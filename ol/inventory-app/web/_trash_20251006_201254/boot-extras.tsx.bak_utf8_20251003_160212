@@ -1,0 +1,49 @@
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { Toaster } from "react-hot-toast";
+
+// Contenedor fuera del árbol principal
+const host = document.createElement('div');
+host.id = 'boot-extras-host';
+Object.assign(host.style, {
+  position: 'fixed',
+  inset: '0',
+  pointerEvents: 'none',
+  zIndex: '2147483000'
+});
+document.body.appendChild(host);
+
+// Botón flotante, estilos encapsulados
+function FloatingReports() {
+  function go() {
+    const here = location.pathname === '/reports';
+    if (here) return;
+    location.href = '/reports';
+  }
+  return (
+    <div style={{position:'fixed', right:16, bottom:16, pointerEvents:'auto'}}>
+      <button
+        onClick={go}
+        aria-label="Reportes (beta)"
+        style={{
+          padding:'10px 14px',
+          borderRadius: 999,
+          border:'1px solid #d4d4d8',
+          background:'#111827',
+          color:'#fff',
+          boxShadow:'0 4px 18px rgba(0,0,0,.25)',
+          cursor:'pointer'
+        }}
+      >
+        Reportes (beta)
+      </button>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(host).render(
+  <React.StrictMode>
+    <Toaster position="top-right" />
+    <FloatingReports />
+  </React.StrictMode>
+);

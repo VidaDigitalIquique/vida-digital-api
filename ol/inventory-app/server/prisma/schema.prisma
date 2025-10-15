@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model app_user {
+  id              String               @id @default(cuid())
+  email           String               @unique
+  name            String?
+  role            String               // 'admin' | 'warehouse'
+  passwordHash    String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  physicalCounts  app_physical_count[] @relation("user_physical_counts")
+  auditLogs       app_audit_log[]      @relation("user_audit_logs")
+}
+
+model app_location {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  counts    app_physical_count[]
+}
+
+model app_product_meta {
+  id                 String   @id @default(cuid())
+  productCode        String   @db.Text
+  imageUrl           String?
+  qtyPerBoxOverride  Int?
+  observations       String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([productCode])
+}
+
+model app_physical_count {
+  id              String      @id @default(cuid())
+  productCode     String      @db.Text
+  location_id     String
+  countedBoxes    Decimal     @db.Decimal(12, 2)
+  countedByUserId String?
+  countedAt       DateTime    @default(now())
+  note            String?
+
+  location        app_location @relation(fields: [location_id], references: [id])
+  countedBy       app_user?    @relation(name: "user_physical_counts", fields: [countedByUserId], references: [id])
+
+  @@index([productCode])
+  @@index([location_id])
+  @@index([countedByUserId])
+}
+
+model app_audit_log {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  entity      String
+  entityId    String
+  diff        Json?
+  createdAt   DateTime @default(now())
+
+  actor       app_user? @relation(name: "user_audit_logs", fields: [actorUserId], references: [id])
+
+  @@index([actorUserId])
+}

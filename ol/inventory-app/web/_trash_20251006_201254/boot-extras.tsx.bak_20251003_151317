@@ -1,0 +1,30 @@
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { Toaster } from "react-hot-toast";
+
+(() => {
+  // Toaster
+  const toastHost = document.createElement("div");
+  document.body.appendChild(toastHost);
+  createRoot(toastHost).render(<Toaster position="top-right" />);
+
+  // Botón flotante
+  const fab = document.createElement("button");
+  fab.textContent = "Reportes (beta)";
+  Object.assign(fab.style, {
+    position: "fixed",
+    right: "16px",
+    bottom: "16px",
+    zIndex: 2147483647,
+    padding: "10px 14px",
+    borderRadius: "999px",
+    border: "none",
+    boxShadow: "0 6px 18px rgba(0,0,0,.2)",
+    background: "#111827",
+    color: "#fff",
+    cursor: "pointer",
+    fontSize: "14px"
+  });
+  fab.onclick = () => { window.location.href = "/reports"; };
+  document.body.appendChild(fab);
+})();

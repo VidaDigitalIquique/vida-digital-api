@@ -1,0 +1,21 @@
+import React, { useState } from 'react';
+
+export default function Precios() {
+  const [search, setSearch] = useState('');
+
+  return (
+    <div className="p-6">
+      <h1 className="text-3xl font-bold mb-4">Precios</h1>
+      <input
+        type="text"
+        placeholder="Buscar producto..."
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="border p-2 rounded mb-4"
+      />
+      <div className="bg-white p-8 rounded shadow">
+        <p>Lista de precios aparecerá aquí</p>
+      </div>
+    </div>
+  );
+}

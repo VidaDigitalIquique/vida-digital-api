@@ -1,0 +1,119 @@
+﻿import React, { useMemo, useState } from "react";
+
+const API = import.meta?.env?.VITE_API_URL ?? "http://localhost:4000";
+
+type SummaryRow = {
+  productCode: string;
+  inventory_boxes: number | null;
+  physical_boxes: number | null;
+  difference_boxes: number | null;
+  difference_percent: number | null;
+};
+
+export default function Reports() {
+  const [codesText, setCodesText] = useState<string>("");
+  const [rows, setRows] = useState<SummaryRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const codes = useMemo(() => {
+    return codesText
+      .split(/[\n,]+/g)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }, [codesText]);
+
+  async function calc() {
+    setLoading(true);
+    setError(null);
+    try {
+      const out: SummaryRow[] = [];
+      for (const code of codes) {
+        const r = await fetch(`${API}/wh/summary?productCode=${encodeURIComponent(code)}`);
+        if (!r.ok) throw new Error(`summary ${code}: ${r.status}`);
+        const j = await r.json();
+        out.push(j);
+      }
+      setRows(out);
+    } catch (e: any) {
+      setError(e?.message ?? "Error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function exportCSV() {
+    const headers = ["Código","Teórico","Físico","Diferencia","%"];
+    const lines = [headers.join(",")];
+    for (const r of rows) {
+      const line = [
+        r.productCode,
+        r.inventory_boxes ?? "",
+        r.physical_boxes ?? "",
+        r.difference_boxes ?? "",
+        r.difference_percent ?? ""
+      ].join(",");
+      lines.push(line);
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "reporte_conteos.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div style={{maxWidth: 1100, margin: "0 auto", padding: "24px"}}>
+      <h2 style={{marginBottom: 8}}>Reportes (beta)</h2>
+      <p style={{marginTop:0, color:"#666"}}>
+        Pega códigos (uno por línea o separados por coma), luego pulsa <b>Calcular</b>.
+      </p>
+
+      <div style={{display:"grid", gridTemplateColumns:"1fr 220px", gap:16, alignItems:"start"}}>
+        <textarea
+          placeholder="Ej:&#10;SF-2074&#10;002"
+          value={codesText}
+          onChange={e => setCodesText(e.target.value)}
+          rows={10}
+          style={{width:"100%", padding:12, fontFamily:"ui-monospace,Consolas,monospace"}}
+        />
+        <div style={{display:"grid", gap:8}}>
+          <button onClick={calc} disabled={loading || codes.length===0} style={{padding:"10px 12px"}}>
+            {loading ? "Calculando..." : `Calcular (${codes.length})`}
+          </button>
+          <button onClick={exportCSV} disabled={rows.length===0} style={{padding:"10px 12px"}}>
+            Exportar CSV
+          </button>
+          {error && <div style={{color:"#b00"}}>{error}</div>}
+        </div>
+      </div>
+
+      <div style={{marginTop:24, overflowX:"auto"}}>
+        <table style={{borderCollapse:"collapse", width:"100%"}}>
+          <thead>
+            <tr>
+              {["Código","Teórico","Físico","Diferencia","%"].map(h => (
+                <th key={h} style={{textAlign:"left", padding:"8px", borderBottom:"1px solid #eee"}}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length===0 ? (
+              <tr><td colSpan={5} style={{padding:"12px", color:"#777"}}>Sin datos…</td></tr>
+            ) : rows.map(r => (
+              <tr key={r.productCode}>
+                <td style={{padding:"8px"}}>{r.productCode}</td>
+                <td style={{padding:"8px"}}>{r.inventory_boxes ?? ""}</td>
+                <td style={{padding:"8px"}}>{r.physical_boxes ?? ""}</td>
+                <td style={{padding:"8px"}}>{r.difference_boxes ?? ""}</td>
+                <td style={{padding:"8px"}}>{r.difference_percent ?? ""}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,324 @@
+import React, { useEffect, useMemo, useState } from "react";
+
+type ProductRow = {
+  code: string;
+  description: string | null;
+  cost_usd: string | null;
+  price_usd: string | null;
+  stock_units: string | null;
+  qty_per_box: string | null;
+  inventory_boxes: string | null;
+};
+
+type CountRow = {
+  location_id: string;
+  location_code: string;
+  location_name: string | null;
+  countedBoxes: string | null;
+  countedAt: string | null;
+  note: string | null;
+};
+
+type Location = {
+  id: string;
+  code: string;
+  name: string | null;
+};
+
+const API = (import.meta as any).env?.VITE_API_URL || "http://localhost:4000";
+
+function num(x: string | null | undefined): number | null {
+  if (x == null) return null;
+  const n = Number(x);
+  return Number.isFinite(n) ? n : null;
+}
+function fmt(n: number | null): string {
+  return n == null ? "" : String(n);
+}
+
+export default function Prices() {
+  const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState<ProductRow[]>([]);
+  const [showWh, setShowWh] = useState(false);
+  const [selCode, setSelCode] = useState<string | null>(null);
+  const [counts, setCounts] = useState<CountRow[] | null>(null);
+  const [locs, setLocs] = useState<Location[]>([]);
+  const [formLoc, setFormLoc] = useState("");
+  const [formBoxes, setFormBoxes] = useState("");
+  const [formNote, setFormNote] = useState("");
+  const [posting, setPosting] = useState(false);
+
+  useEffect(() => {
+    void search();
+  }, []);
+
+  async function search() {
+    setLoading(true);
+    try {
+      const url = new URL(API + "/products");
+      if (q.trim()) url.searchParams.set("q", q.trim());
+      url.searchParams.set("limit", "50");
+      const r = await fetch(url.toString());
+      const j = await r.json();
+      setRows(j.rows ?? []);
+    } catch (e) {
+      console.error(e);
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function openWarehouse(code: string) {
+    setSelCode(code);
+    setShowWh(true);
+    setCounts(null);
+    setFormLoc("");
+    setFormBoxes("");
+    setFormNote("");
+    try {
+      const [cRes, lRes] = await Promise.all([
+        fetch(API + "/wh/counts?code=" + encodeURIComponent(code)),
+        fetch(API + "/wh/locations"),
+      ]);
+      const cJson = await cRes.json();
+      const lJson = await lRes.json();
+      setCounts(cJson?.value ?? cJson ?? []);
+      setLocs(lJson?.value ?? lJson ?? []);
+    } catch (e) {
+      console.error(e);
+      setCounts([]);
+      setLocs([]);
+    }
+  }
+
+  async function postCount() {
+    if (!selCode) return;
+    const n = Number(formBoxes);
+    if (!formLoc.trim() || !Number.isFinite(n)) return;
+    setPosting(true);
+    try {
+      await fetch(API + "/wh/counts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productCode: selCode,
+          locationCode: formLoc.trim(),
+          countedBoxes: n,
+          note: formNote || null,
+        }),
+      });
+      await openWarehouse(selCode); // refrescar
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setPosting(false);
+    }
+  }
+
+  function asNum(x: string | null) {
+    if (x == null) return "";
+    const n = Number(x);
+    return Number.isFinite(n) ? n.toString() : "";
+  }
+
+  function toCSV() {
+    const headers = ["Código","Descripción","Costo USD","Precio USD","Unidades","Unid/Caja","Cajas (teórico)"];
+    const lines = [headers.join("\t")];
+    for (const r of rows) {
+      const line = [
+        (r.code ?? "").toString(),
+        (r.description ?? "").replace(/\t/g, " ").replace(/\r?\n/g, " "),
+        asNum(r.cost_usd),
+        asNum(r.price_usd),
+        asNum(r.stock_units),
+        asNum(r.qty_per_box),
+        asNum(r.inventory_boxes),
+      ].join("\t");
+      lines.push(line);
+    }
+    const blob = new Blob([lines.join("\r\n")], { type: "text/tab-separated-values;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `precios_${new Date().toISOString().slice(0,10)}.tsv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // === Cálculos de bodega (en el panel) ===
+  const selRow = useMemo(
+    () => rows.find((r) => r.code === selCode) ?? null,
+    [rows, selCode]
+  );
+
+  const whTotals = useMemo(() => {
+    const phys = (counts ?? [])
+      .map((c) => num(c.countedBoxes))
+      .filter((n): n is number => n != null)
+      .reduce((a, b) => a + b, 0);
+    const theor = num(selRow?.inventory_boxes) ?? 0;
+    const diff = phys - theor;
+    return { phys, theor, diff };
+  }, [counts, selRow]);
+
+  const badgeClass =
+    whTotals.diff === 0
+      ? "inline-block rounded-full bg-green-100 text-green-700 px-2 py-0.5 text-xs"
+      : "inline-block rounded-full bg-red-100 text-red-700 px-2 py-0.5 text-xs";
+
+  const whTitle = useMemo(
+    () => (selCode ? `Ubicación Bodega — ${selCode}` : "Ubicación Bodega"),
+    [selCode]
+  );
+
+  return (
+    <div className="p-4 max-w-7xl mx-auto">
+      <h1 className="text-2xl font-semibold mb-4">Precios</h1>
+
+      <div className="flex gap-2 mb-4">
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Buscar por código o descripción…"
+          className="border rounded px-3 py-2 w-80"
+        />
+        <button onClick={search} className="border rounded px-3 py-2">Buscar</button>
+        <button onClick={toCSV} className="border rounded px-3 py-2">Exportar CSV</button>
+      </div>
+
+      {loading ? (
+        <div>Cargando…</div>
+      ) : (
+        <div className="overflow-auto border rounded">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left p-2">Código</th>
+                <th className="text-left p-2">Descripción</th>
+                <th className="text-right p-2">Costo USD</th>
+                <th className="text-right p-2">Precio USD</th>
+                <th className="text-right p-2">Unidades</th>
+                <th className="text-right p-2">Unid/Caja</th>
+                <th className="text-right p-2">Cajas (teórico)</th>
+                <th className="text-center p-2">Bodega</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.code} className="border-t">
+                  <td className="p-2">{r.code}</td>
+                  <td className="p-2">{r.description}</td>
+                  <td className="p-2 text-right">{asNum(r.cost_usd)}</td>
+                  <td className="p-2 text-right">{asNum(r.price_usd)}</td>
+                  <td className="p-2 text-right">{asNum(r.stock_units)}</td>
+                  <td className="p-2 text-right">{asNum(r.qty_per_box)}</td>
+                  <td className="p-2 text-right">{asNum(r.inventory_boxes)}</td>
+                  <td className="p-2 text-center">
+                    <button className="border rounded px-2 py-1" onClick={() => openWarehouse(r.code)}>
+                      Bodega
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr><td className="p-3 text-center" colSpan={8}>Sin resultados</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Panel Bodega */}
+      {showWh && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={() => setShowWh(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-[900px] max-w-[95%] p-4" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-semibold">{whTitle}</h2>
+              <button className="px-3 py-1 border rounded" onClick={() => setShowWh(false)}>Cerrar</button>
+            </div>
+
+            {/* Resumen de diferencias */}
+            <div className="mb-3 flex items-center gap-3">
+              <span><b>Físicas:</b> {fmt(whTotals.phys)}</span>
+              <span><b>Teórico:</b> {fmt(whTotals.theor)}</span>
+              <span><b>Diferencia:</b> {fmt(whTotals.diff)}</span>
+              <span className={badgeClass}>
+                {whTotals.diff === 0 ? "OK sin diferencia" : "DIFERENCIA"}
+              </span>
+            </div>
+
+            {/* Formulario conteo */}
+            <div className="mb-4 flex gap-2 items-end">
+              <div className="flex flex-col">
+                <label className="text-xs text-gray-600">Ubicación</label>
+                <select
+                  className="border rounded px-2 py-1 w-40"
+                  value={formLoc}
+                  onChange={(e) => setFormLoc(e.target.value)}
+                >
+                  <option value="">-- Selecciona --</option>
+                  {locs.map((l) => (
+                    <option key={l.id} value={l.code}>{l.code}{l.name ? ` — ${l.name}` : ""}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col">
+                <label className="text-xs text-gray-600">Cajas contadas</label>
+                <input
+                  className="border rounded px-2 py-1 w-32 text-right"
+                  value={formBoxes}
+                  onChange={(e) => setFormBoxes(e.target.value)}
+                  placeholder="0"
+                  inputMode="decimal"
+                />
+              </div>
+              <div className="flex flex-col flex-1">
+                <label className="text-xs text-gray-600">Nota (opcional)</label>
+                <input
+                  className="border rounded px-2 py-1"
+                  value={formNote}
+                  onChange={(e) => setFormNote(e.target.value)}
+                  placeholder="observaciones…"
+                />
+              </div>
+              <button className="border rounded px-3 py-2" disabled={posting} onClick={postCount}>
+                {posting ? "Guardando…" : "Guardar conteo"}
+              </button>
+            </div>
+
+            {/* Tabla conteos */}
+            <div className="overflow-auto border rounded">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left p-2">Ubicación</th>
+                    <th className="text-left p-2">Nombre</th>
+                    <th className="text-right p-2">Cajas contadas</th>
+                    <th className="text-left p-2">Fecha</th>
+                    <th className="text-left p-2">Nota</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(counts ?? []).map((c) => (
+                    <tr key={c.location_id} className="border-t">
+                      <td className="p-2">{c.location_code}</td>
+                      <td className="p-2">{c.location_name ?? ""}</td>
+                      <td className="p-2 text-right">{c.countedBoxes ?? ""}</td>
+                      <td className="p-2">{c.countedAt ? new Date(c.countedAt).toLocaleString() : ""}</td>
+                      <td className="p-2">{c.note ?? ""}</td>
+                    </tr>
+                  ))}
+                  {(!counts || counts.length === 0) && (
+                    <tr><td className="p-3 text-center" colSpan={5}>Sin conteos</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

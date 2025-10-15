@@ -1,0 +1,32 @@
+﻿import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React, { useState } from "react";
+import Prices from "./Prices";
+import Warehouse from "./Warehouse";
+
+type Tab = "precios" | "bodega";
+
+export default function App() {
+  const [tab, setTab] = useState<Tab>("precios");
+
+  const btn: React.CSSProperties = {
+    padding: "8px 12px",
+    borderRadius: 8,
+    border: "1px solid #ddd",
+    background: "#f7f7f7",
+    cursor: "pointer",
+    fontWeight: 600,
+  };
+  const active: React.CSSProperties = { ...btn, background: "#0b6", color: "#fff", border: "1px solid #0a5" };
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, padding: 12, borderBottom: "1px solid #eee" }}>
+        <button style={tab === "precios" ? active : btn} onClick={() => setTab("precios")}>Precios</button>
+        <button style={tab === "bodega" ? active : btn} onClick={() => setTab("bodega")}>UbicaciÃ³n Bodega</button>
+      </div>
+      <div>
+        {tab === "precios" ? <Prices /> : <Warehouse />}
+      </div>
+    </div>
+  );
+}

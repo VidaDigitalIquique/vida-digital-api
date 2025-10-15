@@ -1,0 +1,315 @@
+import { Router } from "express";
+import crypto from "crypto";
+import { getPool } from "../lib/sql";
+import { DATA_SOURCES } from "../config/data-sources";
+
+const router = Router();
+const pool = getPool();
+
+function isNonEmpty(v: any): v is string { return typeof v === "string" && v.trim().length > 0; }
+function isLocationCode(v: any): v is string { return typeof v === "string" && /^[A-Za-z0-9_-]+$/.test(String(v)); }
+function safeIdent(id: string | null | undefined): string | null {
+  if (!id) return null;
+  return /^[a-zA-Z0-9_]+$/.test(id) ? id : null;
+}
+
+type ResolvedTable = { schema: string | null; table: string };
+
+async function resolveTable(table: string, preferredSchema?: string): Promise<ResolvedTable> {
+  if (preferredSchema) {
+    const r = await pool.query(
+      "SELECT 1 FROM information_schema.tables WHERE table_schema = $1 AND table_name = $2",
+      [preferredSchema, table]
+    );
+    if (r.rowCount > 0) return { schema: preferredSchema, table };
+  }
+  const sql =
+    "SELECT table_schema, table_name " +
+    "FROM information_schema.tables " +
+    "WHERE lower(table_name) = lower($1) " +
+    "  AND table_type = 'BASE TABLE' " +
+    "  AND table_schema NOT IN ('pg_catalog','information_schema') " +
+    "ORDER BY CASE WHEN table_schema='public' THEN 0 ELSE 1 END, table_schema " +
+    "LIMIT 1";
+  const { rows } = await pool.query(sql, [table]);
+  if (rows.length === 0) return { schema: null, table };
+  return { schema: String(rows[0].table_schema), table: String(rows[0].table_name) };
+}
+
+async function findColumnPublic(table: string, names: string[]): Promise<string | null> {
+  const { rows } = await pool.query(
+    "SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1",
+    [table]
+  );
+  const cols = rows.map((r: any) => String(r.column_name));
+  for (const n of names) {
+    const hit = cols.find((c) => c.toLowerCase() === n.toLowerCase());
+    if (hit) return '"' + hit + '"';
+  }
+  return null;
+}
+
+async function logAudit(action: string, entity: string, entityId: string, diff: any, actor: string = "system") {
+  try {
+    const id = crypto.randomUUID();
+    await pool.query(
+      'INSERT INTO app_audit_log ("id","actorUserId","action","entity","entityId","diff","createdAt") VALUES ($1,$2,$3,$4,$5,$6, now())',
+      [id, actor, action, entity, entityId, diff]
+    );
+  } catch {}
+}
+
+/* ---------- LOCATIONS ---------- */
+
+router.get("/locations", async (_req, res) => {
+  try {
+    const createdAtCol = await findColumnPublic("app_location", ["createdAt", "createdat"]);
+    const updatedAtCol = await findColumnPublic("app_location", ["updatedAt", "updatedat"]);
+    const selectCols =
+      'id, code, name, notes' +
+      (createdAtCol ? ', ' + createdAtCol + ' AS "createdAt"' : '') +
+      (updatedAtCol ? ', ' + updatedAtCol + ' AS "updatedAt"' : '');
+    const { rows } = await pool.query("SELECT " + selectCols + " FROM app_location ORDER BY code ASC");
+    res.json(rows);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || "locations error" });
+  }
+});
+
+router.post("/locations", async (req, res) => {
+  try {
+    const code = String(req.body?.code ?? "").trim();
+    const name = req.body?.name ? String(req.body.name) : null;
+    const notes = req.body?.notes ? String(req.body.notes) : null;
+    if (!isLocationCode(code)) return res.status(400).json({ error: "code inválido" });
+
+    const createdAtCol = await findColumnPublic("app_location", ["createdAt", "createdat"]);
+    const updatedAtCol = await findColumnPublic("app_location", ["updatedAt", "updatedat"]);
+
+    const id = crypto.randomUUID();
+    const insertCols: string[] = ["id", "code", "name", "notes"];
+    const insertVals: string[] = ["$1", "$2", "$3", "$4"];
+    if (createdAtCol) { insertCols.push(createdAtCol); insertVals.push("now()"); }
+    if (updatedAtCol) { insertCols.push(updatedAtCol); insertVals.push("now()"); }
+
+    const baseInsert =
+      "INSERT INTO app_location (" + insertCols.join(", ") + ") VALUES (" + insertVals.join(", ") + ") " +
+      "ON CONFLICT (code) DO UPDATE SET name = EXCLUDED.name, notes = EXCLUDED.notes";
+    const withUpdated = updatedAtCol ? baseInsert + ", " + updatedAtCol + " = now()" : baseInsert;
+
+    const returningCols =
+      'id, code, name, notes' +
+      (createdAtCol ? ', ' + createdAtCol + ' AS "createdAt"' : '') +
+      (updatedAtCol ? ', ' + updatedAtCol + ' AS "updatedAt"' : '');
+
+    const sql = withUpdated + " RETURNING " + returningCols;
+    const { rows } = await pool.query(sql, [id, code, name, notes]);
+    const row = rows[0];
+    await logAudit("UPSERT_LOCATION", "app_location", row.id, { code, name, notes });
+    res.json(row);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || "locations upsert error" });
+  }
+});
+
+/* ---------- COUNTS ---------- */
+
+router.get("/counts", async (req, res) => {
+  try {
+    const code = String(req.query.code ?? "").trim();
+    if (!isNonEmpty(code)) return res.status(400).json({ error: "code requerido" });
+
+    const colProductCode = (await findColumnPublic("app_physical_count", ["productCode", "productcode"])) ?? '"productCode"';
+    const colCountedAt = (await findColumnPublic("app_physical_count", ["countedAt", "countedat"])) ?? '"countedAt"';
+    const colCountedBoxes = (await findColumnPublic("app_physical_count", ["countedBoxes", "countedboxes"])) ?? '"countedBoxes"';
+
+    const sql =
+      "WITH latest AS (" +
+      "  SELECT c.*, ROW_NUMBER() OVER (PARTITION BY c.location_id ORDER BY " + colCountedAt + " DESC, c.id DESC) rn " +
+      "  FROM app_physical_count c WHERE " + colProductCode + " = $1" +
+      ") " +
+      "SELECT loc.id AS location_id, loc.code AS location_code, loc.name AS location_name, " +
+      "       l." + colCountedBoxes + " AS \"countedBoxes\", " +
+      "       l." + colCountedAt + " AS \"countedAt\", " +
+      "       l.note " +
+      "FROM app_location loc " +
+      "LEFT JOIN latest l ON l.location_id = loc.id AND l.rn = 1 " +
+      "ORDER BY loc.code ASC";
+
+    const { rows } = await pool.query(sql, [code]);
+    res.json(rows);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || "counts error" });
+  }
+});
+
+router.post("/counts", async (req, res) => {
+  try {
+    const productCode = String(req.body?.productCode ?? "").trim();
+    const locationCode = String(req.body?.locationCode ?? "").trim();
+    const countedBoxesNum = Number(req.body?.countedBoxes);
+    const note = req.body?.note ? String(req.body.note) : null;
+
+    if (!isNonEmpty(productCode)) return res.status(400).json({ error: "productCode requerido" });
+    if (!isLocationCode(locationCode)) return res.status(400).json({ error: "locationCode inválido" });
+    if (!Number.isFinite(countedBoxesNum)) return res.status(400).json({ error: "countedBoxes inválido" });
+
+    let loc = await pool.query('SELECT id FROM app_location WHERE code = $1', [locationCode]);
+    if (loc.rowCount === 0) {
+      const newId = crypto.randomUUID();
+      const createdAtCol = await findColumnPublic("app_location", ["createdAt","createdat"]);
+      const updatedAtCol = await findColumnPublic("app_location", ["updatedAt","updatedat"]);
+      const baseCols: string[] = ["id","code"];
+      const baseVals: string[] = ["$1","$2"];
+      if (createdAtCol) { baseCols.push(createdAtCol); baseVals.push("now()"); }
+      if (updatedAtCol) { baseCols.push(updatedAtCol); baseVals.push("now()"); }
+      await pool.query(
+        "INSERT INTO app_location (" + baseCols.join(", ") + ") VALUES (" + baseVals.join(", ") + ") ON CONFLICT (code) DO NOTHING",
+        [newId, locationCode]
+      );
+      loc = await pool.query('SELECT id FROM app_location WHERE code = $1', [locationCode]);
+    }
+    const location_id = String(loc.rows[0].id);
+
+    const colProductCode = (await findColumnPublic("app_physical_count", ["productCode","productcode"])) ?? '"productCode"';
+    const colCountedBoxes = (await findColumnPublic("app_physical_count", ["countedBoxes","countedboxes"])) ?? '"countedBoxes"';
+    const colCountedAt    = (await findColumnPublic("app_physical_count", ["countedAt","countedat"])) ?? '"countedAt"';
+
+    const id = crypto.randomUUID();
+    const sql =
+      "INSERT INTO app_physical_count (id, " + colProductCode + ", location_id, " + colCountedBoxes + ", " + colCountedAt + ", note) " +
+      "VALUES ($1, $2, $3, $4, now(), $5)";
+    await pool.query(sql, [id, productCode, location_id, countedBoxesNum, note]);
+
+    await logAudit("CREATE_COUNT", "app_physical_count", id, { productCode, locationCode, countedBoxes: countedBoxesNum, note });
+    res.json({ ok: true, id, productCode, locationCode, countedBoxes: countedBoxesNum, note });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || "create count error" });
+  }
+});
+
+router.put("/counts/:id", async (req, res) => {
+  try {
+    const id = String(req.params.id ?? "").trim();
+    if (!isNonEmpty(id)) return res.status(400).json({ error: "id requerido" });
+
+    const colCountedBoxes = (await findColumnPublic("app_physical_count", ["countedBoxes","countedboxes"])) ?? '"countedBoxes"';
+    const colCountedAt    = (await findColumnPublic("app_physical_count", ["countedAt","countedat"])) ?? '"countedAt"';
+
+    const old = await pool.query("SELECT * FROM app_physical_count WHERE id = $1", [id]);
+    if (old.rowCount === 0) return res.status(404).json({ error: "conteo no encontrado" });
+
+    const updates: string[] = [];
+    const params: any[] = [];
+    let idx = 1;
+
+    if (req.body?.countedBoxes !== undefined) {
+      const n = Number(req.body.countedBoxes);
+      if (!Number.isFinite(n)) return res.status(400).json({ error: "countedBoxes inválido" });
+      updates.push(colCountedBoxes + " = $" + idx++); params.push(n);
+    }
+    if (req.body?.note !== undefined) {
+      updates.push("note = $" + idx++); params.push(String(req.body.note));
+    }
+    updates.push(colCountedAt + " = now()");
+
+    const sql = "UPDATE app_physical_count SET " + updates.join(", ") + " WHERE id = $" + idx;
+    params.push(id);
+    await pool.query(sql, params);
+
+    await logAudit("UPDATE_COUNT", "app_physical_count", id, { old: old.rows[0], new: { id, countedBoxes: req.body?.countedBoxes, note: req.body?.note } });
+    res.json({ ok: true, id });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || "update count error" });
+  }
+});
+
+router.delete("/counts/:id", async (req, res) => {
+  try {
+    const id = String(req.params.id ?? "").trim();
+    if (!isNonEmpty(id)) return res.status(400).json({ error: "id requerido" });
+
+    const old = await pool.query("SELECT * FROM app_physical_count WHERE id = $1", [id]);
+    if (old.rowCount === 0) return res.json({ ok: true, id });
+
+    await pool.query("DELETE FROM app_physical_count WHERE id = $1", [id]);
+    await logAudit("DELETE_COUNT", "app_physical_count", id, { old: old.rows[0] });
+    res.json({ ok: true, id });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || "delete count error" });
+  }
+});
+
+/* ---------- AUDIT ---------- */
+
+router.get("/audit", async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(String(req.query.limit ?? "20"), 10) || 20, 200);
+    const { rows } = await pool.query(
+      'SELECT id, "actorUserId", action, entity, "entityId", diff, "createdAt" FROM app_audit_log ORDER BY "createdAt" DESC LIMIT $1',
+      [limit]
+    );
+    res.json(rows);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || "audit error" });
+  }
+});
+
+/* ---------- SUMMARY ---------- */
+
+router.get("/summary", async (req, res) => {
+  try {
+    const productCode = String(req.query.productCode ?? "").trim();
+    if (!isNonEmpty(productCode)) return res.status(400).json({ error: "productCode requerido" });
+
+    const inv: any = (DATA_SOURCES as any).inventar || {};
+    const iResolved = await resolveTable(inv.table || "inventar", inv.schema);
+    if (!iResolved.schema) return res.status(404).json({ error: "Tabla inventario no encontrada" });
+
+    const iCode = safeIdent(inv.code || "codunico");
+    const iStockUnits = safeIdent(inv.stock_units || "stocdisp");
+    const iQtyPerBox = safeIdent("cantcaja");
+
+    const invTheoRows = await pool.query(
+      'SELECT ' +
+        (iStockUnits && iQtyPerBox
+          ? ' (i."' + iStockUnits + '"::numeric / NULLIF(i."' + iQtyPerBox + '"::numeric,0)) AS inventory_boxes '
+          : ' NULL::numeric AS inventory_boxes ') +
+      'FROM "' + iResolved.schema + '"."' + iResolved.table + '" i ' +
+      'WHERE i."' + iCode + '" = $1 LIMIT 1',
+      [productCode]
+    );
+    const invBoxes = invTheoRows.rows.length > 0 && invTheoRows.rows[0].inventory_boxes != null
+      ? Number(invTheoRows.rows[0].inventory_boxes)
+      : 0;
+
+    const colProductCode = (await findColumnPublic("app_physical_count", ["productCode","productcode"])) ?? '"productCode"';
+    const colCountedAt    = (await findColumnPublic("app_physical_count", ["countedAt","countedat"])) ?? '"countedAt"';
+    const colCountedBoxes = (await findColumnPublic("app_physical_count", ["countedBoxes","countedboxes"])) ?? '"countedBoxes"';
+
+    const physSQL =
+      "WITH latest AS (" +
+      "  SELECT c.*, ROW_NUMBER() OVER (PARTITION BY c.location_id ORDER BY " + colCountedAt + " DESC, c.id DESC) rn " +
+      "  FROM app_physical_count c WHERE " + colProductCode + " = $1" +
+      ") SELECT COALESCE(SUM(l." + colCountedBoxes + "::numeric), 0) AS physical_boxes " +
+      "FROM latest l WHERE l.rn = 1";
+
+    const physRows = await pool.query(physSQL, [productCode]);
+    const physical = physRows.rows.length > 0 ? Number(physRows.rows[0].physical_boxes) : 0;
+
+    const diff = Number(invBoxes) - Number(physical);
+    const percent = Number(invBoxes) > 0 ? (diff / Number(invBoxes)) * 100 : 0;
+
+    res.json({
+      productCode,
+      inventory_boxes: Number(invBoxes),
+      physical_boxes: Number(physical),
+      difference_boxes: Number(diff),
+      difference_percent: Number(percent.toFixed(2))
+    });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || "summary error" });
+  }
+});
+
+export default router;

@@ -1,0 +1,146 @@
+import React, { useMemo, useState } from "react";
+import toast from "react-hot-toast";
+
+type Summary = {
+  productCode: string;
+  inventory_boxes: number | null;
+  physical_boxes: number | null;
+  difference_boxes: number | null;
+  difference_percent: number | null;
+}
+
+function downloadCSV(filename: string, rows: any[]) {
+  const cols = Object.keys(rows[0] ?? { productCode: "", inventory_boxes: "", physical_boxes: "", difference_boxes: "", difference_percent: "" });
+  const lines = [cols.join(",")].concat(
+    rows.map(r => cols.map(c => {
+      const v = (r as any)[c];
+      const s = (v ?? "").toString().replace(/"/g, '""');
+      return /[",\n]/.test(s) ? `"${s}"` : s;
+    }).join(","))
+  );
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+export default function FloatingReports() {
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<Summary | null>(null);
+
+  async function fetchSummary() {
+    const productCode = code.trim();
+    if (!productCode) { toast.error("Ingresa un C�digo"); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`http://localhost:4000/wh/summary?productCode=${encodeURIComponent(productCode)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json() as Summary;
+      setData(json);
+      toast.success("Resumen cargado");
+    } catch (e: any) {
+      console.error(e);
+      toast.error("No se pudo cargar el resumen");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const canExport = useMemo(() => !!data, [data]);
+
+  return (
+    <>
+      {/* FAB */}
+      <button
+        onClick={() => setOpen(true)}
+        style={{
+          position: "fixed", right: 16, bottom: 16, zIndex: 9999,
+          padding: "10px 14px", borderRadius: 999, border: "1px solid #ddd",
+          background: "#fff", boxShadow: "0 4px 16px rgba(0,0,0,.15)", cursor: "pointer"
+        }}
+        title="Reportes (beta)"
+      >
+        Reportes (beta)
+      </button>
+
+      {/* Overlay */}
+      {open && (
+        <div
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,.5)", zIndex: 9998,
+            display: "flex", alignItems: "center", justifyContent: "center"
+          }}
+          onClick={() => setOpen(false)}
+        >
+          <div
+            style={{ background: "#fff", minWidth: 520, maxWidth: "90vw", padding: 16, borderRadius: 12 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <h2 style={{ margin: 0 }}>Reporte r?f�pido por producto</h2>
+              <button onClick={() => setOpen(false)} style={{ background: "transparent", border: "none", fontSize: 18, cursor: "pointer" }}>�?"???</button>
+            </div>
+
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="C�digo de producto (ej: SF-2074)"
+                style={{ flex: 1, padding: 8, borderRadius: 8, border: "1px solid #ddd" }}
+              />
+              <button
+                onClick={fetchSummary}
+                disabled={loading}
+                style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #0d9488", background: loading ? "#cbd5e1" : "#14b8a6", color: "#fff", cursor: loading ? "not-allowed" : "pointer" }}
+              >
+                {loading ? "Consultando..." : "Consultar"}
+              </button>
+              <button
+                onClick={() => {
+                  if (!data) { toast.error("Nada para exportar"); return; }
+                  downloadCSV(`reporte_${data.productCode}.csv`, [data]);
+                }}
+                disabled={!canExport}
+                style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #1d4ed8", background: canExport ? "#3b82f6" : "#93c5fd", color: "#fff", cursor: canExport ? "pointer" : "not-allowed" }}
+              >
+                Exportar CSV
+              </button>
+            </div>
+
+            {data && (
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <th style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #eee" }}>C�digo</th>
+                    <th style={{ textAlign: "right", padding: 8, borderBottom: "1px solid #eee" }}>Cajas (te�rico)</th>
+                    <th style={{ textAlign: "right", padding: 8, borderBottom: "1px solid #eee" }}>Cajas (F�sico)</th>
+                    <th style={{ textAlign: "right", padding: 8, borderBottom: "1px solid #eee" }}>Diferencia</th>
+                    <th style={{ textAlign: "right", padding: 8, borderBottom: "1px solid #eee" }}>%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: 8, borderBottom: "1px solid #f1f5f9" }}>{data.productCode}</td>
+                    <td style={{ padding: 8, textAlign: "right", borderBottom: "1px solid #f1f5f9" }}>{data.inventory_boxes ?? ""}</td>
+                    <td style={{ padding: 8, textAlign: "right", borderBottom: "1px solid #f1f5f9" }}>{data.physical_boxes ?? ""}</td>
+                    <td style={{ padding: 8, textAlign: "right", borderBottom: "1px solid #f1f5f9" }}>{data.difference_boxes ?? ""}</td>
+                    <td style={{ padding: 8, textAlign: "right", borderBottom: "1px solid #f1f5f9" }}>{data.difference_percent ?? ""}</td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
+
+            {!data && (
+              <div style={{ color: "#64748b", fontSize: 14 }}>
+                Ingresa un C�digo y presiona <b>Consultar</b> para ver el resumen.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
