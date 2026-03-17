@@ -46,16 +46,14 @@ export async function POST(request: Request) {
       const nroingreso = p.nroingreso ? String(p.nroingreso).trim() : null;
       const umed = p.umed ? String(p.umed).trim().toUpperCase() : 'UN';
 
-      const saldocajas = cantcaja > 0 ? saldo / cantcaja : 0;
-
       // Upsert using proper tagged template literals
       await sql`
         INSERT INTO productos (
           empresa_id, codigo, detalle, prcventa, prcminimo, costo, cif, 
-          saldo, saldocajas, cantcaja, pesocaja, cubicaja, nroingreso, umed, es_nuevo, fecha_ingreso
+          saldo, cantcaja, pesocaja, cubicaja, nroingreso, umed, es_nuevo, fecha_ingreso
         ) VALUES (
           ${eid}, ${codigo}, ${detalle}, ${prcventa}, ${prcminimo}, ${costo}, ${cif},
-          ${saldo}, ${saldocajas}, ${cantcaja}, ${pesocaja}, ${cubicaja}, ${nroingreso}, ${umed}, true, NOW()
+          ${saldo}, ${cantcaja}, ${pesocaja}, ${cubicaja}, ${nroingreso}, ${umed}, true, NOW()
         )
         ON CONFLICT (empresa_id, codigo) DO UPDATE SET
           detalle = EXCLUDED.detalle,
@@ -64,7 +62,6 @@ export async function POST(request: Request) {
           costo = EXCLUDED.costo,
           cif = EXCLUDED.cif,
           saldo = EXCLUDED.saldo,
-          saldocajas = EXCLUDED.saldocajas,
           cantcaja = EXCLUDED.cantcaja,
           pesocaja = EXCLUDED.pesocaja,
           cubicaja = EXCLUDED.cubicaja,
