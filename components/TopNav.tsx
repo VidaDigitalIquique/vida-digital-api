@@ -86,12 +86,12 @@ export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number,
                     Administración <ChevronDown className="w-4 h-4" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem>
                       <Link href="/admin/importar" className="flex items-center gap-2 w-full">
                         <FileSpreadsheet className="w-4 h-4" /> Importar Excel
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
+                    <DropdownMenuItem>
                       <Link href="/admin/usuarios" className="flex items-center gap-2 w-full">
                         <Users className="w-4 h-4" /> Usuarios
                       </Link>

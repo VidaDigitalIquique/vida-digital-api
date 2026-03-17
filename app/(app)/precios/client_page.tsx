@@ -9,11 +9,29 @@ import { Search } from 'lucide-react';
 
 interface PreciosClientProps {
   session: UserSession;
-  activeEmpresaId: number;
   empresasMap: Record<number, string>; // ID to Slug
 }
 
-export function PreciosClient({ session, activeEmpresaId, empresasMap }: PreciosClientProps) {
+export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
+  const [activeEmpresaId, setActiveEmpresaId] = useState<number>(0);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('vidadigital_empresa');
+    const id = stored && !isNaN(parseInt(stored)) && parseInt(stored) > 0 
+      ? parseInt(stored) 
+      : 1;
+    setActiveEmpresaId(id);
+    setIsHydrated(true);
+    const handler = () => {
+      const s = localStorage.getItem('vidadigital_empresa');
+      setActiveEmpresaId(s && parseInt(s) > 0 ? parseInt(s) : 1);
+    };
+    window.addEventListener('empresaChanged', handler);
+    return () => window.removeEventListener('empresaChanged', handler);
+  }, []);
+
+
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -34,6 +52,8 @@ export function PreciosClient({ session, activeEmpresaId, empresasMap }: Precios
 
   // Fetch logic
   useEffect(() => {
+    if (!isHydrated) return;
+
     async function fetchProducts() {
       setLoading(true);
       try {
@@ -57,7 +77,7 @@ export function PreciosClient({ session, activeEmpresaId, empresasMap }: Precios
     }
     
     fetchProducts();
-  }, [activeEmpresaId, debouncedSearch, soloStock, soloNuevo]);
+  }, [activeEmpresaId, debouncedSearch, soloStock, soloNuevo, isHydrated]);
 
   const handleProductUpdate = (updatedProduct: Producto) => {
     setProductos(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));

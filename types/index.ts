@@ -30,6 +30,7 @@ export interface UbicacionBodega {
   id: number;
   empresa_id: number;
   codigo: string;
+  nroingreso: string | null;
   ubicacion: string;
   detalle: string | null;
   cantcaja: number;

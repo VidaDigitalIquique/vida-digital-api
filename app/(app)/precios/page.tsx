@@ -19,7 +19,6 @@ export default async function PreciosPage() {
   return (
     <PreciosClient 
       session={session as any} 
-      activeEmpresaId={0} // Will be set by client useEffect 
       empresasMap={empresasMap} 
     />
   );

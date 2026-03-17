@@ -45,24 +45,24 @@ export async function GET(request: Request) {
 
     if (search && soloStock && soloNuevo) {
       const sq = '%' + search + '%';
-      rows = await sql.unsafe(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo HAVING SUM(saldo) > 0 AND MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
+      rows = await (sql as any)(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo HAVING SUM(saldo) > 0 AND MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
     } else if (search && soloStock) {
       const sq = '%' + search + '%';
-      rows = await sql.unsafe(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo HAVING SUM(saldo) > 0 ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
+      rows = await (sql as any)(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo HAVING SUM(saldo) > 0 ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
     } else if (search && soloNuevo) {
       const sq = '%' + search + '%';
-      rows = await sql.unsafe(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo HAVING MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
+      rows = await (sql as any)(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo HAVING MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
     } else if (soloStock && soloNuevo) {
-      rows = await sql.unsafe(`${baseQuery} GROUP BY codigo HAVING SUM(saldo) > 0 AND MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid]);
+      rows = await (sql as any)(`${baseQuery} GROUP BY codigo HAVING SUM(saldo) > 0 AND MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid]);
     } else if (search) {
       const sq = '%' + search + '%';
-      rows = await sql.unsafe(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
+      rows = await (sql as any)(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
     } else if (soloStock) {
-      rows = await sql.unsafe(`${baseQuery} GROUP BY codigo HAVING SUM(saldo) > 0 ORDER BY codigo ASC LIMIT 100`, [eid]);
+      rows = await (sql as any)(`${baseQuery} GROUP BY codigo HAVING SUM(saldo) > 0 ORDER BY codigo ASC LIMIT 100`, [eid]);
     } else if (soloNuevo) {
-      rows = await sql.unsafe(`${baseQuery} GROUP BY codigo HAVING MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid]);
+      rows = await (sql as any)(`${baseQuery} GROUP BY codigo HAVING MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid]);
     } else {
-      rows = await sql.unsafe(`${baseQuery} GROUP BY codigo ORDER BY codigo ASC LIMIT 100`, [eid]);
+      rows = await (sql as any)(`${baseQuery} GROUP BY codigo ORDER BY codigo ASC LIMIT 100`, [eid]);
     }
 
     return NextResponse.json({ data: rows });
