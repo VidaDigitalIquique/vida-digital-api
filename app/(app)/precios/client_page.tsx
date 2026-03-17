@@ -1,39 +1,40 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import * as React from 'react';
 import { Producto, UserSession } from '@/types';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductDrawer } from '@/components/ProductDrawer';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { useEmpresaId } from '@/hooks/useEmpresaId';
 
 interface PreciosClientProps {
   session: UserSession;
-  activeEmpresaId: number;
   empresasMap: Record<number, string>; // ID to Slug
 }
 
-export function PreciosClient({ session, activeEmpresaId, empresasMap }: PreciosClientProps) {
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [soloStock, setSoloStock] = useState(false);
-  const [soloNuevo, setSoloNuevo] = useState(false);
+export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
+  const activeEmpresaId = useEmpresaId();
+  const [productos, setProductos] = React.useState<Producto[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [search, setSearch] = React.useState('');
+  const [debouncedSearch, setDebouncedSearch] = React.useState('');
+  const [soloStock, setSoloStock] = React.useState(false);
+  const [soloNuevo, setSoloNuevo] = React.useState(false);
 
-  const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = React.useState<Producto | null>(null);
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   const empresaSlug = empresasMap[activeEmpresaId] || 'sanjh';
 
   // Debounce search input
-  useEffect(() => {
+  React.useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(timer);
   }, [search]);
 
   // Fetch logic
-  useEffect(() => {
+  React.useEffect(() => {
     async function fetchProducts() {
       setLoading(true);
       try {

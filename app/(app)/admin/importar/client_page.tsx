@@ -1,45 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import * as React from 'react';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
+import { useEmpresaId } from '@/hooks/useEmpresaId';
+
 export function ImportarClient() {
-  const [activeEmpresaId, setActiveEmpresaId] = useState<number>(0);
-  const [parsedData, setParsedData] = useState<any[]>([]);
-  const [importProgress, setImportProgress] = useState<number | null>(null);
-  const [isParsing, setIsParsing] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-
-  // Sync with localStorage
-  useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('vidadigital_empresa');
-      if (stored && !isNaN(parseInt(stored, 10))) {
-        setActiveEmpresaId(parseInt(stored, 10));
-      }
-    }
-  });
-
-  // Listen for changes
-  useState(() => {
-    if (typeof window !== 'undefined') {
-      const handleStorage = () => {
-        const stored = localStorage.getItem('vidadigital_empresa');
-        if (stored && !isNaN(parseInt(stored, 10))) {
-          setActiveEmpresaId(parseInt(stored, 10));
-        }
-      };
-      window.addEventListener('storage', handleStorage);
-      return () => window.removeEventListener('storage', handleStorage);
-    }
-  });
+  const activeEmpresaId = useEmpresaId();
   
-  const [stats, setStats] = useState({ total: 0, valid: 0, error: 0 });
+  const [stats, setStats] = React.useState({ total: 0, valid: 0, error: 0 });
+  const [parsedData, setParsedData] = React.useState<unknown[]>([]);
+  const [isParsing, setIsParsing] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [importProgress, setImportProgress] = React.useState<number | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -222,7 +199,7 @@ export function ImportarClient() {
               <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1 list-disc list-inside">
                  <li>Columnas requeridas en la fila 5: <code>CODIGO, DETALLE, PRCVENTA, PRCMINIMO, COSTO, CIF, SALDO, NROINGRESO, UMED, CANTCAJA, PESOCAJA, CUBICAJA</code>.</li>
                  <li>Al importar, los productos existentes se <strong>actualizarán</strong> y los nuevos se <strong>crearán</strong>.</li>
-                 <li>Los productos nuevos ingresarán automáticamente marcados con la etiqueta "NUEVO".</li>
+                  <li>Los productos nuevos ingresarán automáticamente marcados con la etiqueta &quot;NUEVO&quot;.</li>
                  <li>El <code>saldo</code> actual en Bodegas no se sobreescribe desde aquí; solo el Saldo Sistema Global.</li>
               </ul>
            </div>
@@ -262,7 +239,7 @@ export function ImportarClient() {
                     </TableRow>
                  </TableHeader>
                  <TableBody>
-                    {parsedData.slice(0, 100).map((row, i) => (
+                    {parsedData.slice(0, 5).map((row: any, i: number) => (
                        <TableRow key={i} className={!row._valid ? "bg-red-50/50" : ""}>
                           <TableCell>
                              {row._valid ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertTriangle className="w-4 h-4 text-red-500" />}

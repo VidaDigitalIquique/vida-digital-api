@@ -50,9 +50,9 @@ export function BodegaCard({ ubicacion, empresaSlug, onClick }: BodegaCardProps)
             </div>
             
             {ubicacion.diferencia !== null && (
-               <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-5 font-bold \${diffColor}`}>
-                 Dif: {ubicacion.diferencia > 0 ? '+' : ''}{ubicacion.diferencia}
-               </Badge>
+                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 h-5 font-bold ${diffColor}`}>
+                  Dif: {ubicacion.diferencia > 0 ? '+' : ''}{ubicacion.diferencia}
+                </Badge>
             )}
           </div>
         </div>

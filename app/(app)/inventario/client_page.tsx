@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { UserSession } from '@/types';
+import * as React from 'react';
+import { Producto, Ubicacion } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Save, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { Search, Loader2, Save, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { useEmpresaId } from '@/hooks/useEmpresaId';
 
-interface Ubicacion {
+interface UbicacionItem {
   id: number;
   codigo: string;
   nroingreso: string | null;
@@ -24,23 +25,24 @@ interface Ubicacion {
   observaciones: string | null;
 }
 
-export function InventarioClient({ activeEmpresaId }: { activeEmpresaId: number }) {
-  const [data, setData] = useState<Ubicacion[]>([]);
-  const [loading, setLoading] = useState(true);
+export function InventarioClient({ session, empresasMap }: { session: any, empresasMap: Record<number, string> }) {
+  const activeEmpresaId = useEmpresaId();
+  const [data, setData] = React.useState<UbicacionItem[]>([]);
+  const [loading, setLoading] = React.useState(true);
   
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [search, setSearch] = React.useState('');
+  const [debouncedSearch, setDebouncedSearch] = React.useState('');
   
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
+  const [page, setPage] = React.useState(1);
+  const [totalPages, setTotalPages] = React.useState(1);
+  const [totalItems, setTotalItems] = React.useState(0);
 
   // Unsaved edits
-  const [edits, setEdits] = useState<Record<number, { fisico?: string, observaciones?: string }>>({});
-  const [isSaving, setIsSaving] = useState(false);
+  const [edits, setEdits] = React.useState<Record<number, { fisico?: string, observaciones?: string }>>({});
+  const [isSaving, setIsSaving] = React.useState(false);
 
   // Debounce search
-  useEffect(() => {
+  React.useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1); // Reset page on new search
@@ -73,7 +75,7 @@ export function InventarioClient({ activeEmpresaId }: { activeEmpresaId: number 
     }
   };
 
-  useEffect(() => { fetchData() }, [activeEmpresaId, debouncedSearch, page]);
+  React.useEffect(() => { fetchData() }, [activeEmpresaId, debouncedSearch, page]);
 
   const handleEditChange = (id: number, field: 'fisico' | 'observaciones', value: string) => {
     setEdits(prev => ({

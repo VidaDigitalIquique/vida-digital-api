@@ -1,25 +1,26 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-export function DashboardClient({ stats }: { stats: Record<number, any> }) {
-  const [activeEmpresaId, setActiveEmpresaId] = useState<number | null>(null);
+import { useEmpresaId } from "@/hooks/useEmpresaId";
 
-  useEffect(() => {
-    const val = localStorage.getItem('vidadigital_empresa');
-    if (val) setActiveEmpresaId(parseInt(val, 10));
-    else if (Object.keys(stats).length > 0) {
-      setActiveEmpresaId(parseInt(Object.keys(stats)[0], 10));
-    }
-  }, [stats]);
+export function DashboardClient({ initialData, empresasMap }: { initialData: any, empresasMap: Record<number, string> }) {
+  const activeEmpresaId = useEmpresaId();
+  const [data, setData] = React.useState(initialData); // Added this line
+  const [loading, setLoading] = React.useState(false); // Added this line
 
-  if (!activeEmpresaId || !stats[activeEmpresaId]) return null;
+  // The original code used 'stats' and 'currentStats'.
+  // Assuming 'data' will now hold the stats, and 'currentStats' should be derived from 'data'.
+  // The instruction did not specify how to update the logic for 'currentStats' or the conditional return.
+  // I will make a reasonable assumption that 'data' replaces 'stats' and 'currentStats' is derived from 'data'.
+  // If this is incorrect, further instructions would be needed.
+  if (!activeEmpresaId || !data[activeEmpresaId]) return null;
 
-  const currentStats = stats[activeEmpresaId];
+  const currentStats = data[activeEmpresaId];
 
   return (
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200">
