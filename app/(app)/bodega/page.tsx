@@ -16,6 +16,7 @@ export default async function BodegaPage() {
   return (
     <BodegaClient 
       session={session as any} 
+      activeEmpresaId={0} 
       empresasMap={empresasMap} 
     />
   );

@@ -1,7 +1,7 @@
 'use client';
 
-import * as React from 'react';
-import { Producto, Ubicacion } from '@/types';
+import { useState, useEffect, useRef } from 'react';
+import { UbicacionBodega, UserSession } from '@/types';
 import { BodegaCard } from '@/components/BodegaCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
@@ -9,34 +9,33 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
+import { formatUSD } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useEmpresaId } from '@/hooks/useEmpresaId';
 
-export function BodegaClient({ session, empresasMap }: { session: any, empresasMap: Record<number, string> }) {
-  const activeEmpresaId = useEmpresaId();
-  const [ubicaciones, setUbicaciones] = React.useState<any[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [search, setSearch] = React.useState('');
+export function BodegaClient({ session, activeEmpresaId, empresasMap }: any) {
+  const [ubicaciones, setUbicaciones] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   
-  const [selectedUbi, setSelectedUbi] = React.useState<any>(null);
-  const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [selectedUbi, setSelectedUbi] = useState<any>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Edit states
-  const [editUbicacionText, setEditUbicacionText] = React.useState('');
-  const [editFisico, setEditFisico] = React.useState('');
-  const [editObs, setEditObs] = React.useState('');
-  const [isSaving, setIsSaving] = React.useState(false);
+  const [editUbicacionText, setEditUbicacionText] = useState('');
+  const [editFisico, setEditFisico] = useState('');
+  const [editObs, setEditObs] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const empresaSlug = empresasMap[activeEmpresaId] || 'sanjh';
 
   // Autobocus on search input for fast warehouse operations
-  React.useEffect(() => {
+  useEffect(() => {
     if (searchInputRef.current) searchInputRef.current.focus();
   }, []);
 
   // Instant search - no debounce needed if backend is fast, but we'll debounce 250ms internally to save DB load
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(async () => {
       setLoading(true);
       try {

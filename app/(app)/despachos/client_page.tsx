@@ -1,10 +1,9 @@
 'use client';
 
-import React from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { UploadCloud, FileArchive, CheckCircle2, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { useEmpresaId } from '@/hooks/useEmpresaId';
 
 type QueueItemStatus = 'pending' | 'processing' | 'ok' | 'sin_folio' | 'error';
 
@@ -16,15 +15,14 @@ interface QueueItem {
   message?: string;
 }
 
-export function DespachosClient() {
-  const activeEmpresaId = useEmpresaId();
-  const [queue, setQueue] = React.useState<QueueItem[]>([]);
-  const [isProcessingQueue, setIsProcessingQueue] = React.useState(false);
-  const [isExtractingZip, setIsExtractingZip] = React.useState(false);
-  const preferredModelRef = React.useRef<HTMLSelectElement>(null);
+export function DespachosClient({ activeEmpresaId }: { activeEmpresaId: number }) {
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [isProcessingQueue, setIsProcessingQueue] = useState(false);
+  const [isExtractingZip, setIsExtractingZip] = useState(false);
+  const preferredModelRef = useRef<HTMLSelectElement>(null);
 
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const zipInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const zipInputRef = useRef<HTMLInputElement>(null);
 
   // Convert File to Base64
   const toBase64 = (file: File): Promise<string> => {
@@ -88,7 +86,7 @@ export function DespachosClient() {
       }));
 
       setQueue(prev => [...prev, ...newItems]);
-      toast.success(`${files.length} imágenes extraídas del ZIP`);
+      toast.success(`\${files.length} imágenes extraídas del ZIP`);
     } catch (err) {
       toast.error('Error al subir ZIP');
     } finally {
@@ -152,7 +150,7 @@ export function DespachosClient() {
 
     setIsProcessingQueue(false);
     toast(`Proceso Finalizado`, {
-      description: `${success} exitosos / ${fallback} sin folio / ${errors} errores`,
+      description: `\${success} exitosos / \${fallback} sin folio / \${errors} errores`,
       duration: 5000,
     });
   };
@@ -235,7 +233,7 @@ export function DespachosClient() {
 
            {/* Progress Bar */}
            <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800">
-              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${progress}%` }}></div>
+              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `\${progress}%` }}></div>
            </div>
 
            <div className="flex-1 overflow-y-auto p-4 space-y-2">

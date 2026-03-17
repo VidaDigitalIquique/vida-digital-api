@@ -19,9 +19,8 @@ export function AppShell({ children, session }: { children: React.ReactNode, ses
     setActiveEmpresaId(id);
     if (typeof window !== 'undefined') {
       localStorage.setItem('vidadigital_empresa', id.toString());
-      window.dispatchEvent(new Event('empresaChanged'));
     }
-    // Force a router refresh to refetch server components
+    // Force a router refresh to refetch server components with the new active enterprise state (if handled via cookies or searchParams later), but client-side state handles it for now.
     window.location.reload(); 
   };
 
