@@ -1,0 +1,340 @@
+import { Router } from "express";
+import crypto from "crypto";
+import { getPool } from "../lib/sql";
+
+const router = Router();
+const pool = getPool();
+
+function isCode(v: any): v is string {
+  return typeof v === "string" && /^[A-Za-z0-9_-]+$/.test(v.trim());
+}
+function nonEmpty(v: any): v is string {
+  return typeof v === "string" && v.trim().length > 0;
+}
+function logErr(ctx: string, e: any) {
+  console.error(ctx + ":", e?.message ?? e);
+}
+
+// ================== LOCATIONS ==================
+router.get("/locations", async (_req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, code, name, notes,
+              createdat AS "createdAt",
+              updatedat AS "updatedAt"
+         FROM app_location
+        ORDER BY code ASC`
+    );
+    res.json(rows);
+  } catch (e: any) {
+    logErr("GET /wh/locations", e);
+    res.status(500).json({ error: e.message || "locations error" });
+  }
+});
+
+router.post("/locations", async (req, res) => {
+  try {
+    const code = String(req.body?.code ?? "").trim();
+    const name = req.body?.name ? String(req.body.name) : null;
+    const notes = req.body?.notes ? String(req.body.notes) : null;
+    if (!isCode(code)) return res.status(400).json({ error: "code invÃ¡lido" });
+
+    const id = crypto.randomUUID();
+    const sql = `
+      INSERT INTO app_location (id, code, name, notes)
+      VALUES ($1,$2,$3,$4)
+      ON CONFLICT (code) DO UPDATE
+        SET name = EXCLUDED.name,
+            notes = EXCLUDED.notes,
+            updatedat = now()
+      RETURNING id, code, name, notes,
+                createdat AS "createdAt",
+                updatedat AS "updatedAt"
+    `;
+    const { rows } = await pool.query(sql, [id, code, name, notes]);
+
+    try {
+      await pool.query(
+        `INSERT INTO app_audit_log (id, "actorUserId", action, entity, "entityId", diff)
+         VALUES ($1,$2,$3,$4,$5,$6::jsonb)`,
+        [
+          crypto.randomUUID(),
+          "system",
+          "UPSERT_LOCATION",
+          "app_location",
+          rows[0].id,
+          JSON.stringify({ code, name, notes })
+        ]
+      );
+    } catch (ae) {
+      console.warn("audit(location) skipped:", ae?.message ?? ae);
+    }
+
+    res.json(rows[0]);
+  } catch (e: any) {
+    logErr("POST /wh/locations", e);
+    res.status(500).json({ error: e.message || "locations upsert error" });
+  }
+});
+
+// ================== COUNTS ==================
+// Listar Ãºltimos conteos por ubicaciÃ³n para un producto
+router.get("/counts", async (req, res) => {
+  try {
+    const code = String(req.query.code ?? "").trim();
+    if (!nonEmpty(code)) return res.status(400).json({ error: "code requerido" });
+
+    const sql = `
+      WITH latest AS (
+        SELECT c.*,
+               ROW_NUMBER() OVER (PARTITION BY c.location_id
+                                  ORDER BY c."countedAt" DESC NULLS LAST, c.id DESC) rn
+          FROM app_physical_count c
+         WHERE "productCode" = $1
+      )
+      SELECT lct.id   AS location_id,
+             lct.code AS location_code,
+             lct.name AS location_name,
+             latest."countedBoxes",
+             latest."countedAt",
+             latest.note
+        FROM app_location lct
+   LEFT JOIN latest ON latest.location_id = lct.id AND latest.rn = 1
+    ORDER BY lct.code ASC
+    `;
+    const { rows } = await pool.query(sql, [code]);
+    res.json(rows);
+  } catch (e: any) {
+    logErr("GET /wh/counts", e);
+    res.status(500).json({ error: e.message || "counts error" });
+  }
+});
+
+// Crear conteo
+router.post("/counts", async (req, res) => {
+  try {
+    const productCode = String(req.body?.productCode ?? "").trim();
+    const locationCode = String(req.body?.locationCode ?? "").trim();
+    const countedBoxes = Number(req.body?.countedBoxes);
+    const note = req.body?.note ? String(req.body.note) : null;
+
+    if (!nonEmpty(productCode)) return res.status(400).json({ error: "productCode requerido" });
+    if (!isCode(locationCode)) return res.status(400).json({ error: "locationCode invÃ¡lido" });
+    if (!Number.isFinite(countedBoxes)) return res.status(400).json({ error: "countedBoxes invÃ¡lido" });
+
+    // asegurar ubicaciÃ³n
+    let loc = await pool.query(`SELECT id FROM app_location WHERE code = $1`, [locationCode]);
+    if (loc.rowCount === 0) {
+      const newId = crypto.randomUUID();
+      await pool.query(
+        `INSERT INTO app_location (id, code, name, notes)
+         VALUES ($1,$2,NULL,NULL)
+         ON CONFLICT (code) DO NOTHING`,
+        [newId, locationCode]
+      );
+      loc = await pool.query(`SELECT id FROM app_location WHERE code = $1`, [locationCode]);
+    }
+    const location_id = String(loc.rows[0].id);
+
+    const id = crypto.randomUUID();
+    await pool.query(
+      `INSERT INTO app_physical_count (id, "productCode", location_id, "countedBoxes", "countedAt", note)
+       VALUES ($1,$2,$3,$4, now(), $5)`,
+      [id, productCode, location_id, countedBoxes, note]
+    );
+
+    try {
+      await pool.query(
+        `INSERT INTO app_audit_log (id, "actorUserId", action, entity, "entityId", diff)
+         VALUES ($1,$2,$3,$4,$5,$6::jsonb)`,
+        [
+          crypto.randomUUID(),
+          "system",
+          "CREATE_COUNT",
+          "app_physical_count",
+          id,
+          JSON.stringify({ productCode, locationCode, countedBoxes, note })
+        ]
+      );
+    } catch (ae) {
+      console.warn("audit(count) skipped:", ae?.message ?? ae);
+    }
+
+    res.json({ ok: true, id, productCode, locationCode, countedBoxes, note });
+  } catch (e: any) {
+    logErr("POST /wh/counts", e);
+    res.status(500).json({ error: e.message || "create count error" });
+  }
+});
+
+// Editar conteo
+router.put("/counts/:id", async (req, res) => {
+  try {
+    const id = String(req.params.id ?? "").trim();
+    const countedBoxes = req.body?.countedBoxes !== undefined ? Number(req.body.countedBoxes) : undefined;
+    const note = req.body?.note !== undefined ? (req.body.note === null ? null : String(req.body.note)) : undefined;
+
+    if (!nonEmpty(id)) return res.status(400).json({ error: "id requerido" });
+    if (countedBoxes !== undefined && !Number.isFinite(countedBoxes)) {
+      return res.status(400).json({ error: "countedBoxes invÃ¡lido" });
+    }
+
+    const prev = await pool.query(
+      `SELECT id, "productCode", location_id, "countedBoxes", "countedAt", note
+         FROM app_physical_count
+        WHERE id = $1`,
+      [id]
+    );
+    if (prev.rowCount === 0) return res.status(404).json({ error: "count no encontrado" });
+
+    const sets: string[] = [];
+    const vals: any[] = [id];
+    let pos = 2;
+
+    if (countedBoxes !== undefined) { sets.push(`"countedBoxes" = $${pos++}`); vals.push(countedBoxes); }
+    if (note !== undefined)         { sets.push(`note = $${pos++}`);          vals.push(note); }
+    sets.push(`"countedAt" = now()`);
+
+    const sql = `UPDATE app_physical_count SET ${sets.join(", ")} WHERE id = $1`;
+    await pool.query(sql, vals);
+
+    try {
+      await pool.query(
+        `INSERT INTO app_audit_log (id, "actorUserId", action, entity, "entityId", diff)
+         VALUES ($1,$2,$3,$4,$5,$6::jsonb)`,
+        [
+          crypto.randomUUID(),
+          "system",
+          "UPDATE_COUNT",
+          "app_physical_count",
+          id,
+          JSON.stringify({ old: prev.rows[0], new: { id, countedBoxes, note } })
+        ]
+      );
+    } catch (ae) {
+      console.warn("audit(update) skipped:", ae?.message ?? ae);
+    }
+
+    res.json({ ok: true, id });
+  } catch (e: any) {
+    logErr("PUT /wh/counts/:id", e);
+    res.status(500).json({ error: e.message || "update count error" });
+  }
+});
+
+// Borrar conteo (hard delete)
+router.delete("/counts/:id", async (req, res) => {
+  try {
+    const id = String(req.params.id ?? "").trim();
+    if (!nonEmpty(id)) return res.status(400).json({ error: "id requerido" });
+
+    const prev = await pool.query(
+      `SELECT id, "productCode", location_id, "countedBoxes", "countedAt", note
+         FROM app_physical_count
+        WHERE id = $1`,
+      [id]
+    );
+    if (prev.rowCount === 0) return res.status(404).json({ error: "count no encontrado" });
+
+    await pool.query(`DELETE FROM app_physical_count WHERE id = $1`, [id]);
+
+    try {
+      await pool.query(
+        `INSERT INTO app_audit_log (id, "actorUserId", action, entity, "entityId", diff)
+         VALUES ($1,$2,$3,$4,$5,$6::jsonb)`,
+        [
+          crypto.randomUUID(),
+          "system",
+          "DELETE_COUNT",
+          "app_physical_count",
+          id,
+          JSON.stringify({ old: prev.rows[0] })
+        ]
+      );
+    } catch (ae) {
+      console.warn("audit(delete) skipped:", ae?.message ?? ae);
+    }
+
+    res.json({ ok: true, id });
+  } catch (e: any) {
+    logErr("DELETE /wh/counts/:id", e);
+    res.status(500).json({ error: e.message || "delete count error" });
+  }
+});
+
+// ================== AUDIT ==================
+router.get("/audit", async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(String(req.query.limit ?? "20"), 10) || 20, 200);
+    const offset = Math.max(parseInt(String(req.query.offset ?? "0"), 10) || 0, 0);
+    const { rows } = await pool.query(
+      `SELECT id, "actorUserId", action, entity, "entityId", diff, "createdAt"
+         FROM app_audit_log
+        ORDER BY "createdAt" DESC, id DESC
+        LIMIT $1 OFFSET $2`,
+      [limit, offset]
+    );
+    res.json(rows);
+  } catch (e: any) {
+    logErr("GET /wh/audit", e);
+    res.status(500).json({ error: e.message || "audit error" });
+  }
+});
+
+
+/**
+ * GET /wh/summary?productCode=CODE
+ * Retorna: productCode, inventory_boxes, physical_boxes, difference_boxes, difference_percent
+ */
+router.get("/summary", async (req, res) => {
+  try {
+    const productCode = String(req.query.productCode ?? "").trim();
+    if (!productCode) return res.status(400).json({ error: "productCode requerido" });
+
+    const sql = `
+      WITH inv AS (
+        SELECT
+          CASE
+            WHEN NULLIF(i.cantcaja::numeric,0) IS NOT NULL
+            THEN (i.stocdisp::numeric / NULLIF(i.cantcaja::numeric,0))
+            ELSE NULL
+          END AS inventory_boxes
+        FROM sanjh.inventar i
+        WHERE i.codunico = $1
+        ORDER BY 1 DESC
+        LIMIT 1
+      ),
+      latest AS (
+        SELECT c.*,
+               ROW_NUMBER() OVER (PARTITION BY c.location_id
+                                  ORDER BY c."countedAt" DESC NULLS LAST, c.id DESC) rn
+        FROM app_physical_count c
+        WHERE c."productCode" = $1
+      ),
+      phys AS (
+        SELECT COALESCE(SUM(l."countedBoxes"::numeric),0) AS physical_boxes
+        FROM latest l
+        WHERE l.rn = 1
+      )
+      SELECT
+        $1::text AS "productCode",
+        (SELECT inventory_boxes FROM inv) AS inventory_boxes,
+        (SELECT physical_boxes   FROM phys) AS physical_boxes,
+        COALESCE((SELECT physical_boxes FROM phys),0) - COALESCE((SELECT inventory_boxes FROM inv),0) AS difference_boxes,
+        CASE
+          WHEN (SELECT inventory_boxes FROM inv) IS NOT NULL AND (SELECT inventory_boxes FROM inv) <> 0
+            THEN ROUND(((COALESCE((SELECT physical_boxes FROM phys),0) - (SELECT inventory_boxes FROM inv))
+                        / (SELECT inventory_boxes FROM inv)) * 100.0, 2)
+          ELSE NULL
+        END AS difference_percent
+    `;
+    const { rows } = await pool.query(sql, [productCode]);
+    return res.json(rows[0] ?? {
+      productCode, inventory_boxes: null, physical_boxes: 0, difference_boxes: null, difference_percent: null
+    });
+  } catch (e) {
+    console.error("GET /wh/summary:", (e as any)?.message ?? e);
+    res.status(500).json({ error: (e as any)?.message || "summary error" });
+  }
+});
+export default router;

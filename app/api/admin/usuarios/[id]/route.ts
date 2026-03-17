@@ -1,0 +1,49 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { sql } from "@/lib/db";
+import { NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).rol !== 'admin') {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const { id } = params;
+  const uid = parseInt(id, 10);
+
+  try {
+    const { rut, nombre, password, rol, activo, empresas } = await request.json();
+
+    // Prevent removing admin from self
+    if ((session.user as any).id === uid && (rol !== 'admin' || activo === false)) {
+      return NextResponse.json({ error: "No puedes quitarte los permisos de admin a ti mismo" }, { status: 400 });
+    }
+
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+
+    // Use sequential conditional updates instead of dynamic string building
+    if (rut !== undefined) await sql`UPDATE usuarios SET rut = ${rut} WHERE id = ${uid}`;
+    if (nombre !== undefined) await sql`UPDATE usuarios SET nombre = ${nombre} WHERE id = ${uid}`;
+    if (rol !== undefined) await sql`UPDATE usuarios SET rol = ${rol} WHERE id = ${uid}`;
+    if (activo !== undefined) await sql`UPDATE usuarios SET activo = ${activo} WHERE id = ${uid}`;
+    if (hashedPassword) await sql`UPDATE usuarios SET password = ${hashedPassword} WHERE id = ${uid}`;
+    await sql`UPDATE usuarios SET updated_at = NOW() WHERE id = ${uid}`;
+
+    if (empresas && Array.isArray(empresas)) {
+      await sql`DELETE FROM usuario_empresa WHERE usuario_id = ${uid}`;
+      for (const empId of empresas) {
+        const eid = parseInt(empId, 10);
+        await sql`INSERT INTO usuario_empresa (usuario_id, empresa_id) VALUES (${uid}, ${eid})`;
+      }
+    }
+
+    return NextResponse.json({ message: "Usuario actualizado" });
+  } catch (error: any) {
+    if (error.message && error.message.includes('unique constraint')) {
+      return NextResponse.json({ error: "El RUT modificado ya pertenece a otro usuario" }, { status: 400 });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}

@@ -1,0 +1,85 @@
+import * as React from "react";
+
+/** Corrige mojibake típico por doble codificación (UTF-8 leído como Latin-1). */
+function replaceMojibake(s: string): string {
+  const pairs: Array<[RegExp, string]> = [
+    // Palabras completas frecuentes en tu UI
+    [/UbicaciÃ³n Bodega/g, "Ubicación Bodega"],
+    [/Cajas \(teÃ³rico\)/g, "Cajas (teórico)"],
+    [/Buscar por cÃ³digo o descripciÃ³n/g, "Buscar por código o descripción"],
+    [/PÃ¡gina/g, "Página"],
+
+    // Títulos de columnas / labels genéricos
+    [/CÃ³digo/g, "Código"],
+    [/DescripciÃ³n/g, "Descripción"],
+    [/TeÃ³rico/g, "Teórico"],
+    [/FÃ­sico/g, "Físico"],
+    [/Unid\/Caja/g, "Unid/Caja"],
+
+    // Reparación general de caracteres
+    [/Ã¡/g, "á"], [/Ã©/g, "é"], [/Ã­/g, "í"], [/Ã³/g, "ó"], [/Ãº/g, "ú"],
+    [/Ã/g, "Á"], [/Ã‰/g, "É"], [/Ã/g, "Í"], [/Ã“/g, "Ó"], [/Ãš/g, "Ú"],
+    [/Ã±/g, "ñ"], [/Ã‘/g, "Ñ"], [/Ã¼/g, "ü"], [/Ãœ/g, "Ü"], [/Ã§/g, "ç"],
+    [/Â¿/g, "¿"], [/Â¡/g, "¡"], [/Âº/g, "º"], [/Â°/g, "°"], [/Âª/g, "ª"],
+    [/â€“/g, "–"], [/â€”/g, "—"], [/â€¦/g, "…"], [/â€œ/g, "“"], [/â€/g, "”"],
+    [/â€˜/g, "‘"], [/â€™/g, "’"],
+  ];
+  let out = s;
+  for (const [re, to] of pairs) out = out.replace(re, to);
+  return out;
+}
+
+function walkAndFix(root: Element) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const toFix: Text[] = [];
+  while (walker.nextNode()) {
+    const t = walker.currentNode as Text;
+    const src = t.nodeValue ?? "";
+    const fixed = replaceMojibake(src);
+    if (fixed !== src) toFix.push(t);
+  }
+  for (const t of toFix) t.nodeValue = replaceMojibake(t.nodeValue ?? "");
+
+  // Atributos visibles
+  root.querySelectorAll<HTMLElement>("input[placeholder],*[title]").forEach(el => {
+    const inEl = el as HTMLInputElement;
+    if (inEl.placeholder) inEl.placeholder = replaceMojibake(inEl.placeholder);
+    const ttl = el.getAttribute("title");
+    if (ttl) el.setAttribute("title", replaceMojibake(ttl));
+  });
+}
+
+export default function BootExtras() {
+  React.useEffect(() => {
+    try {
+      const root = document.getElementById("root");
+      if (!root) return;
+
+      // Fix inicial
+      walkAndFix(root);
+
+      // Observa nuevos nodos / cambios de texto y los repara
+      const obs = new MutationObserver(muts => {
+        for (const m of muts) {
+          if (m.type === "childList") {
+            m.addedNodes.forEach(n => {
+              if (n.nodeType === 1) walkAndFix(n as Element);
+            });
+          } else if (m.type === "characterData") {
+            const cd = m.target as CharacterData;
+            const fixed = replaceMojibake(cd.data);
+            if (fixed !== cd.data) cd.data = fixed;
+          }
+        }
+      });
+      obs.observe(root, { childList: true, subtree: true, characterData: true });
+      return () => obs.disconnect();
+    } catch (err) {
+      // Nunca romper la app por esto
+      console.error("BootExtras error:", err);
+    }
+  }, []);
+
+  return null; // componente “fantasma”
+}
+export {};
