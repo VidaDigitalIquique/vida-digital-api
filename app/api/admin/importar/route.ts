@@ -18,7 +18,7 @@ export async function POST(request: Request) {
 
     const { empresaId, products } = body;
 
-    if (!empresaId || !products || !Array.isArray(products) || products.length === 0) {
+    if (empresaId === undefined || empresaId === null || !products || !Array.isArray(products) || products.length === 0) {
       return NextResponse.json({ error: "Datos de importación inválidos o bloque vacío" }, { status: 400 });
     }
 

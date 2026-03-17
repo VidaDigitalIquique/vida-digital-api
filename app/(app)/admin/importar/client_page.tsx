@@ -102,6 +102,16 @@ export function ImportarClient({ activeEmpresaId }: { activeEmpresaId: number })
     setIsUploading(true);
     setImportProgress(0);
     try {
+      let finalEmpresaId = activeEmpresaId;
+      if ((finalEmpresaId === 0 || !finalEmpresaId) && typeof window !== 'undefined') {
+        const stored = localStorage.getItem('vidadigital_empresa');
+        const slugToId: Record<string, number> = { 'sanjh': 1, 'vidadigital': 2 };
+        if (stored && slugToId[stored]) {
+          finalEmpresaId = slugToId[stored];
+        }
+      }
+      console.log('Sending empresaId:', finalEmpresaId, 'from slug:', typeof window !== 'undefined' ? localStorage.getItem('vidadigital_empresa') : 'N/A');
+
       const CHUNK_SIZE = 200;
       let totalUpserted = 0;
 
@@ -113,7 +123,7 @@ export function ImportarClient({ activeEmpresaId }: { activeEmpresaId: number })
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              empresaId: activeEmpresaId,
+              empresaId: finalEmpresaId,
               products: chunk
             })
          });
