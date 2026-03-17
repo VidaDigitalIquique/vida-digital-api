@@ -34,6 +34,11 @@ export function BodegaCard({ ubicacion, empresaSlug, onClick }: BodegaCardProps)
             <div className="font-mono text-sm font-semibold text-zinc-700 dark:text-zinc-300">
               {ubicacion.codigo}
             </div>
+            {ubicacion.nroingreso && (
+              <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-tighter -mt-0.5 mb-1">
+                Ing: {ubicacion.nroingreso}
+              </div>
+            )}
             <h3 className="text-xs font-medium text-zinc-500 line-clamp-1" title={ubicacion.producto_detalle || ubicacion.detalle || ''}>
               {ubicacion.producto_detalle || ubicacion.detalle || 'Sin descripción'}
             </h3>

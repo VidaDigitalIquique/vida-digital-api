@@ -29,9 +29,9 @@ export async function GET(request: Request) {
           p.detalle as producto_detalle,
           p.imagen_url as producto_imagen_url
         FROM ubicaciones_bodega u
-        LEFT JOIN productos p ON u.codigo = p.codigo AND u.empresa_id = p.empresa_id
+        LEFT JOIN productos p ON u.codigo = p.codigo AND u.empresa_id = p.empresa_id AND u.nroingreso = p.nroingreso
         WHERE u.empresa_id = ${eid} 
-        AND (LOWER(u.codigo) LIKE ${searchQuery} OR LOWER(u.ubicacion) LIKE ${searchQuery} OR LOWER(u.detalle) LIKE ${searchQuery})
+        AND (LOWER(u.codigo) LIKE ${searchQuery} OR LOWER(u.ubicacion) LIKE ${searchQuery} OR LOWER(u.detalle) LIKE ${searchQuery} OR LOWER(u.nroingreso) LIKE ${searchQuery})
         ORDER BY u.ubicacion ASC
         LIMIT 100
       `;
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
           p.detalle as producto_detalle,
           p.imagen_url as producto_imagen_url
         FROM ubicaciones_bodega u
-        LEFT JOIN productos p ON u.codigo = p.codigo AND u.empresa_id = p.empresa_id
+        LEFT JOIN productos p ON u.codigo = p.codigo AND u.empresa_id = p.empresa_id AND u.nroingreso = p.nroingreso
         WHERE u.empresa_id = ${eid}
         ORDER BY u.ubicacion ASC
         LIMIT 100
