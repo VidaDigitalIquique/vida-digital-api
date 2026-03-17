@@ -63,7 +63,7 @@ export async function POST(request: Request) {
           ${eid}, ${codigo}, ${detalle}, ${prcventa}, ${prcminimo}, ${costo}, ${cif},
           ${saldo}, ${cantcaja}, ${pesocaja}, ${cubicaja}, ${nroingreso}, ${umed}, true, NOW()
         )
-        ON CONFLICT (empresa_id, codigo, nroingreso) DO UPDATE SET
+        ON CONFLICT ON CONSTRAINT productos_empresa_id_codigo_nroingreso_key DO UPDATE SET
           detalle = EXCLUDED.detalle,
           prcventa = EXCLUDED.prcventa,
           prcminimo = EXCLUDED.prcminimo,

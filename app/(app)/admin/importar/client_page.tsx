@@ -8,11 +8,36 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
-export function ImportarClient({ activeEmpresaId }: { activeEmpresaId: number }) {
+export function ImportarClient() {
+  const [activeEmpresaId, setActiveEmpresaId] = useState<number>(0);
   const [parsedData, setParsedData] = useState<any[]>([]);
   const [importProgress, setImportProgress] = useState<number | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Sync with localStorage
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('vidadigital_empresa');
+      if (stored && !isNaN(parseInt(stored, 10))) {
+        setActiveEmpresaId(parseInt(stored, 10));
+      }
+    }
+  });
+
+  // Listen for changes
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      const handleStorage = () => {
+        const stored = localStorage.getItem('vidadigital_empresa');
+        if (stored && !isNaN(parseInt(stored, 10))) {
+          setActiveEmpresaId(parseInt(stored, 10));
+        }
+      };
+      window.addEventListener('storage', handleStorage);
+      return () => window.removeEventListener('storage', handleStorage);
+    }
+  });
   
   const [stats, setStats] = useState({ total: 0, valid: 0, error: 0 });
 
@@ -102,6 +127,9 @@ export function ImportarClient({ activeEmpresaId }: { activeEmpresaId: number })
     setIsUploading(true);
     setImportProgress(0);
     try {
+      console.log('activeEmpresaId prop/state:', activeEmpresaId);
+      console.log('localStorage value:', typeof window !== 'undefined' ? localStorage.getItem('vidadigital_empresa') : 'n/a');
+
       let finalEmpresaId = activeEmpresaId;
       if ((!finalEmpresaId || finalEmpresaId === 0) && typeof window !== 'undefined') {
         const stored = localStorage.getItem('vidadigital_empresa');
@@ -138,7 +166,7 @@ export function ImportarClient({ activeEmpresaId }: { activeEmpresaId: number })
       }
 
       setImportProgress(validProducts.length);
-      toast.success(`\${totalUpserted} productos sincronizados con éxito`);
+      toast.success(`${totalUpserted} productos sincronizados con éxito`);
       setParsedData([]); // clear on success
     } catch (err: any) {
        toast.error(err.message || 'Fallo de subida. Revise su conexión.');

@@ -10,5 +10,5 @@ export default async function ImportarPage() {
     redirect('/dashboard');
   }
 
-  return <ImportarClient activeEmpresaId={(session.user as any).empresas?.[0] || 1} />;
+  return <ImportarClient />;
 }
