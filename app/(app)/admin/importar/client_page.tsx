@@ -103,11 +103,10 @@ export function ImportarClient({ activeEmpresaId }: { activeEmpresaId: number })
     setImportProgress(0);
     try {
       let finalEmpresaId = activeEmpresaId;
-      if ((finalEmpresaId === 0 || !finalEmpresaId) && typeof window !== 'undefined') {
+      if ((!finalEmpresaId || finalEmpresaId === 0) && typeof window !== 'undefined') {
         const stored = localStorage.getItem('vidadigital_empresa');
-        const slugToId: Record<string, number> = { 'sanjh': 1, 'vidadigital': 2 };
-        if (stored && slugToId[stored]) {
-          finalEmpresaId = slugToId[stored];
+        if (stored && !isNaN(parseInt(stored, 10))) {
+          finalEmpresaId = parseInt(stored, 10);
         }
       }
       console.log('Sending empresaId:', finalEmpresaId, 'from slug:', typeof window !== 'undefined' ? localStorage.getItem('vidadigital_empresa') : 'N/A');
