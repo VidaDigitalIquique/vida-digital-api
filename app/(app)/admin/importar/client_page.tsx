@@ -120,7 +120,8 @@ export function ImportarClient({ activeEmpresaId }: { activeEmpresaId: number })
 
          if (!res.ok) {
             const errBody = await res.json();
-            throw new Error(`Error en bloque \${Math.floor(i/CHUNK_SIZE) + 1}: \${errBody.error || 'Fallo servidor'}`);
+            console.log('Chunk error:', errBody);
+            throw new Error(`Error en bloque ${Math.floor(i/CHUNK_SIZE) + 1}: ${errBody.error || 'Fallo servidor'}`);
          }
          
          const { count } = await res.json();
