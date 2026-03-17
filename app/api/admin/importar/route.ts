@@ -3,6 +3,14 @@ import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '10mb',
+    },
+  },
+};
+
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session || !['admin', 'supervisor'].includes((session.user as any).rol)) {
@@ -13,7 +21,7 @@ export async function POST(request: Request) {
     const { empresaId, products } = await request.json();
 
     if (!empresaId || !products || !Array.isArray(products) || products.length === 0) {
-      return NextResponse.json({ error: "Datos de importación inválidos" }, { status: 400 });
+      return NextResponse.json({ error: "Datos de importación inválidos o bloque vacío" }, { status: 400 });
     }
 
     if (!(session.user as any).empresas.includes(parseInt(empresaId, 10))) {

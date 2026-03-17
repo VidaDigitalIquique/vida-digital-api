@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 
 export function ImportarClient({ activeEmpresaId }: { activeEmpresaId: number }) {
   const [parsedData, setParsedData] = useState<any[]>([]);
+  const [importProgress, setImportProgress] = useState<number | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   
@@ -99,14 +100,15 @@ export function ImportarClient({ activeEmpresaId }: { activeEmpresaId: number })
     if (validProducts.length === 0) return toast.info('No hay productos válidos para subir');
 
     setIsUploading(true);
+    setImportProgress(0);
     try {
-      // Chunking for huge files (>500 rows) is recommended, but for typical use 1-request is fine.
-      // We will slice into max 500 records per petition to avoid payload too large blocks.
-      const CHUNK_SIZE = 500;
+      const CHUNK_SIZE = 200;
       let totalUpserted = 0;
 
       for (let i = 0; i < validProducts.length; i += CHUNK_SIZE) {
          const chunk = validProducts.slice(i, i + CHUNK_SIZE);
+         setImportProgress(i + chunk.length);
+
          const res = await fetch('/api/admin/importar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -118,19 +120,21 @@ export function ImportarClient({ activeEmpresaId }: { activeEmpresaId: number })
 
          if (!res.ok) {
             const errBody = await res.json();
-            throw new Error(errBody.error || 'Error en validación servidor');
+            throw new Error(`Error en bloque \${Math.floor(i/CHUNK_SIZE) + 1}: \${errBody.error || 'Fallo servidor'}`);
          }
          
          const { count } = await res.json();
          totalUpserted += count;
       }
 
-      toast.success(`${totalUpserted} productos sincronizados con éxito`);
+      setImportProgress(validProducts.length);
+      toast.success(`\${totalUpserted} productos sincronizados con éxito`);
       setParsedData([]); // clear on success
     } catch (err: any) {
        toast.error(err.message || 'Fallo de subida. Revise su conexión.');
     } finally {
        setIsUploading(false);
+       setImportProgress(null);
     }
   };
 
@@ -149,7 +153,11 @@ export function ImportarClient({ activeEmpresaId }: { activeEmpresaId: number })
                Cancelar
             </Button>
             <Button onClick={handleUpload} disabled={isUploading || stats.valid === 0} className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg">
-               {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sincronizando...</> : 'Confirmar e Importar DB'}
+               {isUploading ? (
+                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Importando... {importProgress !== null ? importProgress : 0}/{stats.valid}</>
+               ) : (
+                 'Confirmar e Importar DB'
+               )}
             </Button>
           </div>
         )}
