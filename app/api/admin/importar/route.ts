@@ -10,7 +10,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { empresaId, products } = await request.json();
+    const body = await request.json();
+    console.log('Body keys received:', Object.keys(body));
+    console.log('empresaId:', body.empresaId);
+    console.log('products length:', body.products?.length);
+    console.log('First product sample:', body.products?.[0]);
+
+    const { empresaId, products } = body;
 
     if (!empresaId || !products || !Array.isArray(products) || products.length === 0) {
       return NextResponse.json({ error: "Datos de importación inválidos o bloque vacío" }, { status: 400 });
