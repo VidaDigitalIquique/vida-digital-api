@@ -6,14 +6,15 @@ import { ProductCard } from '@/components/ProductCard';
 import { ProductDrawer } from '@/components/ProductDrawer';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { useEmpresaId } from '@/hooks/useEmpresaId';
 
 interface PreciosClientProps {
   session: UserSession;
-  activeEmpresaId: number;
   empresasMap: Record<number, string>; // ID to Slug
 }
 
-export function PreciosClient({ session, activeEmpresaId, empresasMap }: PreciosClientProps) {
+export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
+  const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -34,6 +35,7 @@ export function PreciosClient({ session, activeEmpresaId, empresasMap }: Precios
 
   // Fetch logic
   useEffect(() => {
+    if (!isLoaded) return;
     async function fetchProducts() {
       setLoading(true);
       try {
@@ -57,7 +59,7 @@ export function PreciosClient({ session, activeEmpresaId, empresasMap }: Precios
     }
     
     fetchProducts();
-  }, [activeEmpresaId, debouncedSearch, soloStock, soloNuevo]);
+  }, [activeEmpresaId, debouncedSearch, soloStock, soloNuevo, isLoaded]);
 
   const handleProductUpdate = (updatedProduct: Producto) => {
     setProductos(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
@@ -68,6 +70,8 @@ export function PreciosClient({ session, activeEmpresaId, empresasMap }: Precios
     setSelectedProduct(producto);
     setDrawerOpen(true);
   };
+
+  if (!isLoaded) return <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-pulse"><div className="h-48 bg-zinc-200 dark:bg-zinc-800 rounded-xl" /><div className="h-48 bg-zinc-200 dark:bg-zinc-800 rounded-xl" /></div>;
 
   return (
     <div className="flex flex-col gap-6 fade-in zoom-in-95 duration-200">

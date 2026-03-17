@@ -14,12 +14,9 @@ export default async function PreciosPage() {
     empresasMap[e.id] = e.slug;
   });
 
-  // Client will figure out the activeEmpresaId
-  // we just render the shell here
   return (
     <PreciosClient 
       session={session as any} 
-      activeEmpresaId={0} // Will be set by client useEffect 
       empresasMap={empresasMap} 
     />
   );

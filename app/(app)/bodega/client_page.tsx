@@ -11,8 +11,10 @@ import { Label } from '@/components/ui/label';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { formatUSD } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useEmpresaId } from '@/hooks/useEmpresaId';
 
-export function BodegaClient({ session, activeEmpresaId, empresasMap }: any) {
+export function BodegaClient({ session, empresasMap }: any) {
+  const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
   const [ubicaciones, setUbicaciones] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -36,6 +38,7 @@ export function BodegaClient({ session, activeEmpresaId, empresasMap }: any) {
 
   // Instant search - no debounce needed if backend is fast, but we'll debounce 250ms internally to save DB load
   useEffect(() => {
+    if (!isLoaded) return;
     const timer = setTimeout(async () => {
       setLoading(true);
       try {
@@ -57,7 +60,7 @@ export function BodegaClient({ session, activeEmpresaId, empresasMap }: any) {
     }, 250);
     
     return () => clearTimeout(timer);
-  }, [activeEmpresaId, search]);
+  }, [activeEmpresaId, search, isLoaded]);
 
   const openDrawer = (ubi: any) => {
     setSelectedUbi(ubi);
@@ -101,6 +104,8 @@ export function BodegaClient({ session, activeEmpresaId, empresasMap }: any) {
     editFisico === '' || isNaN(parseFloat(editFisico)) 
       ? null 
       : parseFloat(editFisico) - (selectedUbi?.saldo || 0);
+
+  if (!isLoaded) return <div className="h-64 animate-pulse bg-zinc-100 dark:bg-zinc-800 rounded-xl" />;
 
   return (
     <div className="flex flex-col gap-6 fade-in zoom-in-95 duration-200">
