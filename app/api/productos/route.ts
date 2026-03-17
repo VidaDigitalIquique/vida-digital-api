@@ -25,26 +25,44 @@ export async function GET(request: Request) {
     // Use branch logic to avoid dynamic sql() calls which Neon doesn't support
     let rows;
 
+    // Aggregated query to show total stock per product code
+    const baseQuery = `
+      SELECT 
+        codigo, 
+        MAX(id) as id,
+        MAX(detalle) as detalle, 
+        SUM(saldo) as saldo, 
+        MAX(prcventa) as prcventa, 
+        MAX(prcminimo) as prcminimo, 
+        MAX(costo) as costo, 
+        MAX(cif) as cif,
+        MAX(umed) as umed,
+        MAX(imagen_url) as imagen_url,
+        MAX(es_nuevo) as es_nuevo
+      FROM productos 
+      WHERE empresa_id = \${eid}
+    `;
+
     if (search && soloStock && soloNuevo) {
       const sq = '%' + search + '%';
-      rows = await sql`SELECT * FROM productos WHERE empresa_id = ${eid} AND (LOWER(codigo) LIKE ${sq} OR LOWER(detalle) LIKE ${sq}) AND saldo > 0 AND es_nuevo = true ORDER BY codigo ASC LIMIT 100`;
+      rows = await sql.unsafe(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo HAVING SUM(saldo) > 0 AND MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
     } else if (search && soloStock) {
       const sq = '%' + search + '%';
-      rows = await sql`SELECT * FROM productos WHERE empresa_id = ${eid} AND (LOWER(codigo) LIKE ${sq} OR LOWER(detalle) LIKE ${sq}) AND saldo > 0 ORDER BY codigo ASC LIMIT 100`;
+      rows = await sql.unsafe(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo HAVING SUM(saldo) > 0 ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
     } else if (search && soloNuevo) {
       const sq = '%' + search + '%';
-      rows = await sql`SELECT * FROM productos WHERE empresa_id = ${eid} AND (LOWER(codigo) LIKE ${sq} OR LOWER(detalle) LIKE ${sq}) AND es_nuevo = true ORDER BY codigo ASC LIMIT 100`;
+      rows = await sql.unsafe(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo HAVING MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
     } else if (soloStock && soloNuevo) {
-      rows = await sql`SELECT * FROM productos WHERE empresa_id = ${eid} AND saldo > 0 AND es_nuevo = true ORDER BY codigo ASC LIMIT 100`;
+      rows = await sql.unsafe(`${baseQuery} GROUP BY codigo HAVING SUM(saldo) > 0 AND MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid]);
     } else if (search) {
       const sq = '%' + search + '%';
-      rows = await sql`SELECT * FROM productos WHERE empresa_id = ${eid} AND (LOWER(codigo) LIKE ${sq} OR LOWER(detalle) LIKE ${sq}) ORDER BY codigo ASC LIMIT 100`;
+      rows = await sql.unsafe(`${baseQuery} AND (LOWER(codigo) LIKE $2 OR LOWER(detalle) LIKE $2) GROUP BY codigo ORDER BY codigo ASC LIMIT 100`, [eid, sq]);
     } else if (soloStock) {
-      rows = await sql`SELECT * FROM productos WHERE empresa_id = ${eid} AND saldo > 0 ORDER BY codigo ASC LIMIT 100`;
+      rows = await sql.unsafe(`${baseQuery} GROUP BY codigo HAVING SUM(saldo) > 0 ORDER BY codigo ASC LIMIT 100`, [eid]);
     } else if (soloNuevo) {
-      rows = await sql`SELECT * FROM productos WHERE empresa_id = ${eid} AND es_nuevo = true ORDER BY codigo ASC LIMIT 100`;
+      rows = await sql.unsafe(`${baseQuery} GROUP BY codigo HAVING MAX(es_nuevo::int)::bool = true ORDER BY codigo ASC LIMIT 100`, [eid]);
     } else {
-      rows = await sql`SELECT * FROM productos WHERE empresa_id = ${eid} ORDER BY codigo ASC LIMIT 100`;
+      rows = await sql.unsafe(`${baseQuery} GROUP BY codigo ORDER BY codigo ASC LIMIT 100`, [eid]);
     }
 
     return NextResponse.json({ data: rows });

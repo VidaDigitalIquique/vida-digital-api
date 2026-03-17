@@ -10,6 +10,15 @@ export async function POST(request: Request) {
   }
 
   try {
+    // Diagnostic query requested by USER
+    const state = await sql`
+      SELECT e.nombre, e.id, COUNT(p.id) as total_productos 
+      FROM empresas e 
+      LEFT JOIN productos p ON p.empresa_id = e.id 
+      GROUP BY e.id, e.nombre;
+    `;
+    console.log('Current DB State (Products by Company):', JSON.stringify(state, null, 2));
+
     const body = await request.json();
     console.log('Body keys received:', Object.keys(body));
     console.log('empresaId:', body.empresaId);
@@ -27,7 +36,6 @@ export async function POST(request: Request) {
     }
 
     // Upsert products one by one to ensure we don't blow up neon connection or limits
-    // Neon HTTP can handle moderate parallelization; we use chunking in real apps, loop simplifies demo
     let upserted = 0;
     const eid = parseInt(empresaId, 10);
 
@@ -43,10 +51,10 @@ export async function POST(request: Request) {
       const cantcaja = parseFloat(p.cantcaja) || 1; 
       const pesocaja = parseFloat(p.pesocaja) || 0;
       const cubicaja = parseFloat(p.cubicaja) || 0;
-      const nroingreso = p.nroingreso ? String(p.nroingreso).trim() : null;
+      const nroingreso = p.nroingreso ? String(p.nroingreso).trim().toUpperCase() : 'INICIAL';
       const umed = p.umed ? String(p.umed).trim().toUpperCase() : 'UN';
 
-      // Upsert using proper tagged template literals
+      // Upsert using proper tagged template literals with (empresa_id, codigo, nroingreso) conflict target
       await sql`
         INSERT INTO productos (
           empresa_id, codigo, detalle, prcventa, prcminimo, costo, cif, 
@@ -55,7 +63,7 @@ export async function POST(request: Request) {
           ${eid}, ${codigo}, ${detalle}, ${prcventa}, ${prcminimo}, ${costo}, ${cif},
           ${saldo}, ${cantcaja}, ${pesocaja}, ${cubicaja}, ${nroingreso}, ${umed}, true, NOW()
         )
-        ON CONFLICT (empresa_id, codigo) DO UPDATE SET
+        ON CONFLICT (empresa_id, codigo, nroingreso) DO UPDATE SET
           detalle = EXCLUDED.detalle,
           prcventa = EXCLUDED.prcventa,
           prcminimo = EXCLUDED.prcminimo,
@@ -65,7 +73,6 @@ export async function POST(request: Request) {
           cantcaja = EXCLUDED.cantcaja,
           pesocaja = EXCLUDED.pesocaja,
           cubicaja = EXCLUDED.cubicaja,
-          nroingreso = EXCLUDED.nroingreso,
           umed = EXCLUDED.umed,
           updated_at = NOW()
       `;
