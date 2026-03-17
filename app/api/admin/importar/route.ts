@@ -10,21 +10,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    // Diagnostic query requested by USER
-    const state = await sql`
-      SELECT e.nombre, e.id, COUNT(p.id) as total_productos 
-      FROM empresas e 
-      LEFT JOIN productos p ON p.empresa_id = e.id 
-      GROUP BY e.id, e.nombre;
-    `;
-    console.log('Current DB State (Products by Company):', JSON.stringify(state, null, 2));
 
     const body = await request.json();
-    console.log('Body keys received:', Object.keys(body));
-    console.log('empresaId:', body.empresaId);
-    console.log('products length:', body.products?.length);
-    console.log('First product sample:', body.products?.[0]);
-
     const { empresaId, products } = body;
 
     if (empresaId === undefined || empresaId === null || !products || !Array.isArray(products) || products.length === 0) {

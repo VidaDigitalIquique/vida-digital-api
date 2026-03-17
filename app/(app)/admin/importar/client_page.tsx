@@ -127,9 +127,6 @@ export function ImportarClient() {
     setIsUploading(true);
     setImportProgress(0);
     try {
-      console.log('activeEmpresaId prop/state:', activeEmpresaId);
-      console.log('localStorage value:', typeof window !== 'undefined' ? localStorage.getItem('vidadigital_empresa') : 'n/a');
-
       let finalEmpresaId = activeEmpresaId;
       if ((!finalEmpresaId || finalEmpresaId === 0) && typeof window !== 'undefined') {
         const stored = localStorage.getItem('vidadigital_empresa');
@@ -137,7 +134,6 @@ export function ImportarClient() {
           finalEmpresaId = parseInt(stored, 10);
         }
       }
-      console.log('Sending empresaId:', finalEmpresaId, 'from slug:', typeof window !== 'undefined' ? localStorage.getItem('vidadigital_empresa') : 'N/A');
 
       const CHUNK_SIZE = 200;
       let totalUpserted = 0;
@@ -157,7 +153,6 @@ export function ImportarClient() {
 
          if (!res.ok) {
             const errBody = await res.json();
-            console.log('Chunk error:', errBody);
             throw new Error(`Error en bloque ${Math.floor(i/CHUNK_SIZE) + 1}: ${errBody.error || 'Fallo servidor'}`);
          }
          
