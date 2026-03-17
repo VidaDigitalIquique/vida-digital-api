@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 interface Ubicacion {
   id: number;
   codigo: string;
+  nroingreso: string | null;
   ubicacion: string;
   detalle: string;
   producto_detalle: string;
@@ -168,7 +169,7 @@ export function InventarioClient({ activeEmpresaId }: { activeEmpresaId: number 
             <TableHeader className="bg-zinc-50 dark:bg-zinc-900 border-b">
               <TableRow>
                 <TableHead className="w-32 uppercase tracking-wide text-xs">Ubicación</TableHead>
-                <TableHead className="w-32 uppercase tracking-wide text-xs">Código</TableHead>
+                <TableHead className="w-40 uppercase tracking-wide text-xs">Código / Ingreso</TableHead>
                 <TableHead className="uppercase tracking-wide text-xs">Descripción</TableHead>
                 <TableHead className="w-24 text-right uppercase tracking-wide text-xs">Sistema</TableHead>
                 <TableHead className="w-32 text-center uppercase tracking-wide text-xs bg-blue-50/50 dark:bg-blue-900/10">Físico</TableHead>
@@ -209,7 +210,10 @@ export function InventarioClient({ activeEmpresaId }: { activeEmpresaId: number 
                   return (
                     <TableRow key={row.id} className={isEdited ? 'bg-amber-50/50 dark:bg-amber-900/10 border-amber-100 dark:border-amber-900/50' : ''}>
                       <TableCell className="font-bold whitespace-nowrap text-blue-700 dark:text-blue-400">{row.ubicacion || '-'}</TableCell>
-                      <TableCell className="font-mono text-xs">{row.codigo}</TableCell>
+                      <TableCell>
+                        <div className="font-mono text-xs font-bold">{row.codigo}</div>
+                        {row.nroingreso && <div className="text-[10px] text-zinc-400 font-mono tracking-tight">Ing: {row.nroingreso}</div>}
+                      </TableCell>
                       <TableCell className="text-xs text-zinc-600 line-clamp-2 max-w-[200px]" title={row.producto_detalle || row.detalle}>
                          {row.producto_detalle || row.detalle}
                       </TableCell>
