@@ -8,7 +8,6 @@ import { Search, Save, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-rea
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { useEmpresaId } from '@/hooks/useEmpresaId';
 
 interface Ubicacion {
   id: number;
@@ -25,8 +24,7 @@ interface Ubicacion {
   observaciones: string | null;
 }
 
-export function InventarioClient() {
-  const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
+export function InventarioClient({ activeEmpresaId }: { activeEmpresaId: number }) {
   const [data, setData] = useState<Ubicacion[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -52,7 +50,6 @@ export function InventarioClient() {
 
   // Fetch data
   const fetchData = async () => {
-    if (!isLoaded) return;
     setLoading(true);
     try {
       const queryParams = new URLSearchParams({
@@ -76,7 +73,7 @@ export function InventarioClient() {
     }
   };
 
-  useEffect(() => { fetchData() }, [activeEmpresaId, debouncedSearch, page, isLoaded]);
+  useEffect(() => { fetchData() }, [activeEmpresaId, debouncedSearch, page]);
 
   const handleEditChange = (id: number, field: 'fisico' | 'observaciones', value: string) => {
     setEdits(prev => ({
@@ -121,8 +118,6 @@ export function InventarioClient() {
   };
 
   const hasEdits = Object.keys(edits).length > 0;
-
-  if (!isLoaded) return <div className="h-64 animate-pulse bg-zinc-100 dark:bg-zinc-900 rounded-xl" />;
 
   return (
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200">

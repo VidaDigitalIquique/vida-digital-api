@@ -1,15 +1,23 @@
 'use client';
 
-import { useEmpresaId } from "@/hooks/useEmpresaId";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export function DashboardClient({ stats }: { stats: Record<number, any> }) {
-  const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
+  const [activeEmpresaId, setActiveEmpresaId] = useState<number | null>(null);
 
-  if (!isLoaded || !activeEmpresaId || !stats[activeEmpresaId]) return null;
+  useEffect(() => {
+    const val = localStorage.getItem('vidadigital_empresa');
+    if (val) setActiveEmpresaId(parseInt(val, 10));
+    else if (Object.keys(stats).length > 0) {
+      setActiveEmpresaId(parseInt(Object.keys(stats)[0], 10));
+    }
+  }, [stats]);
+
+  if (!activeEmpresaId || !stats[activeEmpresaId]) return null;
 
   const currentStats = stats[activeEmpresaId];
 

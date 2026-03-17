@@ -7,6 +7,6 @@ export default async function InventarioPage() {
   if (!session) return null;
 
   return (
-    <InventarioClient />
+    <InventarioClient activeEmpresaId={0} />
   );
 }

@@ -4,7 +4,6 @@ import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { UploadCloud, FileArchive, CheckCircle2, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { useEmpresaId } from '@/hooks/useEmpresaId';
 
 type QueueItemStatus = 'pending' | 'processing' | 'ok' | 'sin_folio' | 'error';
 
@@ -16,8 +15,7 @@ interface QueueItem {
   message?: string;
 }
 
-export function DespachosClient() {
-  const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
+export function DespachosClient({ activeEmpresaId }: { activeEmpresaId: number }) {
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [isProcessingQueue, setIsProcessingQueue] = useState(false);
   const [isExtractingZip, setIsExtractingZip] = useState(false);
@@ -88,7 +86,7 @@ export function DespachosClient() {
       }));
 
       setQueue(prev => [...prev, ...newItems]);
-      toast.success(`${files.length} imágenes extraídas del ZIP`);
+      toast.success(`\${files.length} imágenes extraídas del ZIP`);
     } catch (err) {
       toast.error('Error al subir ZIP');
     } finally {
@@ -152,14 +150,12 @@ export function DespachosClient() {
 
     setIsProcessingQueue(false);
     toast(`Proceso Finalizado`, {
-      description: `${success} exitosos / ${fallback} sin folio / ${errors} errores`,
+      description: `\${success} exitosos / \${fallback} sin folio / \${errors} errores`,
       duration: 5000,
     });
   };
 
   const progress = queue.length === 0 ? 0 : Math.round((queue.filter(q => ['ok', 'sin_folio', 'error'].includes(q.status)).length / queue.length) * 100);
-
-  if (!isLoaded) return <div className="h-64 bg-zinc-100 dark:bg-zinc-800 animate-pulse rounded-xl" />;
 
   return (
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200 pb-12">
@@ -237,7 +233,7 @@ export function DespachosClient() {
 
            {/* Progress Bar */}
            <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800">
-              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${progress}%` }}></div>
+              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `\${progress}%` }}></div>
            </div>
 
            <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -266,7 +262,7 @@ export function DespachosClient() {
                   }
 
                   return (
-                    <div key={item.id} className={`flex items-center gap-3 p-2 rounded-lg ${statusColor} transition-colors`}>
+                    <div key={item.id} className={`flex items-center gap-3 p-2 rounded-lg \${statusColor} transition-colors`}>
                        <span className="text-xs font-mono opacity-50 w-6 text-center">{idx + 1}</span>
                        <div className="w-10 h-10 rounded bg-white dark:bg-black/20 overflow-hidden flex-shrink-0">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
