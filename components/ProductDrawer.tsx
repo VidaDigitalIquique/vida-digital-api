@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Producto, UserSession } from '@/types';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -29,9 +29,14 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
 
   const canEditPrices = ['admin', 'supervisor'].includes(session.rol);
   const isAdmin = session.rol === 'admin';
+
+  useEffect(() => {
+    setCurrentImageUrl(producto?.imagen_url || null);
+  }, [producto]);
 
   // Sync state when product opens
   const handleOpenStatus = (isOpen: boolean) => {
@@ -96,6 +101,7 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
       const { imagen_url } = await res.json();
       
       // Update local state and parent
+      setCurrentImageUrl(imagen_url);
       onUpdated({ ...producto, imagen_url });
       toast.success('Imagen actualizada con éxito');
       setPreviewUrl(null);
@@ -168,7 +174,7 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
           {/* Main Image */}
           <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-900 border">
             <ImageWithFallback 
-              src={producto.imagen_url} 
+              src={currentImageUrl || producto.imagen_url} 
               codigo={producto.codigo} 
               empresaSlug={empresaSlug}
               fill
