@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface ImageWithFallbackProps {
@@ -29,6 +29,13 @@ export function ImageWithFallback({
   // If no DB URL is provided and we haven't errored yet, try the predictable Cloudinary path
   const cloudinaryFallbackUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${empresaSlug}/${codigo}.jpeg`;
   const [imgSrc, setImgSrc] = useState(src || cloudinaryFallbackUrl);
+
+  useEffect(() => {
+    if (src) {
+      setImgSrc(src);
+      setError(false);
+    }
+  }, [src]);
 
   const handleError = () => {
     setError(true);

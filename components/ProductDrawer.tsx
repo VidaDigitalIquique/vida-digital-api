@@ -36,10 +36,8 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
   const isAdmin = session.rol === 'admin';
 
   useEffect(() => {
-    console.log('useEffect fired, skipNextSync:', skipNextSync.current, 'producto.imagen_url:', producto?.imagen_url);
     if (skipNextSync.current) {
       skipNextSync.current = false;
-      console.log('useEffect skipped');
       return;
     }
     setCurrentImageUrl(producto?.imagen_url || null);
@@ -106,15 +104,11 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
       }
 
       const { imagen_url } = await res.json();
-      console.log('1. Upload success, new url:', imagen_url);
-      console.log('2. currentImageUrl before set:', currentImageUrl);
       
       // Update local state and parent
       skipNextSync.current = true;
       setCurrentImageUrl(imagen_url);
-      console.log('3. skipNextSync set to true');
       onUpdated({ ...producto, imagen_url });
-      console.log('4. onUpdated called');
       toast.success('Imagen actualizada con éxito');
       setPreviewUrl(null);
       setSelectedFile(null);
