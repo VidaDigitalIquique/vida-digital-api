@@ -30,11 +30,16 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
+  const skipNextSync = useRef(false);
 
   const canEditPrices = ['admin', 'supervisor'].includes(session.rol);
   const isAdmin = session.rol === 'admin';
 
   useEffect(() => {
+    if (skipNextSync.current) {
+      skipNextSync.current = false;
+      return;
+    }
     setCurrentImageUrl(producto?.imagen_url || null);
   }, [producto]);
 
@@ -101,6 +106,7 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
       const { imagen_url } = await res.json();
       
       // Update local state and parent
+      skipNextSync.current = true;
       setCurrentImageUrl(imagen_url);
       onUpdated({ ...producto, imagen_url });
       toast.success('Imagen actualizada con éxito');
