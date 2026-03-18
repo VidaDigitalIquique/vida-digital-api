@@ -1,25 +1,17 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useEmpresaId } from "@/hooks/useEmpresaId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export function DashboardClient({ stats }: { stats: Record<number, any> }) {
-  const [activeEmpresaId, setActiveEmpresaId] = useState<number | null>(null);
+  const { empresaId, isLoaded } = useEmpresaId();
+  
+  if (!isLoaded || !empresaId || !stats[empresaId]) return null;
 
-  useEffect(() => {
-    const val = localStorage.getItem('vidadigital_empresa');
-    if (val) setActiveEmpresaId(parseInt(val, 10));
-    else if (Object.keys(stats).length > 0) {
-      setActiveEmpresaId(parseInt(Object.keys(stats)[0], 10));
-    }
-  }, [stats]);
-
-  if (!activeEmpresaId || !stats[activeEmpresaId]) return null;
-
-  const currentStats = stats[activeEmpresaId];
+  const currentStats = stats[empresaId];
 
   return (
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200">

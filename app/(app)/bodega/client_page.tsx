@@ -12,7 +12,10 @@ import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { formatUSD } from '@/lib/utils';
 import { toast } from 'sonner';
 
-export function BodegaClient({ session, activeEmpresaId, empresasMap }: any) {
+import { useEmpresaId } from '@/hooks/useEmpresaId';
+
+export function BodegaClient({ session, empresasMap }: any) {
+  const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
   const [ubicaciones, setUbicaciones] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -37,6 +40,7 @@ export function BodegaClient({ session, activeEmpresaId, empresasMap }: any) {
   // Instant search - no debounce needed if backend is fast, but we'll debounce 250ms internally to save DB load
   useEffect(() => {
     const timer = setTimeout(async () => {
+      if (!isLoaded || activeEmpresaId === 0) return;
       setLoading(true);
       try {
         const queryParams = new URLSearchParams({
@@ -57,7 +61,7 @@ export function BodegaClient({ session, activeEmpresaId, empresasMap }: any) {
     }, 250);
     
     return () => clearTimeout(timer);
-  }, [activeEmpresaId, search]);
+  }, [activeEmpresaId, search, isLoaded]);
 
   const openDrawer = (ubi: any) => {
     setSelectedUbi(ubi);

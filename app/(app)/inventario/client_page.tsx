@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { UserSession } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Save, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { Search, Save, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { useEmpresaId } from '@/hooks/useEmpresaId';
 
 interface Ubicacion {
   id: number;
@@ -24,7 +24,8 @@ interface Ubicacion {
   observaciones: string | null;
 }
 
-export function InventarioClient({ activeEmpresaId }: { activeEmpresaId: number }) {
+export function InventarioClient() {
+  const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
   const [data, setData] = useState<Ubicacion[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -50,6 +51,7 @@ export function InventarioClient({ activeEmpresaId }: { activeEmpresaId: number 
 
   // Fetch data
   const fetchData = async () => {
+    if (!isLoaded || activeEmpresaId === 0) return;
     setLoading(true);
     try {
       const queryParams = new URLSearchParams({
@@ -73,7 +75,7 @@ export function InventarioClient({ activeEmpresaId }: { activeEmpresaId: number 
     }
   };
 
-  useEffect(() => { fetchData() }, [activeEmpresaId, debouncedSearch, page]);
+  useEffect(() => { fetchData() }, [activeEmpresaId, debouncedSearch, page, isLoaded]);
 
   const handleEditChange = (id: number, field: 'fisico' | 'observaciones', value: string) => {
     setEdits(prev => ({
