@@ -58,6 +58,11 @@ export function ProductCard({ producto, empresaSlug, onClick }: ProductCardProps
                <Badge variant="outline" className={`text-xs ${producto.saldo > 0 ? 'border-blue-200 text-blue-700 dark:text-blue-400' : 'text-zinc-400'}`}>
                  {producto.saldo} {producto.umed}
                </Badge>
+               {producto.cantcaja > 1 && (
+                 <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 font-medium leading-none">
+                   {producto.cantcaja} {producto.umed}/Caja
+                 </span>
+               )}
             </div>
           </div>
         </div>
