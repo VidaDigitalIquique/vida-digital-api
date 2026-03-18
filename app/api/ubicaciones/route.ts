@@ -19,35 +19,44 @@ export async function GET(request: Request) {
 
   try {
     const eid = parseInt(empresaId, 10);
+    const searchPattern = `%${search}%`;
 
-    let rows;
-    if (search) {
-      const searchQuery = '%' + search + '%';
-      rows = await sql`
-        SELECT 
-          u.*, 
-          p.detalle as producto_detalle,
-          p.imagen_url as producto_imagen_url
-        FROM ubicaciones_bodega u
-        LEFT JOIN productos p ON u.codigo = p.codigo AND u.empresa_id = p.empresa_id AND u.nroingreso = p.nroingreso
-        WHERE u.empresa_id = ${eid} 
-        AND (LOWER(u.codigo) LIKE ${searchQuery} OR LOWER(u.ubicacion) LIKE ${searchQuery} OR LOWER(u.detalle) LIKE ${searchQuery} OR LOWER(u.nroingreso) LIKE ${searchQuery})
-        ORDER BY u.ubicacion ASC
-        LIMIT 100
-      `;
-    } else {
-      rows = await sql`
-        SELECT 
-          u.*, 
-          p.detalle as producto_detalle,
-          p.imagen_url as producto_imagen_url
-        FROM ubicaciones_bodega u
-        LEFT JOIN productos p ON u.codigo = p.codigo AND u.empresa_id = p.empresa_id AND u.nroingreso = p.nroingreso
-        WHERE u.empresa_id = ${eid}
-        ORDER BY u.ubicacion ASC
-        LIMIT 100
-      `;
-    }
+    const rows = await sql`
+      SELECT
+        u.codigo,
+        MAX(u.detalle) as detalle,
+        MAX(u.empresa_id) as empresa_id,
+        MAX(p.imagen_url) as producto_imagen_url,
+        SUM(u.saldo) as saldo_total,
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'id', u.id,
+            'nroingreso', u.nroingreso,
+            'ubicacion', u.ubicacion,
+            'saldo', u.saldo,
+            'saldocajas', u.saldocajas,
+            'fisico', u.fisico,
+            'diferencia', u.diferencia,
+            'observaciones', u.observaciones,
+            'updated_at', u.updated_at
+          ) ORDER BY u.nroingreso ASC
+        ) as lotes
+      FROM ubicaciones_bodega u
+      LEFT JOIN productos p ON u.codigo = p.codigo 
+        AND u.empresa_id = p.empresa_id 
+        AND u.nroingreso = p.nroingreso
+      WHERE u.empresa_id = ${eid}
+        AND (
+          ${search} = ''
+          OR LOWER(u.codigo) LIKE ${searchPattern}
+          OR LOWER(u.ubicacion) LIKE ${searchPattern}
+          OR LOWER(u.detalle) LIKE ${searchPattern}
+          OR LOWER(u.nroingreso) LIKE ${searchPattern}
+        )
+      GROUP BY u.codigo
+      ORDER BY u.codigo ASC
+      LIMIT 100
+    `;
 
     return NextResponse.json({ data: rows });
   } catch (error: any) {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { UbicacionBodega, UserSession } from '@/types';
+import { LoteBodega, UbicacionBodegaAgrupada } from '@/types';
 import { BodegaCard } from '@/components/BodegaCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
@@ -9,25 +9,18 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
-import { formatUSD } from '@/lib/utils';
 import { toast } from 'sonner';
 
 import { useEmpresaId } from '@/hooks/useEmpresaId';
 
 export function BodegaClient({ session, empresasMap }: any) {
   const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
-  const [ubicaciones, setUbicaciones] = useState<any[]>([]);
+  const [ubicaciones, setUbicaciones] = useState<UbicacionBodegaAgrupada[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   
-  const [selectedUbi, setSelectedUbi] = useState<any>(null);
+  const [selectedUbi, setSelectedUbi] = useState<UbicacionBodegaAgrupada | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  // Edit states
-  const [editUbicacionText, setEditUbicacionText] = useState('');
-  const [editFisico, setEditFisico] = useState('');
-  const [editObs, setEditObs] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const empresaSlug = empresasMap[activeEmpresaId] || 'sanjh';
@@ -63,48 +56,23 @@ export function BodegaClient({ session, empresasMap }: any) {
     return () => clearTimeout(timer);
   }, [activeEmpresaId, search, isLoaded]);
 
-  const openDrawer = (ubi: any) => {
+  const openDrawer = (ubi: UbicacionBodegaAgrupada) => {
     setSelectedUbi(ubi);
-    setEditUbicacionText(ubi.ubicacion || '');
-    setEditFisico(ubi.fisico !== null ? ubi.fisico.toString() : '');
-    setEditObs(ubi.observaciones || '');
     setDrawerOpen(true);
   };
 
-  const handleSave = async () => {
-    if (!selectedUbi) return;
-    setIsSaving(true);
-    
-    try {
-      const res = await fetch(`/api/ubicaciones/${selectedUbi.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ubicacion: editUbicacionText,
-          fisico: editFisico === '' ? null : parseFloat(editFisico),
-          observaciones: editObs,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Error guardando');
-      
-      const { data } = await res.json();
-      
-      // Update local list
-      setUbicaciones(prev => prev.map(u => u.id === selectedUbi.id ? { ...u, ...data } : u));
-      toast.success('Ubicación guardada con éxito');
-      setDrawerOpen(false);
-    } catch (error) {
-       toast.error('No se pudo guardar');
-    } finally {
-       setIsSaving(false);
-    }
+  const handleLoteUpdated = (updated: LoteBodega) => {
+    setSelectedUbi(prev => {
+      if (!prev) return prev;
+      const lotes = prev.lotes.map(l => l.id === updated.id ? { ...l, ...updated } : l);
+      return { ...prev, lotes };
+    });
+    setUbicaciones(prev => prev.map(u => (
+      u.lotes.some(l => l.id === updated.id)
+        ? { ...u, lotes: u.lotes.map(l => l.id === updated.id ? { ...l, ...updated } : l) }
+        : u
+    )));
   };
-
-  const previewDiferencia = 
-    editFisico === '' || isNaN(parseFloat(editFisico)) 
-      ? null 
-      : parseFloat(editFisico) - (selectedUbi?.saldo || 0);
 
   return (
     <div className="flex flex-col gap-6 fade-in zoom-in-95 duration-200">
@@ -135,7 +103,7 @@ export function BodegaClient({ session, empresasMap }: any) {
          ) : (
            ubicaciones.map(u => (
              <BodegaCard 
-               key={u.id} 
+               key={u.codigo} 
                ubicacion={u} 
                empresaSlug={empresaSlug} 
                onClick={openDrawer}
@@ -151,14 +119,14 @@ export function BodegaClient({ session, empresasMap }: any) {
             <>
               <SheetHeader className="mb-6 border-b pb-4">
                 <SheetTitle className="text-2xl font-black text-blue-700 dark:text-blue-400 leading-none">
-                  {selectedUbi.ubicacion || 'Nueva Ubicación'}
-                </SheetTitle>
-                <div className="font-mono font-bold text-zinc-700 dark:text-zinc-300 mt-2">
                   {selectedUbi.codigo}
-                </div>
+                </SheetTitle>
                 <SheetDescription className="text-left text-sm font-medium mt-1 text-zinc-600">
-                  {selectedUbi.producto_detalle || selectedUbi.detalle}
+                  {selectedUbi.detalle || 'Sin descripción'}
                 </SheetDescription>
+                <div className="text-xs text-zinc-500 mt-2">
+                  Saldo total: <span className="font-semibold text-zinc-700 dark:text-zinc-300">{selectedUbi.saldo_total}</span>
+                </div>
               </SheetHeader>
 
               <div className="space-y-6">
@@ -173,63 +141,131 @@ export function BodegaClient({ session, empresasMap }: any) {
                   />
                 </div>
 
-                {/* Edit Form */}
+                {/* Lotes */}
                 <div className="space-y-4">
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-zinc-50 dark:bg-zinc-900 p-3 rounded-md border">
-                       <Label className="text-zinc-500 text-xs uppercase tracking-wider">Saldo Sistema</Label>
-                       <div className="text-2xl font-bold mt-1">{selectedUbi.saldo}</div>
-                    </div>
-                    <div className={`p-3 rounded-md border text-right ${previewDiferencia !== null && previewDiferencia !== 0 ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200' : 'bg-zinc-50 dark:bg-zinc-900'}`}>
-                       <Label className="text-zinc-500 text-xs uppercase tracking-wider">Diferencia</Label>
-                       <div className={`text-2xl font-bold mt-1 ${previewDiferencia !== null && previewDiferencia !== 0 ? 'text-amber-600 dark:text-amber-500' : ''}`}>
-                         {previewDiferencia !== null ? (previewDiferencia > 0 ? '+' + previewDiferencia : previewDiferencia) : '-'}
-                       </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 pt-2">
-                    <Label htmlFor="fisico" className="font-bold">Físico (Conteo real)</Label>
-                    <Input 
-                      id="fisico" 
-                      type="number" 
-                      className="h-12 text-xl font-bold placeholder:font-normal placeholder:text-zinc-300" 
-                      placeholder="Ej: 45"
-                      value={editFisico}
-                      onChange={e => setEditFisico(e.target.value)}
+                  {selectedUbi.lotes.map(lote => (
+                    <LoteEditor
+                      key={lote.id}
+                      lote={lote}
+                      onSaved={handleLoteUpdated}
                     />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="ubicacion">Código de Ubicación</Label>
-                    <Input 
-                      id="ubicacion" 
-                      className="font-mono uppercase" 
-                      value={editUbicacionText}
-                      onChange={e => setEditUbicacionText(e.target.value.toUpperCase())}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="observaciones">Observaciones</Label>
-                    <Input 
-                      id="observaciones" 
-                      placeholder="Ej: Cajas mojadas, faltan piezas..." 
-                      value={editObs}
-                      onChange={e => setEditObs(e.target.value)}
-                    />
-                  </div>
-
-                  <Button className="w-full h-12 text-lg font-bold mt-4" onClick={handleSave} disabled={isSaving}>
-                    {isSaving ? 'Guardando...' : 'Guardar Cambios'}
-                  </Button>
+                  ))}
                 </div>
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
+    </div>
+  );
+}
+
+function LoteEditor({ lote, onSaved }: { lote: LoteBodega; onSaved: (updated: LoteBodega) => void }) {
+  const [open, setOpen] = useState(false);
+  const [ubicacion, setUbicacion] = useState(lote.ubicacion || '');
+  const [fisico, setFisico] = useState(lote.fisico !== null ? lote.fisico.toString() : '');
+  const [observaciones, setObservaciones] = useState(lote.observaciones || '');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setUbicacion(lote.ubicacion || '');
+    setFisico(lote.fisico !== null ? lote.fisico.toString() : '');
+    setObservaciones(lote.observaciones || '');
+  }, [lote]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/ubicaciones/${lote.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ubicacion: ubicacion === '' ? null : ubicacion,
+          fisico: fisico === '' ? null : parseFloat(fisico),
+          observaciones: observaciones === '' ? null : observaciones,
+        }),
+      });
+
+      if (!res.ok) throw new Error('Error guardando');
+      const { data } = await res.json();
+      onSaved({ ...lote, ...data });
+      toast.success('Lote actualizado');
+      setOpen(false);
+    } catch (error) {
+      toast.error('No se pudo guardar');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="border rounded-lg overflow-hidden bg-white dark:bg-zinc-950">
+      <button
+        type="button"
+        className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-900"
+        onClick={() => setOpen(v => !v)}
+      >
+        <div>
+          <div className="text-xs text-zinc-500">Lote</div>
+          <div className="font-mono font-semibold text-sm">
+            {lote.nroingreso || 'Sin Nro Ingreso'}
+          </div>
+        </div>
+        <div className="text-xs text-zinc-500">
+          {lote.ubicacion || 'Sin ubicación'}
+        </div>
+      </button>
+
+      {open && (
+        <div className="p-4 space-y-3 border-t">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-zinc-50 dark:bg-zinc-900 p-3 rounded-md border">
+              <Label className="text-zinc-500 text-xs uppercase tracking-wider">Saldo</Label>
+              <div className="text-xl font-bold mt-1">{lote.saldo}</div>
+            </div>
+            <div className="bg-zinc-50 dark:bg-zinc-900 p-3 rounded-md border text-right">
+              <Label className="text-zinc-500 text-xs uppercase tracking-wider">Cajas</Label>
+              <div className="text-xl font-bold mt-1">{lote.saldocajas}</div>
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-1">
+            <Label htmlFor={`fisico-${lote.id}`} className="font-bold">Físico (Conteo real)</Label>
+            <Input 
+              id={`fisico-${lote.id}`} 
+              type="number" 
+              className="h-12 text-xl font-bold placeholder:font-normal placeholder:text-zinc-300" 
+              placeholder="Ej: 45"
+              value={fisico}
+              onChange={e => setFisico(e.target.value)}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor={`ubicacion-${lote.id}`}>Código de Ubicación</Label>
+            <Input 
+              id={`ubicacion-${lote.id}`} 
+              className="font-mono uppercase" 
+              value={ubicacion}
+              onChange={e => setUbicacion(e.target.value.toUpperCase())}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor={`observaciones-${lote.id}`}>Observaciones</Label>
+            <Input 
+              id={`observaciones-${lote.id}`} 
+              placeholder="Ej: Cajas mojadas, faltan piezas..." 
+              value={observaciones}
+              onChange={e => setObservaciones(e.target.value)}
+            />
+          </div>
+
+          <Button className="w-full h-12 text-lg font-bold mt-2" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

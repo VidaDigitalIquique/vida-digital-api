@@ -42,6 +42,27 @@ export interface UbicacionBodega {
   updated_at: Date;
 }
 
+export interface LoteBodega {
+  id: number;
+  nroingreso: string | null;
+  ubicacion: string | null;
+  saldo: number;
+  saldocajas: number;
+  fisico: number | null;
+  diferencia: number | null;
+  observaciones: string | null;
+  updated_at: Date;
+}
+
+export interface UbicacionBodegaAgrupada {
+  codigo: string;
+  detalle: string | null;
+  producto_imagen_url: string | null;
+  empresa_id: number;
+  saldo_total: number;
+  lotes: LoteBodega[];
+}
+
 export interface InventarioConteo {
   id: number;
   ubicacion_id: number;
