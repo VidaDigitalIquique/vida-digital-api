@@ -18,7 +18,7 @@ export default async function PreciosPage() {
   // we just render the shell here
   return (
     <PreciosClient 
-      session={session as any} 
+      session={session.user as any} 
       empresasMap={empresasMap} 
     />
   );
