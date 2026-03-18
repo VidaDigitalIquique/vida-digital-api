@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Producto, UserSession } from '@/types';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,10 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
   const [prcVenta, setPrcVenta] = useState('');
   const [prcMinimo, setPrcMinimo] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const canEditPrices = ['admin', 'supervisor'].includes(session.rol);
   const isAdmin = session.rol === 'admin';
@@ -36,7 +40,71 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
       setPrcMinimo(producto.prcminimo.toString());
       setIsEditing(false);
     }
+    setPreviewUrl(null);
+    setSelectedFile(null);
     onOpenChange(isOpen);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('Solo se aceptan JPG, PNG o WEBP');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Imagen debe ser menor a 5MB');
+      return;
+    }
+
+    setSelectedFile(file);
+    const reader = new FileReader();
+    reader.onload = () => setPreviewUrl(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile || !producto) return;
+    setIsUploading(true);
+    
+    try {
+      // 1. Convert to base64
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onload = () => resolve(reader.result as string);
+      });
+      reader.readAsDataURL(selectedFile);
+      const base64Data = await base64Promise;
+
+      // 2. Upload to backend
+      const res = await fetch('/api/productos/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          productoId: producto.id,
+          imageBase64: base64Data,
+          codigo: producto.codigo 
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Error al subir imagen');
+      }
+
+      const { imagen_url } = await res.json();
+      
+      // Update local state and parent
+      onUpdated({ ...producto, imagen_url });
+      toast.success('Imagen actualizada con éxito');
+      setPreviewUrl(null);
+      setSelectedFile(null);
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleSavePrices = async () => {
@@ -185,19 +253,61 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
           </div>
 
           {/* Admin Tools */}
-          {isAdmin && (
+          {canEditPrices && (
              <div className="border-t pt-6 space-y-4">
-                <h3 className="font-semibold uppercase tracking-wider text-xs text-zinc-500">Herramientas Admin</h3>
+                <h3 className="font-semibold uppercase tracking-wider text-xs text-zinc-500">Herramientas de Gestión</h3>
                 
-                {producto.es_nuevo && (
+                {isAdmin && producto.es_nuevo && (
                   <Button variant="secondary" className="w-full" onClick={handleMarkAsViewed}>
                     Quitar etiqueta NUEVO
                   </Button>
                 )}
 
-                {/* File picker for manual image upload would go here. We will build an ImageUploader widget later. */}
-                <div className="p-4 border border-dashed rounded-lg text-center text-sm text-zinc-500">
-                   Subir imagen individual (Pendiente para posterior)
+                <div className="space-y-4">
+                   <div 
+                     className="p-6 border-2 border-dashed rounded-xl text-center cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors border-zinc-200 dark:border-zinc-800"
+                     onClick={() => fileInputRef.current?.click()}
+                   >
+                     {previewUrl ? (
+                         <div className="relative w-full aspect-square max-w-[120px] mx-auto overflow-hidden rounded-md border shadow-sm">
+                            <img src={previewUrl} alt="Preview" className="object-cover w-full h-full" />
+                         </div>
+                     ) : (
+                         <div className="text-zinc-500">
+                           <p className="font-semibold text-sm">Click para subir imagen</p>
+                           <p className="text-xs text-zinc-400 mt-1">NUEVA IMAGEN INDIVIDUAL</p>
+                         </div>
+                     )}
+                     <input 
+                       type="file" 
+                       ref={fileInputRef} 
+                       className="hidden" 
+                       accept="image/jpeg,image/png,image/webp" 
+                       onChange={handleFileChange} 
+                       data-testid="upload-input"
+                     />
+                   </div>
+
+                   {selectedFile && (
+                     <div className="flex gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="text-xs text-red-500 hover:text-red-700" 
+                          onClick={() => { setSelectedFile(null); setPreviewUrl(null); }}
+                        >
+                          Limpiar
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="flex-1 font-bold bg-blue-600 hover:bg-blue-700 h-9" 
+                          onClick={handleUpload} 
+                          disabled={isUploading}
+                        >
+                          {isUploading ? 'Subiendo...' : 'SUBIR IMAGEN'}
+                        </Button>
+                     </div>
+                   )}
                 </div>
              </div>
           )}
