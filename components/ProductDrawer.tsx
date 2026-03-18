@@ -209,9 +209,11 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
           <div>
             <div className="flex items-center justify-between mb-2">
                <h3 className="font-semibold uppercase tracking-wider text-xs text-zinc-500">Precios (USD)</h3>
+               {/* DISABLED_V2: Edit button
                {canEditPrices && !isEditing && (
                  <Button variant="link" size="sm" onClick={() => setIsEditing(true)}>Editar</Button>
                )}
+               */}
             </div>
             
             <div className="border rounded-lg overflow-hidden">
@@ -269,11 +271,13 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
              <div className="border-t pt-6 space-y-4">
                 <h3 className="font-semibold uppercase tracking-wider text-xs text-zinc-500">Herramientas de Gestión</h3>
                 
+                {/* DISABLED_V2: Mark as viewed button
                 {isAdmin && producto.es_nuevo && (
                   <Button variant="secondary" className="w-full" onClick={handleMarkAsViewed}>
                     Quitar etiqueta NUEVO
                   </Button>
                 )}
+                */}
 
                 <div className="space-y-4">
                    <div 
