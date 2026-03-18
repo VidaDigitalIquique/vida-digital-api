@@ -77,6 +77,17 @@ export async function POST(request: Request) {
           umed = EXCLUDED.umed,
           updated_at = NOW()
       `;
+
+      await sql`
+        INSERT INTO ubicaciones_bodega (empresa_id, codigo, nroingreso, detalle, saldo, cantcaja)
+        VALUES (${eid}, ${codigo}, ${nroingreso}, ${detalle}, ${saldo}, ${cantcaja})
+        ON CONFLICT ON CONSTRAINT ubicaciones_bodega_empresa_id_codigo_nroingreso_key
+        DO UPDATE SET
+          detalle = EXCLUDED.detalle,
+          saldo = EXCLUDED.saldo,
+          cantcaja = EXCLUDED.cantcaja,
+          updated_at = NOW()
+      `;
       
       upserted++;
     }
