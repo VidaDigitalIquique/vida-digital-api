@@ -35,7 +35,11 @@ export async function GET(request: Request) {
         MAX(cif) as cif,
         MAX(umed) as umed,
         MAX(imagen_url) as imagen_url,
-        BOOL_OR(es_nuevo) as es_nuevo
+        BOOL_OR(es_nuevo) as es_nuevo,
+        MAX(cantcaja) as cantcaja,
+        MAX(pesocaja) as pesocaja,
+        MAX(cubicaja) as cubicaja,
+        MAX(nroingreso) as nroingreso
       FROM productos
       WHERE empresa_id = ${eid}
         AND (${search} = '' OR LOWER(codigo) LIKE ${searchPattern} OR LOWER(detalle) LIKE ${searchPattern})

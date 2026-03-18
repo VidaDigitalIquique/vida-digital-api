@@ -190,19 +190,21 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
 
           {/* Logistics Data */}
           <div className="grid grid-cols-2 gap-4 bg-zinc-50 dark:bg-zinc-900 p-4 rounded-lg">
-             <div>
-                <p className="text-xs text-zinc-500 mb-1">Saldo</p>
-                <p className="font-semibold text-lg">{producto.saldo} {producto.umed}</p>
-             </div>
-             <div>
-                <p className="text-xs text-zinc-500 mb-1">Cajas</p>
-                <p className="font-medium text-sm">{producto.cantcaja} u/cj</p>
-                <p className="text-xs text-zinc-400">{producto.pesocaja} kg · {producto.cubicaja} m³</p>
-             </div>
-             <div className="col-span-2">
-                <p className="text-xs text-zinc-500 mb-1">Nro Ingreso</p>
-                <p className="font-mono text-sm">{producto.nroingreso || 'N/A'}</p>
-             </div>
+            <div>
+              <p className="text-xs text-zinc-500 mb-1">Saldo</p>
+              <p className="font-semibold text-lg">{producto.saldo} {producto.umed}</p>
+            </div>
+            <div>
+              <p className="text-xs text-zinc-500 mb-1">Cajas</p>
+              {producto.cantcaja > 1 ? (
+                <>
+                  <p className="font-medium text-sm">{producto.cantcaja} {producto.umed}/Caja</p>
+                  <p className="text-xs text-zinc-400">{producto.pesocaja} kg · {producto.cubicaja} m³</p>
+                </>
+              ) : (
+                <p className="text-sm text-zinc-400">—</p>
+              )}
+            </div>
           </div>
 
           {/* Pricing Table */}
