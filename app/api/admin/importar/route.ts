@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { recalculateNuevoFlags } from "@/lib/services/product-service";
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -80,7 +81,13 @@ export async function POST(request: Request) {
       upserted++;
     }
 
-    return NextResponse.json({ message: "Importación completada con éxito", count: upserted });
+    const nuevoCount = await recalculateNuevoFlags(eid);
+
+    return NextResponse.json({ 
+      message: "Importación completada con éxito", 
+      count: upserted,
+      nuevoCount 
+    });
 
   } catch (error: any) {
     console.error("POST /api/admin/importar error:", error);
