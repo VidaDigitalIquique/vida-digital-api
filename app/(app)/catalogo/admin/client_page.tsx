@@ -49,6 +49,25 @@ export function CatalogoAdminClient({ session }: { session: any }) {
     fetchCatalogos();
   }, [activeEmpresaId, isLoaded]);
 
+  const downloadQR = (slug: string) => {
+    const svgEl = document.querySelector(`[data-qr="${slug}"] svg`) as SVGElement;
+    if (!svgEl) return;
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      ctx?.drawImage(img, 0, 0, 256, 256);
+      const a = document.createElement('a');
+      a.download = `qr-${slug}.png`;
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
+
   const handleCreate = async () => {
     try {
       const res = await fetch('/api/catalogos', {
@@ -134,12 +153,20 @@ export function CatalogoAdminClient({ session }: { session: any }) {
                  </div>
                  <p className="text-sm text-zinc-500 line-clamp-2 mb-4 h-10">{cat.descripcion || 'Sin descripción'}</p>
                  <div className="flex gap-3 items-start mb-4">
-                    <div className="flex-shrink-0 bg-white p-1.5 rounded border">
-                      <QRCodeSVG 
-                        value={getPublicUrl(cat.slug)} 
-                        size={72}
-                        level="M"
-                      />
+                    <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                      <div data-qr={cat.slug} className="bg-white p-1.5 rounded border">
+                        <QRCodeSVG
+                          value={getPublicUrl(cat.slug)}
+                          size={72}
+                          level="M"
+                        />
+                      </div>
+                      <button
+                        onClick={() => downloadQR(cat.slug)}
+                        className="text-xs text-blue-600 hover:underline text-center"
+                      >
+                        Descargar QR
+                      </button>
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="bg-zinc-100 dark:bg-zinc-800 rounded p-2 text-xs font-mono text-zinc-600 dark:text-zinc-400 flex items-center justify-between">
