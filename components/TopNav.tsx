@@ -27,6 +27,7 @@ const NAV_LINKS = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Precios', href: '/precios', icon: Tag },
   { name: 'Bodega', href: '/bodega', icon: Box },
+  { name: 'Catálogos', href: '/catalogo/admin', icon: LayoutList },
 ];
 
 export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number, onSwitch: (id: number) => void }) {
@@ -36,7 +37,7 @@ export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number,
   const rol = (session?.user as any)?.rol as string;
 
   const RUTAS_POR_ROL: Record<string, string[]> = {
-    admin: ['/dashboard', '/precios', '/bodega'],
+    admin: ['/dashboard', '/precios', '/bodega', '/catalogo'],
     vendedor: ['/precios', '/catalogo'],
     bodeguero: ['/bodega'],
   };
@@ -75,17 +76,6 @@ export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number,
             {/* Admin Only Links */}
             {isAdmin && (
               <>
-                <Link
-                  href="/catalogo/admin"
-                  className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900',
-                    pathname.startsWith('/catalogo/admin') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
-                  )}
-                >
-                  <LayoutList className="w-4 h-4" />
-                  Catálogos
-                </Link>
-
                 <DropdownMenu>
                   <DropdownMenuTrigger className={cn(
                     'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none',
