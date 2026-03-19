@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { UserPlus, Edit, Shield, Check } from 'lucide-react';
+import { UserPlus, Edit, Shield, Check, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatRut } from '@/lib/utils';
 
@@ -119,6 +119,21 @@ export function UsuariosClient({ empresasList, currentUserId }: { empresasList: 
     }
   };
 
+  const handleDelete = async (u: any) => {
+    if (!confirm(`¿Eliminar permanentemente a ${u.nombre}? Esta acción no se puede deshacer.`)) return;
+    try {
+      const res = await fetch(`/api/admin/usuarios/${u.id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error || 'Error al eliminar');
+      }
+      toast.success('Usuario eliminado');
+      fetchUsuarios();
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -169,10 +184,15 @@ export function UsuariosClient({ empresasList, currentUserId }: { empresasList: 
                  <TableCell className="text-center">
                     {u.activo ? <Badge className="bg-emerald-500">Activo</Badge> : <Badge variant="destructive">Bloqueado</Badge>}
                  </TableCell>
-                 <TableCell className="text-right">
+                 <TableCell className="text-right flex items-center justify-end gap-1">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(u)}>
                        <Edit className="w-4 h-4 text-zinc-500 hover:text-blue-600" />
                     </Button>
+                    {currentUserId !== u.id && (
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(u)}>
+                        <Trash2 className="w-4 h-4 text-zinc-500 hover:text-red-600" />
+                      </Button>
+                    )}
                  </TableCell>
               </TableRow>
             ))}

@@ -47,3 +47,25 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).rol !== 'admin') {
+    return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  }
+
+  const { id } = params;
+  const uid = parseInt(id, 10);
+
+  if ((session.user as any).id === uid) {
+    return NextResponse.json({ error: "No puedes eliminarte a ti mismo" }, { status: 400 });
+  }
+
+  try {
+    await sql`DELETE FROM usuario_empresa WHERE usuario_id = ${uid}`;
+    await sql`DELETE FROM usuarios WHERE id = ${uid}`;
+    return NextResponse.json({ message: "Usuario eliminado" });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
