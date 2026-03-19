@@ -22,6 +22,7 @@ export function CatalogoAdminClient({ activeEmpresaId }: { activeEmpresaId: numb
   const [newPalabrasExcluir, setNewPalabrasExcluir] = useState('');
 
   const fetchCatalogos = async () => {
+    if (!activeEmpresaId || activeEmpresaId === 0) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/catalogos?empresa=${activeEmpresaId}`);
@@ -37,6 +38,7 @@ export function CatalogoAdminClient({ activeEmpresaId }: { activeEmpresaId: numb
   };
 
   useEffect(() => {
+    if (!activeEmpresaId || activeEmpresaId === 0) return;
     fetchCatalogos();
   }, [activeEmpresaId]);
 
