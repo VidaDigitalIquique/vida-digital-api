@@ -60,6 +60,11 @@ export interface UbicacionBodegaAgrupada {
   producto_imagen_url: string | null;
   empresa_id: number;
   saldo_total: number;
+  cantcaja: number;
+  umed: string;
+  fisico_total: number | null;
+  diferencia_total: number | null;
+  ubicaciones: string[];
   lotes: LoteBodega[];
 }
 

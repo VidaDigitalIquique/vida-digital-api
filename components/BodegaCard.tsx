@@ -1,7 +1,6 @@
 'use client';
 
 import { UbicacionBodegaAgrupada } from '@/types';
-import { Badge } from '@/components/ui/badge';
 import { ImageWithFallback } from './ImageWithFallback';
 
 interface BodegaCardProps {
@@ -11,46 +10,97 @@ interface BodegaCardProps {
 }
 
 export function BodegaCard({ ubicacion, empresaSlug, onClick }: BodegaCardProps) {
-  const totalLotes = ubicacion.lotes.length;
-  const lotesUbicados = ubicacion.lotes.filter(l => l.ubicacion).length;
+  const { saldo_total, fisico_total, diferencia_total, cantcaja, umed } = ubicacion;
+
+  const difColor = diferencia_total === null
+    ? 'text-zinc-400 dark:text-zinc-600'
+    : diferencia_total === 0
+      ? 'text-emerald-700 dark:text-emerald-400'
+      : diferencia_total < 0
+        ? 'text-red-700 dark:text-red-400'
+        : 'text-amber-700 dark:text-amber-400';
+
+  const difLabel = diferencia_total === null
+    ? '—'
+    : diferencia_total > 0
+      ? `+${diferencia_total} ${umed}`
+      : `${diferencia_total} ${umed}`;
 
   return (
-    <div 
+    <div
       className="group relative bg-card hover:bg-zinc-50 dark:hover:bg-zinc-900 border border-border shadow-sm rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-md active:scale-[0.98]"
       onClick={() => onClick(ubicacion)}
     >
-      <div className="flex flex-row p-3 gap-3">
-        {/* Info Left */}
-        <div className="flex flex-col flex-1 min-w-0 justify-between">
-          <div>
-            <div className="font-mono text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-              {ubicacion.codigo}
-            </div>
-            <h3 className="text-xs font-medium text-zinc-500 line-clamp-1" title={ubicacion.detalle || ''}>
-              {ubicacion.detalle || 'Sin descripción'}
-            </h3>
-          </div>
-
-          <div className="flex items-end justify-between mt-3">
-            <div className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              {ubicacion.saldo_total} un
-            </div>
-            
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 font-bold">
-              {lotesUbicados} / {totalLotes} lotes ubicados
-            </Badge>
-          </div>
-        </div>
-
-        {/* Thumbnail Image Right */}
-        <div className="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 self-center">
-          <ImageWithFallback 
-            src={ubicacion.producto_imagen_url} 
-            codigo={ubicacion.codigo} 
-            empresaSlug={empresaSlug} 
-            fill 
+      {/* Top: foto + código + descripción + packing */}
+      <div className="flex gap-3 p-3 pb-2">
+        <div className="flex-shrink-0 w-16 h-16 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border self-center">
+          <ImageWithFallback
+            src={ubicacion.producto_imagen_url}
+            codigo={ubicacion.codigo}
+            empresaSlug={empresaSlug}
+            fill
           />
         </div>
+        <div className="flex flex-col flex-1 min-w-0 gap-0.5">
+          <div className="font-mono text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
+            {ubicacion.codigo}
+          </div>
+          <div className="text-xs font-medium text-foreground leading-snug line-clamp-2" title={ubicacion.detalle || ''}>
+            {ubicacion.detalle || 'Sin descripción'}
+          </div>
+          {cantcaja > 1 && (
+            <div className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-0.5">
+              Packing: {cantcaja} {umed}/Caja
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-border" />
+
+      {/* Stats: Saldo Zofri / Físico / Diferencia */}
+      <div className="grid grid-cols-3 divide-x divide-border">
+        <div className="flex flex-col gap-0.5 px-3 py-2">
+          <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium">Saldo Zofri</div>
+          <div className="text-sm font-semibold text-blue-700 dark:text-blue-400 leading-none">
+            {saldo_total} {umed}
+          </div>
+        </div>
+        <div className="flex flex-col gap-0.5 px-3 py-2">
+          <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium">Físico</div>
+          <div className={`text-sm font-semibold leading-none ${fisico_total !== null ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-400'}`}>
+            {fisico_total !== null ? `${fisico_total} ${umed}` : '—'}
+          </div>
+        </div>
+        <div className="flex flex-col gap-0.5 px-3 py-2">
+          <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium">Diferencia</div>
+          <div className={`text-sm font-semibold leading-none ${difColor}`}>
+            {difLabel}
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-border" />
+
+      {/* Ubicaciones */}
+      <div className="px-3 py-2">
+        <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium mb-1.5">Ubicaciones en bodega</div>
+        {ubicacion.ubicaciones.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {ubicacion.ubicaciones.map(u => (
+              <span
+                key={u}
+                className="font-mono text-[11px] font-medium bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded"
+              >
+                {u}
+              </span>
+            ))}
+          </div>
+        ) : (
+          <span className="text-[11px] text-zinc-400 italic">Sin ubicación registrada</span>
+        )}
       </div>
     </div>
   );

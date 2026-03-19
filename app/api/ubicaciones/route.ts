@@ -27,7 +27,18 @@ export async function GET(request: Request) {
         MAX(u.detalle) as detalle,
         MAX(u.empresa_id) as empresa_id,
         MAX(p.imagen_url) as producto_imagen_url,
+        MAX(p.cantcaja) as cantcaja,
+        MAX(p.umed) as umed,
         SUM(u.saldo) as saldo_total,
+        CASE 
+          WHEN BOOL_AND(u.fisico IS NULL) THEN NULL 
+          ELSE SUM(COALESCE(u.fisico, 0)) 
+        END as fisico_total,
+        CASE 
+          WHEN BOOL_AND(u.fisico IS NULL) THEN NULL 
+          ELSE SUM(COALESCE(u.fisico, 0)) - SUM(u.saldo)
+        END as diferencia_total,
+        ARRAY_REMOVE(ARRAY_AGG(DISTINCT u.ubicacion ORDER BY u.ubicacion ASC), NULL) as ubicaciones,
         JSON_AGG(
           JSON_BUILD_OBJECT(
             'id', u.id,
@@ -42,8 +53,8 @@ export async function GET(request: Request) {
           ) ORDER BY u.nroingreso ASC
         ) as lotes
       FROM ubicaciones_bodega u
-      LEFT JOIN productos p ON u.codigo = p.codigo 
-        AND u.empresa_id = p.empresa_id 
+      LEFT JOIN productos p ON u.codigo = p.codigo
+        AND u.empresa_id = p.empresa_id
         AND u.nroingreso = p.nroingreso
       WHERE u.empresa_id = ${eid}
         AND (
