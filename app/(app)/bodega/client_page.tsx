@@ -161,6 +161,7 @@ export function BodegaClient({ session, empresasMap }: any) {
                     <LoteEditor
                       key={lote.id}
                       lote={lote}
+                      cantcaja={selectedUbi.cantcaja}
                       onSaved={handleLoteUpdated}
                     />
                   ))}
@@ -174,109 +175,146 @@ export function BodegaClient({ session, empresasMap }: any) {
   );
 }
 
-function LoteEditor({ lote, onSaved }: { lote: LoteBodega; onSaved: (updated: LoteBodega) => void }) {
+function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: number; onSaved: (updated: LoteBodega) => void }) {
   const [open, setOpen] = useState(false);
   const [ubicacion, setUbicacion] = useState(lote.ubicacion || '');
-  const [fisico, setFisico] = useState(lote.fisico !== null ? lote.fisico.toString() : '');
-  const [observaciones, setObservaciones] = useState(lote.observaciones || '');
-  const [isSaving, setIsSaving] = useState(false);
+  const [fisicoCanjas, setFisicoCanjas] = useState(lote.fisico_cajas !== null ? lote.fisico_cajas.toString() : '');
+  const [fisicoUnidades, setFisicoUnidades] = useState(lote.fisico_unidades !== null && lote.fisico_unidades > 0 ? lote.fisico_unidades.toString() : '');
+  const [obs, setObs] = useState(lote.observaciones || '');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setUbicacion(lote.ubicacion || '');
-    setFisico(lote.fisico !== null ? lote.fisico.toString() : '');
-    setObservaciones(lote.observaciones || '');
+    setFisicoCanjas(lote.fisico_cajas !== null ? lote.fisico_cajas.toString() : '');
+    setFisicoUnidades(lote.fisico_unidades !== null && lote.fisico_unidades > 0 ? lote.fisico_unidades.toString() : '');
+    setObs(lote.observaciones || '');
   }, [lote]);
 
+  const cajas = fisicoCanjas === '' ? null : parseInt(fisicoCanjas);
+  const unidades = fisicoUnidades === '' ? 0 : parseInt(fisicoUnidades);
+  const fisicoTotal = cajas !== null ? (cajas * cantcaja) + unidades : null;
+  const diferencia = fisicoTotal !== null ? fisicoTotal - lote.saldo : null;
+  const difCajas = diferencia !== null ? Math.trunc(diferencia / cantcaja) : null;
+  const difResto = diferencia !== null ? diferencia % cantcaja : null;
+
+  const difLabel = diferencia === null
+    ? '—'
+    : diferencia === 0
+      ? 'Cuadrado ✓'
+      : `${difCajas} cj ${difResto !== 0 ? `+ ${difResto} u` : ''}`.trim();
+
+  const difColor = diferencia === null
+    ? 'text-zinc-400'
+    : diferencia === 0
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : diferencia < 0
+        ? 'text-red-600 dark:text-red-400'
+        : 'text-amber-600 dark:text-amber-400';
+
   const handleSave = async () => {
-    setIsSaving(true);
+    setSaving(true);
     try {
       const res = await fetch(`/api/ubicaciones/${lote.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ubicacion: ubicacion === '' ? null : ubicacion,
-          fisico: fisico === '' ? null : parseFloat(fisico),
-          observaciones: observaciones === '' ? null : observaciones,
+          fisico_cajas: cajas,
+          fisico_unidades: unidades,
+          observaciones: obs === '' ? null : obs,
         }),
       });
-
       if (!res.ok) throw new Error('Error guardando');
       const { data } = await res.json();
       onSaved({ ...lote, ...data });
-      toast.success('Lote actualizado');
+      toast.success('Lote guardado');
       setOpen(false);
-    } catch (error) {
+    } catch {
       toast.error('No se pudo guardar');
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
 
+  const saldoCajas = Math.floor(lote.saldo / cantcaja);
+  const saldoResto = lote.saldo % cantcaja;
+
   return (
-    <div className="border rounded-lg overflow-hidden bg-white dark:bg-zinc-950">
+    <div className="border rounded-xl overflow-hidden">
       <button
         type="button"
-        className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-900"
+        className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
         onClick={() => setOpen(v => !v)}
       >
         <div>
-          <div className="text-xs text-zinc-500">Lote</div>
-          <div className="font-mono font-semibold text-sm">
-            {lote.nroingreso || 'Sin Nro Ingreso'}
+          <div className="text-[10px] font-mono text-zinc-400 uppercase">{lote.nroingreso || 'Sin Nro Ingreso'}</div>
+          <div className="text-lg font-black text-blue-700 dark:text-blue-400 leading-none mt-0.5">
+            {lote.ubicacion || <span className="text-zinc-300 font-normal text-sm">Sin ubicación</span>}
           </div>
         </div>
-        <div className="text-xs text-zinc-500">
-          {lote.ubicacion || 'Sin ubicación'}
+        <div className="text-right">
+          <div className="text-xs text-zinc-500">{saldoCajas} cj {saldoResto > 0 ? `+ ${saldoResto} u` : ''}</div>
+          {diferencia !== null && (
+            <div className={`text-xs font-bold ${difColor}`}>{difLabel}</div>
+          )}
         </div>
       </button>
 
       {open && (
-        <div className="p-4 space-y-3 border-t">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-zinc-50 dark:bg-zinc-900 p-3 rounded-md border">
-              <Label className="text-zinc-500 text-xs uppercase tracking-wider">Saldo</Label>
-              <div className="text-xl font-bold mt-1">{lote.saldo}</div>
-            </div>
-            <div className="bg-zinc-50 dark:bg-zinc-900 p-3 rounded-md border text-right">
-              <Label className="text-zinc-500 text-xs uppercase tracking-wider">Cajas</Label>
-              <div className="text-xl font-bold mt-1">{lote.saldocajas}</div>
-            </div>
-          </div>
-
-          <div className="space-y-2 pt-1">
-            <Label htmlFor={`fisico-${lote.id}`} className="font-bold">Físico (Conteo real)</Label>
-            <Input 
-              id={`fisico-${lote.id}`} 
-              type="number" 
-              className="h-12 text-xl font-bold placeholder:font-normal placeholder:text-zinc-300" 
-              placeholder="Ej: 45"
-              value={fisico}
-              onChange={e => setFisico(e.target.value)}
-            />
-          </div>
+        <div className="border-t p-4 space-y-3 bg-zinc-50 dark:bg-zinc-900">
           
-          <div className="space-y-2">
-            <Label htmlFor={`ubicacion-${lote.id}`}>Código de Ubicación</Label>
-            <Input 
-              id={`ubicacion-${lote.id}`} 
-              className="font-mono uppercase" 
-              value={ubicacion}
-              onChange={e => setUbicacion(e.target.value.toUpperCase())}
-            />
+          {/* Saldo sistema */}
+          <div className="bg-white dark:bg-zinc-800 p-3 rounded-lg border text-center">
+            <div className="text-[10px] text-zinc-400 uppercase tracking-wide">Saldo sistema</div>
+            <div className="text-2xl font-bold mt-0.5">{saldoCajas} cj {saldoResto > 0 ? `+ ${saldoResto} u` : ''}</div>
+            <div className="text-xs text-zinc-400 mt-0.5">{lote.saldo} unidades · {cantcaja} u/caja</div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor={`observaciones-${lote.id}`}>Observaciones</Label>
-            <Input 
-              id={`observaciones-${lote.id}`} 
-              placeholder="Ej: Cajas mojadas, faltan piezas..." 
-              value={observaciones}
-              onChange={e => setObservaciones(e.target.value)}
-            />
+          {/* Conteo físico */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">Cajas contadas</Label>
+              <Input
+                type="number"
+                min="0"
+                className="h-12 text-xl font-bold text-center"
+                placeholder="0"
+                value={fisicoCanjas}
+                onChange={e => setFisicoCanjas(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">Unidades sueltas</Label>
+              <Input
+                type="number"
+                min="0"
+                className="h-12 text-xl font-bold text-center"
+                placeholder="0"
+                value={fisicoUnidades}
+                onChange={e => setFisicoUnidades(e.target.value)}
+              />
+            </div>
           </div>
 
-          <Button className="w-full h-12 text-lg font-bold mt-2" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+          {/* Preview diferencia */}
+          {fisicoTotal !== null && (
+            <div className={`p-3 rounded-lg border text-center ${diferencia === 0 ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200' : diferencia! < 0 ? 'bg-red-50 dark:bg-red-950/30 border-red-200' : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200'}`}>
+              <div className="text-[10px] text-zinc-400 uppercase tracking-wide">Diferencia</div>
+              <div className={`text-xl font-bold mt-0.5 ${difColor}`}>{difLabel}</div>
+              <div className="text-xs text-zinc-400 mt-0.5">{fisicoTotal} u físicas vs {lote.saldo} u sistema</div>
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <Label className="text-xs">Código de ubicación</Label>
+            <Input className="font-mono uppercase" value={ubicacion} onChange={e => setUbicacion(e.target.value.toUpperCase())} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Observaciones</Label>
+            <Input placeholder="Ej: Cajas mojadas..." value={obs} onChange={e => setObs(e.target.value)} />
+          </div>
+          <Button className="w-full font-bold h-11" onClick={handleSave} disabled={saving}>
+            {saving ? 'Guardando...' : 'Guardar lote'}
           </Button>
         </div>
       )}
