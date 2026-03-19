@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { PlusCircle, Search, Edit2, Trash2, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
+import { useEmpresaId } from '@/hooks/useEmpresaId';
 
-export function CatalogoAdminClient({ activeEmpresaId }: { activeEmpresaId: number; session: any }) {
+export function CatalogoAdminClient({ session }: { session: any }) {
+  const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
   const [catalogos, setCatalogos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -41,9 +43,9 @@ export function CatalogoAdminClient({ activeEmpresaId }: { activeEmpresaId: numb
   };
 
   useEffect(() => {
-    if (!activeEmpresaId || activeEmpresaId === 0) return;
+    if (!isLoaded || !activeEmpresaId || activeEmpresaId === 0) return;
     fetchCatalogos();
-  }, [activeEmpresaId]);
+  }, [activeEmpresaId, isLoaded]);
 
   const handleCreate = async () => {
     try {
