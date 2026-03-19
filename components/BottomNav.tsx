@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Tag, Box, Menu } from 'lucide-react';
+import { Home, Tag, Box, Menu, ImageIcon } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { CompanySwitcher } from './CompanySwitcher';
 import { signOut, useSession } from 'next-auth/react';
@@ -73,6 +73,9 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
                    <div>
                       <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Administración</h3>
                       <Link href="/admin/importar" className="block py-2 font-medium">Importar Excel</Link>
+                      <Link href="/admin/subir-imagenes" className="block py-2 font-medium flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4" /> Subir Imágenes
+                      </Link>
                       <Link href="/admin/usuarios" className="block py-2 font-medium">Usuarios</Link>
                    </div>
                  )}

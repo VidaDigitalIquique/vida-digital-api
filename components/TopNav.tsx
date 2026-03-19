@@ -15,10 +15,11 @@ import {
   Home, 
   Tag, 
   Box, 
-  LogOut, 
-  ChevronDown, 
-  FileSpreadsheet, 
-  Users, 
+  LogOut,
+  ChevronDown,
+  FileSpreadsheet,
+  ImageIcon,
+  Users,
   LayoutList 
 } from 'lucide-react';
 import { CompanySwitcher } from './CompanySwitcher';
@@ -87,6 +88,11 @@ export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number,
                     <DropdownMenuItem>
                       <Link href="/admin/importar" className="flex items-center gap-2 w-full">
                         <FileSpreadsheet className="w-4 h-4" /> Importar Excel
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Link href="/admin/subir-imagenes" className="flex items-center gap-2 w-full">
+                        <ImageIcon className="w-4 h-4" /> Subir Imágenes
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>

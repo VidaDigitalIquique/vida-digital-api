@@ -176,6 +176,7 @@ export function ImportarClient() {
     }
   };
 
+
   return (
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
@@ -230,9 +231,10 @@ export function ImportarClient() {
                  <li>Los productos nuevos ingresarán automáticamente marcados con la etiqueta "NUEVO".</li>
                  <li>El <code>saldo</code> actual en Bodegas no se sobreescribe desde aquí; solo el Saldo Sistema Global.</li>
               </ul>
-           </div>
-        </div>
-      ) : (
+             </div>
+          </div>
+
+        ) : (
         <div className="flex flex-col gap-4">
            {/* Stats summary */}
            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
