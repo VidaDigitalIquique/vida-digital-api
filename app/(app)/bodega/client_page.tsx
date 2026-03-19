@@ -201,7 +201,11 @@ function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: n
     ? '—'
     : diferencia === 0
       ? 'Cuadrado ✓'
-      : `${difCajas} cj ${difResto !== 0 ? `+ ${difResto} u` : ''}`.trim();
+      : difCajas === 0
+        ? `${difResto} u`
+        : difResto === 0
+          ? `${difCajas} cj`
+          : `${difCajas} cj + ${difResto} u`;
 
   const difColor = diferencia === null
     ? 'text-zinc-400'
