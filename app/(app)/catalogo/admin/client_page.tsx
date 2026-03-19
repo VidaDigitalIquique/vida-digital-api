@@ -11,7 +11,7 @@ import { useEmpresaId } from '@/hooks/useEmpresaId';
 export function CatalogoAdminClient({ session }: { session: any }) {
   const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
   const [catalogos, setCatalogos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
