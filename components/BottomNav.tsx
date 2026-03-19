@@ -26,7 +26,9 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
   };
 
   const rutasVisibles = RUTAS_POR_ROL[rol] || [];
-  const visibleLinks = NAV_LINKS.filter(link => rutasVisibles.includes(link.href));
+  const visibleLinks = NAV_LINKS.filter(link => 
+    rutasVisibles.some(ruta => link.href.startsWith(ruta))
+  );
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl pb-safe">

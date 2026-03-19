@@ -42,7 +42,9 @@ export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number,
   };
 
   const rutasVisibles = RUTAS_POR_ROL[rol] || [];
-  const visibleLinks = NAV_LINKS.filter(link => rutasVisibles.includes(link.href));
+  const visibleLinks = NAV_LINKS.filter(link => 
+    rutasVisibles.some(ruta => link.href.startsWith(ruta))
+  );
 
   return (
     <header className="hidden md:flex sticky top-0 z-50 w-full h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl transition-all">
