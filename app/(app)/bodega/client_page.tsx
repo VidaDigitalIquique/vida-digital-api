@@ -178,15 +178,15 @@ export function BodegaClient({ session, empresasMap }: any) {
 function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: number; onSaved: (updated: LoteBodega) => void }) {
   const [open, setOpen] = useState(false);
   const [ubicacion, setUbicacion] = useState(lote.ubicacion || '');
-  const [fisicoCanjas, setFisicoCanjas] = useState(lote.fisico_cajas !== null ? lote.fisico_cajas.toString() : '');
-  const [fisicoUnidades, setFisicoUnidades] = useState(lote.fisico_unidades !== null && lote.fisico_unidades > 0 ? lote.fisico_unidades.toString() : '');
+  const [fisicoCanjas, setFisicoCanjas] = useState(lote.fisico_cajas != null ? lote.fisico_cajas.toString() : '');
+  const [fisicoUnidades, setFisicoUnidades] = useState(lote.fisico_unidades != null && lote.fisico_unidades > 0 ? lote.fisico_unidades.toString() : '');
   const [obs, setObs] = useState(lote.observaciones || '');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setUbicacion(lote.ubicacion || '');
-    setFisicoCanjas(lote.fisico_cajas !== null ? lote.fisico_cajas.toString() : '');
-    setFisicoUnidades(lote.fisico_unidades !== null && lote.fisico_unidades > 0 ? lote.fisico_unidades.toString() : '');
+    setFisicoCanjas(lote.fisico_cajas != null ? lote.fisico_cajas.toString() : '');
+    setFisicoUnidades(lote.fisico_unidades != null && lote.fisico_unidades > 0 ? lote.fisico_unidades.toString() : '');
     setObs(lote.observaciones || '');
   }, [lote]);
 
