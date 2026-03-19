@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Tag, Box, Camera, Menu } from 'lucide-react';
+import { Home, Tag, Box, Menu } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { CompanySwitcher } from './CompanySwitcher';
 import { signOut } from 'next-auth/react';
@@ -12,7 +12,6 @@ import { Button } from './ui/button';
 const NAV_LINKS = [
   { name: 'Precios', href: '/precios', icon: Tag },
   { name: 'Bodega', href: '/bodega', icon: Box },
-  { name: 'Despachos', href: '/despachos', icon: Camera },
 ];
 
 export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number, onSwitch: (id: number) => void }) {
@@ -51,7 +50,6 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
                  </div>
                  <div>
                     <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Herramientas</h3>
-                    <Link href="/inventario" className="block py-2 font-medium">Inventario / Conteo</Link>
                     <Link href="/catalogo/admin" className="block py-2 font-medium">Mis Catálogos</Link>
                  </div>
                  <div>
