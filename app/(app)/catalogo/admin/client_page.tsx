@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { PlusCircle, Search, Edit2, Trash2, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEmpresaId } from '@/hooks/useEmpresaId';
+import { QRCodeSVG } from 'qrcode.react';
 
 export function CatalogoAdminClient({ session }: { session: any }) {
   const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
@@ -131,12 +132,23 @@ export function CatalogoAdminClient({ session }: { session: any }) {
                     <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${cat.activo ? 'bg-emerald-500' : 'bg-red-500'}`} title={cat.activo ? 'Activo' : 'Inactivo'} />
                  </div>
                  <p className="text-sm text-zinc-500 line-clamp-2 mb-4 h-10">{cat.descripcion || 'Sin descripción'}</p>
-                 <div className="bg-zinc-100 dark:bg-zinc-800 rounded p-2 text-xs font-mono text-zinc-600 dark:text-zinc-400 flex items-center justify-between mb-4">
-                    <span className="truncate mr-2">.../catalogo/{cat.slug}</span>
-                    <button onClick={() => {
-                        window.navigator.clipboard.writeText(getPublicUrl(cat.slug));
-                        toast.success('Enlace copiado al portapapeles');
-                    }} className="p-1 hover:text-blue-500"><LinkIcon className="w-3 h-3" /></button>
+                 <div className="flex gap-3 items-start mb-4">
+                    <div className="flex-shrink-0 bg-white p-1.5 rounded border">
+                      <QRCodeSVG 
+                        value={getPublicUrl(cat.slug)} 
+                        size={72}
+                        level="M"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="bg-zinc-100 dark:bg-zinc-800 rounded p-2 text-xs font-mono text-zinc-600 dark:text-zinc-400 flex items-center justify-between">
+                        <span className="truncate mr-2">.../catalogo/{cat.slug}</span>
+                        <button onClick={() => {
+                            window.navigator.clipboard.writeText(getPublicUrl(cat.slug));
+                            toast.success('Enlace copiado al portapapeles');
+                        }} className="p-1 hover:text-blue-500"><LinkIcon className="w-3 h-3" /></button>
+                      </div>
+                    </div>
                  </div>
               </div>
               <div className="flex items-center gap-2 border-t pt-4">
