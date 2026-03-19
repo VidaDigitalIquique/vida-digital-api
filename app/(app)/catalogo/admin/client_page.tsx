@@ -18,6 +18,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [newAmbasEmpresas, setNewAmbasEmpresas] = useState(true);
   const [newSoloStock, setNewSoloStock] = useState(false);
   const [newSoloNuevo, setNewSoloNuevo] = useState(false);
   const [newMostrarPrecio, setNewMostrarPrecio] = useState(true);
@@ -80,6 +81,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
           mostrar_precio: newMostrarPrecio,
           margen_precio: newMargen,
           solo_stock: newSoloStock,
+          ambas_empresas: newAmbasEmpresas,
           solo_nuevo: newSoloNuevo,
           palabras_incluir: newPalabrasIncluir,
           palabras_excluir: newPalabrasExcluir,
@@ -90,6 +92,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
         setIsCreating(false);
         setNewTitle('');
         setNewDesc('');
+        setNewAmbasEmpresas(true);
         setNewSoloStock(false);
         setNewSoloNuevo(false);
         setNewMostrarPrecio(true);
@@ -208,6 +211,10 @@ export function CatalogoAdminClient({ session }: { session: any }) {
 
             <div className="border-t pt-4 space-y-3">
               <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Filtros de productos</p>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={newAmbasEmpresas} onChange={e => setNewAmbasEmpresas(e.target.checked)} className="w-4 h-4 rounded" />
+                Incluir productos de ambas empresas
+              </label>
               <label className="flex items-center gap-2 text-sm cursor-pointer">
                 <input type="checkbox" checked={newSoloStock} onChange={e => setNewSoloStock(e.target.checked)} className="w-4 h-4 rounded" />
                 Solo productos con stock

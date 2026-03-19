@@ -42,7 +42,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
         SUM(p.saldo) as saldo,
         BOOL_OR(p.es_nuevo) as es_nuevo
       FROM productos p
-      WHERE p.empresa_id = ${cat.empresa_id}
+      WHERE (${cat.ambas_empresas} = true OR p.empresa_id = ${cat.empresa_id})
         AND p.saldo > 0
         AND (${soloNuevo} = false OR p.es_nuevo = true)
         AND EXISTS (

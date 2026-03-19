@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   try {
-    const { empresaId, titulo, descripcion, mostrar_precio, margen_precio, solo_stock, solo_nuevo, palabras_incluir, palabras_excluir } = await request.json();
+    const { empresaId, titulo, descripcion, mostrar_precio, margen_precio, solo_stock, solo_nuevo, palabras_incluir, palabras_excluir, ambas_empresas } = await request.json();
 
     if (!empresaId || !titulo) return NextResponse.json({ error: "Datos requeridos faltantes" }, { status: 400 });
 
@@ -49,11 +49,11 @@ export async function POST(request: Request) {
     const slug = `${baseSlug}-${shortId}`;
 
     const inserted = await sql`
-      INSERT INTO catalogos (empresa_id, slug, titulo, descripcion, activo, mostrar_precio, margen_precio, solo_stock, solo_nuevo, palabras_incluir, palabras_excluir)
+      INSERT INTO catalogos (empresa_id, slug, titulo, descripcion, activo, mostrar_precio, margen_precio, solo_stock, solo_nuevo, palabras_incluir, palabras_excluir, ambas_empresas)
       VALUES (
         ${empresaId}, ${slug}, ${titulo}, ${descripcion || null}, true,
         ${mostrar_precio ?? true}, ${margen_precio ?? 0}, ${solo_stock ?? false}, ${solo_nuevo ?? false},
-        ${palabras_incluir || ''}, ${palabras_excluir || ''}
+        ${palabras_incluir || ''}, ${palabras_excluir || ''}, ${ambas_empresas ?? true}
       )
       RETURNING *
     `;
