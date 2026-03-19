@@ -21,7 +21,7 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
 
   const RUTAS_POR_ROL: Record<string, string[]> = {
     admin: ['/precios', '/bodega'],
-    vendedor: ['/precios'],
+    vendedor: ['/precios', '/catalogo'],
     bodeguero: ['/bodega'],
   };
 

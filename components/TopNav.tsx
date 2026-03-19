@@ -37,7 +37,7 @@ export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number,
 
   const RUTAS_POR_ROL: Record<string, string[]> = {
     admin: ['/dashboard', '/precios', '/bodega'],
-    vendedor: ['/precios'],
+    vendedor: ['/precios', '/catalogo'],
     bodeguero: ['/bodega'],
   };
 
