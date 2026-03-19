@@ -63,10 +63,12 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
                     <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Empresa Activa</h3>
                     <CompanySwitcher activeEmpresaId={activeEmpresaId} onSwitch={onSwitch} />
                  </div>
-                 <div>
-                    <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Herramientas</h3>
-                    <Link href="/catalogo/admin" className="block py-2 font-medium">Mis Catálogos</Link>
-                 </div>
+                 {(rol === 'admin' || rol === 'vendedor') && (
+                   <div>
+                      <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Herramientas</h3>
+                      <Link href="/catalogo/admin" className="block py-2 font-medium">Mis Catálogos</Link>
+                   </div>
+                 )}
                  {rol === 'admin' && (
                    <div>
                       <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Administración</h3>
