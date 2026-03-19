@@ -13,9 +13,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const body = await request.json();
     const { ubicacion, fisico_cajas, fisico_unidades, observaciones } = body;
     const { id } = params;
-    console.log('DEBUG body:', JSON.stringify(body));
-    console.log('DEBUG fisico_cajas:', fisico_cajas, typeof fisico_cajas);
-    console.log('DEBUG fisico_unidades:', fisico_unidades, typeof fisico_unidades);
 
     const existing = await sql`
       SELECT empresa_id, saldo, cantcaja 
@@ -40,7 +37,6 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       fisicoTotal = (cajas * cantcaja) + unidades;
       diferencia = fisicoTotal - saldo;
     }
-    console.log('DEBUG cajas:', cajas, 'unidades:', unidades, 'fisicoTotal:', fisicoTotal);
 
     const updated = await sql`
       UPDATE ubicaciones_bodega

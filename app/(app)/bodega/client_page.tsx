@@ -159,7 +159,7 @@ export function BodegaClient({ session, empresasMap }: any) {
                 <div className="space-y-4">
                   {selectedUbi.lotes.map(lote => (
                     <LoteEditor
-                      key={lote.id}
+                      key={`${lote.id}-${lote.updated_at}`}
                       lote={lote}
                       cantcaja={selectedUbi.cantcaja}
                       onSaved={handleLoteUpdated}
@@ -178,8 +178,8 @@ export function BodegaClient({ session, empresasMap }: any) {
 function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: number; onSaved: (updated: LoteBodega) => void }) {
   const [open, setOpen] = useState(false);
   const [ubicacion, setUbicacion] = useState(lote.ubicacion || '');
-  const [fisicoCanjas, setFisicoCanjas] = useState(lote.fisico_cajas != null ? lote.fisico_cajas.toString() : '');
-  const [fisicoUnidades, setFisicoUnidades] = useState(lote.fisico_unidades != null && lote.fisico_unidades > 0 ? lote.fisico_unidades.toString() : '');
+  const [fisicoCanjas, setFisicoCanjas] = useState(() => lote.fisico_cajas != null ? lote.fisico_cajas.toString() : '');
+  const [fisicoUnidades, setFisicoUnidades] = useState(() => lote.fisico_unidades != null && lote.fisico_unidades > 0 ? lote.fisico_unidades.toString() : '');
   const [obs, setObs] = useState(lote.observaciones || '');
   const [saving, setSaving] = useState(false);
 

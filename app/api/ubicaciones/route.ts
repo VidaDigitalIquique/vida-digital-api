@@ -77,7 +77,6 @@ export async function GET(request: Request) {
       LIMIT 100
     `;
 
-    console.log('DEBUG lote sample:', JSON.stringify(rows[0]?.lotes?.[0]));
     return NextResponse.json({ data: rows });
   } catch (error: any) {
     console.error("GET /api/ubicaciones error:", error);
