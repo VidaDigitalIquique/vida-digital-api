@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { PlusCircle, Search, Edit2, Trash2, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEmpresaId } from '@/hooks/useEmpresaId';
-import { QRCodeSVG } from 'qrcode.react';
+import dynamic from 'next/dynamic';
+const QRCodeSVG = dynamic(() => import('qrcode.react').then(mod => mod.QRCodeSVG), { ssr: false });
 
 export function CatalogoAdminClient({ session }: { session: any }) {
   const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
