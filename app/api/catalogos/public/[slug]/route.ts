@@ -81,7 +81,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
       costo: parseFloat(p.costo),
       cantcaja: parseInt(p.cantcaja),
       precio_catalogo: mostrarPrecio
-        ? Math.round(parseFloat(p.costo) * (1 + margen / 100) * 100) / 100
+        ? Math.ceil(parseFloat(p.costo) * (1 + margen / 100) * 10) / 10
         : null,
     }));
 
