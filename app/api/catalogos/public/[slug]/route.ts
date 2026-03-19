@@ -55,6 +55,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
       GROUP BY p.codigo
       ORDER BY p.codigo ASC
     `;
+    console.log('DEBUG rows count:', rows.length, 'empresa_id:', cat.empresa_id);
 
     // Apply keyword filters in JS (simpler than complex SQL)
     let productos = rows.filter((p: any) => {
