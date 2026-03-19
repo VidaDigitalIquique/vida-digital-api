@@ -22,6 +22,9 @@ export async function GET(request: Request) {
 
   try {
     const searchPattern = `%${search}%`;
+    if (!search) {
+      return NextResponse.json({ data: [] });
+    }
 
     const rows = await sql`
       SELECT

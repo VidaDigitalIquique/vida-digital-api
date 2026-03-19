@@ -36,6 +36,7 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const hasSearch = debouncedSearch.trim().length >= 2;
   const [soloStock, setSoloStock] = useState(false);
   const [soloNuevo, setSoloNuevo] = useState(false);
 
@@ -56,6 +57,11 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
 
     async function fetchProducts() {
       setLoading(true);
+      if (debouncedSearch.trim().length < 2) {
+        setProductos([]);
+        setLoading(false);
+        return;
+      }
       try {
         const queryParams = new URLSearchParams({
           empresa: activeEmpresaId.toString(),
@@ -119,24 +125,30 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
         </div>
       </div>
 
-      {loading ? (
+      {loading && hasSearch ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-pulse">
-           {[...Array(8)].map((_, i) => (
-             <div key={i} className="h-36 bg-zinc-200 dark:bg-zinc-800 rounded-xl"></div>
-           ))}
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-36 bg-zinc-200 dark:bg-zinc-800 rounded-xl"></div>
+          ))}
+        </div>
+      ) : !hasSearch ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
+          <div className="text-4xl"></div>
+          <p className="text-zinc-500 font-medium">Busca un producto o descripción</p>
+          <p className="text-zinc-400 text-sm">Ingresa al menos 2 caracteres para ver resultados</p>
         </div>
       ) : productos.length === 0 ? (
         <div className="text-center py-12 text-zinc-500">
-           No se encontraron productos.
+          No se encontraron productos.
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-12">
           {productos.map(p => (
-            <ProductCard 
-              key={p.id} 
-              producto={p} 
-              empresaSlug={empresaSlug} 
-              onClick={openDrawer} 
+            <ProductCard
+              key={p.id}
+              producto={p}
+              empresaSlug={empresaSlug}
+              onClick={openDrawer}
             />
           ))}
         </div>
