@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { UploadCloud, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
+import { UploadCloud, CheckCircle2, AlertTriangle, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function SubirImagenesClient() {
@@ -99,6 +99,18 @@ export function SubirImagenesClient() {
                   {item.status === 'error' && <AlertTriangle className="w-3 h-3 text-red-500" />}
                   <span className={`font-mono truncate ${item.status === 'error' ? 'text-red-500' : ''}`}>{item.name}</span>
                   {item.msg && <span className="text-red-400 ml-auto">{item.msg}</span>}
+                  {item.status === 'pending' && (
+                    <button
+                      onClick={() => {
+                        setImageFiles(prev => prev.filter((_, idx) => idx !== i));
+                        setImageQueue(prev => prev.filter((_, idx) => idx !== i));
+                      }}
+                      className="ml-auto text-zinc-400 hover:text-red-500"
+                      title="Eliminar"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
