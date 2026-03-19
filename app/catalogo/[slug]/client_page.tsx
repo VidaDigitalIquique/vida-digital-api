@@ -66,7 +66,9 @@ export function PublicCatalogoClient({ data }: { data: any }) {
       </div>
 
       <div className="text-center py-12 text-zinc-400 text-sm">
-        Potenciado por <strong>VidaDigital</strong>
+        <a href="https://wa.me/56920948874" target="_blank" rel="noopener noreferrer">
+          Servicios Digitales PBT - Software a Medida para Que Su Empresa Venda Más
+        </a>
       </div>
     </div>
   );

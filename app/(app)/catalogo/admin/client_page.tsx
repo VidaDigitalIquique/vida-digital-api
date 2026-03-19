@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { PlusCircle, Search, Edit2, Trash2, Link as LinkIcon, ExternalLink } from 'lucide-react';
+import { PlusCircle, Search, Trash2, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEmpresaId } from '@/hooks/useEmpresaId';
 import dynamic from 'next/dynamic';
@@ -157,9 +157,6 @@ export function CatalogoAdminClient({ session }: { session: any }) {
                  <Button variant="outline" className="flex-1 text-xs" onClick={() => window.open(getPublicUrl(cat.slug), '_blank')}>
                    <ExternalLink className="w-3 h-3 mr-2" /> Ver
                  </Button>
-                 <Button variant="outline" className="flex-1 text-xs" onClick={() => toast.info('Editor Drag&Drop en construcción para esta demo simplificada.')}>
-                   <Edit2 className="w-3 h-3 mr-2" /> Editar
-                 </Button>
                  <Button variant="destructive" size="icon" onClick={() => handleDelete(cat.id)}>
                    <Trash2 className="w-4 h-4" />
                  </Button>
@@ -201,7 +198,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
               </div>
               <div className="space-y-1">
                 <label className="text-sm font-medium">Excluir si contiene (separar con coma)</label>
-                <Input value={newPalabrasExcluir} onChange={e => setNewPalabrasExcluir(e.target.value)} placeholder="Ej: NAVIDAD, ANIL" />
+                <Input value={newPalabrasExcluir} onChange={e => setNewPalabrasExcluir(e.target.value)} placeholder="Ej: NAVIDAD, (ANIL)" />
               </div>
             </div>
 
