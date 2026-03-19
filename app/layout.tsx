@@ -8,6 +8,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'VidaDigital Inventario v2',
   description: 'Sistema de inventario para VidaDigital & Sanjh',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
