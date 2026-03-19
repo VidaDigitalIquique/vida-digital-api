@@ -15,8 +15,6 @@ import {
   Home, 
   Tag, 
   Box, 
-  ClipboardCheck, 
-  Camera, 
   LogOut, 
   ChevronDown, 
   FileSpreadsheet, 
@@ -29,8 +27,6 @@ const NAV_LINKS = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Precios', href: '/precios', icon: Tag },
   { name: 'Bodega', href: '/bodega', icon: Box },
-  { name: 'Inventario', href: '/inventario', icon: ClipboardCheck },
-  { name: 'Despachos', href: '/despachos', icon: Camera },
 ];
 
 export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number, onSwitch: (id: number) => void }) {
