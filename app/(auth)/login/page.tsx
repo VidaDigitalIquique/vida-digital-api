@@ -44,12 +44,10 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="space-y-3">
-          <CardTitle className="text-2xl font-bold text-center">VidaDigital v2</CardTitle>
-          <CardDescription className="text-center font-medium">
-            IMPORT EXPORT SANJH LTDA. <br />
-            <span className="text-zinc-400">|</span> <br />
-            IMPORT EXPORT VIDA DIGITAL LTDA.
-          </CardDescription>
+            <CardTitle className="text-2xl font-bold text-center">VidaDigital v2</CardTitle>
+            <CardDescription className="text-center font-medium">
+              App Vida Digital
+            </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
