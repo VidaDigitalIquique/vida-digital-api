@@ -18,6 +18,7 @@ export function BodegaClient({ session, empresasMap }: any) {
   const [ubicaciones, setUbicaciones] = useState<UbicacionBodegaAgrupada[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const hasSearch = search.trim().length >= 2;
   const [soloStock, setSoloStock] = useState(false);
   const [soloNuevo, setSoloNuevo] = useState(false);
   
@@ -36,6 +37,11 @@ export function BodegaClient({ session, empresasMap }: any) {
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (!isLoaded || activeEmpresaId === 0) return;
+      if (search.trim().length < 2) {
+        setUbicaciones([]);
+        setLoading(false);
+        return;
+      }
       setLoading(true);
       try {
         const queryParams = new URLSearchParams({
@@ -104,22 +110,30 @@ export function BodegaClient({ session, empresasMap }: any) {
             Solo nuevos ✨
           </label>
         </div>
-        <div className="text-xs text-zinc-500 font-medium mt-3 text-right">
-          Mostrando {ubicaciones.length} ubicaciones
-        </div>
+        {hasSearch && (
+          <div className="text-xs text-zinc-500 font-medium mt-3 text-right">
+            Mostrando {ubicaciones.length} ubicaciones
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-12">
-         {loading && ubicaciones.length === 0 ? (
+         {loading && hasSearch ? (
            <div className="col-span-full py-8 text-center text-zinc-500 animate-pulse">Buscando...</div>
+         ) : !hasSearch ? (
+           <div className="col-span-full flex flex-col items-center justify-center py-16 text-center gap-3">
+             <div className="text-4xl"></div>
+             <p className="text-zinc-500 font-medium">Busca un producto o ubicación</p>
+             <p className="text-zinc-400 text-sm">Ingresa al menos 2 caracteres para ver resultados</p>
+           </div>
          ) : ubicaciones.length === 0 ? (
            <div className="col-span-full text-center py-12 text-zinc-500">Ninguna ubicación coincide.</div>
          ) : (
            ubicaciones.map(u => (
-             <BodegaCard 
-               key={u.codigo} 
-               ubicacion={u} 
-               empresaSlug={empresaSlug} 
+             <BodegaCard
+               key={u.codigo}
+               ubicacion={u}
+               empresaSlug={empresaSlug}
                onClick={openDrawer}
              />
            ))
