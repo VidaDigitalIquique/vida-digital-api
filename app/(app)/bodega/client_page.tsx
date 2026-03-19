@@ -19,8 +19,8 @@ export function BodegaClient({ session, empresasMap }: any) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const hasSearch = search.trim().length >= 2;
-  const [soloStock, setSoloStock] = useState(false);
-  const [soloNuevo, setSoloNuevo] = useState(false);
+  const [soloStock, setSoloStock] = useState(() => localStorage.getItem('bodega_soloStock') === 'true');
+  const [soloNuevo, setSoloNuevo] = useState(() => localStorage.getItem('bodega_soloNuevo') === 'true');
   
   const [selectedUbi, setSelectedUbi] = useState<UbicacionBodegaAgrupada | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -32,6 +32,9 @@ export function BodegaClient({ session, empresasMap }: any) {
   useEffect(() => {
     if (searchInputRef.current) searchInputRef.current.focus();
   }, []);
+
+  useEffect(() => { localStorage.setItem('bodega_soloStock', soloStock.toString()); }, [soloStock]);
+  useEffect(() => { localStorage.setItem('bodega_soloNuevo', soloNuevo.toString()); }, [soloNuevo]);
 
   // Instant search - no debounce needed if backend is fast, but we'll debounce 250ms internally to save DB load
   useEffect(() => {
