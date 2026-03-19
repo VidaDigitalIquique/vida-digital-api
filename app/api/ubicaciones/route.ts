@@ -10,6 +10,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const empresaId = searchParams.get('empresa');
   const search = searchParams.get('search')?.toLowerCase() || '';
+  const soloStock = searchParams.get('soloStock') === 'true';
+  const soloNuevo = searchParams.get('soloNuevo') === 'true';
 
   if (!empresaId) return NextResponse.json({ error: "Falta empresa_id" }, { status: 400 });
 
@@ -30,6 +32,7 @@ export async function GET(request: Request) {
         MAX(p.cantcaja) as cantcaja,
         MAX(p.umed) as umed,
         SUM(u.saldo) as saldo_total,
+        BOOL_OR(p.es_nuevo) as es_nuevo,
         CASE 
           WHEN BOOL_AND(u.fisico IS NULL) THEN NULL 
           ELSE SUM(COALESCE(u.fisico, 0)) 
@@ -65,6 +68,9 @@ export async function GET(request: Request) {
           OR LOWER(u.nroingreso) LIKE ${searchPattern}
         )
       GROUP BY u.codigo
+      HAVING
+        (${soloStock} = false OR SUM(u.saldo) > 0)
+        AND (${soloNuevo} = false OR BOOL_OR(p.es_nuevo) = true)
       ORDER BY u.codigo ASC
       LIMIT 100
     `;

@@ -18,6 +18,8 @@ export function BodegaClient({ session, empresasMap }: any) {
   const [ubicaciones, setUbicaciones] = useState<UbicacionBodegaAgrupada[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [soloStock, setSoloStock] = useState(false);
+  const [soloNuevo, setSoloNuevo] = useState(false);
   
   const [selectedUbi, setSelectedUbi] = useState<UbicacionBodegaAgrupada | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -39,6 +41,8 @@ export function BodegaClient({ session, empresasMap }: any) {
         const queryParams = new URLSearchParams({
           empresa: activeEmpresaId.toString(),
           ...(search && { search }),
+          ...(soloStock && { soloStock: 'true' }),
+          ...(soloNuevo && { soloNuevo: 'true' }),
         });
         
         const res = await fetch(`/api/ubicaciones?${queryParams.toString()}`);
@@ -54,7 +58,7 @@ export function BodegaClient({ session, empresasMap }: any) {
     }, 250);
     
     return () => clearTimeout(timer);
-  }, [activeEmpresaId, search, isLoaded]);
+  }, [activeEmpresaId, search, soloStock, soloNuevo, isLoaded]);
 
   const openDrawer = (ubi: UbicacionBodegaAgrupada) => {
     setSelectedUbi(ubi);
@@ -89,6 +93,16 @@ export function BodegaClient({ session, empresasMap }: any) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
+        <div className="flex flex-wrap gap-4 mt-3">
+          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+            <input type="checkbox" className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500" checked={soloStock} onChange={(e) => setSoloStock(e.target.checked)} />
+            Solo con stock ✓
+          </label>
+          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+            <input type="checkbox" className="w-4 h-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-500" checked={soloNuevo} onChange={(e) => setSoloNuevo(e.target.checked)} />
+            Solo nuevos ✨
+          </label>
         </div>
         <div className="text-xs text-zinc-500 font-medium mt-3 text-right">
           Mostrando {ubicaciones.length} ubicaciones
