@@ -31,15 +31,15 @@ export async function GET(request: Request) {
         MAX(p.imagen_url) as producto_imagen_url,
         MAX(p.cantcaja) as cantcaja,
         MAX(p.umed) as umed,
-        SUM(u.saldo) as saldo_total,
+        SUM(u.saldo)::int as saldo_total,
         BOOL_OR(p.es_nuevo) as es_nuevo,
         CASE 
           WHEN BOOL_AND(u.fisico IS NULL) THEN NULL 
-          ELSE SUM(COALESCE(u.fisico, 0)) 
+          ELSE SUM(COALESCE(u.fisico, 0))::int
         END as fisico_total,
         CASE 
           WHEN BOOL_AND(u.fisico IS NULL) THEN NULL 
-          ELSE SUM(COALESCE(u.fisico, 0)) - SUM(u.saldo)
+          ELSE (SUM(COALESCE(u.fisico, 0)) - SUM(u.saldo))::int
         END as diferencia_total,
         ARRAY_REMOVE(ARRAY_AGG(DISTINCT u.ubicacion ORDER BY u.ubicacion ASC), NULL) as ubicaciones,
         JSON_AGG(
