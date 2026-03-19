@@ -14,6 +14,12 @@ export function CatalogoAdminClient({ activeEmpresaId }: { activeEmpresaId: numb
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [newSoloStock, setNewSoloStock] = useState(false);
+  const [newSoloNuevo, setNewSoloNuevo] = useState(false);
+  const [newMostrarPrecio, setNewMostrarPrecio] = useState(true);
+  const [newMargen, setNewMargen] = useState(0);
+  const [newPalabrasIncluir, setNewPalabrasIncluir] = useState('');
+  const [newPalabrasExcluir, setNewPalabrasExcluir] = useState('');
 
   const fetchCatalogos = async () => {
     setLoading(true);
@@ -39,13 +45,29 @@ export function CatalogoAdminClient({ activeEmpresaId }: { activeEmpresaId: numb
       const res = await fetch('/api/catalogos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ empresaId: activeEmpresaId, titulo: newTitle, descripcion: newDesc }),
+        body: JSON.stringify({
+          empresaId: activeEmpresaId,
+          titulo: newTitle,
+          descripcion: newDesc,
+          mostrar_precio: newMostrarPrecio,
+          margen_precio: newMargen,
+          solo_stock: newSoloStock,
+          solo_nuevo: newSoloNuevo,
+          palabras_incluir: newPalabrasIncluir,
+          palabras_excluir: newPalabrasExcluir,
+        }),
       });
       if (res.ok) {
         toast.success('Catálogo creado');
         setIsCreating(false);
         setNewTitle('');
         setNewDesc('');
+        setNewSoloStock(false);
+        setNewSoloNuevo(false);
+        setNewMostrarPrecio(true);
+        setNewMargen(0);
+        setNewPalabrasIncluir('');
+        setNewPalabrasExcluir('');
         fetchCatalogos();
       } else throw new Error();
     } catch {
@@ -134,14 +156,56 @@ export function CatalogoAdminClient({ activeEmpresaId }: { activeEmpresaId: numb
             <DialogTitle>Nuevo Catálogo</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-             <div className="space-y-2">
-                <label className="text-sm font-medium">Título Comercial</label>
-                <Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Ej: Ofertas Navidad 2026" />
-             </div>
-             <div className="space-y-2">
-                <label className="text-sm font-medium">Descripción (Opcional)</label>
-                <Input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Breve mensaje para el cliente" />
-             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Título Comercial</label>
+              <Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Ej: Ofertas Mayo 2026" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Descripción (Opcional)</label>
+              <Input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Breve mensaje para el cliente" />
+            </div>
+
+            <div className="border-t pt-4 space-y-3">
+              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Filtros de productos</p>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={newSoloStock} onChange={e => setNewSoloStock(e.target.checked)} className="w-4 h-4 rounded" />
+                Solo productos con stock
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={newSoloNuevo} onChange={e => setNewSoloNuevo(e.target.checked)} className="w-4 h-4 rounded" />
+                Solo productos nuevos ✨
+              </label>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Incluir solo si contiene (separar con coma)</label>
+                <Input value={newPalabrasIncluir} onChange={e => setNewPalabrasIncluir(e.target.value)} placeholder="Ej: vidrio, licuadora" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Excluir si contiene (separar con coma)</label>
+                <Input value={newPalabrasExcluir} onChange={e => setNewPalabrasExcluir(e.target.value)} placeholder="Ej: NAVIDAD, ANIL" />
+              </div>
+            </div>
+
+            <div className="border-t pt-4 space-y-3">
+              <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Configuración de precio</p>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={newMostrarPrecio} onChange={e => setNewMostrarPrecio(e.target.checked)} className="w-4 h-4 rounded" />
+                Mostrar precio en el catálogo
+              </label>
+              {newMostrarPrecio && (
+                <div className="space-y-1">
+                  <label className="text-sm font-medium">Margen sobre costo (%)</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="500"
+                    value={newMargen}
+                    onChange={e => setNewMargen(parseFloat(e.target.value) || 0)}
+                    placeholder="Ej: 30"
+                  />
+                  <p className="text-xs text-zinc-400">Precio = Costo × (1 + margen%)</p>
+                </div>
+              )}
+            </div>
           </div>
           <DialogFooter>
              <Button variant="outline" onClick={() => setIsCreating(false)}>Cancelar</Button>
