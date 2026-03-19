@@ -97,7 +97,7 @@ export function UsuariosClient({ empresasList, currentUserId }: { empresasList: 
     };
 
     try {
-      const url = isEditMode ? `/api/admin/usuarios/\${formId}` : '/api/admin/usuarios';
+      const url = isEditMode ? `/api/admin/usuarios/${formId}` : '/api/admin/usuarios';
       const method = isEditMode ? 'PUT' : 'POST';
 
       const res = await fetch(url, {
@@ -167,7 +167,7 @@ export function UsuariosClient({ empresasList, currentUserId }: { empresasList: 
                     </div>
                  </TableCell>
                  <TableCell className="text-center">
-                    {u.is_active ? <Badge className="bg-emerald-500">Activo</Badge> : <Badge variant="destructive">Bloqueado</Badge>}
+                    {u.activo ? <Badge className="bg-emerald-500">Activo</Badge> : <Badge variant="destructive">Bloqueado</Badge>}
                  </TableCell>
                  <TableCell className="text-right">
                     <Button variant="ghost" size="icon" onClick={() => openEdit(u)}>
