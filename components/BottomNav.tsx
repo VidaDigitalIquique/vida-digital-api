@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { Home, Tag, Box, Menu } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { CompanySwitcher } from './CompanySwitcher';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { Button } from './ui/button';
 
 const NAV_LINKS = [
@@ -16,16 +16,29 @@ const NAV_LINKS = [
 
 export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number, onSwitch: (id: number) => void }) {
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const rol = (session?.user as any)?.rol as string;
+
+  const RUTAS_POR_ROL: Record<string, string[]> = {
+    admin: ['/precios', '/bodega'],
+    vendedor: ['/precios'],
+    bodeguero: ['/bodega'],
+  };
+
+  const rutasVisibles = RUTAS_POR_ROL[rol] || [];
+  const visibleLinks = NAV_LINKS.filter(link => rutasVisibles.includes(link.href));
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl pb-safe">
       <div className="flex items-center justify-around h-full px-2">
-        <Link href="/dashboard" className={cn("flex flex-col items-center justify-center w-full h-full gap-1 transition-colors", pathname === '/dashboard' ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100')}>
-          <Home className="w-5 h-5" />
-          <span className="text-[10px] font-medium">Inicio</span>
-        </Link>
+        {rol === 'admin' && (
+          <Link href="/dashboard" className={cn("flex flex-col items-center justify-center w-full h-full gap-1 transition-colors", pathname === '/dashboard' ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100')}>
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] font-medium">Inicio</span>
+          </Link>
+        )}
         
-        {NAV_LINKS.map((link) => {
+        {visibleLinks.map((link) => {
           const Icon = link.icon;
           const isActive = pathname.startsWith(link.href);
           return (
@@ -52,11 +65,13 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
                     <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Herramientas</h3>
                     <Link href="/catalogo/admin" className="block py-2 font-medium">Mis Catálogos</Link>
                  </div>
-                 <div>
-                    <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Administración</h3>
-                    <Link href="/admin/importar" className="block py-2 font-medium">Importar Excel</Link>
-                    <Link href="/admin/usuarios" className="block py-2 font-medium">Usuarios</Link>
-                 </div>
+                 {rol === 'admin' && (
+                   <div>
+                      <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Administración</h3>
+                      <Link href="/admin/importar" className="block py-2 font-medium">Importar Excel</Link>
+                      <Link href="/admin/usuarios" className="block py-2 font-medium">Usuarios</Link>
+                   </div>
+                 )}
                </div>
                <Button variant="destructive" onClick={() => signOut()} className="w-full">
                  Cerrar Sesión

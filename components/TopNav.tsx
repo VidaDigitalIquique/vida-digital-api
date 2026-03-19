@@ -33,16 +33,26 @@ export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number,
   const pathname = usePathname();
   const { data: session } = useSession();
   const isAdmin = (session?.user as any)?.rol === 'admin';
+  const rol = (session?.user as any)?.rol as string;
+
+  const RUTAS_POR_ROL: Record<string, string[]> = {
+    admin: ['/dashboard', '/precios', '/bodega'],
+    vendedor: ['/precios'],
+    bodeguero: ['/bodega'],
+  };
+
+  const rutasVisibles = RUTAS_POR_ROL[rol] || [];
+  const visibleLinks = NAV_LINKS.filter(link => rutasVisibles.includes(link.href));
 
   return (
     <header className="hidden md:flex sticky top-0 z-50 w-full h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl transition-all">
       <div className="container flex h-16 max-w-7xl items-center justify-between mx-auto px-4">
         <div className="flex items-center gap-8">
-          <Link href="/dashboard" className="font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
+          <Link href={rutasVisibles[0] || '/dashboard'} className="font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
             VidaDigital
           </Link>
           <nav className="flex items-center space-x-1">
-            {NAV_LINKS.map((link) => {
+            {visibleLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname.startsWith(link.href);
               return (

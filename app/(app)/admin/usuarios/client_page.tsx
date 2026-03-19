@@ -154,7 +154,7 @@ export function UsuariosClient({ empresasList, currentUserId }: { empresasList: 
                  <TableCell className="font-mono text-sm">{u.rut}</TableCell>
                  <TableCell className="font-semibold">{u.nombre}{currentUserId === u.id && ' (Tú)'}</TableCell>
                  <TableCell className="text-center">
-                    <Badge variant="outline" className={`\${u.rol === 'admin' ? 'border-purple-200 text-purple-700 bg-purple-50' : u.rol === 'supervisor' ? 'border-blue-200 text-blue-700 bg-blue-50' : 'bg-transparent'}`}>
+                    <Badge variant="outline" className={`\${u.rol === 'admin' ? 'border-purple-200 text-purple-700 bg-purple-50' : u.rol === 'bodeguero' ? 'border-amber-200 text-amber-700 bg-amber-50' : u.rol === 'vendedor' ? 'border-blue-200 text-blue-700 bg-blue-50' : 'bg-transparent'}`}>
                        {u.rol.toUpperCase()}
                     </Badge>
                  </TableCell>
@@ -211,9 +211,9 @@ export function UsuariosClient({ empresasList, currentUserId }: { empresasList: 
                     className="w-full bg-white dark:bg-zinc-900 border rounded-md px-3 py-2 text-sm focus-visible:ring-1 focus-visible:ring-blue-500 outline-none"
                     disabled={isEditMode && currentUserId === formId}
                   >
-                     <option value="vendedor">Vendedor / Bodeguero</option>
-                     <option value="supervisor">Supervisor</option>
-                     <option value="admin">Administrador Global</option>
+                     <option value="vendedor">Vendedor</option>
+                     <option value="bodeguero">Bodeguero</option>
+                     <option value="admin">Administrador</option>
                   </select>
                 </div>
                 {isEditMode && currentUserId !== formId && (
@@ -257,3 +257,5 @@ export function UsuariosClient({ empresasList, currentUserId }: { empresasList: 
     </div>
   );
 }
+
+

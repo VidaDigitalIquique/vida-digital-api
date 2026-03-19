@@ -1,16 +1,41 @@
-export { default } from 'next-auth/middleware';
+import { withAuth } from 'next-auth/middleware';
+import { NextResponse } from 'next/server';
+
+const RUTAS_POR_ROL: Record<string, string[]> = {
+  admin: ['/dashboard', '/precios', '/bodega', '/catalogo', '/admin', '/inventario', '/despachos'],
+  vendedor: ['/precios', '/catalogo'],
+  bodeguero: ['/bodega'],
+};
+
+export default withAuth(
+  function middleware(req) {
+    const { pathname } = req.nextUrl;
+    const token = req.nextauth.token as any;
+    const rol = token?.rol as string;
+
+    if (!rol || !RUTAS_POR_ROL[rol]) {
+      return NextResponse.redirect(new URL('/login', req.url));
+    }
+
+    const rutasPermitidas = RUTAS_POR_ROL[rol];
+    const tieneAcceso = rutasPermitidas.some(ruta => pathname.startsWith(ruta));
+
+    if (!tieneAcceso) {
+      const primeraRuta = rutasPermitidas[0];
+      return NextResponse.redirect(new URL(primeraRuta, req.url));
+    }
+
+    return NextResponse.next();
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => !!token,
+    },
+  }
+);
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api/auth (NextAuth API routes)
-     * - login (auth page)
-     * - catalogo (public standalone pages)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!api/auth|api/debug/migrate|login|catalogo|_next/static|_next/image|favicon.ico).*)',
   ],
 };
