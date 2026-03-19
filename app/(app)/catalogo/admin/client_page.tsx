@@ -147,46 +147,43 @@ export function CatalogoAdminClient({ session }: { session: any }) {
           {catalogos.map(cat => (
             <div key={cat.id} className="bg-white dark:bg-zinc-900 border rounded-xl p-5 shadow-sm flex flex-col justify-between">
               <div>
-                 <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-lg leading-tight line-clamp-1" title={cat.titulo}>{cat.titulo}</h3>
-                    <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${cat.activo ? 'bg-emerald-500' : 'bg-red-500'}`} title={cat.activo ? 'Activo' : 'Inactivo'} />
-                 </div>
-                 <p className="text-sm text-zinc-500 line-clamp-2 mb-4 h-10">{cat.descripcion || 'Sin descripción'}</p>
-                 <div className="flex gap-3 items-start mb-4">
-                    <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                      <div data-qr={cat.slug} className="bg-white p-1.5 rounded border">
-                        <QRCodeSVG
-                          value={getPublicUrl(cat.slug)}
-                          size={72}
-                          level="M"
-                        />
-                      </div>
-                      <button
-                        onClick={() => downloadQR(cat.slug)}
-                        className="text-xs text-blue-600 hover:underline text-center"
-                      >
-                        Descargar QR
-                      </button>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="bg-zinc-100 dark:bg-zinc-800 rounded p-2 text-xs font-mono text-zinc-600 dark:text-zinc-400 flex items-center justify-between">
-                        <span className="truncate mr-2">.../catalogo/{cat.slug}</span>
-                        <button onClick={() => {
-                            window.navigator.clipboard.writeText(getPublicUrl(cat.slug));
-                            toast.success('Enlace copiado al portapapeles');
-                        }} className="p-1 hover:text-blue-500"><LinkIcon className="w-3 h-3" /></button>
-                      </div>
-                    </div>
-                 </div>
+                {/* Header */}
+                <div className="flex justify-between items-start mb-1">
+                  <h3 className="font-bold text-lg leading-tight line-clamp-1" title={cat.titulo}>{cat.titulo}</h3>
+                  <div className={`w-2 h-2 rounded-full mt-2 flex-shrink-0 ${cat.activo ? 'bg-emerald-500' : 'bg-red-500'}`} title={cat.activo ? 'Activo' : 'Inactivo'} />
+                </div>
+                <p className="text-sm text-zinc-500 line-clamp-2 mb-4 h-10">{cat.descripcion || 'Sin descripción'}</p>
+
+                {/* QR centrado */}
+                <div className="flex flex-col items-center gap-2 mb-4">
+                  <div data-qr={cat.slug} className="bg-white p-2 rounded-lg border shadow-sm">
+                    <QRCodeSVG value={getPublicUrl(cat.slug)} size={96} level="M" />
+                  </div>
+                  <button onClick={() => downloadQR(cat.slug)} className="text-xs text-blue-600 hover:underline">
+                    Descargar QR
+                  </button>
+                </div>
+
+                {/* Slug copiable */}
+                <div className="bg-zinc-100 dark:bg-zinc-800 rounded-lg p-2 text-xs font-mono text-zinc-600 dark:text-zinc-400 flex items-center justify-between mb-2">
+                  <span className="truncate mr-2">.../catalogo/{cat.slug}</span>
+                  <button onClick={() => {
+                    window.navigator.clipboard.writeText(getPublicUrl(cat.slug));
+                    toast.success('Enlace copiado');
+                  }} className="p-1 hover:text-blue-500 flex-shrink-0">
+                    <LinkIcon className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2 border-t pt-4">
-                 {/* For this specific task, we will link to a simple editor route or manage it here. In a real scenario we'd route to /catalogo/admin/[id] */}
-                 <Button variant="outline" className="flex-1 text-xs" onClick={() => window.open(getPublicUrl(cat.slug), '_blank')}>
-                   <ExternalLink className="w-3 h-3 mr-2" /> Ver
-                 </Button>
-                 <Button variant="destructive" size="icon" onClick={() => handleDelete(cat.id)}>
-                   <Trash2 className="w-4 h-4" />
-                 </Button>
+
+              {/* Actions */}
+              <div className="flex items-center gap-2 border-t pt-4 mt-2">
+                <Button variant="outline" className="flex-1 text-xs" onClick={() => window.open(getPublicUrl(cat.slug), '_blank')}>
+                  <ExternalLink className="w-3 h-3 mr-2" /> Ver
+                </Button>
+                <Button variant="destructive" size="icon" onClick={() => handleDelete(cat.id)}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </div>
             </div>
           ))}
