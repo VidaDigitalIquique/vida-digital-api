@@ -52,7 +52,9 @@ export async function GET(request: Request) {
             'fisico', u.fisico,
             'diferencia', u.diferencia,
             'observaciones', u.observaciones,
-            'updated_at', u.updated_at
+            'updated_at', u.updated_at,
+            'fisico_cajas', u.fisico_cajas,
+            'fisico_unidades', u.fisico_unidades
           ) ORDER BY u.nroingreso ASC
         ) as lotes
       FROM ubicaciones_bodega u
@@ -75,6 +77,7 @@ export async function GET(request: Request) {
       LIMIT 100
     `;
 
+    console.log('DEBUG lote sample:', JSON.stringify(rows[0]?.lotes?.[0]));
     return NextResponse.json({ data: rows });
   } catch (error: any) {
     console.error("GET /api/ubicaciones error:", error);
