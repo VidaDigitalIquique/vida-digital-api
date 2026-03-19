@@ -18,6 +18,7 @@ export function SubirImagenesClient() {
     setImageFiles(files);
     setImageQueue(files.map(f => ({ name: f.name, status: 'pending' })));
     setImageSyncDone(false);
+    e.target.value = '';
   };
 
   const handleImageSync = async () => {
