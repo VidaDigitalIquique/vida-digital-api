@@ -37,8 +37,8 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const hasSearch = debouncedSearch.trim().length >= 2;
-  const [soloStock, setSoloStock] = useState(() => localStorage.getItem('precios_soloStock') === 'true');
-  const [soloNuevo, setSoloNuevo] = useState(() => localStorage.getItem('precios_soloNuevo') === 'true');
+  const [soloStock, setSoloStock] = useState(false);
+  const [soloNuevo, setSoloNuevo] = useState(false);
 
   const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -50,6 +50,11 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    setSoloStock(localStorage.getItem('precios_soloStock') === 'true');
+    setSoloNuevo(localStorage.getItem('precios_soloNuevo') === 'true');
+  }, []);
 
   useEffect(() => { localStorage.setItem('precios_soloStock', soloStock.toString()); }, [soloStock]);
   useEffect(() => { localStorage.setItem('precios_soloNuevo', soloNuevo.toString()); }, [soloNuevo]);

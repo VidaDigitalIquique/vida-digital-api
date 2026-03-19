@@ -19,8 +19,8 @@ export function BodegaClient({ session, empresasMap }: any) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const hasSearch = search.trim().length >= 2;
-  const [soloStock, setSoloStock] = useState(() => localStorage.getItem('bodega_soloStock') === 'true');
-  const [soloNuevo, setSoloNuevo] = useState(() => localStorage.getItem('bodega_soloNuevo') === 'true');
+  const [soloStock, setSoloStock] = useState(false);
+  const [soloNuevo, setSoloNuevo] = useState(false);
   
   const [selectedUbi, setSelectedUbi] = useState<UbicacionBodegaAgrupada | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -31,6 +31,11 @@ export function BodegaClient({ session, empresasMap }: any) {
   // Autobocus on search input for fast warehouse operations
   useEffect(() => {
     if (searchInputRef.current) searchInputRef.current.focus();
+  }, []);
+
+  useEffect(() => {
+    setSoloStock(localStorage.getItem('bodega_soloStock') === 'true');
+    setSoloNuevo(localStorage.getItem('bodega_soloNuevo') === 'true');
   }, []);
 
   useEffect(() => { localStorage.setItem('bodega_soloStock', soloStock.toString()); }, [soloStock]);
