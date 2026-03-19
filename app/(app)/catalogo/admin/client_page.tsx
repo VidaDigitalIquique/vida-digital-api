@@ -24,7 +24,7 @@ export function CatalogoAdminClient({ activeEmpresaId }: { activeEmpresaId: numb
   const fetchCatalogos = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/catalogos?empresa=\${activeEmpresaId}`);
+      const res = await fetch(`/api/catalogos?empresa=${activeEmpresaId}`);
       if (res.ok) {
         const { data } = await res.json();
         setCatalogos(data || []);
