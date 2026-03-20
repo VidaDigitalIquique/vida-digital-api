@@ -6,7 +6,14 @@ import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
-export function DashboardClient({ stats }: { stats: Record<number, any> }) {
+type StockCompareRow = {
+  empresaId: number;
+  nombre: string;
+  saldoZofriTotal: number;
+  fisicoTotal: number | null;
+};
+
+export function DashboardClient({ stats, stockCompare }: { stats: Record<number, any>; stockCompare: StockCompareRow[] }) {
   const { empresaId, isLoaded } = useEmpresaId();
   
   if (!isLoaded || !empresaId || !stats[empresaId]) return null;
@@ -20,6 +27,51 @@ export function DashboardClient({ stats }: { stats: Record<number, any> }) {
         <p className="text-zinc-500 dark:text-zinc-400 mt-1">
           Métricas principales de la empresa en tiempo real.
         </p>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <div>
+          <h2 className="text-xl font-bold">Comparación de Stock</h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            Totales de Zofri vs físico por empresa.
+          </p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {stockCompare.map(row => {
+            const hasFisico = row.fisicoTotal !== null;
+            const diferencia = hasFisico ? row.fisicoTotal! - row.saldoZofriTotal : null;
+            const diffColor =
+              diferencia === null || diferencia === 0
+                ? 'text-zinc-500'
+                : diferencia > 0
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : 'text-red-600 dark:text-red-400';
+            const diffLabel =
+              diferencia === null ? '—' : diferencia > 0 ? `+${diferencia}` : `${diferencia}`;
+
+            return (
+              <Card key={row.empresaId} className="border-zinc-200/70 dark:border-zinc-800">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg font-bold">{row.nombre}</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-3 gap-3">
+                  <div className="flex flex-col">
+                    <span className="text-[11px] uppercase tracking-wide text-zinc-400">Saldo Zofri total</span>
+                    <span className="text-2xl font-bold">{row.saldoZofriTotal}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] uppercase tracking-wide text-zinc-400">Físico total</span>
+                    <span className="text-2xl font-bold">{hasFisico ? row.fisicoTotal : '—'}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] uppercase tracking-wide text-zinc-400">Diferencia</span>
+                    <span className={`text-2xl font-bold ${diffColor}`}>{diffLabel}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -1,10 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "lucide-react";
+import { DashboardClient } from "./client_page";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -26,6 +23,7 @@ export default async function DashboardPage() {
 
   // Fetch metrics per enterprise
   const groupedStats: Record<number, any> = {};
+  const empresasInfo = await sql`SELECT id, nombre, slug FROM empresas`;
 
   for (const empId of userEmpresas) {
     const [{ count: totalProds }] = await sql`SELECT COUNT(*)::int FROM productos WHERE empresa_id = ${empId}`;
@@ -51,10 +49,33 @@ export default async function DashboardPage() {
     };
   }
 
+  const makeStockCompare = async (empresaId: number) => {
+    const empresaRow = empresasInfo.find(e => e.id === empresaId);
+    const nombre = empresaRow?.nombre || empresaRow?.slug || `Empresa ${empresaId}`;
+
+    const [{ sum: saldoZofriTotal }] = await sql`
+      SELECT COALESCE(SUM(saldo), 0)::int as sum
+      FROM productos
+      WHERE empresa_id = ${empresaId}
+    `;
+
+    const [{ sum: fisicoTotal }] = await sql`
+      SELECT SUM(fisico)::int as sum
+      FROM ubicaciones_bodega
+      WHERE empresa_id = ${empresaId} AND fisico IS NOT NULL
+    `;
+
+    return {
+      empresaId,
+      nombre,
+      saldoZofriTotal,
+      fisicoTotal: fisicoTotal ?? null,
+    };
+  };
+
+  const stockCompare = await Promise.all(userEmpresas.map(makeStockCompare));
+
   return (
-    <DashboardClient stats={groupedStats} />
+    <DashboardClient stats={groupedStats} stockCompare={stockCompare} />
   );
 }
-
-// Client Component to react to active empresa switcher
-import { DashboardClient } from "./client_page";
