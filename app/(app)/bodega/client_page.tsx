@@ -79,19 +79,45 @@ export function BodegaClient({ session, empresasMap }: any) {
     setDrawerOpen(true);
   };
 
+  const buildUpdatedUbi = (base: UbicacionBodegaAgrupada, lotes: LoteBodega[]) => {
+    const ubicaciones = Array.from(
+      new Set(
+        lotes
+          .map(l => (l.ubicacion || '').trim())
+          .filter(u => u.length > 0)
+      )
+    );
+
+    const fisicoValues = lotes.map(l => l.fisico);
+    const hasFisico = fisicoValues.some(v => v !== null);
+    const fisico_total = hasFisico
+      ? fisicoValues.reduce((acc, v) => acc + (v ?? 0), 0)
+      : null;
+
+    const diferenciaValues = lotes.map(l => l.diferencia);
+    const hasDiferencia = diferenciaValues.some(v => v !== null);
+    const diferencia_total = hasDiferencia
+      ? diferenciaValues.reduce((acc, v) => acc + (v ?? 0), 0)
+      : null;
+
+    return { ...base, lotes, ubicaciones, fisico_total, diferencia_total };
+  };
+
   const handleLoteUpdated = (updated: LoteBodega) => {
     setSelectedUbi(prev => {
       if (!prev) return prev;
       const lotes = prev.lotes.map(l => l.id === updated.id ? { ...l, ...updated } : l);
-      return { ...prev, lotes };
+      return buildUpdatedUbi(prev, lotes);
     });
     setUbicaciones(prev => prev.map(u => (
       u.lotes.some(l => l.id === updated.id)
-        ? { ...u, lotes: u.lotes.map(l => l.id === updated.id ? { ...l, ...updated } : l) }
+        ? buildUpdatedUbi(
+            u,
+            u.lotes.map(l => l.id === updated.id ? { ...l, ...updated } : l)
+          )
         : u
     )));
   };
-
   return (
     <div className="flex flex-col gap-6 fade-in zoom-in-95 duration-200">
       
