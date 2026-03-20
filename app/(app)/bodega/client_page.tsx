@@ -240,19 +240,20 @@ function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: n
   const handleSave = async () => {
     setSaving(true);
     try {
+      const payload = {
+        ubicacion,
+        fisico_cajas: cajas,
+        fisico_unidades: unidades,
+        observaciones: obs,
+      };
       const res = await fetch(`/api/ubicaciones/${lote.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ubicacion: ubicacion === '' ? null : ubicacion,
-          fisico_cajas: cajas,
-          fisico_unidades: unidades,
-          observaciones: obs === '' ? null : obs,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Error guardando');
       const { data } = await res.json();
-      onSaved({ ...lote, ...data });
+      onSaved({ ...lote, ...data, ubicacion: payload.ubicacion, observaciones: payload.observaciones });
       toast.success('Lote guardado');
       setOpen(false);
     } catch {
@@ -299,7 +300,7 @@ function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: n
           {/* Conteo físico */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs font-bold">Cajas contadas</Label>
+              <Label className="text-xs font-bold">Físico</Label>
               <Input
                 type="number"
                 min="0"

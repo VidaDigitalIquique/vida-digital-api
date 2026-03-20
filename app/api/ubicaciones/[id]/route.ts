@@ -15,7 +15,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const { id } = params;
 
     const existing = await sql`
-      SELECT empresa_id, saldo, cantcaja 
+      SELECT empresa_id, saldo, cantcaja, ubicacion, observaciones
       FROM ubicaciones_bodega 
       WHERE id = ${id}
     `;
@@ -26,6 +26,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
     const saldo = existing[0].saldo;
     const cantcaja = existing[0].cantcaja || 1;
+    const ubicacionValue = ubicacion !== undefined ? ubicacion : existing[0].ubicacion;
+    const observacionesValue = observaciones !== undefined ? observaciones : existing[0].observaciones;
 
     // Compute fisico total in units and diferencia
     let fisicoTotal = null;
@@ -41,12 +43,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const updated = await sql`
       UPDATE ubicaciones_bodega
       SET
-        ubicacion = COALESCE(${ubicacion !== undefined ? ubicacion : null}, ubicacion),
+        ubicacion = ${ubicacionValue},
         fisico_cajas = ${cajas},
         fisico_unidades = ${fisico_unidades !== undefined && fisico_unidades !== null ? parseInt(fisico_unidades) : 0},
         fisico = ${fisicoTotal},
         diferencia = ${diferencia},
-        observaciones = COALESCE(${observaciones !== undefined ? observaciones : null}, observaciones),
+        observaciones = ${observacionesValue},
         updated_at = NOW()
       WHERE id = ${id}
       RETURNING *
