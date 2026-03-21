@@ -21,8 +21,8 @@ export async function GET(request: Request) {
   try {
     const catalogos = await sql`
       SELECT * FROM catalogos 
-      WHERE empresa_id = ${empresaId}
-        AND user_id = ${userId}
+      WHERE user_id = ${userId}
+        AND (empresa_id = ${empresaId} OR ambas_empresas = true)
       ORDER BY created_at DESC
     `;
 
