@@ -29,15 +29,15 @@ type StockDetailRow = {
 
 export function DashboardClient({ stats, stockCompare }: { stats: Record<number, any>; stockCompare: StockCompareRow[] }) {
   const { empresaId, isLoaded } = useEmpresaId();
-  
-  if (!isLoaded || !empresaId || !stats[empresaId]) return null;
-
-  const currentStats = stats[empresaId];
   const [open, setOpen] = useState(false);
   const [drawerTitle, setDrawerTitle] = useState('');
   const [drawerRows, setDrawerRows] = useState<StockDetailRow[]>([]);
   const [drawerLoading, setDrawerLoading] = useState(false);
   const [drawerError, setDrawerError] = useState<string | null>(null);
+
+  if (!isLoaded || !empresaId || !stats[empresaId]) return null;
+
+  const currentStats = stats[empresaId];
 
   return (
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200">
