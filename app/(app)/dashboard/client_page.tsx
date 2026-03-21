@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from "react";
 import { useEmpresaId } from "@/hooks/useEmpresaId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -17,12 +19,25 @@ type StockCompareRow = {
   totalConFisico: number;
 };
 
+type StockDetailRow = {
+  codigo: string;
+  detalle: string | null;
+  saldo: number;
+  fisico: number;
+  diferencia: number;
+};
+
 export function DashboardClient({ stats, stockCompare }: { stats: Record<number, any>; stockCompare: StockCompareRow[] }) {
   const { empresaId, isLoaded } = useEmpresaId();
   
   if (!isLoaded || !empresaId || !stats[empresaId]) return null;
 
   const currentStats = stats[empresaId];
+  const [open, setOpen] = useState(false);
+  const [drawerTitle, setDrawerTitle] = useState('');
+  const [drawerRows, setDrawerRows] = useState<StockDetailRow[]>([]);
+  const [drawerLoading, setDrawerLoading] = useState(false);
+  const [drawerError, setDrawerError] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200">
@@ -32,6 +47,56 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
           Métricas principales de la empresa en tiempo real.
         </p>
       </div>
+
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-2xl">
+          <SheetHeader>
+            <SheetTitle>{drawerTitle}</SheetTitle>
+          </SheetHeader>
+
+          <div className="mt-6">
+            {drawerError ? (
+              <div className="text-sm text-red-600">{drawerError}</div>
+            ) : null}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="text-zinc-500">
+                  <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                    <th className="text-left py-2 font-semibold">Código</th>
+                    <th className="text-left py-2 font-semibold">Detalle</th>
+                    <th className="text-right py-2 font-semibold">Saldo Zofri</th>
+                    <th className="text-right py-2 font-semibold">Físico</th>
+                    <th className="text-right py-2 font-semibold">Diferencia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {drawerLoading ? (
+                    <tr>
+                      <td className="py-3 text-zinc-500" colSpan={5}>Cargando...</td>
+                    </tr>
+                  ) : drawerRows.length > 0 ? (
+                    drawerRows.map(row => (
+                      <tr key={row.codigo} className="border-b border-zinc-100 dark:border-zinc-900">
+                        <td className="py-2 font-mono">{row.codigo}</td>
+                        <td className="py-2">{row.detalle || '—'}</td>
+                        <td className="py-2 text-right">{row.saldo}</td>
+                        <td className="py-2 text-right">{row.fisico}</td>
+                        <td className={`py-2 text-right font-semibold ${row.diferencia >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {row.diferencia >= 0 ? `+${row.diferencia}` : row.diferencia}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td className="py-3 text-zinc-500" colSpan={5}>Sin resultados.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <div className="flex flex-col gap-3">
         <div>
@@ -46,6 +111,23 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
             const sobrantePct = total > 0 ? (row.conSobrante / total) * 100 : 0;
             const faltantePct = total > 0 ? (row.conFaltante / total) * 100 : 0;
             const sinFisicoPct = total > 0 ? (row.sinFisico / total) * 100 : 0;
+            const openDrawer = async (tipo: 'sobrante' | 'faltante') => {
+              setDrawerTitle(`Productos con ${tipo} — ${row.nombre}`);
+              setDrawerRows([]);
+              setDrawerError(null);
+              setDrawerLoading(true);
+              setOpen(true);
+              try {
+                const res = await fetch(`/api/dashboard/stock-detail?empresaId=${row.empresaId}&tipo=${tipo}`);
+                if (!res.ok) throw new Error('No se pudo cargar el detalle.');
+                const data = await res.json();
+                setDrawerRows(data?.data || []);
+              } catch (err: any) {
+                setDrawerError(err?.message || 'Error cargando detalle.');
+              } finally {
+                setDrawerLoading(false);
+              }
+            };
 
             return (
               <Card key={row.empresaId} className="border-zinc-200/70 dark:border-zinc-800">
@@ -55,11 +137,23 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
                 <CardContent className="grid grid-cols-3 gap-3">
                   <div className="flex flex-col">
                     <span className="text-[11px] uppercase tracking-wide text-emerald-600">productos con sobrante</span>
-                    <span className="text-2xl font-bold text-emerald-600">{row.conSobrante}</span>
+                    <button
+                      type="button"
+                      className="text-2xl font-bold text-emerald-600 text-left hover:underline"
+                      onClick={() => openDrawer('sobrante')}
+                    >
+                      {row.conSobrante}
+                    </button>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[11px] uppercase tracking-wide text-red-600">productos con faltante</span>
-                    <span className="text-2xl font-bold text-red-600">{row.conFaltante}</span>
+                    <button
+                      type="button"
+                      className="text-2xl font-bold text-red-600 text-left hover:underline"
+                      onClick={() => openDrawer('faltante')}
+                    >
+                      {row.conFaltante}
+                    </button>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[11px] uppercase tracking-wide text-zinc-500">productos sin físico</span>
