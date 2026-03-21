@@ -134,8 +134,8 @@ export function BodegaClient({ session, empresasMap }: any) {
           <Input 
             ref={searchInputRef}
             type="text" 
-            placeholder="Buscar UBICACIÓN o CÓDIGO..." 
-            className="pl-12 h-14 text-lg font-medium shadow-md border-blue-200 dark:border-blue-900 bg-white dark:bg-zinc-900 focus-visible:ring-blue-500"
+            placeholder="Buscar ubicación o código..." 
+            className="pl-12 h-14 text-sm font-medium shadow-md border-blue-200 dark:border-blue-900 bg-white dark:bg-zinc-900 focus-visible:ring-blue-500"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -269,7 +269,7 @@ function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: n
       ? 'text-emerald-600 dark:text-emerald-400'
       : diferencia < 0
         ? 'text-red-600 dark:text-red-400'
-        : 'text-amber-600 dark:text-amber-400';
+        : 'text-emerald-700 dark:text-emerald-400';
 
   const handleSave = async () => {
     setSaving(true);
@@ -359,7 +359,7 @@ function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: n
 
           {/* Preview diferencia */}
           {fisicoTotal !== null && (
-            <div className={`p-3 rounded-lg border text-center ${diferencia === 0 ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200' : diferencia! < 0 ? 'bg-red-50 dark:bg-red-950/30 border-red-200' : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200'}`}>
+            <div className={`p-3 rounded-lg border text-center ${diferencia === 0 ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200' : diferencia! < 0 ? 'bg-red-50 dark:bg-red-950/30 border-red-200' : 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200'}`}>
               <div className="text-[10px] text-zinc-400 uppercase tracking-wide">Diferencia</div>
               <div className={`text-xl font-bold mt-0.5 ${difColor}`}>{difLabel}</div>
               <div className="text-xs text-zinc-400 mt-0.5">{fisicoTotal} u en bodega vs {lote.saldo} u en Zofri</div>

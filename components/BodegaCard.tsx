@@ -94,7 +94,7 @@ export function BodegaCard({ ubicacion, empresaSlug, onClick }: BodegaCardProps)
             {ubicacion.ubicaciones.map(u => (
               <span
                 key={u}
-                className="location-badge"
+                className="font-mono text-base font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 px-3 py-1.5 rounded-lg"
               >
                 {u}
               </span>
