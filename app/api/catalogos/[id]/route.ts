@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const userId = (session.user as any).id;
 
   const { id } = params;
 
@@ -13,9 +14,9 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const { titulo, descripcion, activo, items } = await request.json();
 
     // Verify ownership
-    const existing = await sql`SELECT empresa_id FROM catalogos WHERE id = ${id}`;
+    const existing = await sql`SELECT empresa_id, user_id FROM catalogos WHERE id = ${id}`;
     if (existing.length === 0) return NextResponse.json({ error: "Catálogo no encontrado" }, { status: 404 });
-    if (!(session.user as any).empresas.includes(existing[0].empresa_id)) {
+    if (existing[0].user_id !== userId || !(session.user as any).empresas.includes(existing[0].empresa_id)) {
       return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
     }
 
@@ -60,13 +61,14 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const userId = (session.user as any).id;
   
   const { id } = params;
   
   try {
-    const existing = await sql`SELECT empresa_id FROM catalogos WHERE id = ${id}`;
+    const existing = await sql`SELECT empresa_id, user_id FROM catalogos WHERE id = ${id}`;
     if (existing.length === 0) return NextResponse.json({ error: "Catálogo no encontrado" }, { status: 404 });
-    if (!(session.user as any).empresas.includes(existing[0].empresa_id)) {
+    if (existing[0].user_id !== userId || !(session.user as any).empresas.includes(existing[0].empresa_id)) {
       return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
     }
 
@@ -83,11 +85,12 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const userId = (session.user as any).id;
 
   try {
     const { id } = params;
     
-    const catRows = await sql`SELECT * FROM catalogos WHERE id = ${id}`;
+    const catRows = await sql`SELECT * FROM catalogos WHERE id = ${id} AND user_id = ${userId}`;
     if (catRows.length === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
     const catalog = catRows[0];
 

@@ -7,6 +7,7 @@ import { generateSlug } from "@/lib/utils";
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const userId = (session.user as any).id;
 
   const { searchParams } = new URL(request.url);
   const empresaId = searchParams.get('empresa');
@@ -20,7 +21,8 @@ export async function GET(request: Request) {
   try {
     const catalogos = await sql`
       SELECT * FROM catalogos 
-      WHERE empresa_id = ${empresaId} 
+      WHERE empresa_id = ${empresaId}
+        AND user_id = ${userId}
       ORDER BY created_at DESC
     `;
 
@@ -33,6 +35,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const userId = (session.user as any).id;
 
   try {
     const { empresaId, titulo, descripcion, mostrar_precio, margen_precio, solo_stock, solo_nuevo, palabras_incluir, palabras_excluir, ambas_empresas } = await request.json();
@@ -49,9 +52,9 @@ export async function POST(request: Request) {
     const slug = `${baseSlug}-${shortId}`;
 
     const inserted = await sql`
-      INSERT INTO catalogos (empresa_id, slug, titulo, descripcion, activo, mostrar_precio, margen_precio, solo_stock, solo_nuevo, palabras_incluir, palabras_excluir, ambas_empresas)
+      INSERT INTO catalogos (empresa_id, user_id, slug, titulo, descripcion, activo, mostrar_precio, margen_precio, solo_stock, solo_nuevo, palabras_incluir, palabras_excluir, ambas_empresas)
       VALUES (
-        ${empresaId}, ${slug}, ${titulo}, ${descripcion || null}, true,
+        ${empresaId}, ${userId}, ${slug}, ${titulo}, ${descripcion || null}, true,
         ${mostrar_precio ?? true}, ${margen_precio ?? 0}, ${solo_stock ?? false}, ${solo_nuevo ?? false},
         ${palabras_incluir || ''}, ${palabras_excluir || ''}, ${ambas_empresas ?? true}
       )
