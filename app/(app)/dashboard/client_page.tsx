@@ -67,16 +67,16 @@ const StockCompareChart = ({ productos, testId }: { productos?: StockCompareProd
       <polyline
         points={saldoPoints}
         fill="none"
+        stroke="#3B82F6"
         strokeWidth="2"
-        className="stroke-blue-500"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <polyline
         points={fisicoPoints}
         fill="none"
+        stroke="#10B981"
         strokeWidth="2"
-        className="stroke-emerald-500"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
