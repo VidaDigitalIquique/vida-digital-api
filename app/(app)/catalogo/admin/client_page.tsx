@@ -195,7 +195,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
 
       {/* Creation Modal */}
       <Dialog open={isCreating} onOpenChange={setIsCreating}>
-        <DialogContent className="w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-full h-full sm:h-auto sm:max-w-lg sm:max-h-[90vh] sm:mx-4 overflow-y-auto p-5 rounded-none sm:rounded-xl">
           <DialogHeader>
             <DialogTitle>Nuevo Catálogo</DialogTitle>
           </DialogHeader>
