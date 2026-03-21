@@ -6,11 +6,82 @@ import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
+type StockCompareProduct = {
+  codigo: string;
+  saldo: number;
+  fisico_total: number | null;
+};
+
 type StockCompareRow = {
   empresaId: number;
   nombre: string;
   saldoZofriTotal: number;
   fisicoTotal: number | null;
+  productos?: StockCompareProduct[];
+};
+
+const buildLine = (
+  values: number[],
+  maxValue: number,
+  width: number,
+  height: number,
+  padding: number
+) => {
+  if (values.length === 0) return '';
+  const usableWidth = width - padding * 2;
+  const usableHeight = height - padding * 2;
+  const safeMax = Math.max(maxValue, 1);
+
+  return values
+    .map((value, index) => {
+      const ratio = values.length === 1 ? 0 : index / (values.length - 1);
+      const x = padding + usableWidth * ratio;
+      const clamped = Math.min(Math.max(value, 0), safeMax);
+      const y = padding + usableHeight * (1 - clamped / safeMax);
+      return `${x},${y}`;
+    })
+    .join(' ');
+};
+
+const StockCompareChart = ({ productos, testId }: { productos?: StockCompareProduct[]; testId: string }) => {
+  if (!productos || productos.length === 0) return null;
+
+  const width = 260;
+  const height = 72;
+  const padding = 6;
+
+  const saldoValues = productos.map(p => p.saldo ?? 0);
+  const fisicoValues = productos.map(p => p.fisico_total ?? 0);
+  const maxValue = Math.max(...saldoValues, ...fisicoValues, 1);
+
+  const saldoPoints = buildLine(saldoValues, maxValue, width, height, padding);
+  const fisicoPoints = buildLine(fisicoValues, maxValue, width, height, padding);
+
+  return (
+    <svg
+      data-testid={testId}
+      viewBox={`0 0 ${width} ${height}`}
+      className="w-full h-20"
+      preserveAspectRatio="none"
+    >
+      <polyline
+        points={saldoPoints}
+        fill="none"
+        strokeWidth="2"
+        className="stroke-blue-500"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <polyline
+        points={fisicoPoints}
+        fill="none"
+        strokeWidth="2"
+        className="stroke-emerald-500"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
 };
 
 export function DashboardClient({ stats, stockCompare }: { stats: Record<number, any>; stockCompare: StockCompareRow[] }) {
@@ -40,6 +111,18 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
           {stockCompare.map(row => {
             const hasFisico = row.fisicoTotal !== null;
             const diferencia = hasFisico ? row.fisicoTotal! - row.saldoZofriTotal : null;
+            const coveragePercent =
+              hasFisico && row.saldoZofriTotal > 0
+                ? Math.min(Math.round((row.fisicoTotal! / row.saldoZofriTotal) * 100), 101)
+                : null;
+            const coverageColor =
+              coveragePercent === null
+                ? 'text-zinc-500'
+                : coveragePercent >= 100
+                  ? 'text-emerald-600 dark:text-emerald-400'
+                  : coveragePercent < 50
+                    ? 'text-red-600 dark:text-red-400'
+                    : 'text-amber-600 dark:text-amber-400';
             const diffColor =
               diferencia === null || diferencia === 0
                 ? 'text-zinc-500'
@@ -54,7 +137,7 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg font-bold">{row.nombre}</CardTitle>
                 </CardHeader>
-                <CardContent className="grid grid-cols-3 gap-3">
+                <CardContent className="grid grid-cols-4 gap-3">
                   <div className="flex flex-col">
                     <span className="text-[11px] uppercase tracking-wide text-zinc-400">Saldo Zofri total</span>
                     <span className="text-2xl font-bold">{row.saldoZofriTotal}</span>
@@ -67,7 +150,18 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
                     <span className="text-[11px] uppercase tracking-wide text-zinc-400">Diferencia</span>
                     <span className={`text-2xl font-bold ${diffColor}`}>{diffLabel}</span>
                   </div>
+                  <div className="flex flex-col">
+                    <span className="text-[11px] uppercase tracking-wide text-zinc-400">% de cobertura física</span>
+                    <span className={`text-2xl font-bold ${coverageColor}`}>
+                      {coveragePercent === null ? '—' : `${coveragePercent}%`}
+                    </span>
+                  </div>
                 </CardContent>
+                {row.productos?.length ? (
+                  <div className="px-6 pb-4">
+                    <StockCompareChart productos={row.productos} testId={`stock-compare-chart-${row.empresaId}`} />
+                  </div>
+                ) : null}
               </Card>
             );
           })}

@@ -25,66 +25,116 @@ const makeStats = () => ({
   },
 });
 
-describe('Dashboard stock comparison section (red first)', () => {
-  test('renders comparison section with two company cards', () => {
+const makeProducts = () => ([
+  { codigo: 'P-03', saldo: 5, fisico_total: 2 },
+  { codigo: 'P-02', saldo: 25, fisico_total: 30 },
+  { codigo: 'P-01', saldo: 100, fisico_total: 150 },
+]);
+
+describe('Dashboard stock comparison (red first)', () => {
+  test('renders summary + chart for each company', () => {
     render(
       <DashboardClient
         stats={makeStats()}
         stockCompare={[
-          { empresaId: 1, nombre: 'SANJH', saldoZofriTotal: 100, fisicoTotal: 120 },
-          { empresaId: 2, nombre: 'Vida Digital', saldoZofriTotal: 200, fisicoTotal: 150 },
+          {
+            empresaId: 1,
+            nombre: 'SANJH',
+            saldoZofriTotal: 100,
+            fisicoTotal: 150,
+            productos: makeProducts(),
+          },
+          {
+            empresaId: 2,
+            nombre: 'Vida Digital',
+            saldoZofriTotal: 200,
+            fisicoTotal: 50,
+            productos: makeProducts(),
+          },
         ]}
       />
     );
 
     expect(screen.getByText('Comparación de Stock')).toBeInTheDocument();
-    expect(screen.getByText('SANJH')).toBeInTheDocument();
-    expect(screen.getByText('Vida Digital')).toBeInTheDocument();
+
+    const cardA = screen.getByText('SANJH').closest('[data-slot="card"]') as HTMLElement;
+    const cardB = screen.getByText('Vida Digital').closest('[data-slot="card"]') as HTMLElement;
+
+    expect(cardA).toBeInTheDocument();
+    expect(cardB).toBeInTheDocument();
+
+    expect(screen.getByTestId('stock-compare-chart-1')).toBeInTheDocument();
+    expect(screen.getByTestId('stock-compare-chart-2')).toBeInTheDocument();
   });
 
-  test('shows correct totals and positive difference for SANJH', () => {
+  test('shows coverage percent and colored difference', () => {
     render(
       <DashboardClient
         stats={makeStats()}
         stockCompare={[
-          { empresaId: 1, nombre: 'SANJH', saldoZofriTotal: 100, fisicoTotal: 120 },
-          { empresaId: 2, nombre: 'Vida Digital', saldoZofriTotal: 200, fisicoTotal: 150 },
+          {
+            empresaId: 1,
+            nombre: 'SANJH',
+            saldoZofriTotal: 100,
+            fisicoTotal: 150,
+            productos: makeProducts(),
+          },
+          {
+            empresaId: 2,
+            nombre: 'Vida Digital',
+            saldoZofriTotal: 200,
+            fisicoTotal: 50,
+            productos: makeProducts(),
+          },
+        ]}
+      />
+    );
+
+    const cardA = screen.getByText('SANJH').closest('[data-slot="card"]') as HTMLElement;
+    const cardB = screen.getByText('Vida Digital').closest('[data-slot="card"]') as HTMLElement;
+
+    expect(within(cardA).getByText('Saldo Zofri total')).toBeInTheDocument();
+    expect(within(cardA).getByText('Físico total')).toBeInTheDocument();
+    expect(within(cardA).getByText('Diferencia')).toBeInTheDocument();
+    expect(within(cardA).getByText('% de cobertura física')).toBeInTheDocument();
+
+    const coverageA = within(cardA).getByText('101%');
+    expect(coverageA).toBeInTheDocument();
+    expect(coverageA.className).toMatch(/text-emerald/);
+
+    const diffA = within(cardA).getByText('+50');
+    expect(diffA).toBeInTheDocument();
+    expect(diffA.className).toMatch(/text-emerald/);
+
+    const coverageB = within(cardB).getByText('25%');
+    expect(coverageB).toBeInTheDocument();
+    expect(coverageB.className).toMatch(/text-red/);
+
+    const diffB = within(cardB).getByText('-150');
+    expect(diffB).toBeInTheDocument();
+    expect(diffB.className).toMatch(/text-red/);
+  });
+
+  test('renders gray coverage when there is no physical data', () => {
+    render(
+      <DashboardClient
+        stats={makeStats()}
+        stockCompare={[
+          {
+            empresaId: 1,
+            nombre: 'SANJH',
+            saldoZofriTotal: 100,
+            fisicoTotal: null,
+            productos: makeProducts(),
+          },
         ]}
       />
     );
 
     const card = screen.getByText('SANJH').closest('[data-slot="card"]') as HTMLElement;
 
-    expect(within(card).getByText('Saldo Zofri total')).toBeInTheDocument();
-    expect(within(card).getByText('Físico total')).toBeInTheDocument();
-    expect(within(card).getByText('Diferencia')).toBeInTheDocument();
-
-    expect(within(card).getByText('100')).toBeInTheDocument();
-    expect(within(card).getByText('120')).toBeInTheDocument();
-
-    const diff = within(card).getByText('+20');
-    expect(diff).toBeInTheDocument();
-    expect(diff.className).toMatch(/text-emerald/);
-  });
-
-  test('shows correct totals and negative difference for Vida Digital', () => {
-    render(
-      <DashboardClient
-        stats={makeStats()}
-        stockCompare={[
-          { empresaId: 1, nombre: 'SANJH', saldoZofriTotal: 100, fisicoTotal: 120 },
-          { empresaId: 2, nombre: 'Vida Digital', saldoZofriTotal: 200, fisicoTotal: 150 },
-        ]}
-      />
-    );
-
-    const card = screen.getByText('Vida Digital').closest('[data-slot="card"]') as HTMLElement;
-
-    expect(within(card).getByText('200')).toBeInTheDocument();
-    expect(within(card).getByText('150')).toBeInTheDocument();
-
-    const diff = within(card).getByText('-50');
-    expect(diff).toBeInTheDocument();
-    expect(diff.className).toMatch(/text-red/);
+    const coverage = within(card).getAllByText('—').find(el => el.className.includes('text-zinc-500'))!;
+    expect(coverage).toBeInTheDocument();
+    expect(coverage.className).toMatch(/text-zinc-500/);
   });
 });
