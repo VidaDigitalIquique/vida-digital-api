@@ -5,7 +5,8 @@ import { toast } from 'sonner';
 export function useShareImage() {
   const shareImage = useCallback(async (imageUrl: string, filename: string, title: string) => {
     try {
-      const response = await fetch(imageUrl);
+      const proxyUrl = `/api/share-image?url=${encodeURIComponent(imageUrl)}`;
+      const response = await fetch(proxyUrl);
       if (!response.ok) throw new Error('No se pudo cargar la imagen');
       const blob = await response.blob();
       const file = new File([blob], filename, { type: blob.type });
