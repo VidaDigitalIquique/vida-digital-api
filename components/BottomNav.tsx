@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Home, Tag, Box, Menu, ImageIcon } from 'lucide-react';
@@ -18,6 +19,7 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
   const pathname = usePathname();
   const { data: session } = useSession();
   const rol = (session?.user as any)?.rol as string;
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const RUTAS_POR_ROL: Record<string, string[]> = {
     admin: ['/precios', '/bodega'],
@@ -51,7 +53,7 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
           );
         })}
 
-        <Sheet>
+        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
           <SheetTrigger className="flex flex-col items-center justify-center w-full h-full gap-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors focus:outline-none">
             <Menu className="w-5 h-5" />
             <span className="text-[10px] font-medium">Más</span>
@@ -61,22 +63,24 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
                <div className="space-y-6">
                  <div>
                     <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Empresa Activa</h3>
-                    <CompanySwitcher activeEmpresaId={activeEmpresaId} onSwitch={onSwitch} />
+                    <div onClick={() => setMenuOpen(false)}>
+                      <CompanySwitcher activeEmpresaId={activeEmpresaId} onSwitch={onSwitch} />
+                    </div>
                  </div>
                  {(rol === 'admin' || rol === 'vendedor') && (
                    <div>
                       <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Herramientas</h3>
-                      <Link href="/catalogo/admin" className="block py-2 font-medium">Mis Catálogos</Link>
+                      <Link href="/catalogo/admin" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Mis Catálogos</Link>
                    </div>
                  )}
                  {rol === 'admin' && (
                    <div>
                       <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Administración</h3>
-                      <Link href="/admin/importar" className="block py-2 font-medium">Importar Excel</Link>
-                      <Link href="/admin/subir-imagenes" className="block py-2 font-medium flex items-center gap-2">
+                      <Link href="/admin/importar" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Importar Excel</Link>
+                      <Link href="/admin/subir-imagenes" onClick={() => setMenuOpen(false)} className="block py-2 font-medium flex items-center gap-2">
                         <ImageIcon className="w-4 h-4" /> Subir Imágenes
                       </Link>
-                      <Link href="/admin/usuarios" className="block py-2 font-medium">Usuarios</Link>
+                      <Link href="/admin/usuarios" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Usuarios</Link>
                    </div>
                  )}
                </div>
