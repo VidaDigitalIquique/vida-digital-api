@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useEmpresaId } from "@/hooks/useEmpresaId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
-import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle, X } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -49,55 +49,52 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="w-full h-full sm:max-w-2xl overflow-y-auto flex flex-col">
-          <SheetHeader>
-            <div className="flex items-center justify-between mb-2">
+        <SheetContent side="right" className="w-screen h-screen sm:w-[500px] sm:h-full max-w-full overflow-y-auto flex flex-col p-0">
+          <div className="p-5 flex flex-col h-full overflow-y-auto">
+            <SheetHeader>
               <SheetTitle>{drawerTitle}</SheetTitle>
-              <SheetClose className="rounded-full p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                <X className="w-5 h-5 text-zinc-500" />
-              </SheetClose>
-            </div>
-          </SheetHeader>
+            </SheetHeader>
 
-          <div className="mt-6">
-            {drawerError ? (
-              <div className="text-sm text-red-600">{drawerError}</div>
-            ) : null}
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-zinc-500">
-                  <tr className="border-b border-zinc-200 dark:border-zinc-800">
-                    <th className="text-left py-2 font-semibold">Código</th>
-                    <th className="text-left py-2 font-semibold">Detalle</th>
-                    <th className="text-right py-2 font-semibold">Saldo Zofri</th>
-                    <th className="text-right py-2 font-semibold">Físico</th>
-                    <th className="text-right py-2 font-semibold">Diferencia</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {drawerLoading ? (
-                    <tr>
-                      <td className="py-3 text-zinc-500" colSpan={5}>Cargando...</td>
+            <div className="mt-6">
+              {drawerError ? (
+                <div className="text-sm text-red-600">{drawerError}</div>
+              ) : null}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-zinc-500">
+                    <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                      <th className="text-left py-2 font-semibold">Código</th>
+                      <th className="text-left py-2 font-semibold">Detalle</th>
+                      <th className="text-right py-2 font-semibold">Saldo Zofri</th>
+                      <th className="text-right py-2 font-semibold">Físico</th>
+                      <th className="text-right py-2 font-semibold">Diferencia</th>
                     </tr>
-                  ) : drawerRows.length > 0 ? (
-                    drawerRows.map(row => (
-                      <tr key={row.codigo} className="border-b border-zinc-100 dark:border-zinc-900">
-                        <td className="py-2 font-mono">{row.codigo}</td>
-                        <td className="py-2">{row.detalle || '—'}</td>
-                        <td className="py-2 text-right">{row.saldo}</td>
-                        <td className="py-2 text-right">{row.fisico}</td>
-                        <td className={`py-2 text-right font-semibold ${row.diferencia >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {row.diferencia >= 0 ? `+${row.diferencia}` : row.diferencia}
-                        </td>
+                  </thead>
+                  <tbody>
+                    {drawerLoading ? (
+                      <tr>
+                        <td className="py-3 text-zinc-500" colSpan={5}>Cargando...</td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td className="py-3 text-zinc-500" colSpan={5}>Sin resultados.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    ) : drawerRows.length > 0 ? (
+                      drawerRows.map(row => (
+                        <tr key={row.codigo} className="border-b border-zinc-100 dark:border-zinc-900">
+                          <td className="py-2 font-mono">{row.codigo}</td>
+                          <td className="py-2">{row.detalle || '—'}</td>
+                          <td className="py-2 text-right">{row.saldo}</td>
+                          <td className="py-2 text-right">{row.fisico}</td>
+                          <td className={`py-2 text-right font-semibold ${row.diferencia >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {row.diferencia >= 0 ? `+${row.diferencia}` : row.diferencia}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td className="py-3 text-zinc-500" colSpan={5}>Sin resultados.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </SheetContent>

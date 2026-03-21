@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { LoteBodega, UbicacionBodegaAgrupada } from '@/types';
 import { BodegaCard } from '@/components/BodegaCard';
 import { Input } from '@/components/ui/input';
-import { Search, X } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose } from '@/components/ui/sheet';
+import { Search } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
@@ -182,27 +182,23 @@ export function BodegaClient({ session, empresasMap }: any) {
 
       {/* Edit Drawer */}
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <SheetContent className="w-full h-full sm:max-w-md overflow-y-auto pb-safe flex flex-col">
-          {selectedUbi && (
-            <>
-              <SheetHeader className="mb-6 border-b pb-4">
-                <div className="flex items-center justify-between mb-2">
+        <SheetContent className="w-screen h-screen sm:w-[500px] sm:h-full max-w-full overflow-y-auto flex flex-col p-0">
+          <div className="p-5 flex flex-col h-full overflow-y-auto">
+            {selectedUbi && (
+              <>
+                <SheetHeader className="mb-6 border-b pb-4">
                   <SheetTitle className="text-2xl font-black text-blue-700 dark:text-blue-400 leading-none">
                     {selectedUbi.codigo}
                   </SheetTitle>
-                  <SheetClose className="rounded-full p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                    <X className="w-5 h-5 text-zinc-500" />
-                  </SheetClose>
-                </div>
-                <SheetDescription className="text-left text-sm font-medium mt-1 text-zinc-600">
-                  {selectedUbi.detalle || 'Sin descripción'}
-                </SheetDescription>
-                <div className="text-xs text-zinc-500 mt-2">
+                  <SheetDescription className="text-left text-sm font-medium mt-1 text-zinc-600">
+                    {selectedUbi.detalle || 'Sin descripción'}
+                  </SheetDescription>
+                  <div className="text-xs text-zinc-500 mt-2">
                   Saldo total: <span className="font-semibold text-zinc-700 dark:text-zinc-300">{selectedUbi.saldo_total}</span>
                 </div>
-              </SheetHeader>
+                </SheetHeader>
 
-              <div className="space-y-6">
+                <div className="space-y-6">
                  {/* Image */}
                 <div className="w-full h-48 relative rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-900 border">
                   <ImageWithFallback 
@@ -225,9 +221,10 @@ export function BodegaClient({ session, empresasMap }: any) {
                     />
                   ))}
                 </div>
-              </div>
-            </>
-          )}
+                </div>
+              </>
+            )}
+          </div>
         </SheetContent>
       </Sheet>
     </div>

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Producto, UserSession } from '@/types';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,6 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ImageWithFallback } from './ImageWithFallback';
 import { formatUSD } from '@/lib/utils';
 import { toast } from 'sonner';
-import { X } from 'lucide-react';
 
 interface ProductDrawerProps {
   producto: Producto | null;
@@ -169,20 +168,16 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
 
   return (
     <Sheet open={open} onOpenChange={handleOpenStatus}>
-      <SheetContent className="w-full h-full sm:max-w-md overflow-y-auto pb-safe flex flex-col">
-        <SheetHeader className="mb-4">
-          <div className="flex items-center justify-between mb-2">
+      <SheetContent className="w-screen h-screen sm:w-[500px] sm:h-full max-w-full overflow-y-auto flex flex-col p-0">
+        <div className="p-5 flex flex-col h-full overflow-y-auto">
+          <SheetHeader className="mb-4">
             <SheetTitle className="text-left font-mono text-zinc-500">{producto.codigo}</SheetTitle>
-            <SheetClose className="rounded-full p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-              <X className="w-5 h-5 text-zinc-500" />
-            </SheetClose>
-          </div>
-          <SheetDescription className="text-left text-base text-foreground font-medium">
-            {producto.detalle}
-          </SheetDescription>
-        </SheetHeader>
+            <SheetDescription className="text-left text-base text-foreground font-medium">
+              {producto.detalle}
+            </SheetDescription>
+          </SheetHeader>
 
-        <div className="space-y-6">
+          <div className="space-y-6">
           {/* Main Image */}
           <div className="w-full aspect-square relative rounded-lg overflow-hidden bg-zinc-100 dark:bg-zinc-900 border">
             <ImageWithFallback 
@@ -336,6 +331,7 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
              </div>
           )}
 
+          </div>
         </div>
       </SheetContent>
     </Sheet>
