@@ -19,6 +19,14 @@
 }
 
 @layer base {
+  html {
+    font-size: 17px;
+  }
+  @media (min-width: 640px) {
+    html {
+      font-size: 16px;
+    }
+  }
   :root {
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
@@ -69,5 +77,27 @@
   }
   body {
     @apply bg-background text-foreground;
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+@layer components {
+  .stat-label {
+    @apply text-[10px] uppercase tracking-wide text-zinc-400 font-medium;
+  }
+  .location-badge {
+    @apply font-mono text-sm font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 px-2.5 py-1 rounded;
+  }
+  .saldo-positive {
+    @apply text-blue-700 dark:text-blue-400 font-semibold;
+  }
+  .saldo-zero {
+    @apply text-emerald-700 dark:text-emerald-400 font-semibold;
+  }
+  .saldo-negative {
+    @apply text-red-700 dark:text-red-400 font-semibold;
+  }
+  .saldo-surplus {
+    @apply text-emerald-700 dark:text-emerald-400 font-semibold;
   }
 }

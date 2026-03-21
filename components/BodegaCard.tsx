@@ -15,16 +15,18 @@ export function BodegaCard({ ubicacion, empresaSlug, onClick }: BodegaCardProps)
   const difColor = diferencia_total === null
     ? 'text-zinc-400 dark:text-zinc-600'
     : diferencia_total === 0
-      ? 'text-emerald-700 dark:text-emerald-400'
+      ? 'saldo-zero'
       : diferencia_total < 0
-        ? 'text-red-700 dark:text-red-400'
-        : 'text-amber-700 dark:text-amber-400';
+        ? 'saldo-negative'
+        : 'saldo-surplus';
 
   const difLabel = diferencia_total === null
     ? '—'
     : diferencia_total > 0
       ? `+${diferencia_total} ${umed}`
-      : `${diferencia_total} ${umed}`;
+      : diferencia_total < 0
+        ? `${diferencia_total} ${umed}`
+        : `${diferencia_total} ${umed}`;
 
   return (
     <div
@@ -62,19 +64,19 @@ export function BodegaCard({ ubicacion, empresaSlug, onClick }: BodegaCardProps)
       {/* Stats: Saldo Zofri / Físico / Diferencia */}
       <div className="grid grid-cols-3 divide-x divide-border">
         <div className="flex flex-col gap-0.5 px-3 py-2">
-          <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium">Zofri</div>
-          <div className="text-sm font-semibold text-blue-700 dark:text-blue-400 leading-none">
+          <div className="stat-label">Zofri</div>
+          <div className="text-sm leading-none saldo-positive">
             {saldo_total} {umed}
           </div>
         </div>
         <div className="flex flex-col gap-0.5 px-3 py-2">
-          <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium">Bodega</div>
-          <div className={`text-sm font-semibold leading-none ${fisico_total !== null ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-400'}`}>
+          <div className="stat-label">Bodega</div>
+          <div className={`text-sm leading-none ${fisico_total !== null ? 'saldo-zero' : 'text-zinc-400'}`}>
             {fisico_total !== null ? `${fisico_total} ${umed}` : '—'}
           </div>
         </div>
         <div className="flex flex-col gap-0.5 px-3 py-2">
-          <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium">Diferencia</div>
+          <div className="stat-label">Diferencia</div>
           <div className={`text-sm font-semibold leading-none ${difColor}`}>
             {difLabel}
           </div>
@@ -86,13 +88,13 @@ export function BodegaCard({ ubicacion, empresaSlug, onClick }: BodegaCardProps)
 
       {/* Ubicaciones */}
       <div className="px-3 py-2">
-        <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium mb-1.5">Ubicaciones en bodega</div>
+        <div className="stat-label mb-1.5">Ubicaciones en bodega</div>
         {ubicacion.ubicaciones.length > 0 ? (
           <div className="flex flex-wrap gap-1">
             {ubicacion.ubicaciones.map(u => (
               <span
                 key={u}
-                className="font-mono text-[11px] font-medium bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 px-2 py-0.5 rounded"
+                className="location-badge"
               >
                 {u}
               </span>
