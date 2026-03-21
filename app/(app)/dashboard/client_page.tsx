@@ -54,15 +54,15 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
                 </CardHeader>
                 <CardContent className="grid grid-cols-3 gap-3">
                   <div className="flex flex-col">
-                    <span className="text-[11px] uppercase tracking-wide text-emerald-600">con sobrante</span>
+                    <span className="text-[11px] uppercase tracking-wide text-emerald-600">productos con sobrante</span>
                     <span className="text-2xl font-bold text-emerald-600">{row.conSobrante}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[11px] uppercase tracking-wide text-red-600">con faltante</span>
+                    <span className="text-[11px] uppercase tracking-wide text-red-600">productos con faltante</span>
                     <span className="text-2xl font-bold text-red-600">{row.conFaltante}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[11px] uppercase tracking-wide text-zinc-500">sin físico registrado</span>
+                    <span className="text-[11px] uppercase tracking-wide text-zinc-500">productos sin físico</span>
                     <span className="text-2xl font-bold text-zinc-500">{row.sinFisico}</span>
                   </div>
                 </CardContent>
