@@ -53,6 +53,28 @@ export default async function DashboardPage() {
     const empresaRow = empresasInfo.find(e => e.id === empresaId);
     const nombre = empresaRow?.nombre || empresaRow?.slug || `Empresa ${empresaId}`;
 
+    const [counts] = await sql`
+      WITH producto_saldos AS (
+        SELECT
+          u.codigo as codigo,
+          SUM(p.saldo)::int as saldo_total,
+          CASE
+            WHEN BOOL_AND(u.fisico IS NULL) THEN NULL
+            ELSE SUM(COALESCE(u.fisico, 0))::int
+          END as fisico_total
+        FROM productos p
+        JOIN ubicaciones_bodega u
+          ON u.empresa_id = p.empresa_id AND u.codigo = p.codigo
+        WHERE p.empresa_id = ${empresaId}
+        GROUP BY u.codigo
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE fisico_total IS NOT NULL AND fisico_total > saldo_total)::int as con_sobrante,
+        COUNT(*) FILTER (WHERE fisico_total IS NOT NULL AND fisico_total < saldo_total)::int as con_faltante,
+        COUNT(*) FILTER (WHERE fisico_total IS NULL)::int as sin_fisico
+      FROM producto_saldos
+    `;
+
     const [{ sum: saldoZofriTotal }] = await sql`
       SELECT COALESCE(SUM(saldo), 0)::int as sum
       FROM productos
@@ -65,28 +87,15 @@ export default async function DashboardPage() {
       WHERE empresa_id = ${empresaId} AND fisico IS NOT NULL
     `;
 
-    const productos = await sql`
-      SELECT
-        u.codigo as codigo,
-        SUM(p.saldo)::int as saldo,
-        CASE
-          WHEN BOOL_AND(u.fisico IS NULL) THEN NULL
-          ELSE SUM(COALESCE(u.fisico, 0))::int
-        END as fisico_total
-      FROM productos p
-      JOIN ubicaciones_bodega u
-        ON u.empresa_id = p.empresa_id AND u.codigo = p.codigo
-      WHERE p.empresa_id = ${empresaId}
-      GROUP BY u.codigo
-      ORDER BY SUM(p.saldo) DESC
-    `;
-
     return {
       empresaId,
       nombre,
       saldoZofriTotal,
       fisicoTotal: fisicoTotal ?? null,
-      productos,
+      conSobrante: counts?.con_sobrante ?? 0,
+      conFaltante: counts?.con_faltante ?? 0,
+      sinFisico: counts?.sin_fisico ?? 0,
+      totalConFisico: (counts?.con_sobrante ?? 0) + (counts?.con_faltante ?? 0),
     };
   };
 
