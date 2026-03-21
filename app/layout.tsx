@@ -8,8 +8,15 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'App Vida Digital',
   description: 'Sistema de inventario para VidaDigital & Sanjh',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'App Vida Digital',
+  },
   icons: {
     icon: '/favicon.ico',
+    apple: '/favicon.png',
   },
 };
 
@@ -20,6 +27,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
+      <head>
+        <meta name="theme-color" content="#1565C0" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+      </head>
       <body className={inter.className}>
         {children}
         <Toaster position="top-center" richColors />
