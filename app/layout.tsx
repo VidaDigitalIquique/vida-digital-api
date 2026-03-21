@@ -15,8 +15,8 @@ export const metadata: Metadata = {
     title: 'App Vida Digital',
   },
   icons: {
-    icon: '/favicon.ico',
-    apple: '/favicon.png',
+    icon: '/icon-192.png',
+    apple: '/icon-192.png',
   },
 };
 
