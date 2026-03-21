@@ -26,7 +26,7 @@ import { CompanySwitcher } from './CompanySwitcher';
 
 const NAV_LINKS = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Precios', href: '/precios', icon: Tag },
+  { name: 'Sala de Venta', href: '/precios', icon: Tag },
   { name: 'Bodega', href: '/bodega', icon: Box },
   { name: 'Catálogos', href: '/catalogo/admin', icon: LayoutList },
 ];

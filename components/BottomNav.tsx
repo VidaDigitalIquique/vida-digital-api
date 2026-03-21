@@ -10,7 +10,7 @@ import { signOut, useSession } from 'next-auth/react';
 import { Button } from './ui/button';
 
 const NAV_LINKS = [
-  { name: 'Precios', href: '/precios', icon: Tag },
+  { name: 'Sala de Venta', href: '/precios', icon: Tag },
   { name: 'Bodega', href: '/bodega', icon: Box },
 ];
 

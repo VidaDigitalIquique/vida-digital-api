@@ -194,7 +194,7 @@ export function BodegaClient({ session, empresasMap }: any) {
                     {selectedUbi.detalle || 'Sin descripción'}
                   </SheetDescription>
                   <div className="text-xs text-zinc-500 mt-2">
-                  Saldo total: <span className="font-semibold text-zinc-700 dark:text-zinc-300">{selectedUbi.saldo_total}</span>
+                  Zofri: <span className="font-semibold text-zinc-700 dark:text-zinc-300">{selectedUbi.saldo_total}</span>
                 </div>
                 </SheetHeader>
 
@@ -326,7 +326,7 @@ function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: n
           
           {/* Saldo sistema */}
           <div className="bg-white dark:bg-zinc-800 p-3 rounded-lg border text-center">
-            <div className="text-[10px] text-zinc-400 uppercase tracking-wide">Saldo sistema</div>
+            <div className="text-[10px] text-zinc-400 uppercase tracking-wide">Zofri</div>
             <div className="text-2xl font-bold mt-0.5">{saldoCajas} cj {saldoResto > 0 ? `+ ${saldoResto} u` : ''}</div>
             <div className="text-xs text-zinc-400 mt-0.5">{lote.saldo} unidades · {cantcaja} u/caja</div>
           </div>
@@ -334,7 +334,7 @@ function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: n
           {/* Conteo físico */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-xs font-bold">Físico</Label>
+              <Label className="text-xs font-bold">Bodega</Label>
               <Input
                 type="number"
                 min="0"
@@ -362,7 +362,7 @@ function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: n
             <div className={`p-3 rounded-lg border text-center ${diferencia === 0 ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200' : diferencia! < 0 ? 'bg-red-50 dark:bg-red-950/30 border-red-200' : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200'}`}>
               <div className="text-[10px] text-zinc-400 uppercase tracking-wide">Diferencia</div>
               <div className={`text-xl font-bold mt-0.5 ${difColor}`}>{difLabel}</div>
-              <div className="text-xs text-zinc-400 mt-0.5">{fisicoTotal} u físicas vs {lote.saldo} u sistema</div>
+              <div className="text-xs text-zinc-400 mt-0.5">{fisicoTotal} u en bodega vs {lote.saldo} u en Zofri</div>
             </div>
           )}
 

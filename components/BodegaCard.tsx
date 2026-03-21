@@ -62,13 +62,13 @@ export function BodegaCard({ ubicacion, empresaSlug, onClick }: BodegaCardProps)
       {/* Stats: Saldo Zofri / Físico / Diferencia */}
       <div className="grid grid-cols-3 divide-x divide-border">
         <div className="flex flex-col gap-0.5 px-3 py-2">
-          <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium">Saldo Zofri</div>
+          <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium">Zofri</div>
           <div className="text-sm font-semibold text-blue-700 dark:text-blue-400 leading-none">
             {saldo_total} {umed}
           </div>
         </div>
         <div className="flex flex-col gap-0.5 px-3 py-2">
-          <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium">Físico</div>
+          <div className="text-[9px] uppercase tracking-wide text-zinc-400 font-medium">Bodega</div>
           <div className={`text-sm font-semibold leading-none ${fisico_total !== null ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-400'}`}>
             {fisico_total !== null ? `${fisico_total} ${umed}` : '—'}
           </div>

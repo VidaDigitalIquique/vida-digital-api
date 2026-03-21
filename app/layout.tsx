@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/sonner';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'VidaDigital Inventario v2',
+  title: 'App Vida Digital',
   description: 'Sistema de inventario para VidaDigital & Sanjh',
   icons: {
     icon: '/favicon.svg',

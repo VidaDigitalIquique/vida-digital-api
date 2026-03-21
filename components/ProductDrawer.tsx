@@ -192,11 +192,11 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
           {/* Logistics Data */}
           <div className="grid grid-cols-2 gap-4 bg-zinc-50 dark:bg-zinc-900 p-4 rounded-lg">
             <div>
-              <p className="text-xs text-zinc-500 mb-1">Saldo</p>
+              <p className="text-xs text-zinc-500 mb-1">Zofri</p>
               <p className="font-semibold text-lg">{producto.saldo} {producto.umed}</p>
             </div>
             <div>
-              <p className="text-xs text-zinc-500 mb-1">Cajas</p>
+              <p className="text-xs text-zinc-500 mb-1">Packing</p>
               {producto.cantcaja > 1 ? (
                 <>
                   <p className="font-medium text-sm">{producto.cantcaja} {producto.umed}/Caja</p>
