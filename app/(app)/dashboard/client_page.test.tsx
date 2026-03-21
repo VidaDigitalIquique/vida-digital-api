@@ -16,7 +16,7 @@ describe('DashboardClient Sync', () => {
     // Current component (v1) ignores the mock hook because it relies on its own localStorage useEffect
     (useEmpresaId as jest.Mock).mockReturnValue({ empresaId: 2, isLoaded: true });
 
-    render(<DashboardClient stats={mockStats} />);
+    render(<DashboardClient stats={mockStats} stockCompare={[]} />);
 
     // Since stats for ID 2 has 100 products, we expect to see 100.
     // However, DashboardClient v1 will probably see ID 1 if localStorage is empty,

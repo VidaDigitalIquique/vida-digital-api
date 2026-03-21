@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useEmpresaId } from "@/hooks/useEmpresaId";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
+import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle, X } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -49,9 +49,14 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-2xl">
+        <SheetContent side="right" className="w-full h-full sm:max-w-2xl overflow-y-auto flex flex-col">
           <SheetHeader>
-            <SheetTitle>{drawerTitle}</SheetTitle>
+            <div className="flex items-center justify-between mb-2">
+              <SheetTitle>{drawerTitle}</SheetTitle>
+              <SheetClose className="rounded-full p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                <X className="w-5 h-5 text-zinc-500" />
+              </SheetClose>
+            </div>
           </SheetHeader>
 
           <div className="mt-6">

@@ -49,6 +49,8 @@ export interface LoteBodega {
   saldo: number;
   saldocajas: number;
   fisico: number | null;
+  fisico_cajas: number | null;
+  fisico_unidades: number | null;
   diferencia: number | null;
   observaciones: string | null;
   updated_at: Date;

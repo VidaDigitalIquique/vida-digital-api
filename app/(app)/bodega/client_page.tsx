@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { LoteBodega, UbicacionBodegaAgrupada } from '@/types';
 import { BodegaCard } from '@/components/BodegaCard';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Search, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
@@ -91,13 +91,19 @@ export function BodegaClient({ session, empresasMap }: any) {
     const fisicoValues = lotes.map(l => l.fisico);
     const hasFisico = fisicoValues.some(v => v !== null);
     const fisico_total = hasFisico
-      ? fisicoValues.reduce((acc, v) => acc + (v ?? 0), 0)
+      ? fisicoValues.reduce((acc, v) => {
+        if (acc === null) return acc;
+        return acc + (v ?? 0);
+      }, 0 as number | null)
       : null;
 
     const diferenciaValues = lotes.map(l => l.diferencia);
     const hasDiferencia = diferenciaValues.some(v => v !== null);
     const diferencia_total = hasDiferencia
-      ? diferenciaValues.reduce((acc, v) => acc + (v ?? 0), 0)
+      ? diferenciaValues.reduce((acc, v) => {
+        if (acc === null) return acc;
+        return acc + (v ?? 0);
+      }, 0 as number | null)
       : null;
 
     return { ...base, lotes, ubicaciones, fisico_total, diferencia_total };
@@ -176,13 +182,18 @@ export function BodegaClient({ session, empresasMap }: any) {
 
       {/* Edit Drawer */}
       <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
-        <SheetContent className="w-full sm:max-w-md overflow-y-auto pb-safe">
+        <SheetContent className="w-full h-full sm:max-w-md overflow-y-auto pb-safe flex flex-col">
           {selectedUbi && (
             <>
               <SheetHeader className="mb-6 border-b pb-4">
-                <SheetTitle className="text-2xl font-black text-blue-700 dark:text-blue-400 leading-none">
-                  {selectedUbi.codigo}
-                </SheetTitle>
+                <div className="flex items-center justify-between mb-2">
+                  <SheetTitle className="text-2xl font-black text-blue-700 dark:text-blue-400 leading-none">
+                    {selectedUbi.codigo}
+                  </SheetTitle>
+                  <SheetClose className="rounded-full p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                    <X className="w-5 h-5 text-zinc-500" />
+                  </SheetClose>
+                </div>
                 <SheetDescription className="text-left text-sm font-medium mt-1 text-zinc-600">
                   {selectedUbi.detalle || 'Sin descripción'}
                 </SheetDescription>

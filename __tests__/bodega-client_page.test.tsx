@@ -37,6 +37,8 @@ const makeLote = (overrides: Partial<LoteBodega>): LoteBodega => ({
   saldo: 20,
   saldocajas: 2,
   fisico: 20,
+  fisico_cajas: null,
+  fisico_unidades: null,
   diferencia: 0,
   observaciones: null,
   updated_at: new Date('2026-03-20T00:00:00Z'),

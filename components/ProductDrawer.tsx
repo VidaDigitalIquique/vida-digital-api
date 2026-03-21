@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Producto, UserSession } from '@/types';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetClose } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ImageWithFallback } from './ImageWithFallback';
 import { formatUSD } from '@/lib/utils';
 import { toast } from 'sonner';
+import { X } from 'lucide-react';
 
 interface ProductDrawerProps {
   producto: Producto | null;
@@ -168,9 +169,14 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
 
   return (
     <Sheet open={open} onOpenChange={handleOpenStatus}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto pb-safe">
+      <SheetContent className="w-full h-full sm:max-w-md overflow-y-auto pb-safe flex flex-col">
         <SheetHeader className="mb-4">
-          <SheetTitle className="text-left font-mono text-zinc-500">{producto.codigo}</SheetTitle>
+          <div className="flex items-center justify-between mb-2">
+            <SheetTitle className="text-left font-mono text-zinc-500">{producto.codigo}</SheetTitle>
+            <SheetClose className="rounded-full p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+              <X className="w-5 h-5 text-zinc-500" />
+            </SheetClose>
+          </div>
           <SheetDescription className="text-left text-base text-foreground font-medium">
             {producto.detalle}
           </SheetDescription>
