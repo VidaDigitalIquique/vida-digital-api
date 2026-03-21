@@ -4,16 +4,18 @@ import { useState, useEffect, useRef } from 'react';
 import { LoteBodega, UbicacionBodegaAgrupada } from '@/types';
 import { BodegaCard } from '@/components/BodegaCard';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, Share2 } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { toast } from 'sonner';
+import { useShareImage } from '@/hooks/useShareImage';
 
 import { useEmpresaId } from '@/hooks/useEmpresaId';
 
 export function BodegaClient({ session, empresasMap }: any) {
+  const { shareImage } = useShareImage();
   const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
   const [ubicaciones, setUbicaciones] = useState<UbicacionBodegaAgrupada[]>([]);
   const [loading, setLoading] = useState(true);
@@ -208,6 +210,18 @@ export function BodegaClient({ session, empresasMap }: any) {
                     fill
                     className="object-contain"
                   />
+                  {selectedUbi.producto_imagen_url && (
+                    <button
+                      onClick={() => shareImage(
+                        selectedUbi.producto_imagen_url || '',
+                        `${selectedUbi.codigo}.jpg`,
+                        `${selectedUbi.codigo} — ${selectedUbi.detalle || ''}`
+                      )}
+                      className="absolute top-2 right-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white dark:hover:bg-zinc-800 transition-colors z-10"
+                    >
+                      <Share2 className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Lotes */}

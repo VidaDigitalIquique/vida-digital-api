@@ -10,6 +10,8 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ImageWithFallback } from './ImageWithFallback';
 import { formatUSD } from '@/lib/utils';
 import { toast } from 'sonner';
+import { Share2 } from 'lucide-react';
+import { useShareImage } from '@/hooks/useShareImage';
 
 interface ProductDrawerProps {
   producto: Producto | null;
@@ -21,6 +23,7 @@ interface ProductDrawerProps {
 }
 
 export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChange, onUpdated }: ProductDrawerProps) {
+  const { shareImage } = useShareImage();
   const [isEditing, setIsEditing] = useState(false);
   const [prcVenta, setPrcVenta] = useState('');
   const [prcMinimo, setPrcMinimo] = useState('');
@@ -187,6 +190,18 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
               fill
               className="object-contain"
             />
+            {(currentImageUrl || producto.imagen_url) && (
+              <button
+                onClick={() => shareImage(
+                  currentImageUrl || producto.imagen_url || '',
+                  `${producto.codigo}.jpg`,
+                  `${producto.codigo} — ${producto.detalle || ''}`
+                )}
+                className="absolute top-2 right-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white dark:hover:bg-zinc-800 transition-colors z-10"
+              >
+                <Share2 className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
+              </button>
+            )}
           </div>
 
           {/* Logistics Data */}
