@@ -11,6 +11,13 @@ export function useShareImage() {
       const blob = await response.blob();
       const file = new File([blob], filename, { type: blob.type });
 
+      // DEBUG — remove after testing
+      console.log('navigator.share available:', !!navigator.share);
+      console.log('navigator.canShare available:', !!navigator.canShare);
+      console.log('blob type:', blob.type);
+      console.log('blob size:', blob.size);
+      console.log('canShare result:', navigator.canShare?.({ files: [file] }));
+
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({ files: [file], title });
       } else {
