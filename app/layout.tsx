@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: 'App Vida Digital',
   description: 'Sistema de inventario para VidaDigital & Sanjh',
   icons: {
-    icon: '/favicon.svg',
+    icon: '/favicon.ico',
   },
 };
 
