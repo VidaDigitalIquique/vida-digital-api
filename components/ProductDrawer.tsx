@@ -263,79 +263,38 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
               <Table>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-medium text-zinc-500">CIF</TableCell>
-                    <TableCell className="text-right">${producto.cif ? Number(producto.cif).toFixed(4) : '0.0000'}</TableCell>
-                  </TableRow>
-                  <TableRow>
                     <TableCell className="font-medium text-zinc-500">Costo</TableCell>
                     <TableCell className="text-right">{formatUSD(producto.costo)}</TableCell>
                   </TableRow>
-                  
-                  {isEditing ? (
-                    <>
-                      <TableRow className="bg-blue-50/50 dark:bg-blue-900/10">
-                        <TableCell className="font-medium"><Label>Venta</Label></TableCell>
-                        <TableCell className="text-right p-2">
-                           <Input type="number" step="0.01" value={prcVenta} onChange={e => setPrcVenta(e.target.value)} className="h-8 text-right" />
-                        </TableCell>
-                      </TableRow>
-                      <TableRow className="bg-blue-50/50 dark:bg-blue-900/10">
-                        <TableCell className="font-medium"><Label>Mínimo</Label></TableCell>
-                        <TableCell className="text-right p-2">
-                           <Input type="number" step="0.01" value={prcMinimo} onChange={e => setPrcMinimo(e.target.value)} className="h-8 text-right" />
-                        </TableCell>
-                      </TableRow>
-                    </>
-                  ) : (
-                    <>
-                      <TableRow>
-                        <TableCell className="font-bold text-zinc-900 dark:text-zinc-100">Venta</TableCell>
-                        <TableCell className="text-right font-bold text-lg text-blue-600 dark:text-blue-400">{formatUSD(producto.prcventa)}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium text-zinc-500">Mínimo</TableCell>
-                        <TableCell className="text-right text-zinc-500">{formatUSD(producto.prcminimo)}</TableCell>
-                      </TableRow>
-                    </>
+                  <TableRow>
+                    <TableCell className="font-medium text-zinc-500">Mín. vendido</TableCell>
+                    <TableCell className="text-right">
+                      {kardexLoading ? <span className="animate-pulse">...</span> : kardex?.precio_minimo ? formatUSD(kardex.precio_minimo) : '—'}
+                    </TableCell>
+                  </TableRow>
+                  {(!kardexLoading && kardex?.precio_medio_status === 'ok') && (
+                    <TableRow>
+                      <TableCell className="font-medium text-zinc-500">Precio medio</TableCell>
+                      <TableCell className="text-right text-blue-600 dark:text-blue-400 font-semibold">{formatUSD(kardex.precio_medio ?? 0)}</TableCell>
+                    </TableRow>
                   )}
+                  <TableRow>
+                    <TableCell className="font-medium text-zinc-500">Máx. vendido</TableCell>
+                    <TableCell className="text-right">
+                      {kardexLoading ? <span className="animate-pulse">...</span> : kardex?.precio_maximo ? formatUSD(kardex.precio_maximo) : '—'}
+                    </TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
             </div>
-            {(
-              <>
-                {kardexLoading ? (
-                  <div className="mt-2 h-4 w-64 rounded bg-zinc-200/80 dark:bg-zinc-800 animate-pulse" />
-                ) : kardex && kardex.total_ventas > 0 ? (
-                  <div className="text-sm text-zinc-500 space-y-1">
-                    <div>
-                      Mín. vendido: <span className="font-medium text-zinc-700 dark:text-zinc-300">{formatUSD(kardex.precio_minimo ?? 0)}</span>
-                      {' — '}
-                      Máx. vendido: <span className="font-medium text-zinc-700 dark:text-zinc-300">{formatUSD(kardex.precio_maximo ?? 0)}</span>
-                      {' '}
-                      <span className="text-zinc-400">({kardex.total_ventas} ventas)</span>
-                    </div>
-                    {kardex.precio_medio_status === 'ok' && (
-                      <div>
-                        Precio medio: <span className="font-medium text-blue-600 dark:text-blue-400">{formatUSD(kardex.precio_medio ?? 0)}</span>
-                      </div>
-                    )}
-                    {kardex.precio_medio_status === 'sin_variacion' && (
-                      <div className="text-xs text-zinc-400 italic">Este producto siempre se ha vendido al mismo precio</div>
-                    )}
-                    {kardex.precio_medio_status === 'solo_dos' && (
-                      <div className="text-xs text-zinc-400 italic">Solo se ha vendido a dos precios distintos</div>
-                    )}
-                    {kardex.precio_medio_status === 'empate' && (
-                      <div className="text-xs text-zinc-400 italic">No existe un precio medio único</div>
-                    )}
-                    {kardex.clientes_excluidos > 0 && (
-                      <div className="text-xs text-zinc-400">
-                        ({kardex.clientes_excluidos} {kardex.clientes_excluidos === 1 ? 'cliente excluido' : 'clientes excluidos'})
-                      </div>
-                    )}
-                  </div>
-                ) : null}
-              </>
+            {kardex && kardex.total_ventas > 0 && (
+              <div className="text-xs text-zinc-400 space-y-0.5 mt-2">
+                <div>{kardex.total_ventas} ventas registradas</div>
+                {kardex.precio_medio_status === 'sin_variacion' && <div>Siempre se ha vendido al mismo precio</div>}
+                {kardex.precio_medio_status === 'solo_dos' && <div>Solo se ha vendido a dos precios distintos</div>}
+                {kardex.precio_medio_status === 'empate' && <div>No existe un precio medio único</div>}
+                {kardex.clientes_excluidos > 0 && <div>{kardex.clientes_excluidos} {kardex.clientes_excluidos === 1 ? 'cliente excluido' : 'clientes excluidos'}</div>}
+              </div>
             )}
             {isEditing && (
               <div className="flex gap-2 mt-4">
