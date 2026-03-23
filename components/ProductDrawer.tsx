@@ -48,34 +48,31 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
     setCurrentImageUrl(producto?.imagen_url || null);
   }, [producto]);
 
+  useEffect(() => {
+    if (open && producto) {
+      setKardexLoading(true);
+      setKardex(null);
+      fetch(`/api/kardex?codigo=${encodeURIComponent(producto.codigo)}&empresaSlug=${encodeURIComponent(empresaSlug)}`)
+        .then(res => (res.ok ? res.json() : null))
+        .then(data => { if (data) setKardex(data); })
+        .catch(() => setKardex(null))
+        .finally(() => setKardexLoading(false));
+    }
+    if (!open) {
+      setKardex(null);
+      setKardexLoading(false);
+    }
+  }, [open, producto?.codigo]);
+
   // Sync state when product opens
   const handleOpenStatus = (isOpen: boolean) => {
     if (isOpen && producto) {
       setPrcVenta(producto.prcventa.toString());
       setPrcMinimo(producto.prcminimo.toString());
       setIsEditing(false);
-      if (true) {
-        setKardexLoading(true);
-        setKardex(null);
-        fetch(`/api/kardex?codigo=${encodeURIComponent(producto.codigo)}&empresaSlug=${encodeURIComponent(empresaSlug)}`)
-          .then(res => (res.ok ? res.json() : null))
-          .then(data => {
-            if (data) setKardex(data);
-          })
-          .catch(() => {
-            setKardex(null);
-          })
-          .finally(() => {
-            setKardexLoading(false);
-          });
-      }
     }
     setPreviewUrl(null);
     setSelectedFile(null);
-    if (!isOpen) {
-      setKardex(null);
-      setKardexLoading(false);
-    }
     onOpenChange(isOpen);
   };
 
