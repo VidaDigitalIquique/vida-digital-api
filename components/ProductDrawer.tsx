@@ -28,7 +28,14 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
   const [prcVenta, setPrcVenta] = useState('');
   const [prcMinimo, setPrcMinimo] = useState('');
   const [isSaving, setIsSaving] = useState(false);
-  const [kardex, setKardex] = useState<{ precio_minimo: number | null; precio_maximo: number | null; total_ventas: number } | null>(null);
+  const [kardex, setKardex] = useState<{
+    precio_minimo: number | null;
+    precio_maximo: number | null;
+    precio_medio: number | null;
+    precio_medio_status: string;
+    total_ventas: number;
+    clientes_excluidos: number;
+  } | null>(null);
   const [kardexLoading, setKardexLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -299,9 +306,34 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
                 {kardexLoading ? (
                   <div className="mt-2 h-4 w-64 rounded bg-zinc-200/80 dark:bg-zinc-800 animate-pulse" />
                 ) : kardex && kardex.total_ventas > 0 ? (
-                  <p className="mt-2 text-xs text-zinc-500">
-                    Mín. vendido: {formatUSD(kardex.precio_minimo || 0)} — Máx. vendido: {formatUSD(kardex.precio_maximo || 0)} ({kardex.total_ventas} ventas)
-                  </p>
+                  <div className="text-sm text-zinc-500 space-y-1">
+                    <div>
+                      Mín. vendido: <span className="font-medium text-zinc-700 dark:text-zinc-300">{formatUSD(kardex.precio_minimo ?? 0)}</span>
+                      {' — '}
+                      Máx. vendido: <span className="font-medium text-zinc-700 dark:text-zinc-300">{formatUSD(kardex.precio_maximo ?? 0)}</span>
+                      {' '}
+                      <span className="text-zinc-400">({kardex.total_ventas} ventas)</span>
+                    </div>
+                    {kardex.precio_medio_status === 'ok' && (
+                      <div>
+                        Precio medio: <span className="font-medium text-blue-600 dark:text-blue-400">{formatUSD(kardex.precio_medio ?? 0)}</span>
+                      </div>
+                    )}
+                    {kardex.precio_medio_status === 'sin_variacion' && (
+                      <div className="text-xs text-zinc-400 italic">Este producto siempre se ha vendido al mismo precio</div>
+                    )}
+                    {kardex.precio_medio_status === 'solo_dos' && (
+                      <div className="text-xs text-zinc-400 italic">Solo se ha vendido a dos precios distintos</div>
+                    )}
+                    {kardex.precio_medio_status === 'empate' && (
+                      <div className="text-xs text-zinc-400 italic">No existe un precio medio único</div>
+                    )}
+                    {kardex.clientes_excluidos > 0 && (
+                      <div className="text-xs text-zinc-400">
+                        ({kardex.clientes_excluidos} {kardex.clientes_excluidos === 1 ? 'cliente excluido' : 'clientes excluidos'})
+                      </div>
+                    )}
+                  </div>
                 ) : null}
               </>
             )}
