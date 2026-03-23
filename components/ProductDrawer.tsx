@@ -12,6 +12,7 @@ import { formatUSD } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Share2 } from 'lucide-react';
 import { useShareImage } from '@/hooks/useShareImage';
+import featureFlags from '@/config/feature-flags.json';
 
 interface ProductDrawerProps {
   producto: Producto | null;
@@ -28,6 +29,8 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
   const [prcVenta, setPrcVenta] = useState('');
   const [prcMinimo, setPrcMinimo] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [kardex, setKardex] = useState<{ precio_minimo: number | null; precio_maximo: number | null; total_ventas: number } | null>(null);
+  const [kardexLoading, setKardexLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -52,9 +55,28 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
       setPrcVenta(producto.prcventa.toString());
       setPrcMinimo(producto.prcminimo.toString());
       setIsEditing(false);
+      if (featureFlags["kardex-movimiento"]) {
+        setKardexLoading(true);
+        setKardex(null);
+        fetch(`/api/kardex?codigo=${encodeURIComponent(producto.codigo)}&empresaSlug=${encodeURIComponent(empresaSlug)}`)
+          .then(res => (res.ok ? res.json() : null))
+          .then(data => {
+            if (data) setKardex(data);
+          })
+          .catch(() => {
+            setKardex(null);
+          })
+          .finally(() => {
+            setKardexLoading(false);
+          });
+      }
     }
     setPreviewUrl(null);
     setSelectedFile(null);
+    if (!isOpen) {
+      setKardex(null);
+      setKardexLoading(false);
+    }
     onOpenChange(isOpen);
   };
 
@@ -276,6 +298,17 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
                 </TableBody>
               </Table>
             </div>
+            {featureFlags["kardex-movimiento"] && (
+              <>
+                {kardexLoading ? (
+                  <div className="mt-2 h-4 w-64 rounded bg-zinc-200/80 dark:bg-zinc-800 animate-pulse" />
+                ) : kardex && kardex.total_ventas > 0 ? (
+                  <p className="mt-2 text-xs text-zinc-500">
+                    Mín. vendido: {formatUSD(kardex.precio_minimo || 0)} — Máx. vendido: {formatUSD(kardex.precio_maximo || 0)} ({kardex.total_ventas} ventas)
+                  </p>
+                ) : null}
+              </>
+            )}
             {isEditing && (
               <div className="flex gap-2 mt-4">
                 <Button variant="outline" className="w-full" onClick={() => setIsEditing(false)}>Cancelar</Button>
