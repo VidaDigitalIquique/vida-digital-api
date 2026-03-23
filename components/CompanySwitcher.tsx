@@ -15,7 +15,7 @@ export function CompanySwitcher({ activeEmpresaId, onSwitch }: { activeEmpresaId
   const active = EMPRESAS.find((e) => e.id === activeEmpresaId) || EMPRESAS[0];
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger className="inline-flex items-center justify-between gap-2 w-[180px] px-3 py-2 rounded-md border text-sm font-semibold border-none shadow-sm bg-white/50 dark:bg-zinc-900/50 focus:outline-none">
         <div className="flex items-center gap-2">
           <Building2 className={`w-4 h-4 ${active.color}`} />
