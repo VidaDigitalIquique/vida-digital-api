@@ -21,25 +21,25 @@ export async function GET(request: Request) {
     const rows = schema === "sanjh"
       ? await sql`
           SELECT
-            MIN(i.precreal) AS precio_minimo,
-            MAX(i.precreal) AS precio_maximo,
+            MIN(i.precread) AS precio_minimo,
+            MAX(i.precread) AS precio_maximo,
             COUNT(*)::int AS total_ventas
           FROM sanjh.itemdcto i
           INNER JOIN sanjh.movidcto m ON i.knumfoli = m.knumfoli
           WHERE m.tipomovi = 'V'
-            AND i.precreal > 0
+            AND i.precread > 0
             AND i.cantsali > 0
             AND i.codunico = ${codigo}
         `
       : await sql`
           SELECT
-            MIN(i.precreal) AS precio_minimo,
-            MAX(i.precreal) AS precio_maximo,
+            MIN(i.precread) AS precio_minimo,
+            MAX(i.precread) AS precio_maximo,
             COUNT(*)::int AS total_ventas
           FROM vida.itemdcto i
           INNER JOIN vida.movidcto m ON i.knumfoli = m.knumfoli
           WHERE m.tipomovi = 'V'
-            AND i.precreal > 0
+            AND i.precread > 0
             AND i.cantsali > 0
             AND i.codunico = ${codigo}
         `;
