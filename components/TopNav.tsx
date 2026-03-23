@@ -20,7 +20,8 @@ import {
   FileSpreadsheet,
   ImageIcon,
   Users,
-  LayoutList 
+  LayoutList,
+  Filter
 } from 'lucide-react';
 import { CompanySwitcher } from './CompanySwitcher';
 
@@ -98,6 +99,11 @@ export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number,
                     <DropdownMenuItem>
                       <Link href="/admin/usuarios" className="flex items-center gap-2 w-full">
                         <Users className="w-4 h-4" /> Usuarios
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Link href="/admin/kardex-exclusiones" className="flex items-center gap-2 w-full">
+                        <Filter className="w-4 h-4" /> Exclusiones Kardex
                       </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>

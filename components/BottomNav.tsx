@@ -80,15 +80,18 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
                    </div>
                  )}
                  {rol === 'admin' && (
-                   <div>
-                      <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Administración</h3>
-                      <Link href="/admin/importar" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Importar Excel</Link>
-                      <Link href="/admin/subir-imagenes" onClick={() => setMenuOpen(false)} className="block py-2 font-medium flex items-center gap-2">
+                  <div>
+                     <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Administración</h3>
+                     <Link href="/admin/importar" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Importar Excel</Link>
+                     <Link href="/admin/subir-imagenes" onClick={() => setMenuOpen(false)} className="block py-2 font-medium flex items-center gap-2">
                         <ImageIcon className="w-4 h-4" /> Subir Imágenes
-                      </Link>
-                      <Link href="/admin/usuarios" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Usuarios</Link>
-                   </div>
-                 )}
+                     </Link>
+                     <Link href="/admin/usuarios" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Usuarios</Link>
+                     <Link href="/admin/kardex-exclusiones" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">
+                       Exclusiones Kardex
+                     </Link>
+                  </div>
+                )}
                </div>
                <Button variant="destructive" onClick={() => signOut()} className="w-full">
                  Cerrar Sesión
