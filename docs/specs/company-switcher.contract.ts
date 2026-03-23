@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const CompanySwitcherPropsSchema = z.object({
   activeEmpresaId: z.number().int().positive(),
-  onSwitch: z.function().args(z.number().int().positive()).returns(z.void()),
+  onSwitch: z.function(),
 });
 
 export const CompanySwitcherOpenEventSchema = z.object({

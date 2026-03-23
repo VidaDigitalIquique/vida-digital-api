@@ -63,8 +63,14 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
                <div className="space-y-6">
                  <div>
                     <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Empresa Activa</h3>
-                    <div onClick={() => setMenuOpen(false)}>
-                      <CompanySwitcher activeEmpresaId={activeEmpresaId} onSwitch={onSwitch} />
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <CompanySwitcher
+                        activeEmpresaId={activeEmpresaId}
+                        onSwitch={(id) => {
+                          onSwitch(id);
+                          setMenuOpen(false);
+                        }}
+                      />
                     </div>
                  </div>
                  {(rol === 'admin' || rol === 'vendedor') && (
