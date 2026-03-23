@@ -18,12 +18,16 @@ export async function GET(request: Request) {
   const schema = empresaSlug === "sanjh" ? "sanjh" : "vida";
 
   try {
-    const rows = schema === "sanjh"
+    // Get exclusion patterns for this empresa
+    const exclusiones = schema === 'sanjh'
+      ? await sql`SELECT patron_nombre FROM kardex_clientes_excluidos WHERE empresa_id = 1 AND activo = true`
+      : await sql`SELECT patron_nombre FROM kardex_clientes_excluidos WHERE empresa_id = 2 AND activo = true`;
+    const patrones = exclusiones.map((e: any) => e.patron_nombre as string);
+
+    // Fetch all sales for this product
+    const allRows = schema === 'sanjh'
       ? await sql`
-          SELECT
-            MIN(i.precread) AS precio_minimo,
-            MAX(i.precread) AS precio_maximo,
-            COUNT(*)::int AS total_ventas
+          SELECT i.precread, m.cliente
           FROM sanjh.itemdcto i
           INNER JOIN sanjh.movidcto m ON i.knumfoli = m.knumfoli
           WHERE m.tipomovi = 'V'
@@ -32,10 +36,7 @@ export async function GET(request: Request) {
             AND i.codunico = ${codigo}
         `
       : await sql`
-          SELECT
-            MIN(i.precread) AS precio_minimo,
-            MAX(i.precread) AS precio_maximo,
-            COUNT(*)::int AS total_ventas
+          SELECT i.precread, m.cliente
           FROM vida.itemdcto i
           INNER JOIN vida.movidcto m ON i.knumfoli = m.knumfoli
           WHERE m.tipomovi = 'V'
@@ -43,16 +44,67 @@ export async function GET(request: Request) {
             AND i.cantsali > 0
             AND i.codunico = ${codigo}
         `;
-    const row = rows && rows.length > 0 ? rows[0] : null;
 
-    const totalVentas = row?.total_ventas !== undefined && row?.total_ventas !== null
-      ? Number(row.total_ventas)
-      : 0;
+    // Filter excluded clients in JS
+    const filteredRows = patrones.length > 0
+      ? allRows.filter((r: any) =>
+          !patrones.some(p => r.cliente?.toUpperCase().includes(p.toUpperCase()))
+        )
+      : allRows;
+
+    if (filteredRows.length === 0) {
+      return NextResponse.json({
+        precio_minimo: null,
+        precio_maximo: null,
+        precio_medio: null,
+        precio_medio_status: 'sin_ventas',
+        total_ventas: 0,
+        clientes_excluidos: patrones.length,
+      });
+    }
+
+    const precios = filteredRows.map((r: any) => Number(r.precread));
+    const precioMin = Math.min(...precios);
+    const precioMax = Math.max(...precios);
+    const totalVentas = filteredRows.length;
+
+    // Precio medio logic
+    let precioMedio: number | null = null;
+    let precioMedioStatus: string;
+
+    if (precioMin === precioMax) {
+      precioMedioStatus = 'sin_variacion';
+    } else {
+      const preciosUnicos: number[] = [];
+      for (const p of precios) {
+        if (!preciosUnicos.includes(p)) preciosUnicos.push(p);
+      }
+      preciosUnicos.sort((a, b) => a - b);
+      if (preciosUnicos.length === 2) {
+        precioMedioStatus = 'solo_dos';
+      } else {
+        const puntoMedio = (precioMin + precioMax) / 2;
+        // Find closest real value to punto_medio
+        const conDistancia = preciosUnicos.map(p => ({ precio: p, dist: Math.abs(p - puntoMedio) }));
+        conDistancia.sort((a, b) => a.dist - b.dist);
+        const minDist = conDistancia[0].dist;
+        const candidatos = conDistancia.filter(p => p.dist === minDist);
+        if (candidatos.length > 1) {
+          precioMedioStatus = 'empate';
+        } else {
+          precioMedio = candidatos[0].precio;
+          precioMedioStatus = 'ok';
+        }
+      }
+    }
 
     return NextResponse.json({
-      precio_minimo: row?.precio_minimo !== undefined && row?.precio_minimo !== null ? Number(row.precio_minimo) : null,
-      precio_maximo: row?.precio_maximo !== undefined && row?.precio_maximo !== null ? Number(row.precio_maximo) : null,
+      precio_minimo: precioMin,
+      precio_maximo: precioMax,
+      precio_medio: precioMedio,
+      precio_medio_status: precioMedioStatus,
       total_ventas: totalVentas,
+      clientes_excluidos: patrones.length,
     });
   } catch (error: any) {
     console.error("GET /api/kardex error:", error);
