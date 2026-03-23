@@ -12,7 +12,6 @@ import { formatUSD } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Share2 } from 'lucide-react';
 import { useShareImage } from '@/hooks/useShareImage';
-import featureFlags from '@/config/feature-flags.json';
 
 interface ProductDrawerProps {
   producto: Producto | null;
@@ -55,7 +54,7 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
       setPrcVenta(producto.prcventa.toString());
       setPrcMinimo(producto.prcminimo.toString());
       setIsEditing(false);
-      if (featureFlags["kardex-movimiento"]) {
+      if (true) {
         setKardexLoading(true);
         setKardex(null);
         fetch(`/api/kardex?codigo=${encodeURIComponent(producto.codigo)}&empresaSlug=${encodeURIComponent(empresaSlug)}`)
@@ -298,7 +297,7 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
                 </TableBody>
               </Table>
             </div>
-            {featureFlags["kardex-movimiento"] && (
+            {(
               <>
                 {kardexLoading ? (
                   <div className="mt-2 h-4 w-64 rounded bg-zinc-200/80 dark:bg-zinc-800 animate-pulse" />
