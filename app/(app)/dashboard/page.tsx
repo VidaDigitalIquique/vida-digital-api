@@ -31,7 +31,7 @@ export default async function DashboardPage() {
     const [{ count: nuevos }] = await sql`SELECT COUNT(*)::int FROM productos WHERE empresa_id = ${empId} AND es_nuevo = true`;
     const [{ count: sinPrecio }] = await sql`SELECT COUNT(*)::int FROM productos WHERE empresa_id = ${empId} AND prcventa = 0 AND saldo > 0`;
     
-    const maxDateRows = await sql`SELECT MAX(fecha_ingreso) as max_date FROM productos WHERE empresa_id = ${empId}`;
+    const maxDateRows = await sql`SELECT MAX(updated_at) as max_date FROM productos WHERE empresa_id = ${empId}`;
     const lastImport = maxDateRows[0]?.max_date ? new Date(maxDateRows[0].max_date) : null;
 
     const [{ count: despachosHoy }] = await sql`

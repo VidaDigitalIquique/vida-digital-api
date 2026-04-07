@@ -63,7 +63,8 @@ export async function POST(request: Request) {
           pesocaja = EXCLUDED.pesocaja,
           cubicaja = EXCLUDED.cubicaja,
           umed = EXCLUDED.umed,
-          updated_at = NOW()
+          updated_at = NOW(),
+          fecha_ingreso = NOW()
       `;
 
       await sql`
