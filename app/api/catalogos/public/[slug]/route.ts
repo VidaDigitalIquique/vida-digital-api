@@ -64,7 +64,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
       if (incluir.length > 0) {
         const matchesIncluir = incluir.some((kw: string) => {
           const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          return new RegExp(`\\b${escaped}\\b`, 'i').test(haystack);
+          return new RegExp(`(?<![a-záéíóúñ])${escaped}(?![a-záéíóúñ])`, 'i').test(haystack);
         });
         if (!matchesIncluir) return false;
       }
@@ -72,7 +72,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
       if (excluir.length > 0) {
         const matchesExcluir = excluir.some((kw: string) => {
           const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          return new RegExp(`\\b${escaped}\\b`, 'i').test(haystack);
+          return new RegExp(`(?<![a-záéíóúñ])${escaped}(?![a-záéíóúñ])`, 'i').test(haystack);
         });
         if (matchesExcluir) return false;
       }
