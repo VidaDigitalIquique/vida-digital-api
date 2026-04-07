@@ -62,12 +62,18 @@ export async function GET(request: Request, { params }: { params: { slug: string
       const haystack = `${p.codigo} ${p.detalle || ''}`.toLowerCase();
 
       if (incluir.length > 0) {
-        const matchesIncluir = incluir.some((kw: string) => haystack.includes(kw));
+        const matchesIncluir = incluir.some((kw: string) => {
+          const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          return new RegExp(`\\b${escaped}\\b`, 'i').test(haystack);
+        });
         if (!matchesIncluir) return false;
       }
 
       if (excluir.length > 0) {
-        const matchesExcluir = excluir.some((kw: string) => haystack.includes(kw));
+        const matchesExcluir = excluir.some((kw: string) => {
+          const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          return new RegExp(`\\b${escaped}\\b`, 'i').test(haystack);
+        });
         if (matchesExcluir) return false;
       }
 
