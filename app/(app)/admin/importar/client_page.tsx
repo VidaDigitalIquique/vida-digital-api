@@ -104,7 +104,7 @@ export function ImportarClient() {
           <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2">
             <FileSpreadsheet className="w-8 h-8 text-emerald-600" /> Sincronización Maestra
           </h1>
-          <p className="text-zinc-500 mt-1">Importa precios y stock desde ERP Softland u otros sistemas vía Excel</p>
+          <p className="text-zinc-500 mt-1">Importa precios y stock desde WinFac vía Excel</p>
         </div>
         {parsedData.length > 0 && (
           <div className="flex gap-2">
