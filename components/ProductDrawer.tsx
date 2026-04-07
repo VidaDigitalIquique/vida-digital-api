@@ -12,17 +12,28 @@ import { formatUSD } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Share2 } from 'lucide-react';
 import { useShareImage } from '@/hooks/useShareImage';
+import { Badge } from '@/components/ui/badge';
 
 interface ProductDrawerProps {
   producto: Producto | null;
-  empresaSlug: string;
+  empresaNombre: string;
   session: UserSession;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdated: (updatedProduct: Producto) => void;
 }
 
-export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChange, onUpdated }: ProductDrawerProps) {
+const EMPRESA_SHORT: Record<string, { label: string; color: string }> = {
+  'IMPORT EXPORT SANJH LTDA.': { label: 'SANJH', color: 'bg-amber-100 text-amber-700' },
+  'IMPORT EXPORT VIDA DIGITAL LTDA.': { label: 'VIDA DIGITAL', color: 'bg-teal-100 text-teal-700' },
+};
+
+const EMPRESA_SLUG: Record<string, string> = {
+  'IMPORT EXPORT SANJH LTDA.': 'sanjh',
+  'IMPORT EXPORT VIDA DIGITAL LTDA.': 'vidadigital',
+};
+
+export function ProductDrawer({ producto, empresaNombre, session, open, onOpenChange, onUpdated }: ProductDrawerProps) {
   const { shareImage } = useShareImage();
   const [isEditing, setIsEditing] = useState(false);
   const [prcVenta, setPrcVenta] = useState('');
@@ -43,6 +54,10 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const skipNextSync = useRef(false);
+  const empresaSlug = EMPRESA_SLUG[empresaNombre] || 'sanjh';
+  const empresa =
+    EMPRESA_SHORT[empresaNombre] ||
+    (empresaNombre ? { label: empresaNombre, color: 'bg-zinc-100 text-zinc-600' } : null);
 
   const canEditPrices = ['admin', 'supervisor'].includes(session.rol);
   const isAdmin = session.rol === 'admin';
@@ -199,7 +214,14 @@ export function ProductDrawer({ producto, empresaSlug, session, open, onOpenChan
       <SheetContent className="w-screen h-screen sm:w-[500px] sm:h-full max-w-full overflow-y-auto flex flex-col p-0">
         <div className="p-5 flex flex-col h-full overflow-y-auto">
           <SheetHeader className="mb-4">
-            <SheetTitle className="text-left font-mono text-zinc-500">{producto.codigo}</SheetTitle>
+            <SheetTitle className="text-left font-mono text-zinc-500 flex items-center gap-2">
+              <span>{producto.codigo}</span>
+              {empresa && (
+                <Badge className={`text-[10px] px-1.5 py-0 h-4 ${empresa.color}`}>
+                  {empresa.label}
+                </Badge>
+              )}
+            </SheetTitle>
             <SheetDescription className="text-left text-base text-foreground font-medium">
               {producto.detalle}
             </SheetDescription>

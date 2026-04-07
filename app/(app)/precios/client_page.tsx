@@ -12,26 +12,12 @@ interface PreciosClientProps {
   empresasMap: Record<number, string>; // ID to Slug
 }
 
+const EMPRESA_SLUG: Record<string, string> = {
+  'IMPORT EXPORT SANJH LTDA.': 'sanjh',
+  'IMPORT EXPORT VIDA DIGITAL LTDA.': 'vidadigital',
+};
+
 export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
-  const [activeEmpresaId, setActiveEmpresaId] = useState<number>(0);
-  const [isHydrated, setIsHydrated] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('vidadigital_empresa');
-    const id = stored && !isNaN(parseInt(stored)) && parseInt(stored) > 0 
-      ? parseInt(stored) 
-      : 1;
-    setActiveEmpresaId(id);
-    setIsHydrated(true);
-    const handler = () => {
-      const s = localStorage.getItem('vidadigital_empresa');
-      setActiveEmpresaId(s && parseInt(s) > 0 ? parseInt(s) : 1);
-    };
-    window.addEventListener('empresaChanged', handler);
-    return () => window.removeEventListener('empresaChanged', handler);
-  }, []);
-
-
   const [productos, setProductos] = useState<Producto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -42,8 +28,6 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
 
   const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-
-  const empresaSlug = empresasMap[activeEmpresaId] || 'sanjh';
 
   // Debounce search input
   useEffect(() => {
@@ -61,8 +45,6 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
 
   // Fetch logic
   useEffect(() => {
-    if (!isHydrated) return;
-
     async function fetchProducts() {
       setLoading(true);
       if (debouncedSearch.trim().length < 2) {
@@ -72,7 +54,6 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
       }
       try {
         const queryParams = new URLSearchParams({
-          empresa: activeEmpresaId.toString(),
           ...(debouncedSearch && { search: debouncedSearch }),
           ...(soloStock && { soloStock: 'true' }),
           ...(soloNuevo && { soloNuevo: 'true' }),
@@ -91,7 +72,7 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
     }
     
     fetchProducts();
-  }, [activeEmpresaId, debouncedSearch, soloStock, soloNuevo, isHydrated]);
+  }, [debouncedSearch, soloStock, soloNuevo]);
 
   const handleProductUpdate = (updatedProduct: Producto) => {
     setProductos(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
@@ -155,7 +136,8 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
             <ProductCard
               key={p.id}
               producto={p}
-              empresaSlug={empresaSlug}
+              empresaSlug={EMPRESA_SLUG[(p as any).nombre_empresa] || 'sanjh'}
+              empresaNombre={(p as any).nombre_empresa}
               onClick={openDrawer}
             />
           ))}
@@ -167,7 +149,7 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
         open={drawerOpen} 
         onOpenChange={setDrawerOpen} 
         session={session} 
-        empresaSlug={empresaSlug}
+        empresaNombre={(selectedProduct as any)?.nombre_empresa || ''}
         onUpdated={handleProductUpdate}
       />
     </div>

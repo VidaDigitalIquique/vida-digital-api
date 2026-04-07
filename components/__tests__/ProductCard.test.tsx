@@ -26,7 +26,14 @@ const mockProduct: Producto = {
 describe('ProductCard - Cantidad por Caja', () => {
   const setup = (overrides: Partial<Producto> = {}) => {
     const producto = { ...mockProduct, ...overrides };
-    render(<ProductCard producto={producto} empresaSlug="test-empresa" onClick={() => {}} />);
+    render(
+      <ProductCard
+        producto={producto}
+        empresaSlug="test-empresa"
+        empresaNombre="IMPORT EXPORT SANJH LTDA."
+        onClick={() => {}}
+      />
+    );
   };
 
   test('Renderiza "10 SET/Caja" cuando cantcaja=10 y umed="SET"', () => {

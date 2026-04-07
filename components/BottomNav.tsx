@@ -6,7 +6,6 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Home, Tag, Box, Menu, ImageIcon } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
-import { CompanySwitcher } from './CompanySwitcher';
 import { signOut, useSession } from 'next-auth/react';
 import { Button } from './ui/button';
 
@@ -15,7 +14,7 @@ const NAV_LINKS = [
   { name: 'Bodega', href: '/bodega', icon: Box },
 ];
 
-export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number, onSwitch: (id: number) => void }) {
+export function BottomNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const rol = (session?.user as any)?.rol as string;
@@ -61,18 +60,6 @@ export function BottomNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: numb
           <SheetContent side="right" className="w-[80vw] sm:w-[350px] p-6">
             <div className="flex justify-between flex-col h-full pt-10">
                <div className="space-y-6">
-                 <div>
-                    <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Empresa Activa</h3>
-                    <div onClick={(e) => e.stopPropagation()}>
-                      <CompanySwitcher
-                        activeEmpresaId={activeEmpresaId}
-                        onSwitch={(id) => {
-                          onSwitch(id);
-                          setMenuOpen(false);
-                        }}
-                      />
-                    </div>
-                 </div>
                  {(rol === 'admin' || rol === 'vendedor') && (
                    <div>
                       <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Herramientas</h3>

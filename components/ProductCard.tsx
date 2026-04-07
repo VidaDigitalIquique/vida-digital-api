@@ -8,10 +8,19 @@ import { ImageWithFallback } from './ImageWithFallback';
 interface ProductCardProps {
   producto: Producto;
   empresaSlug: string;
+  empresaNombre: string;
   onClick: (producto: Producto) => void;
 }
 
-export function ProductCard({ producto, empresaSlug, onClick }: ProductCardProps) {
+const EMPRESA_SHORT: Record<string, { label: string; color: string }> = {
+  'IMPORT EXPORT SANJH LTDA.': { label: 'SANJH', color: 'bg-amber-100 text-amber-700' },
+  'IMPORT EXPORT VIDA DIGITAL LTDA.': { label: 'VIDA DIGITAL', color: 'bg-teal-100 text-teal-700' },
+};
+
+export function ProductCard({ producto, empresaSlug, empresaNombre, onClick }: ProductCardProps) {
+  const empresa =
+    EMPRESA_SHORT[empresaNombre] ||
+    (empresaNombre ? { label: empresaNombre, color: 'bg-zinc-100 text-zinc-600' } : null);
   return (
     <div
       className="group relative bg-card hover:bg-zinc-50 dark:hover:bg-zinc-900 border border-border shadow-sm rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-md"
@@ -34,6 +43,11 @@ export function ProductCard({ producto, empresaSlug, onClick }: ProductCardProps
               <span className="font-mono text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded">
                 {producto.codigo}
               </span>
+              {empresa && (
+                <Badge className={`text-[10px] px-1.5 py-0 h-4 ${empresa.color}`}>
+                  {empresa.label}
+                </Badge>
+              )}
               {producto.es_nuevo && (
                 <Badge variant="default" className="bg-emerald-500 hover:bg-emerald-600 text-[10px] px-1.5 py-0 h-4">
                   NUEVO

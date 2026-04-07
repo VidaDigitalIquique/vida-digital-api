@@ -44,7 +44,7 @@ describe('ProductDrawer Image Upload', () => {
     render(
       <ProductDrawer 
         producto={mockProducto} 
-        empresaSlug="test-company" 
+        empresaNombre="IMPORT EXPORT SANJH LTDA." 
         session={mockAdmin} 
         open={true} 
         onOpenChange={() => {}} 
@@ -70,7 +70,7 @@ describe('ProductDrawer Image Upload', () => {
     render(
       <ProductDrawer 
         producto={mockProducto} 
-        empresaSlug="test-company" 
+        empresaNombre="IMPORT EXPORT SANJH LTDA." 
         session={mockUser} 
         open={true} 
         onOpenChange={() => {}} 

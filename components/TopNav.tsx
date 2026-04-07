@@ -23,7 +23,6 @@ import {
   LayoutList,
   Filter
 } from 'lucide-react';
-import { CompanySwitcher } from './CompanySwitcher';
 
 const NAV_LINKS = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
@@ -32,7 +31,7 @@ const NAV_LINKS = [
   { name: 'Catálogos', href: '/catalogo/admin', icon: LayoutList },
 ];
 
-export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number, onSwitch: (id: number) => void }) {
+export function TopNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const isAdmin = (session?.user as any)?.rol === 'admin';
@@ -113,7 +112,6 @@ export function TopNav({ activeEmpresaId, onSwitch }: { activeEmpresaId: number,
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <CompanySwitcher activeEmpresaId={activeEmpresaId} onSwitch={onSwitch} />
           <button onClick={() => signOut()} className="p-2 text-zinc-500 hover:text-red-500 transition-colors" title="Cerrar sesión">
             <LogOut className="w-5 h-5" />
           </button>
