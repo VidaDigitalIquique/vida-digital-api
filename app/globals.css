@@ -14,44 +14,53 @@
     padding: 0;
   }
 
+  /* Contenedor del grid: una columna en print */
+  .print-page-container {
+    display: block !important;
+  }
+
+  /* Cada producto ocupa su propia pagina */
   .print-page {
-    page-break-after: always;
-    break-after: page;
+    page-break-before: always;
+    break-before: page;
+    page-break-inside: avoid;
+    break-inside: avoid;
     width: 100%;
-    height: 297mm;
-    max-height: 297mm;
-    display: flex !important;
-    flex-direction: column !important;
+    display: block !important;
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     padding: 1cm;
     box-sizing: border-box;
-    overflow: hidden;
     background: white !important;
   }
 
-  .print-page > div:first-child {
-    flex: 0 0 65%;
-    position: relative;
-    overflow: hidden;
+  /* Primera tarjeta no necesita salto antes */
+  .print-page:first-child {
+    page-break-before: avoid;
+    break-before: avoid;
   }
 
-  .print-page > div:first-child img {
+  /* Imagen: altura fija generosa */
+  .print-page .aspect-square {
+    height: 180mm !important;
     width: 100% !important;
-    height: 100% !important;
-    object-fit: contain !important;
+    position: relative !important;
   }
 
-  .print-page > div:last-child {
-    flex: 1;
-    padding: 0.5cm 0 0 0;
-    overflow: hidden;
+  /* Texto del producto */
+  .print-page .p-4 {
+    padding: 0.5cm 0 !important;
+  }
+
+  /* Ocultar footer del catalogo */
+  .catalogo-footer {
+    display: none !important;
   }
 
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 1cm;
   }
 }
 

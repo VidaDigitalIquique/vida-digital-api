@@ -72,7 +72,7 @@ export function PublicCatalogoClient({ data }: { data: any }) {
         )}
       </div>
 
-      <div className="text-center py-12 text-zinc-400 text-sm px-4">
+      <div className="catalogo-footer text-center py-12 text-zinc-400 text-sm px-4">
         <a href="https://wa.me/56920948874" target="_blank" rel="noopener noreferrer">
           Servicios Digitales PBT<br />
           Software a Medida para Que Su Empresa Venda Más
