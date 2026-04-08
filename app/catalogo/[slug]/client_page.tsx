@@ -18,6 +18,12 @@ export function PublicCatalogoClient({ data }: { data: any }) {
               {data.descripcion}
             </p>
           )}
+          <button
+            onClick={() => window.print()}
+            className="print:hidden mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+          >
+            Imprimir / Descargar PDF
+          </button>
         </div>
       </div>
 
@@ -28,9 +34,9 @@ export function PublicCatalogoClient({ data }: { data: any }) {
             <p className="text-xl">No hay productos disponibles en este catálogo.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 print:block print:space-y-0">
             {data.productos.map((p: any) => (
-              <div key={p.id} className="bg-white dark:bg-zinc-900 border rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all flex flex-col group">
+              <div key={p.id} className="print-page bg-white dark:bg-zinc-900 border rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all flex flex-col group">
                 <div className="relative aspect-square bg-zinc-100 dark:bg-zinc-800">
                   <ImageWithFallback
                     src={p.imagen_url}

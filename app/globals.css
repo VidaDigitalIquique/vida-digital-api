@@ -2,6 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===================== */
+/* ESTILOS DE IMPRESION  */
+/* ===================== */
+@media print {
+  /* Ocultar elementos de navegacion */
+  header, nav, footer {
+    display: none !important;
+  }
+
+  /* Cada tarjeta de producto ocupa una pagina completa */
+  .print-page {
+    page-break-after: always;
+    break-after: page;
+    width: 100%;
+    height: 100vh;
+    display: flex !important;
+    flex-direction: column !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 2rem;
+    box-sizing: border-box;
+  }
+
+  /* Imagen ocupa ~60% del alto */
+  .print-page > div:first-child {
+    flex: 0 0 60%;
+    position: relative;
+  }
+
+  /* Contenido de texto ocupa el resto */
+  .print-page > div:last-child {
+    flex: 1;
+    padding: 1rem 0;
+  }
+
+  /* Ocultar boton de imprimir */
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Fondo blanco siempre */
+  body, .print-page {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Sin margenes de pagina */
+  @page {
+    margin: 1cm;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
