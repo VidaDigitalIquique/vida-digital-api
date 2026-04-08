@@ -1,5 +1,6 @@
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { filterProducts } from "./filter-products";
 
 export async function GET(request: Request, { params }: { params: { slug: string } }) {
   const { slug } = params;
@@ -22,9 +23,27 @@ export async function GET(request: Request, { params }: { params: { slug: string
     const mostrarPrecio = cat.mostrar_precio;
 
     // Parse keyword filters
-    const incluir = cat.palabras_incluir
-      ? cat.palabras_incluir.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean)
+    const tokens = cat.palabras_incluir
+      ? cat.palabras_incluir.split(',').map((s: string) => s.trim()).filter(Boolean)
       : [];
+
+    let codigosIncluir: string[] = [];
+    let keywordsIncluir: string[] = [];
+
+    if (tokens.length > 0) {
+      const tokensUpper = tokens.map((t: string) => t.toUpperCase());
+      const found = await sql`
+        SELECT DISTINCT UPPER(codigo) as codigo
+        FROM productos
+        WHERE UPPER(codigo) = ANY(${tokensUpper})
+      `;
+      const codigosEncontrados = new Set(found.map((r: any) => r.codigo));
+      codigosIncluir = tokensUpper.filter((t: string) => codigosEncontrados.has(t));
+      keywordsIncluir = tokens
+        .filter((t: string) => !codigosEncontrados.has(t.toUpperCase()))
+        .map((t: string) => t.toLowerCase());
+    }
+
     const excluir = cat.palabras_excluir
       ? cat.palabras_excluir.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean)
       : [];
@@ -58,27 +77,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
     console.log('DEBUG rows count:', rows.length, 'empresa_id:', cat.empresa_id);
 
     // Apply keyword filters in JS (simpler than complex SQL)
-    let productos = rows.filter((p: any) => {
-      const haystack = `${p.codigo} ${p.detalle || ''}`.toLowerCase();
-
-      if (incluir.length > 0) {
-        const matchesIncluir = incluir.some((kw: string) => {
-          const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          return new RegExp(`(?<![a-záéíóúñ])${escaped}(?![a-záéíóúñ])`, 'i').test(haystack);
-        });
-        if (!matchesIncluir) return false;
-      }
-
-      if (excluir.length > 0) {
-        const matchesExcluir = excluir.some((kw: string) => {
-          const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          return new RegExp(`(?<![a-záéíóúñ])${escaped}(?![a-záéíóúñ])`, 'i').test(haystack);
-        });
-        if (matchesExcluir) return false;
-      }
-
-      return true;
-    });
+    let productos = filterProducts(rows, codigosIncluir, keywordsIncluir, excluir);
 
     // Compute precio_catalogo
     productos = productos.map((p: any) => ({
