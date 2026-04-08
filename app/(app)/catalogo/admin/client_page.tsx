@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { PlusCircle, Search, Trash2, Link as LinkIcon, ExternalLink } from 'lucide-react';
+import { PlusCircle, Search, Trash2, Link as LinkIcon, ExternalLink, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEmpresaId } from '@/hooks/useEmpresaId';
 import dynamic from 'next/dynamic';
@@ -183,6 +183,9 @@ export function CatalogoAdminClient({ session }: { session: any }) {
               <div className="flex items-center gap-2 border-t pt-4 mt-2">
                 <Button variant="outline" className="flex-1 text-xs" onClick={() => window.open(getPublicUrl(cat.slug), '_blank')}>
                   <ExternalLink className="w-3 h-3 mr-2" /> Ver
+                </Button>
+                <Button variant="outline" className="flex-1 text-xs" onClick={() => window.open(getPublicUrl(cat.slug) + '?print=1', '_blank')}>
+                  <FileDown className="w-3 h-3 mr-2" /> PDF
                 </Button>
                 <Button variant="destructive" size="icon" onClick={() => handleDelete(cat.id)}>
                   <Trash2 className="w-4 h-4" />

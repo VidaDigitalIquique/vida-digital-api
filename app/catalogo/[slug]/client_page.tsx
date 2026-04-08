@@ -1,11 +1,18 @@
 'use client';
 
+import { useEffect } from 'react';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { formatUSD } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingBag } from 'lucide-react';
 
 export function PublicCatalogoClient({ data }: { data: any }) {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.search.includes('print=1')) {
+      setTimeout(() => window.print(), 800);
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans">
       <div className="bg-white dark:bg-zinc-900 border-b py-8 px-4 text-center shadow-sm">
@@ -18,12 +25,6 @@ export function PublicCatalogoClient({ data }: { data: any }) {
               {data.descripcion}
             </p>
           )}
-          <button
-            onClick={() => window.print()}
-            className="print:hidden mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
-          >
-            Imprimir / Descargar PDF
-          </button>
         </div>
       </div>
 
