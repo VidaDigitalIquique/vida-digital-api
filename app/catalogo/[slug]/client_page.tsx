@@ -15,7 +15,7 @@ export function PublicCatalogoClient({ data }: { data: any }) {
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans">
-      <div className="bg-white dark:bg-zinc-900 border-b py-8 px-4 text-center shadow-sm">
+      <div className="catalogo-header bg-white dark:bg-zinc-900 border-b py-8 px-4 text-center shadow-sm">
         <div className="container max-w-5xl mx-auto space-y-3">
           <h1 className="text-3xl md:text-5xl font-black tracking-tight text-blue-700 dark:text-blue-400">
             {data.titulo}
