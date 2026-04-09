@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    // UPDATE productos empresa SANJH (empresa_id = 1) desde sanjh.inventar
+    // UPDATE productos empresa SANJH (empresa_id = 1) desde sanjh.inb
     const sanjhResult = await sql`
       WITH updated AS (
         UPDATE public.productos AS prod SET
@@ -22,10 +22,9 @@ export async function POST(request: Request) {
           pesocaja  = inv.pesocaja,
           cubicaja  = inv.cubicaja,
           umed      = inv.desunida,
-          detalle   = prd.nombre,
+          detalle   = inv.descript,
           updated_at = NOW()
-        FROM sanjh.inventar inv
-        JOIN sanjh.producto prd ON prd.codunico = inv.codunico
+        FROM sanjh.inb inv
         WHERE prod.codigo = inv.codunico
           AND prod.empresa_id = 1
         RETURNING prod.id
@@ -33,7 +32,7 @@ export async function POST(request: Request) {
       SELECT COUNT(*)::int as count FROM updated
     `;
 
-    // UPDATE productos empresa VIDA DIGITAL (empresa_id = 2) desde vida.inventar
+    // UPDATE productos empresa VIDA DIGITAL (empresa_id = 2) desde vida.inb
     const vidaResult = await sql`
       WITH updated AS (
         UPDATE public.productos AS prod SET
@@ -44,10 +43,9 @@ export async function POST(request: Request) {
           pesocaja  = inv.pesocaja,
           cubicaja  = inv.cubicaja,
           umed      = inv.desunida,
-          detalle   = prd.nombre,
+          detalle   = inv.descript,
           updated_at = NOW()
-        FROM vida.inventar inv
-        JOIN vida.producto prd ON prd.codunico = inv.codunico
+        FROM vida.inb inv
         WHERE prod.codigo = inv.codunico
           AND prod.empresa_id = 2
         RETURNING prod.id
