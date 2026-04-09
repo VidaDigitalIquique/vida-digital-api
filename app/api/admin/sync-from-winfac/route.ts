@@ -13,42 +13,50 @@ export async function POST(request: Request) {
   try {
     // UPDATE productos empresa SANJH (empresa_id = 1) desde sanjh.inventar
     const sanjhResult = await sql`
-      UPDATE public.productos AS prod SET
-        saldo     = inv.stocdisp,
-        cif       = inv.cifunita,
-        costo     = inv.cosunita,
-        cantcaja  = inv.cantcaja,
-        pesocaja  = inv.pesocaja,
-        cubicaja  = inv.cubicaja,
-        umed      = inv.desunida,
-        detalle   = prd.nombre,
-        updated_at = NOW()
-      FROM sanjh.inventar inv
-      JOIN sanjh.producto prd ON prd.codunico = inv.codunico
-      WHERE prod.codigo = inv.codunico
-        AND prod.empresa_id = 1
+      WITH updated AS (
+        UPDATE public.productos AS prod SET
+          saldo     = inv.stocdisp,
+          cif       = inv.cifunita,
+          costo     = inv.cosunita,
+          cantcaja  = inv.cantcaja,
+          pesocaja  = inv.pesocaja,
+          cubicaja  = inv.cubicaja,
+          umed      = inv.desunida,
+          detalle   = prd.nombre,
+          updated_at = NOW()
+        FROM sanjh.inventar inv
+        JOIN sanjh.producto prd ON prd.codunico = inv.codunico
+        WHERE prod.codigo = inv.codunico
+          AND prod.empresa_id = 1
+        RETURNING prod.id
+      )
+      SELECT COUNT(*)::int as count FROM updated
     `;
 
     // UPDATE productos empresa VIDA DIGITAL (empresa_id = 2) desde vida.inventar
     const vidaResult = await sql`
-      UPDATE public.productos AS prod SET
-        saldo     = inv.stocdisp,
-        cif       = inv.cifunita,
-        costo     = inv.cosunita,
-        cantcaja  = inv.cantcaja,
-        pesocaja  = inv.pesocaja,
-        cubicaja  = inv.cubicaja,
-        umed      = inv.desunida,
-        detalle   = prd.nombre,
-        updated_at = NOW()
-      FROM vida.inventar inv
-      JOIN vida.producto prd ON prd.codunico = inv.codunico
-      WHERE prod.codigo = inv.codunico
-        AND prod.empresa_id = 2
+      WITH updated AS (
+        UPDATE public.productos AS prod SET
+          saldo     = inv.stocdisp,
+          cif       = inv.cifunita,
+          costo     = inv.cosunita,
+          cantcaja  = inv.cantcaja,
+          pesocaja  = inv.pesocaja,
+          cubicaja  = inv.cubicaja,
+          umed      = inv.desunida,
+          detalle   = prd.nombre,
+          updated_at = NOW()
+        FROM vida.inventar inv
+        JOIN vida.producto prd ON prd.codunico = inv.codunico
+        WHERE prod.codigo = inv.codunico
+          AND prod.empresa_id = 2
+        RETURNING prod.id
+      )
+      SELECT COUNT(*)::int as count FROM updated
     `;
 
-    const sanjh_count = Number(sanjhResult?.[0]?.count ?? sanjhResult?.length ?? 0);
-    const vida_count = Number(vidaResult?.[0]?.count ?? vidaResult?.length ?? 0);
+    const sanjh_count = Number(sanjhResult?.[0]?.count ?? 0);
+    const vida_count = Number(vidaResult?.[0]?.count ?? 0);
 
     await recalculateNuevoFlags(1);
     await recalculateNuevoFlags(2);
