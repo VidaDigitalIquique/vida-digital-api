@@ -15,6 +15,7 @@ export function ImportarClient() {
   const [importProgress, setImportProgress] = useState<number | null>(null);
   const [isParsing, setIsParsing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [stats, setStats] = useState({ total: 0, valid: 0, error: 0 });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,6 +98,23 @@ export function ImportarClient() {
     }
   };
 
+  const handleSyncWinfac = async () => {
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/admin/sync-from-winfac', { method: 'POST' });
+      const body = await res.json();
+      if (res.ok) {
+        toast.success(`Sincronización exitosa — SANJH: ${body.sanjh_count} productos, VIDA DIGITAL: ${body.vida_count} productos`);
+      } else {
+        toast.error(body.error || 'Error al sincronizar');
+      }
+    } catch {
+      toast.error('Error de conexión');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4">
@@ -124,6 +142,21 @@ export function ImportarClient() {
 
       {parsedData.length === 0 ? (
         <div className="max-w-2xl mx-auto w-full mt-10">
+          <div className="max-w-2xl mx-auto w-full mb-6">
+            <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-900 p-4 rounded-xl flex items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold text-emerald-800 dark:text-emerald-300 text-sm">Sincronización Automática</p>
+                <p className="text-xs text-emerald-700 dark:text-emerald-400">Actualiza precios y stock directamente desde WinFac vía Neon</p>
+              </div>
+              <Button
+                onClick={handleSyncWinfac}
+                disabled={isSyncing}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+              >
+                {isSyncing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sincronizando...</> : 'Sincronizar desde WinFac'}
+              </Button>
+            </div>
+          </div>
           <label className="flex flex-col items-center justify-center w-full h-80 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl cursor-pointer transition-colors group">
             <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
               {isParsing ? (
