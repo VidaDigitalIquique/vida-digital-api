@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Tag, Box, Menu, ImageIcon } from 'lucide-react';
+import { Home, Tag, Box, Menu, ImageIcon, Truck } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { signOut, useSession } from 'next-auth/react';
 import { Button } from './ui/button';
@@ -12,6 +12,7 @@ import { Button } from './ui/button';
 const NAV_LINKS = [
   { name: 'Sala de Venta', href: '/precios', icon: Tag },
   { name: 'Bodega', href: '/bodega', icon: Box },
+  { name: 'Despachos', href: '/bodega/despachos', icon: Truck },
 ];
 
 export function BottomNav() {
@@ -23,7 +24,7 @@ export function BottomNav() {
   const RUTAS_POR_ROL: Record<string, string[]> = {
     admin: ['/precios', '/bodega'],
     vendedor: ['/precios', '/catalogo'],
-    bodeguero: ['/bodega'],
+    bodeguero: ['/bodega', '/bodega/despachos'],
   };
 
   const rutasVisibles = RUTAS_POR_ROL[rol] || [];

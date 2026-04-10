@@ -21,13 +21,15 @@ import {
   ImageIcon,
   Users,
   LayoutList,
-  Filter
+  Filter,
+  Truck
 } from 'lucide-react';
 
 const NAV_LINKS = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Sala de Venta', href: '/precios', icon: Tag },
   { name: 'Bodega', href: '/bodega', icon: Box },
+  { name: 'Despachos', href: '/bodega/despachos', icon: Truck },
   { name: 'Catálogos', href: '/catalogo/admin', icon: LayoutList },
 ];
 
