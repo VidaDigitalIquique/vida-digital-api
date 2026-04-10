@@ -69,7 +69,7 @@ export function BottomNav() {
                  {rol === 'admin' && (
                   <div>
                      <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Administración</h3>
-                     <Link href="/admin/importar" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Importar Excel</Link>
+                     <Link href="/admin/importar" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Sincronizar WinFac</Link>
                      <Link href="/admin/subir-imagenes" onClick={() => setMenuOpen(false)} className="block py-2 font-medium flex items-center gap-2">
                         <ImageIcon className="w-4 h-4" /> Subir Imágenes
                      </Link>

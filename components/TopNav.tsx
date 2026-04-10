@@ -17,7 +17,7 @@ import {
   Box, 
   LogOut,
   ChevronDown,
-  FileSpreadsheet,
+  RefreshCw,
   ImageIcon,
   Users,
   LayoutList,
@@ -87,7 +87,7 @@ export function TopNav() {
                   <DropdownMenuContent align="end" className="w-48">
                     <DropdownMenuItem>
                       <Link href="/admin/importar" className="flex items-center gap-2 w-full">
-                        <FileSpreadsheet className="w-4 h-4" /> Importar Excel
+                        <RefreshCw className="w-4 h-4" /> Sincronizar WinFac
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
