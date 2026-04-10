@@ -11,20 +11,20 @@ export async function POST(request: Request) {
   }
 
   try {
-    // UPDATE productos empresa SANJH (empresa_id = 1) desde sanjh.inb
     const sanjhResult = await sql`
       WITH updated AS (
         UPDATE public.productos AS prod SET
-          saldo     = inv.stocdisp,
-          cif       = inv.cifunita,
-          costo     = inv.cosunita,
-          cantcaja  = inv.cantcaja,
-          pesocaja  = inv.pesocaja,
-          cubicaja  = inv.cubicaja,
-          umed      = inv.desunida,
-          detalle   = inv.descript,
+          saldo      = inv.stocdisp,
+          cif        = inv.cifunita,
+          costo      = inv.cosunita,
+          cantcaja   = inv.cantcaja,
+          pesocaja   = inv.pesocaja,
+          cubicaja   = inv.cubicaja,
+          umed       = inv.desunida,
+          detalle    = prd.nombre,
           updated_at = NOW()
-        FROM sanjh.inb inv
+        FROM sanjh.inventar inv
+        JOIN sanjh.producto prd ON prd.codunico = inv.codunico
         WHERE prod.codigo = inv.codunico
           AND prod.empresa_id = 1
         RETURNING prod.id
@@ -32,20 +32,20 @@ export async function POST(request: Request) {
       SELECT COUNT(*)::int as count FROM updated
     `;
 
-    // UPDATE productos empresa VIDA DIGITAL (empresa_id = 2) desde vida.inb
     const vidaResult = await sql`
       WITH updated AS (
         UPDATE public.productos AS prod SET
-          saldo     = inv.stocdisp,
-          cif       = inv.cifunita,
-          costo     = inv.cosunita,
-          cantcaja  = inv.cantcaja,
-          pesocaja  = inv.pesocaja,
-          cubicaja  = inv.cubicaja,
-          umed      = inv.desunida,
-          detalle   = inv.descript,
+          saldo      = inv.stocdisp,
+          cif        = inv.cifunita,
+          costo      = inv.cosunita,
+          cantcaja   = inv.cantcaja,
+          pesocaja   = inv.pesocaja,
+          cubicaja   = inv.cubicaja,
+          umed       = inv.desunida,
+          detalle    = prd.nombre,
           updated_at = NOW()
-        FROM vida.inb inv
+        FROM vida.inventar inv
+        JOIN vida.producto prd ON prd.codunico = inv.codunico
         WHERE prod.codigo = inv.codunico
           AND prod.empresa_id = 2
         RETURNING prod.id
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     await recalculateNuevoFlags(2);
 
     return NextResponse.json({
-      message: 'Sincronización completada con éxito',
+      message: 'Sincronizacion completada con exito',
       sanjh_count,
       vida_count,
     });
