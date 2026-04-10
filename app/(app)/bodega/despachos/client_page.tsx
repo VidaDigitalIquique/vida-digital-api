@@ -79,11 +79,23 @@ export function DespachosClient({
     }
   };
 
-  const getWhatsAppUrl = (despacho: Despacho) => {
-    const texto = encodeURIComponent(
-      `Despacho Nota N° ${despacho.folio}\nFecha: ${format(new Date(despacho.created_at), 'dd MMM yyyy, HH:mm', { locale: es })}\n${despacho.imagen_url}`
-    );
-    return `https://wa.me/?text=${texto}`;
+  const handleShareWhatsApp = async (despacho: Despacho) => {
+    const texto = `Despacho Nota N° ${despacho.folio}\nFecha: ${format(new Date(despacho.created_at), 'dd MMM yyyy, HH:mm', { locale: es })}`;
+    try {
+      const response = await fetch(despacho.imagen_url);
+      const blob = await response.blob();
+      const file = new File([blob], `despacho_${despacho.folio}.jpg`, { type: 'image/jpeg' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], text: texto });
+      } else {
+        // Fallback: compartir solo texto con link
+        await navigator.share({ text: `${texto}\n${despacho.imagen_url}` });
+      }
+    } catch (error: any) {
+      if (error?.name !== 'AbortError') {
+        toast.error('No se pudo compartir la imagen');
+      }
+    }
   };
 
   return (
@@ -145,16 +157,15 @@ export function DespachosClient({
                     />
                   </div>
                   <div className="p-3">
-                    <a
-                      href={getWhatsAppUrl(d)}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => handleShareWhatsApp(d)}
                       aria-label="Compartir por WhatsApp"
                       className="flex items-center justify-center gap-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      WhatsApp
-                    </a>
+                      Compartir imagen
+                    </button>
                   </div>
                 </div>
               ))}
