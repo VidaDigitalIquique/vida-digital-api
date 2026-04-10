@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -32,6 +32,9 @@ export function DespachosClient({
   const [resultados, setResultados] = useState<Despacho[] | null>(null);
   const [buscando, setBuscando] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const queueRef = useRef<File[]>([]);
+  const processingRef = useRef(false);
+  const [queueCount, setQueueCount] = useState(0);
 
   const handleBuscar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,15 +51,14 @@ export function DespachosClient({
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processNext = useCallback(async () => {
+    if (processingRef.current || queueRef.current.length === 0) return;
+    processingRef.current = true;
 
-    // Comprimir imagen antes de enviar (max 1200px, calidad 75%)
-    const compressed = await compressImage(file, 1200, 0.75);
-    const base64 = compressed.split(',')[1];
-
+    const file = queueRef.current[0];
     try {
+      const compressed = await compressImage(file, 1200, 0.75);
+      const base64 = compressed.split(',')[1];
       const res = await fetch('/api/despachos/procesar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -70,13 +72,27 @@ export function DespachosClient({
       if (res.ok) {
         toast.success(`✅ Folio ${body.folio} registrado`);
       } else {
-        toast.error(`❌ No se pudo identificar el folio`);
+        toast.error(`❌ No se pudo identificar el folio en "${file.name}"`, { duration: Infinity });
       }
     } catch {
-      toast.error('❌ Error procesando la foto');
+      toast.error(`❌ Error procesando "${file.name}"`, { duration: Infinity });
     } finally {
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      queueRef.current.shift();
+      setQueueCount(queueRef.current.length);
+      processingRef.current = false;
+      if (queueRef.current.length > 0) {
+        processNext();
+      }
     }
+  }, [empresaId]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    queueRef.current.push(...files);
+    setQueueCount(queueRef.current.length);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    processNext();
   };
 
   const handleShareWhatsApp = async (despacho: Despacho) => {
@@ -174,6 +190,13 @@ export function DespachosClient({
         </div>
       )}
 
+      {queueCount > 0 && (
+        <div className="fixed bottom-40 right-4 md:bottom-28 md:right-8 z-50 bg-blue-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
+          {queueCount} en cola
+        </div>
+      )}
+
       {/* Botón flotante cámara — solo bodeguero y admin */}
       {puedeSubir && (
         <>
@@ -182,6 +205,7 @@ export function DespachosClient({
             type="file"
             accept="image/*"
             capture="environment"
+            multiple
             className="hidden"
             onChange={handleFileChange}
           />
