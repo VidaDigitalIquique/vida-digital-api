@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2 } from 'lucide-react';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 import { parseImportWorkbook } from './parser';
 
 export function ImportarClient() {
+  const router = useRouter();
   const [empresaNombre, setEmpresaNombre] = useState<string | null>(null);
   const [parsedData, setParsedData] = useState<any[]>([]);
   const [importProgress, setImportProgress] = useState<number | null>(null);
@@ -88,6 +90,7 @@ export function ImportarClient() {
 
       setImportProgress(validProducts.length);
       toast.success(`${totalUpserted} productos sincronizados con éxito`);
+      router.refresh();
       setParsedData([]);
       setEmpresaNombre(null);
     } catch (err: any) {
@@ -105,6 +108,7 @@ export function ImportarClient() {
       const body = await res.json();
       if (res.ok) {
         toast.success(`Sincronización exitosa — SANJH: ${body.sanjh_count} productos, VIDA DIGITAL: ${body.vida_count} productos`);
+        router.refresh();
       } else {
         toast.error(body.error || 'Error al sincronizar');
       }
