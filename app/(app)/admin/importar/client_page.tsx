@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2 } from 'lucide-react';
@@ -10,7 +12,13 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { parseImportWorkbook } from './parser';
 
-export function ImportarClient() {
+export function ImportarClient({ 
+  lastSyncSanjh, 
+  lastSyncVida 
+}: { 
+  lastSyncSanjh: Date | null; 
+  lastSyncVida: Date | null; 
+}) {
   const router = useRouter();
   const [empresaNombre, setEmpresaNombre] = useState<string | null>(null);
   const [parsedData, setParsedData] = useState<any[]>([]);
@@ -18,6 +26,7 @@ export function ImportarClient() {
   const [isParsing, setIsParsing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{ sanjh: number; vida: number } | null>(null);
   const [stats, setStats] = useState({ total: 0, valid: 0, error: 0 });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -108,6 +117,7 @@ export function ImportarClient() {
       const body = await res.json();
       if (res.ok) {
         toast.success(`Sincronización exitosa — SANJH: ${body.sanjh_count} productos, VIDA DIGITAL: ${body.vida_count} productos`);
+        setSyncResult({ sanjh: body.sanjh_count, vida: body.vida_count });
         router.refresh();
       } else {
         toast.error(body.error || 'Error al sincronizar');
@@ -147,19 +157,53 @@ export function ImportarClient() {
       {parsedData.length === 0 ? (
         <div className="max-w-2xl mx-auto w-full mt-10">
           <div className="max-w-2xl mx-auto w-full mb-6">
-            <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-900 p-4 rounded-xl flex items-center justify-between gap-4">
-              <div>
-                <p className="font-semibold text-emerald-800 dark:text-emerald-300 text-sm">Sincronización Automática</p>
-                <p className="text-xs text-emerald-700 dark:text-emerald-400">Actualiza precios y stock directamente desde WinFac vía Neon</p>
+            <div className="bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-900 p-5 rounded-xl flex flex-col gap-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <p className="font-bold text-emerald-800 dark:text-emerald-300 text-base">
+                    Sincronización Automática desde WinFac
+                  </p>
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5">
+                    Actualiza precios y stock directamente desde los DBFs de WinFac vía Neon. Corre automáticamente todos los días a las 10:30 AM.
+                  </p>
+                </div>
+                <Button
+                  onClick={handleSyncWinfac}
+                  disabled={isSyncing}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+                >
+                  {isSyncing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sincronizando...</> : 'Sincronizar ahora'}
+                </Button>
               </div>
-              <Button
-                onClick={handleSyncWinfac}
-                disabled={isSyncing}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
-              >
-                {isSyncing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sincronizando...</> : 'Sincronizar desde WinFac'}
-              </Button>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="bg-white dark:bg-zinc-900 border border-emerald-100 dark:border-emerald-900 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">SANJH</p>
+                  {syncResult ? (
+                    <p className="text-sm font-bold text-emerald-700">{syncResult.sanjh} productos actualizados</p>
+                  ) : (
+                    <p className="text-sm text-zinc-500">
+                      Última sync: {lastSyncSanjh ? format(new Date(lastSyncSanjh), "dd MMM yyyy, HH:mm", { locale: es }) : 'Sin datos'}
+                    </p>
+                  )}
+                </div>
+                <div className="bg-white dark:bg-zinc-900 border border-emerald-100 dark:border-emerald-900 rounded-lg p-3">
+                  <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-1">VIDA DIGITAL</p>
+                  {syncResult ? (
+                    <p className="text-sm font-bold text-emerald-700">{syncResult.vida} productos actualizados</p>
+                  ) : (
+                    <p className="text-sm text-zinc-500">
+                      Última sync: {lastSyncVida ? format(new Date(lastSyncVida), "dd MMM yyyy, HH:mm", { locale: es }) : 'Sin datos'}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
+          </div>
+          <div className="flex items-center gap-3 my-2">
+            <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+            <span className="text-xs text-zinc-400 font-medium uppercase tracking-wide">o importa manualmente por Excel</span>
+            <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
           </div>
           <label className="flex flex-col items-center justify-center w-full h-80 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl cursor-pointer transition-colors group">
             <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
@@ -177,18 +221,6 @@ export function ImportarClient() {
             </div>
             <input type="file" className="hidden" accept=".xlsx, .xls, .csv" onChange={handleFileChange} disabled={isParsing} />
           </label>
-
-          <div className="mt-8 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900 p-4 rounded-xl">
-            <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" /> Tips de Importación
-            </h4>
-            <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1 list-disc list-inside">
-              <li>La empresa se detecta automáticamente desde la celda <code>A2</code> del Excel.</li>
-              <li>Columnas requeridas en la fila 5: <code>CODIGO, DETALLE, PRCVENTA, PRCMINIMO, COSTO, CIF, SALDO, NROINGRESO, UMED, CANTCAJA, PESOCAJA, CUBICAJA</code>.</li>
-              <li>Al importar, los productos existentes se <strong>actualizarán</strong> y los nuevos se <strong>crearán</strong>.</li>
-              <li>Los productos nuevos ingresarán automáticamente marcados con la etiqueta "NUEVO".</li>
-            </ul>
-          </div>
         </div>
 
       ) : (
@@ -214,6 +246,18 @@ export function ImportarClient() {
                 <AlertTriangle className="w-5 h-5" /> {stats.error}
               </div>
             </div>
+          </div>
+
+          <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900 p-4 rounded-xl">
+            <h4 className="font-bold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" /> Tips de Importación
+            </h4>
+            <ul className="text-sm text-blue-700 dark:text-blue-400 space-y-1 list-disc list-inside">
+              <li>La empresa se detecta automáticamente desde la celda <code>A2</code> del Excel.</li>
+              <li>Columnas requeridas en la fila 5: <code>CODIGO, DETALLE, PRCVENTA, PRCMINIMO, COSTO, CIF, SALDO, NROINGRESO, UMED, CANTCAJA, PESOCAJA, CUBICAJA</code>.</li>
+              <li>Al importar, los productos existentes se <strong>actualizarán</strong> y los nuevos se <strong>crearán</strong>.</li>
+              <li>Los productos nuevos ingresarán automáticamente marcados con la etiqueta "NUEVO".</li>
+            </ul>
           </div>
 
           <div className="border rounded-xl bg-white dark:bg-zinc-950 shadow-sm overflow-hidden flex-1 overflow-x-auto">
