@@ -88,7 +88,7 @@ export async function POST(request: Request) {
 
     // 2. Subir imagen a Cloudinary en carpeta despachos/
     const fecha = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-    const publicId = `despachos/${fecha}/${folio}_${Date.now()}`;
+    const publicId = `${fecha}/${folio}_${Date.now()}`;
     const uploadResult = await uploadImage(
       `data:${mimeType};base64,${imageBase64}`,
       'despachos',
