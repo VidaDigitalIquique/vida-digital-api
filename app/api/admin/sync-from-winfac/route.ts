@@ -21,10 +21,8 @@ export async function POST(request: Request) {
           pesocaja   = inv.pesocaja,
           cubicaja   = inv.cubicaja,
           umed       = inv.desunida,
-          detalle    = prd.nombre,
           updated_at = NOW()
         FROM sanjh.inventar inv
-        JOIN sanjh.producto prd ON prd.codunico = inv.codunico
         WHERE prod.codigo = inv.codunico
           AND prod.empresa_id = 1
         RETURNING prod.id
@@ -42,10 +40,8 @@ export async function POST(request: Request) {
           pesocaja   = inv.pesocaja,
           cubicaja   = inv.cubicaja,
           umed       = inv.desunida,
-          detalle    = prd.nombre,
           updated_at = NOW()
         FROM vida.inventar inv
-        JOIN vida.producto prd ON prd.codunico = inv.codunico
         WHERE prod.codigo = inv.codunico
           AND prod.empresa_id = 2
         RETURNING prod.id
