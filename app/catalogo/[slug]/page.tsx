@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { PublicCatalogoClient } from "./client_page";
 
+export const dynamic = 'force-dynamic';
+
 async function getCatalogData(slug: string) {
   const res = await fetch(
     `${process.env.NEXTAUTH_URL}/api/catalogos/public/${slug}`,
