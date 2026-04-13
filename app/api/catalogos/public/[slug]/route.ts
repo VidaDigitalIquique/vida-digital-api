@@ -47,6 +47,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
     const excluir = cat.palabras_excluir
       ? cat.palabras_excluir.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean)
       : [];
+    console.log('DEBUG excluir:', excluir);
 
     // Query products with physical availability filter (OBLIGATORIO)
     const rows = await sql`
@@ -78,6 +79,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
 
     // Apply keyword filters in JS (simpler than complex SQL)
     let productos = filterProducts(rows, codigosIncluir, keywordsIncluir, excluir);
+    console.log('DEBUG productos count antes:', rows.length, 'después:', productos.length);
 
     // Compute precio_catalogo
     productos = productos.map((p: any) => ({

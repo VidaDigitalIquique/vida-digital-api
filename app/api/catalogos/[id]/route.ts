@@ -12,6 +12,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
   try {
     const { titulo, descripcion, activo, items, palabras_excluir } = await request.json();
+    console.log('DEBUG PUT palabras_excluir:', palabras_excluir);
 
     // Verify ownership
     const existing = await sql`SELECT empresa_id, user_id FROM catalogos WHERE id = ${id}`;
