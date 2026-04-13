@@ -5,21 +5,21 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut, useSession } from 'next-auth/react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from './ui/dropdown-menu';
-import { 
-  Home, 
-  Tag, 
-  Box, 
+import {
+  Home,
+  Box,
   LogOut,
   ChevronDown,
   RefreshCw,
   ImageIcon,
   Users,
+  ShoppingCart,
   LayoutList,
   Filter,
   Camera
@@ -27,7 +27,6 @@ import {
 
 const NAV_LINKS = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Sala de Venta', href: '/precios', icon: Tag },
   { name: 'Bodega', href: '/bodega', icon: Box },
   { name: 'Despachos', href: '/bodega/despachos', icon: Camera },
   { name: 'Catálogos', href: '/catalogo/admin', icon: LayoutList },
@@ -40,13 +39,13 @@ export function TopNav() {
   const rol = (session?.user as any)?.rol as string;
 
   const RUTAS_POR_ROL: Record<string, string[]> = {
-    admin: ['/dashboard', '/precios', '/bodega', '/catalogo'],
-    vendedor: ['/precios', '/catalogo'],
+    admin: ['/dashboard', '/precios', '/ventas', '/bodega', '/catalogo'],
+    vendedor: ['/precios', '/ventas', '/catalogo'],
     bodeguero: ['/bodega'],
   };
 
   const rutasVisibles = RUTAS_POR_ROL[rol] || [];
-  const visibleLinks = NAV_LINKS.filter(link => 
+  const visibleLinks = NAV_LINKS.filter(link =>
     rutasVisibles.some(ruta => link.href.startsWith(ruta))
   );
 
@@ -76,40 +75,60 @@ export function TopNav() {
               );
             })}
 
-            {/* Admin Only Links */}
+            {(rol === 'admin' || rol === 'vendedor') && (
+              <DropdownMenu>
+                <DropdownMenuTrigger className={cn(
+                  'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none',
+                  (pathname.startsWith('/precios') || pathname.startsWith('/ventas')) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
+                )}>
+                  Ventas <ChevronDown className="w-4 h-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem>
+                    <Link href="/precios" className="flex items-center gap-2 w-full">
+                      <ShoppingCart className="w-4 h-4" /> Sala de Venta
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/ventas/kardex" className="flex items-center gap-2 w-full">
+                      <Users className="w-4 h-4" /> Kardex Cliente
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
             {isAdmin && (
-              <>
-                <DropdownMenu>
-                  <DropdownMenuTrigger className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none',
-                    pathname.startsWith('/admin') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
-                  )}>
-                    Administración <ChevronDown className="w-4 h-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem>
-                      <Link href="/admin/importar" className="flex items-center gap-2 w-full">
-                        <RefreshCw className="w-4 h-4" /> Sincronizar WinFac
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Link href="/admin/subir-imagenes" className="flex items-center gap-2 w-full">
-                        <ImageIcon className="w-4 h-4" /> Subir Imágenes
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Link href="/admin/usuarios" className="flex items-center gap-2 w-full">
-                        <Users className="w-4 h-4" /> Usuarios
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Link href="/admin/kardex-exclusiones" className="flex items-center gap-2 w-full">
-                        <Filter className="w-4 h-4" /> Exclusiones Kardex
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
+              <DropdownMenu>
+                <DropdownMenuTrigger className={cn(
+                  'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none',
+                  pathname.startsWith('/admin') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
+                )}>
+                  Administración <ChevronDown className="w-4 h-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem>
+                    <Link href="/admin/importar" className="flex items-center gap-2 w-full">
+                      <RefreshCw className="w-4 h-4" /> Sincronizar WinFac
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/admin/subir-imagenes" className="flex items-center gap-2 w-full">
+                      <ImageIcon className="w-4 h-4" /> Subir Imágenes
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/admin/usuarios" className="flex items-center gap-2 w-full">
+                      <Users className="w-4 h-4" /> Usuarios
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/admin/kardex-exclusiones" className="flex items-center gap-2 w-full">
+                      <Filter className="w-4 h-4" /> Exclusiones Kardex
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </nav>
         </div>

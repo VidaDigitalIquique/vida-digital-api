@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Tag, Box, Menu, ImageIcon, Camera } from 'lucide-react';
+import { Home, Box, Menu, ImageIcon, Camera, Users } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { signOut, useSession } from 'next-auth/react';
 import { Button } from './ui/button';
 
 const NAV_LINKS = [
-  { name: 'Sala de Venta', href: '/precios', icon: Tag },
+  { name: 'Kardex', href: '/ventas/kardex', icon: Users },
   { name: 'Bodega', href: '/bodega', icon: Box },
   { name: 'Despachos', href: '/bodega/despachos', icon: Camera },
 ];
@@ -22,13 +22,13 @@ export function BottomNav() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const RUTAS_POR_ROL: Record<string, string[]> = {
-    admin: ['/precios', '/bodega'],
-    vendedor: ['/precios', '/catalogo'],
+    admin: ['/precios', '/ventas', '/bodega'],
+    vendedor: ['/precios', '/ventas', '/catalogo'],
     bodeguero: ['/bodega', '/bodega/despachos'],
   };
 
   const rutasVisibles = RUTAS_POR_ROL[rol] || [];
-  const visibleLinks = NAV_LINKS.filter(link => 
+  const visibleLinks = NAV_LINKS.filter(link =>
     rutasVisibles.some(ruta => link.href.startsWith(ruta))
   );
 
@@ -41,7 +41,7 @@ export function BottomNav() {
             <span className="text-[10px] font-medium">Inicio</span>
           </Link>
         )}
-        
+
         {visibleLinks.map((link) => {
           const Icon = link.icon;
           const isActive = pathname.startsWith(link.href);
@@ -64,6 +64,8 @@ export function BottomNav() {
                  {(rol === 'admin' || rol === 'vendedor') && (
                    <div>
                       <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Herramientas</h3>
+                      <Link href="/precios" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Sala de Venta</Link>
+                      <Link href="/ventas/kardex" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Kardex Cliente</Link>
                       <Link href="/catalogo/admin" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Mis Catálogos</Link>
                    </div>
                  )}
@@ -82,7 +84,7 @@ export function BottomNav() {
                 )}
                </div>
                <Button variant="destructive" onClick={() => signOut()} className="w-full">
-                 Cerrar Sesión
+                 Cerrar sesión
                </Button>
             </div>
           </SheetContent>
