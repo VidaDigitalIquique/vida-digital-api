@@ -12,6 +12,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
       JOIN empresas e ON c.empresa_id = e.id
       WHERE c.slug = ${slug} AND c.activo = true
     `;
+    console.log('DEBUG cat raw:', JSON.stringify(cats[0]));
 
     if (cats.length === 0) return NextResponse.json({ error: "Catálogo no encontrado" }, { status: 404 });
     const cat = cats[0];
