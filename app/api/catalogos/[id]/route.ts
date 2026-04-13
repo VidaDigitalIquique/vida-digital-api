@@ -11,7 +11,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   const { id } = params;
 
   try {
-    const { titulo, descripcion, activo, items } = await request.json();
+    const { titulo, descripcion, activo, items, palabras_excluir } = await request.json();
 
     // Verify ownership
     const existing = await sql`SELECT empresa_id, user_id FROM catalogos WHERE id = ${id}`;
@@ -27,6 +27,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         titulo = COALESCE(${titulo !== undefined ? titulo : null}, titulo),
         descripcion = COALESCE(${descripcion !== undefined ? descripcion : null}, descripcion),
         activo = COALESCE(${activo !== undefined ? activo : null}, activo),
+        palabras_excluir = COALESCE(${palabras_excluir !== undefined ? palabras_excluir : null}, palabras_excluir),
         updated_at = NOW()
       WHERE id = ${id}
     `;

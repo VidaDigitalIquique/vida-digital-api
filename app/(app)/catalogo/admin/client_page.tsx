@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -20,6 +20,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
   const [editItems, setEditItems] = useState<any[]>([]);
   const [editLoading, setEditLoading] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
+  const editItemsOriginalRef = useRef<any[]>([]);
 
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -132,10 +133,11 @@ export function CatalogoAdminClient({ session }: { session: any }) {
     setEditItems([]);
     setEditLoading(true);
     try {
-      const res = await fetch(`/api/catalogos/${cat.id}`);
+      const res = await fetch(`/api/catalogos/public/${cat.slug}`);
       if (res.ok) {
         const { data } = await res.json();
-        setEditItems(data.items || []);
+        setEditItems(data.productos || []);
+        editItemsOriginalRef.current = data.productos || [];
       } else {
         toast.error('Error al cargar productos del catálogo');
         setEditingCatalog(null);
@@ -149,30 +151,41 @@ export function CatalogoAdminClient({ session }: { session: any }) {
   };
 
   const handleRemoveItem = (productoId: string) => {
-    setEditItems(prev => prev.filter(item => item.producto_id !== productoId));
+    setEditItems(prev => prev.filter(item => item.codigo !== productoId));
   };
 
   const handleSaveEdit = async () => {
     if (!editingCatalog) return;
     setEditSaving(true);
     try {
+      // Códigos que quedaron en el listado
+      const codigosRestantes = new Set(editItems.map(p => p.codigo.toUpperCase()));
+      
+      // Códigos originales que fueron eliminados por el usuario
+      const codigosEliminados = editItemsOriginalRef.current
+        .map(p => p.codigo.toUpperCase())
+        .filter(c => !codigosRestantes.has(c));
+
+      // Combinar con palabras_excluir existentes del catálogo
+      const excluirActual = editingCatalog.palabras_excluir
+        ? editingCatalog.palabras_excluir.split(',').map((s: string) => s.trim()).filter(Boolean)
+        : [];
+      
+      const nuevasExclusiones = Array.from(
+        new Set([...excluirActual, ...codigosEliminados])
+      ).join(', ');
+
       const res = await fetch(`/api/catalogos/${editingCatalog.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          items: editItems.map((item, i) => ({
-            producto_id: item.producto_id,
-            tipo: item.tipo,
-            url_media: item.url_media ?? null,
-            hide_price: item.hide_price ?? false,
-            orden: i,
-          })),
-        }),
+        body: JSON.stringify({ palabras_excluir: nuevasExclusiones }),
       });
       if (res.ok) {
         toast.success('Catálogo actualizado');
         setEditingCatalog(null);
         setEditItems([]);
+        editItemsOriginalRef.current = [];
+        fetchCatalogos();
       } else {
         toast.error('Error al guardar cambios');
       }
@@ -356,13 +369,13 @@ export function CatalogoAdminClient({ session }: { session: any }) {
               <ul className="flex flex-col gap-3">
                 {editItems.map((item) => (
                   <li
-                    key={item.producto_id}
+                    key={item.codigo}
                     className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3"
                   >
-                    {item.producto_imagen_url ? (
+                    {item.imagen_url ? (
                       <img
-                        src={item.producto_imagen_url}
-                        alt={item.producto_detalle}
+                        src={item.imagen_url}
+                        alt={item.detalle}
                         className="w-10 h-10 object-cover rounded-md flex-shrink-0 border"
                       />
                     ) : (
@@ -370,15 +383,15 @@ export function CatalogoAdminClient({ session }: { session: any }) {
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium leading-tight line-clamp-2">
-                        {item.producto_detalle || 'Sin nombre'}
+                        {item.detalle || 'Sin nombre'}
                       </p>
-                      {item.prcventa != null && (
-                        <p className="text-xs text-zinc-500 mt-0.5">${item.prcventa}</p>
+                      {item.precio_catalogo != null && (
+                        <p className="text-xs text-zinc-500 mt-0.5">${item.precio_catalogo}</p>
                       )}
                     </div>
                     <button
                       aria-label="Eliminar producto"
-                      onClick={() => handleRemoveItem(item.producto_id)}
+                      onClick={() => handleRemoveItem(item.codigo)}
                       className="p-1.5 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex-shrink-0 transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
