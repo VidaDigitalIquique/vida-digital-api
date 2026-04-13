@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { PlusCircle, Search, Trash2, Link as LinkIcon, ExternalLink, FileDown } from 'lucide-react';
+import { PlusCircle, Search, Trash2, Link as LinkIcon, ExternalLink, FileDown, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { useEmpresaId } from '@/hooks/useEmpresaId';
 import dynamic from 'next/dynamic';
@@ -15,6 +15,12 @@ export function CatalogoAdminClient({ session }: { session: any }) {
   const [catalogos, setCatalogos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   
+  // --- Estado modal edición ---
+  const [editingCatalog, setEditingCatalog] = useState<any | null>(null);
+  const [editItems, setEditItems] = useState<any[]>([]);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
+
   const [isCreating, setIsCreating] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
@@ -119,6 +125,64 @@ export function CatalogoAdminClient({ session }: { session: any }) {
     }
   };
 
+  // --- Funciones edición ---
+
+  const handleOpenEdit = async (cat: any) => {
+    setEditingCatalog(cat);
+    setEditItems([]);
+    setEditLoading(true);
+    try {
+      const res = await fetch(`/api/catalogos/${cat.id}`);
+      if (res.ok) {
+        const { data } = await res.json();
+        setEditItems(data.items || []);
+      } else {
+        toast.error('Error al cargar productos del catálogo');
+        setEditingCatalog(null);
+      }
+    } catch {
+      toast.error('Error al cargar productos del catálogo');
+      setEditingCatalog(null);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleRemoveItem = (productoId: string) => {
+    setEditItems(prev => prev.filter(item => item.producto_id !== productoId));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingCatalog) return;
+    setEditSaving(true);
+    try {
+      const res = await fetch(`/api/catalogos/${editingCatalog.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: editItems.map((item, i) => ({
+            producto_id: item.producto_id,
+            tipo: item.tipo,
+            url_media: item.url_media ?? null,
+            hide_price: item.hide_price ?? false,
+            orden: i,
+          })),
+        }),
+      });
+      if (res.ok) {
+        toast.success('Catálogo actualizado');
+        setEditingCatalog(null);
+        setEditItems([]);
+      } else {
+        toast.error('Error al guardar cambios');
+      }
+    } catch {
+      toast.error('Error al guardar cambios');
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const getPublicUrl = (slug: string) => {
     if (typeof window === 'undefined') return '';
     return `${window.location.origin}/catalogo/${slug}`;
@@ -187,6 +251,15 @@ export function CatalogoAdminClient({ session }: { session: any }) {
                 <Button variant="outline" className="flex-1 text-xs" onClick={() => window.open(getPublicUrl(cat.slug) + '?print=1', '_blank')}>
                   <FileDown className="w-3 h-3 mr-2" /> PDF
                 </Button>
+                {cat.user_id === (session?.user as any)?.id && (
+                  <Button
+                    variant="outline"
+                    className="flex-1 text-xs"
+                    onClick={() => handleOpenEdit(cat)}
+                  >
+                    <Pencil className="w-3 h-3 mr-2" /> Editar
+                  </Button>
+                )}
                 <Button variant="destructive" size="icon" onClick={() => handleDelete(cat.id)}>
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -261,6 +334,68 @@ export function CatalogoAdminClient({ session }: { session: any }) {
           <DialogFooter>
              <Button variant="outline" onClick={() => setIsCreating(false)}>Cancelar</Button>
              <Button onClick={handleCreate} disabled={!newTitle.trim()}>Crear</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal edición de productos */}
+      <Dialog open={!!editingCatalog} onOpenChange={(open) => { if (!open) { setEditingCatalog(null); setEditItems([]); } }}>
+        <DialogContent className="w-full h-full sm:h-auto sm:max-w-lg sm:max-h-[90vh] sm:mx-4 overflow-y-auto p-5 rounded-none sm:rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Editar catálogo: {editingCatalog?.titulo}</DialogTitle>
+          </DialogHeader>
+
+          <div className="py-4">
+            {editLoading ? (
+              <div className="py-8 text-center text-zinc-500 animate-pulse">Cargando productos...</div>
+            ) : editItems.length === 0 ? (
+              <div className="py-8 text-center text-zinc-400 text-sm">
+                No hay productos en este catálogo.
+              </div>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {editItems.map((item) => (
+                  <li
+                    key={item.producto_id}
+                    className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg p-3"
+                  >
+                    {item.producto_imagen_url ? (
+                      <img
+                        src={item.producto_imagen_url}
+                        alt={item.producto_detalle}
+                        className="w-10 h-10 object-cover rounded-md flex-shrink-0 border"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-md flex-shrink-0 border bg-zinc-200 dark:bg-zinc-700" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium leading-tight line-clamp-2">
+                        {item.producto_detalle || 'Sin nombre'}
+                      </p>
+                      {item.prcventa != null && (
+                        <p className="text-xs text-zinc-500 mt-0.5">${item.prcventa}</p>
+                      )}
+                    </div>
+                    <button
+                      aria-label="Eliminar producto"
+                      onClick={() => handleRemoveItem(item.producto_id)}
+                      className="p-1.5 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex-shrink-0 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setEditingCatalog(null); setEditItems([]); }} disabled={editSaving}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={editSaving || editLoading}>
+              {editSaving ? 'Guardando...' : 'Guardar cambios'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
