@@ -36,6 +36,7 @@ describe('Dashboard stock comparison drawer', () => {
       <DashboardClient
         stats={makeStats()}
         stockCompare={makeStockCompare()}
+        despachosRecientes={[]}
       />
     );
 
@@ -54,6 +55,7 @@ describe('Dashboard stock comparison drawer', () => {
       <DashboardClient
         stats={makeStats()}
         stockCompare={makeStockCompare()}
+        despachosRecientes={[]}
       />
     );
 

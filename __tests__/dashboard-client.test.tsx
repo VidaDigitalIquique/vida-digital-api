@@ -65,19 +65,19 @@ const stockCompare = [
 
 describe('DashboardClient (Slice 5)', () => {
   test('Renderiza stats de ambas empresas sin localStorage', () => {
-    render(<DashboardClient stats={stats} stockCompare={stockCompare} />);
+    render(<DashboardClient stats={stats} stockCompare={stockCompare} despachosRecientes={[]} />);
   expect(screen.getAllByText(/SANJH/i).length).toBeGreaterThan(0);
   expect(screen.getAllByText(/VIDA DIGITAL/i).length).toBeGreaterThan(0);
   });
 
   test('Muestra fecha de última importación por cada empresa', () => {
-    render(<DashboardClient stats={stats} stockCompare={stockCompare} />);
+    render(<DashboardClient stats={stats} stockCompare={stockCompare} despachosRecientes={[]} />);
     expect(screen.getByText('2024-01-01T10:00:00.000Z')).toBeInTheDocument();
     expect(screen.getByText('2024-01-02T12:00:00.000Z')).toBeInTheDocument();
   });
 
   test('No retorna null cuando no hay localStorage', () => {
-    const { container } = render(<DashboardClient stats={stats} stockCompare={stockCompare} />);
+    const { container } = render(<DashboardClient stats={stats} stockCompare={stockCompare} despachosRecientes={[]} />);
     expect(container.textContent).toBeTruthy();
   });
 });

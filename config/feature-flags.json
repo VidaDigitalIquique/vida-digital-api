@@ -1,1 +1,9 @@
-{ "unified_sync": false, "fix-company-switcher": false, "fix-company-switcher-mobile": false, "kardex-movimiento": true, "company-switcher-visible": false }
+{
+  "unified_sync": false,
+  "fix-company-switcher": false,
+  "fix-company-switcher-mobile": false,
+  "kardex-movimiento": true,
+  "company-switcher-visible": false,
+  "dashboard_despachos_recientes": false,
+  "dashboard_layout_v2": false
+}

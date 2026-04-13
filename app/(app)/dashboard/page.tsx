@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { DashboardClient } from "./client_page";
+import type { DespachoRow } from "./dashboard-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,18 @@ export default async function DashboardPage() {
   // Fetch metrics per enterprise
   const groupedStats: Record<number, any> = {};
   const empresasInfo = await sql`SELECT id, nombre, slug FROM empresas`;
+
+  // Query despachos de hoy para todas las empresas del usuario
+  const despachosRecientes: DespachoRow[] = userEmpresas.length > 0
+    ? (await sql`
+        SELECT id, empresa_id, folio, estado, fecha_despacho::text, imagen_url
+        FROM despachos
+        WHERE empresa_id = ANY(${userEmpresas})
+          AND fecha_despacho = CURRENT_DATE
+        ORDER BY id DESC
+        LIMIT 20
+      `) as DespachoRow[]
+    : [];
 
   for (const empId of userEmpresas) {
     const [{ count: totalProds }] = await sql`SELECT COUNT(*)::int FROM productos WHERE empresa_id = ${empId}`;
@@ -104,6 +117,10 @@ export default async function DashboardPage() {
   const stockCompare = await Promise.all(userEmpresas.map(makeStockCompare));
 
   return (
-    <DashboardClient stats={groupedStats} stockCompare={stockCompare} />
+    <DashboardClient
+      stats={groupedStats}
+      stockCompare={stockCompare}
+      despachosRecientes={despachosRecientes}
+    />
   );
 }

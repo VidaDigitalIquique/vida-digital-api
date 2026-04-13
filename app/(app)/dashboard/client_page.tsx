@@ -1,11 +1,12 @@
-'use client';
+﻿'use client';
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "lucide-react";
+import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle, ImageOff } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { formatDespachoEstado, type DespachoRow } from "./dashboard-utils";
 
 type StockCompareRow = {
   empresaId: number;
@@ -26,7 +27,11 @@ type StockDetailRow = {
   diferencia: number;
 };
 
-export function DashboardClient({ stats, stockCompare }: { stats: Record<number, any>; stockCompare: StockCompareRow[] }) {
+export function DashboardClient({ stats, stockCompare, despachosRecientes }: {
+  stats: Record<number, any>;
+  stockCompare: StockCompareRow[];
+  despachosRecientes: DespachoRow[];
+}) {
   const [open, setOpen] = useState(false);
   const [drawerTitle, setDrawerTitle] = useState('');
   const [drawerRows, setDrawerRows] = useState<StockDetailRow[]>([]);
@@ -37,9 +42,7 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200">
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight">Resumen General</h1>
-        <p className="text-zinc-500 dark:text-zinc-400 mt-1">
-          Métricas principales de la empresa en tiempo real.
-        </p>
+        <p className="text-zinc-500 dark:text-zinc-400 mt-1">Métricas principales en tiempo real.</p>
       </div>
 
       <Sheet open={open} onOpenChange={setOpen}>
@@ -94,6 +97,125 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
         </SheetContent>
       </Sheet>
 
+      {/* ── MÉTRICAS POR EMPRESA ── */}
+      {Object.entries(stats).map(([empId, s]) => {
+        const empInfo = stockCompare.find(e => e.empresaId === Number(empId));
+        const empNombre = empInfo?.nombre || `Empresa ${empId}`;
+        const empShort = empNombre.includes('SANJH') ? 'SANJH' : 'VIDA DIGITAL';
+
+        return (
+          <div key={empId}>
+            <h2 className="text-lg font-bold mb-3">{empShort}</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-xs font-medium text-zinc-500">Total Productos</CardTitle>
+                  <Package className="w-4 h-4 text-zinc-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{s.totalProds}</div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-xs font-medium text-zinc-500">Con Stock</CardTitle>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{s.inStock}</div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-green-200 dark:border-green-900 bg-green-50/50 dark:bg-green-950/20">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-xs font-semibold text-green-700 dark:text-green-400">Nuevos</CardTitle>
+                  <PlusCircle className="w-4 h-4 text-green-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-700 dark:text-green-400">{s.nuevos}</div>
+                </CardContent>
+              </Card>
+
+              <Card className={s.sinPrecio > 0 ? "border-red-300 dark:border-red-900 bg-red-50 dark:bg-red-950/20" : ""}>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className={`text-xs font-medium ${s.sinPrecio > 0 ? 'text-red-600 font-semibold' : 'text-zinc-500'}`}>
+                    Sin Precio
+                  </CardTitle>
+                  <AlertTriangle className={`w-4 h-4 ${s.sinPrecio > 0 ? 'text-red-500' : 'text-zinc-400'}`} />
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${s.sinPrecio > 0 ? 'text-red-600' : ''}`}>
+                    {s.sinPrecio}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-xs font-medium text-zinc-500">Última Importación</CardTitle>
+                  <Clock className="w-4 h-4 text-zinc-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm font-bold">
+                    {s.lastImport ? format(new Date(s.lastImport), "dd MMM yyyy, HH:mm", { locale: es }) : 'Nunca'}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* ── DESPACHOS HOY ── */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <Truck className="w-5 h-5 text-zinc-500" />
+          <h2 className="text-lg font-bold">Despachos Hoy</h2>
+          <span className="ml-1 text-sm text-zinc-400 font-normal">
+            ({despachosRecientes.length})
+          </span>
+        </div>
+
+        {despachosRecientes.length === 0 ? (
+          <div className="flex items-center gap-3 text-zinc-400 text-sm py-6 px-4 border border-dashed rounded-xl">
+            <ImageOff className="w-5 h-5 opacity-50" />
+            Sin despachos registrados hoy.
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {despachosRecientes.map((d) => {
+              const esOk = d.estado === "ok";
+              return (
+                <div
+                  key={d.id}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm
+                    ${esOk
+                      ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900"
+                      : "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900"
+                    }`}
+                >
+                  <span className={`font-mono font-bold text-base ${esOk ? "text-emerald-700 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+                    {d.folio ? `#${d.folio}` : "—"}
+                  </span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold
+                    ${esOk
+                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40"
+                      : "bg-amber-100 text-amber-700 dark:bg-amber-900/40"
+                    }`}>
+                    {formatDespachoEstado(d.estado)}
+                  </span>
+                  <span className="text-zinc-400 text-xs ml-auto">
+                    Empresa {d.empresa_id}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* ── COMPARACIÓN DE STOCK (secundario) ── */}
       <div className="flex flex-col gap-3">
         <div>
           <h2 className="text-xl font-bold">Comparación de Stock</h2>
@@ -183,84 +305,6 @@ export function DashboardClient({ stats, stockCompare }: { stats: Record<number,
           })}
         </div>
       </div>
-
-      {Object.entries(stats).map(([empId, s]) => {
-        const empInfo = stockCompare.find(e => e.empresaId === Number(empId));
-        const empNombre = empInfo?.nombre || `Empresa ${empId}`;
-        const empShort = empNombre.includes('SANJH') ? 'SANJH' : 'VIDA DIGITAL';
-        return (
-          <div key={empId}>
-            <h2 className="text-lg font-bold mb-3">{empShort}</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-zinc-500">Total Productos</CardTitle>
-                  <Package className="w-4 h-4 text-zinc-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{s.totalProds}</div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-zinc-500">Con Stock {'>'} 0</CardTitle>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{s.inStock}</div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-green-200 dark:border-green-900 bg-green-50/50 dark:bg-green-950/20">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-semibold text-green-700 dark:text-green-400">Productos NUEVOS</CardTitle>
-                  <PlusCircle className="w-4 h-4 text-green-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-700 dark:text-green-400">{s.nuevos}</div>
-                </CardContent>
-              </Card>
-
-              <Card className={s.sinPrecio > 0 ? "border-red-300 dark:border-red-900 bg-red-50 dark:bg-red-950/20" : ""}>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className={`text-sm font-medium ${s.sinPrecio > 0 ? 'text-red-600 font-semibold' : 'text-zinc-500'}`}>
-                    Sin Precio (con stock)
-                  </CardTitle>
-                  <AlertTriangle className={`w-4 h-4 ${s.sinPrecio > 0 ? 'text-red-500' : 'text-zinc-400'}`} />
-                </CardHeader>
-                <CardContent>
-                  <div className={`text-2xl font-bold ${s.sinPrecio > 0 ? 'text-red-600' : ''}`}>
-                    {s.sinPrecio}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-zinc-500">Última Importación</CardTitle>
-                  <Clock className="w-4 h-4 text-zinc-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-lg font-bold">
-                    {s.lastImport ? format(new Date(s.lastImport), "dd MMM yyyy, HH:mm", { locale: es }) : 'Nunca'}
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-zinc-500">Despachos Hoy</CardTitle>
-                  <Truck className="w-4 h-4 text-zinc-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{s.despachosHoy}</div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        );
-      })}
     </div>
   );
 }
