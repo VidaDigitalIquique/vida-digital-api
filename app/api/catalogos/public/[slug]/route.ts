@@ -14,7 +14,6 @@ export async function GET(request: Request, { params }: { params: { slug: string
       JOIN empresas e ON c.empresa_id = e.id
       WHERE c.slug = ${slug} AND c.activo = true
     `;
-    console.log('DEBUG cat raw:', JSON.stringify(cats[0]));
 
     if (cats.length === 0) return NextResponse.json({ error: "Catálogo no encontrado" }, { status: 404 });
     const cat = cats[0];
@@ -50,8 +49,6 @@ export async function GET(request: Request, { params }: { params: { slug: string
     const excluir = cat.palabras_excluir
       ? cat.palabras_excluir.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean)
       : [];
-    console.log('DEBUG palabras_excluir raw:', JSON.stringify(cat.palabras_excluir));
-    console.log('DEBUG excluir:', excluir);
 
     // Query products with physical availability filter (OBLIGATORIO)
     const rows = await sql`
@@ -83,7 +80,6 @@ export async function GET(request: Request, { params }: { params: { slug: string
 
     // Apply keyword filters in JS (simpler than complex SQL)
     let productos = filterProducts(rows, codigosIncluir, keywordsIncluir, excluir);
-    console.log('DEBUG productos count antes:', rows.length, 'después:', productos.length);
 
     // Compute precio_catalogo
     productos = productos.map((p: any) => ({
