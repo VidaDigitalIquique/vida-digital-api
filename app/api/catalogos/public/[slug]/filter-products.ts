@@ -33,6 +33,7 @@ export function filterProducts(
       if (matchesExcluir) return false;
     }
 
+    console.log('DEBUG filter:', p.codigo, '| excluir:', keywordsExcluir, '| haystack:', haystack);
     return true;
   });
 }
