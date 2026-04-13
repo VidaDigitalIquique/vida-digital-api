@@ -1,6 +1,6 @@
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { filterProducts } from "./filter-products";
+import { filterProducts, type CatalogoProducto } from "./filter-products";
 
 export const dynamic = 'force-dynamic';
 
@@ -79,7 +79,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
     console.log('DEBUG rows count:', rows.length, 'empresa_id:', cat.empresa_id);
 
     // Apply keyword filters in JS (simpler than complex SQL)
-    let productos = filterProducts(rows, codigosIncluir, keywordsIncluir, excluir);
+    let productos = filterProducts(rows as CatalogoProducto[], codigosIncluir, keywordsIncluir, excluir);
 
     // Compute precio_catalogo
     productos = productos.map((p: any) => ({

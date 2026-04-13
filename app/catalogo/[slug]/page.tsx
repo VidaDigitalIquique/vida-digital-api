@@ -1,9 +1,16 @@
 import { notFound } from "next/navigation";
 import { PublicCatalogoClient } from "./client_page";
 import { sql } from "@/lib/db";
-import { filterProducts } from "@/app/api/catalogos/public/[slug]/filter-products";
+import { filterProducts, type CatalogoProducto } from "@/app/api/catalogos/public/[slug]/filter-products";
 
 export const dynamic = 'force-dynamic';
+
+// Acepta string CSV o array (Neon puede deserializar text[] automáticamente)
+function parseCSVField(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map((s: string) => s.trim()).filter(Boolean);
+  return String(value).split(',').map((s) => s.trim()).filter(Boolean);
+}
 
 async function getCatalogData(slug: string) {
   try {
@@ -20,9 +27,7 @@ async function getCatalogData(slug: string) {
     const margen = parseFloat(cat.margen_precio) || 0;
     const mostrarPrecio = cat.mostrar_precio;
 
-    const tokens = cat.palabras_incluir
-      ? cat.palabras_incluir.split(',').map((s: string) => s.trim()).filter(Boolean)
-      : [];
+    const tokens = parseCSVField(cat.palabras_incluir);
 
     let codigosIncluir: string[] = [];
     let keywordsIncluir: string[] = [];
@@ -41,9 +46,7 @@ async function getCatalogData(slug: string) {
         .map((t: string) => t.toLowerCase());
     }
 
-    const excluir = cat.palabras_excluir
-      ? cat.palabras_excluir.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean)
-      : [];
+    const excluir = parseCSVField(cat.palabras_excluir).map((s) => s.toLowerCase());
 
     const rows = await sql`
       SELECT
@@ -71,7 +74,7 @@ async function getCatalogData(slug: string) {
       ORDER BY p.codigo ASC
     `;
 
-    let productos = filterProducts(rows, codigosIncluir, keywordsIncluir, excluir);
+    let productos = filterProducts(rows as CatalogoProducto[], codigosIncluir, keywordsIncluir, excluir);
 
     productos = productos.map((p: any) => ({
       ...p,
