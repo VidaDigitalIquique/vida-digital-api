@@ -58,7 +58,7 @@ export async function GET(request: Request, { params }: RouteContext) {
             c.celular,
             c.ciudad,
             c.pais,
-            f.foto_url
+            f.imagen_url as foto_url
           FROM sanjh.clientes c
           LEFT JOIN public.clientes_foto f
             ON f.empresa_id = 1 AND f.kcodclie::text = c.kcodclie::text
@@ -74,7 +74,7 @@ export async function GET(request: Request, { params }: RouteContext) {
             c.celular,
             c.ciudad,
             c.pais,
-            f.foto_url
+            f.imagen_url as foto_url
           FROM vida.clientes c
           LEFT JOIN public.clientes_foto f
             ON f.empresa_id = 2 AND f.kcodclie::text = c.kcodclie::text
