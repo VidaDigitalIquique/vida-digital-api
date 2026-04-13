@@ -2,6 +2,8 @@ import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { filterProducts } from "./filter-products";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request, { params }: { params: { slug: string } }) {
   const { slug } = params;
 
