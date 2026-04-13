@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { PublicCatalogoClient } from "./client_page";
 import { sql } from "@/lib/db";
-import { filterProducts } from "@/api/catalogos/public/[slug]/filter-products";
+import { filterProducts } from "@/app/api/catalogos/public/[slug]/filter-products";
 
 export const dynamic = 'force-dynamic';
 
