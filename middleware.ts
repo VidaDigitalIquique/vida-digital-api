@@ -2,8 +2,8 @@ import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
 
 const RUTAS_POR_ROL: Record<string, string[]> = {
-  admin: ['/dashboard', '/precios', '/bodega', '/catalogo', '/admin', '/inventario', '/despachos'],
-  vendedor: ['/precios', '/catalogo'],
+  admin: ['/dashboard', '/precios', '/ventas', '/bodega', '/catalogo', '/admin', '/inventario', '/despachos'],
+  vendedor: ['/precios', '/ventas', '/catalogo'],
   bodeguero: ['/bodega'],
 };
 
