@@ -47,6 +47,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
     const excluir = cat.palabras_excluir
       ? cat.palabras_excluir.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean)
       : [];
+    console.log('DEBUG palabras_excluir raw:', JSON.stringify(cat.palabras_excluir));
     console.log('DEBUG excluir:', excluir);
 
     // Query products with physical availability filter (OBLIGATORIO)
