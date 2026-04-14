@@ -357,7 +357,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                   >
                     <div className="flex flex-col p-3 gap-3">
                       <div className="flex gap-3">
-                        <div className="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border">
+                        <div className="flex-shrink-0 w-28 h-28 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border">
                           <ImageWithFallback
                             src={producto.imagen_url}
                             codigo={producto.codigo}
@@ -367,10 +367,10 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                         </div>
                         <div className="flex flex-col flex-1 min-w-0 gap-1">
                           <div className="flex items-center justify-between gap-1">
-                            <span className="font-mono text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded">
+                            <span className="font-mono text-sm font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded">
                               {producto.codigo}
                             </span>
-                            <Badge className={`text-[10px] px-1.5 py-0 h-4 ${empresaBadge.color}`}>
+                            <Badge className={`text-xs px-1.5 py-0 h-4 ${empresaBadge.color}`}>
                               {empresaBadge.label}
                             </Badge>
                             {producto.imagen_url && (
@@ -387,7 +387,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                             )}
                           </div>
                           <h3
-                            className="text-sm font-medium leading-snug text-foreground line-clamp-3"
+                            className="text-base font-medium leading-snug text-foreground line-clamp-3"
                             title={producto.detalle || ''}
                           >
                             {producto.detalle || 'Sin descripción'}
@@ -400,25 +400,25 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                       <div className="grid grid-cols-1 gap-3">
                         {/* MERCADO */}
                         <div className="text-sm">
-                          <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-1">Se ha vendido</div>
+                          <div className="text-xs uppercase tracking-wide text-zinc-400 font-medium mb-1">Se ha vendido</div>
                           {(() => {
                             const km = kardexMap[producto.codigo];
                             if (!km) return <span className="text-xs text-zinc-400">...</span>;
                             return (
                               <div className="flex gap-4">
                                 <div>
-                                  <div className="text-[10px] text-zinc-400">Mínimo</div>
-                                  <div className="font-semibold text-zinc-900 dark:text-zinc-100">{km.precio_minimo != null ? formatUSD(km.precio_minimo) : '—'}</div>
+                                  <div className="text-xs text-zinc-400">Mínimo</div>
+                                  <div className="text-base font-bold text-zinc-900 dark:text-zinc-100">{km.precio_minimo != null ? formatUSD(km.precio_minimo) : '—'}</div>
                                 </div>
                                 {km.precio_medio_status === 'ok' && km.precio_medio != null && (
                                   <div>
-                                    <div className="text-[10px] text-zinc-400">Medio</div>
-                                    <div className="font-semibold text-zinc-900 dark:text-zinc-100">{formatUSD(km.precio_medio)}</div>
+                                    <div className="text-xs text-zinc-400">Medio</div>
+                                    <div className="text-base font-bold text-zinc-900 dark:text-zinc-100">{formatUSD(km.precio_medio)}</div>
                                   </div>
                                 )}
                                 <div>
-                                  <div className="text-[10px] text-zinc-400">Máximo</div>
-                                  <div className="font-semibold text-zinc-900 dark:text-zinc-100">{km.precio_maximo != null ? formatUSD(km.precio_maximo) : '—'}</div>
+                                  <div className="text-xs text-zinc-400">Máximo</div>
+                                  <div className="text-base font-bold text-zinc-900 dark:text-zinc-100">{km.precio_maximo != null ? formatUSD(km.precio_maximo) : '—'}</div>
                                 </div>
                               </div>
                             );
@@ -427,7 +427,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
 
                         {/* COMPRÓ */}
                         <div className="text-sm">
-                          <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-1">Compró</div>
+                          <div className="text-xs uppercase tracking-wide text-zinc-400 font-medium mb-1">Compró</div>
                           {(() => {
                             const comprasArr = (producto.compras || []) as Array<{ fecha: string; precio: number; cantidad: number }>;
                             const uniqueByPrecio = Object.values(
@@ -447,12 +447,12 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                                 : null;
                               return (
                                 <div key={c.precio} className="flex items-center justify-between">
-                                  <span className="text-zinc-400">{format(new Date(c.fecha), 'dd MMM yyyy', { locale: es })}</span>
+                                  <span className="text-sm text-zinc-400">{format(new Date(c.fecha), 'dd MMM yyyy', { locale: es })}</span>
                                   <div className="text-right">
-                                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">{formatUSD(c.precio)}</span>
+                                    <span className="text-base font-bold text-zinc-900 dark:text-zinc-100">{formatUSD(c.precio)}</span>
                                     {cajas !== null
-                                      ? <span className="text-[11px] text-zinc-400 ml-1">({cajas} cajas)</span>
-                                      : <span className="text-[11px] text-zinc-400 ml-1">({c.cantidad} uds)</span>
+                                      ? <span className="text-sm text-zinc-400 ml-1">({cajas} cajas)</span>
+                                      : <span className="text-sm text-zinc-400 ml-1">({c.cantidad} uds)</span>
                                     }
                                   </div>
                                 </div>
@@ -464,22 +464,22 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                         {/* COSTO */}
                         {producto.costo != null && (
                           <div className="text-sm flex items-center justify-between">
-                            <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium">Costo</div>
-                            <div className="font-semibold text-zinc-900 dark:text-zinc-100">{formatUSD(producto.costo)}</div>
+                            <div className="text-xs uppercase tracking-wide text-zinc-400 font-medium">Costo</div>
+                            <div className="text-base font-bold text-zinc-900 dark:text-zinc-100">{formatUSD(producto.costo)}</div>
                           </div>
                         )}
 
                         <div className="grid grid-cols-1 gap-2 text-sm">
                           <div className="flex items-start justify-between gap-3">
                             <div>
-                              <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium">
+                              <div className="text-xs uppercase tracking-wide text-zinc-400 font-medium">
                                 Saldo Zofri
                               </div>
-                              <div className={cn('font-semibold', tieneSaldoZofri ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400')}>
+                              <div className={cn('text-base font-bold', tieneSaldoZofri ? 'text-emerald-600 dark:text-emerald-400' : 'text-zinc-400')}>
                                 {saldoZofri.unidades} unidades
                               </div>
                             </div>
-                            <div className="text-right text-zinc-500">
+                            <div className="text-right text-sm text-zinc-500">
                               {saldoZofri.cajas} cajas
                             </div>
                           </div>
@@ -487,14 +487,14 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                           {producto.saldo_bodega !== null && producto.saldo_bodega !== undefined && (
                             <div className="flex items-start justify-between gap-3">
                               <div>
-                                <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium">
+                                <div className="text-xs uppercase tracking-wide text-zinc-400 font-medium">
                                   Saldo Bodega
                                 </div>
-                                <div className="font-semibold text-zinc-900 dark:text-zinc-100">
+                                <div className="text-base font-bold text-zinc-900 dark:text-zinc-100">
                                   {saldoBodega.unidades} unidades
                                 </div>
                               </div>
-                              <div className="text-right text-zinc-500">
+                              <div className="text-right text-sm text-zinc-500">
                                 {saldoBodega.cajas} cajas
                               </div>
                             </div>
