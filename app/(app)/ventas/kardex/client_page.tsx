@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Search, Share2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Camera, Search, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { cn, formatRut, formatUSD } from '@/lib/utils';
 import { useShareImage } from '@/hooks/useShareImage';
+import { ProductDrawer } from '@/components/ProductDrawer';
+import { Producto } from '@/types';
 
 interface KardexClientePageProps {
   session: any;
@@ -75,7 +77,9 @@ function formatSaldo(unidades?: number | null, cantcaja?: number | null) {
 export function KardexClientePage({ session, empresasMap }: KardexClientePageProps) {
   void session;
   const { shareImage } = useShareImage();
+  const fotoInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
+  const [uploadingFoto, setUploadingFoto] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [searching, setSearching] = useState(false);
   const [clientes, setClientes] = useState<ClienteBusqueda[]>([]);
@@ -85,6 +89,12 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   const [tipoCliente, setTipoCliente] = useState<'comprador' | 'factura'>('comprador');
   const [loading, setLoading] = useState(false);
   const [clientPhotoError, setClientPhotoError] = useState(false);
+  const [productSearch, setProductSearch] = useState('');
+  const [productSearchDebounced, setProductSearchDebounced] = useState('');
+  const [productResults, setProductResults] = useState<Producto[]>([]);
+  const [productSearching, setProductSearching] = useState(false);
+  const [drawerProduct, setDrawerProduct] = useState<Producto | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const hasSearch = debouncedSearch.trim().length >= 2;
 
@@ -104,6 +114,24 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setProductSearchDebounced(productSearch), 400);
+    return () => clearTimeout(timer);
+  }, [productSearch]);
+
+  useEffect(() => {
+    if (productSearchDebounced.trim().length < 2) {
+      setProductResults([]);
+      return;
+    }
+    setProductSearching(true);
+    fetch(`/api/productos?search=${encodeURIComponent(productSearchDebounced.trim())}`)
+      .then(res => res.ok ? res.json() : { data: [] })
+      .then(({ data }) => setProductResults(data || []))
+      .catch(() => setProductResults([]))
+      .finally(() => setProductSearching(false));
+  }, [productSearchDebounced]);
 
   useEffect(() => {
     if (selectedCliente?.foto_url) {
@@ -209,6 +237,37 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
     setProductos([]);
   }
 
+  async function handleFotoCliente(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !selectedCliente) return;
+    setUploadingFoto(true);
+    try {
+      const reader = new FileReader();
+      const base64 = await new Promise<string>((resolve) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      const empresaId = vidaEmpresaId;
+      const res = await fetch(
+        `/api/ventas/clientes/${selectedCliente.kcodclie}/foto`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: base64, empresaId }),
+        }
+      );
+      if (!res.ok) throw new Error('Error subiendo foto');
+      const { imagen_url } = await res.json();
+      setSelectedCliente(prev => prev ? { ...prev, foto_url: imagen_url } : prev);
+      setClientPhotoError(false);
+    } catch {
+      // toast error silencioso
+    } finally {
+      setUploadingFoto(false);
+      if (fotoInputRef.current) fotoInputRef.current.value = '';
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6 fade-in zoom-in-95 duration-200">
       {!selectedCliente ? (
@@ -285,17 +344,37 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                     ← Volver
                   </Button>
 
-                  <div className="w-24 h-24 rounded-xl overflow-hidden border border-border bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center">
-                    {selectedCliente.foto_url && !clientPhotoError ? (
-                      <img
-                        src={selectedCliente.foto_url}
-                        alt={selectedCliente.nombress}
-                        className="w-full h-full object-cover"
-                        onError={() => setClientPhotoError(true)}
-                      />
-                    ) : (
-                      <span className="text-3xl text-zinc-400">👤</span>
-                    )}
+                  <div className="relative w-24 h-24 flex-shrink-0">
+                    <div
+                      className="w-full h-full rounded-xl overflow-hidden border border-border bg-zinc-100 dark:bg-zinc-900 flex items-center justify-center cursor-pointer"
+                      onClick={() => fotoInputRef.current?.click()}
+                    >
+                      {selectedCliente.foto_url && !clientPhotoError ? (
+                        <img
+                          src={selectedCliente.foto_url}
+                          alt={selectedCliente.nombress}
+                          className="w-full h-full object-cover"
+                          onError={() => setClientPhotoError(true)}
+                        />
+                      ) : (
+                        <span className="text-3xl text-zinc-400">👤</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => fotoInputRef.current?.click()}
+                      disabled={uploadingFoto}
+                      className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-1.5 shadow-md transition-colors"
+                    >
+                      <Camera className="w-3 h-3" />
+                    </button>
+                    <input
+                      ref={fotoInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleFotoCliente}
+                    />
                   </div>
 
                   <div className="flex flex-col gap-1">
@@ -318,6 +397,39 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                     </p>
                     <p className="text-sm text-zinc-500">{selectedCliente.celular || 'Sin teléfono'}</p>
                     <p className="text-sm text-zinc-500">{selectedCliente.ciudad || 'Sin ciudad'}</p>
+                    <div className="relative mt-2 max-w-xs">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                      <Input
+                        type="text"
+                        placeholder="Buscar producto..."
+                        className="pl-9 h-9 text-sm"
+                        value={productSearch}
+                        onChange={e => {
+                          setProductSearch(e.target.value);
+                          if (!e.target.value) setProductResults([]);
+                        }}
+                      />
+                      {productResults.length > 0 && (
+                        <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-white dark:bg-zinc-900 border border-border rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                          {productResults.map(p => (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => {
+                                setDrawerProduct(p);
+                                setDrawerOpen(true);
+                                setProductSearch('');
+                                setProductResults([]);
+                              }}
+                              className="w-full text-left px-3 py-2 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2 border-b last:border-b-0 border-border"
+                            >
+                              <span className="font-mono text-xs text-zinc-500 shrink-0">{p.codigo}</span>
+                              <span className="text-sm truncate">{p.detalle}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -392,6 +504,11 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                           >
                             {producto.detalle || 'Sin descripción'}
                           </h3>
+                          {producto.cantcaja && producto.cantcaja > 1 && (
+                            <p className="text-xs text-zinc-400 mt-0.5">
+                              Packing: {producto.cantcaja} u/caja
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -509,6 +626,15 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
           )}
         </>
       )}
+
+      <ProductDrawer
+        producto={drawerProduct}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        session={session}
+        empresaNombre={(drawerProduct as any)?.nombre_empresa || ''}
+        onUpdated={(updated) => setDrawerProduct(updated)}
+      />
     </div>
   );
 }
