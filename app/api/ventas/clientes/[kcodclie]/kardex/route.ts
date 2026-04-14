@@ -97,8 +97,8 @@ export async function GET(request: Request, { params }: RouteContext) {
             AND m.kcodclie = ${kcodclie}
             AND i.precread > 0
             AND i.cantsali > 0
-            AND (${desde || null} IS NULL OR m.fechanvt >= ${desde || null})
-            AND (${hasta || null} IS NULL OR m.fechanvt <= ${hasta || null})
+            AND (${desde || null}::date IS NULL OR m.fechanvt >= ${desde || null}::date)
+            AND (${hasta || null}::date IS NULL OR m.fechanvt <= ${hasta || null}::date)
           ORDER BY m.fechanvt DESC
         `
       : await sql`
@@ -115,8 +115,8 @@ export async function GET(request: Request, { params }: RouteContext) {
             AND m.kcodclie = ${kcodclie}
             AND i.precread > 0
             AND i.cantsali > 0
-            AND (${desde || null} IS NULL OR m.fechanvt >= ${desde || null})
-            AND (${hasta || null} IS NULL OR m.fechanvt <= ${hasta || null})
+            AND (${desde || null}::date IS NULL OR m.fechanvt >= ${desde || null}::date)
+            AND (${hasta || null}::date IS NULL OR m.fechanvt <= ${hasta || null}::date)
           ORDER BY m.fechanvt DESC
         `;
 
