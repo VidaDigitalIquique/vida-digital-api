@@ -113,6 +113,20 @@ export function ImportarClient({
   const handleSyncWinfac = async () => {
     setIsSyncing(true);
     try {
+      // Paso 1: disparar script en PC del jefe y esperar que termine
+      const triggerRes = await fetch('/api/admin/trigger-sync', { method: 'POST' });
+
+      if (!triggerRes.ok) {
+        const triggerBody = await triggerRes.json();
+        if (triggerRes.status === 504) {
+          toast.error('El PC de sincronización no respondió. Verifica que esté encendido.');
+        } else {
+          toast.error(triggerBody.error || 'Error al disparar sincronización');
+        }
+        return;
+      }
+
+      // Paso 2: script terminó, ahora actualizar public.productos
       const res = await fetch('/api/admin/sync-from-winfac', { method: 'POST' });
       const body = await res.json();
       if (res.ok) {
