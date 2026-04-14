@@ -38,6 +38,7 @@ export async function GET(request: Request, { params }: RouteContext) {
   const empresaSlug = searchParams.get('empresaSlug')?.trim();
   const desde = searchParams.get('desde')?.trim();
   const hasta = searchParams.get('hasta')?.trim();
+  const tipoCliente = searchParams.get('tipoCliente') || 'comprador';
   const kcodclie = params.kcodclie;
 
   if (!empresaSlug) {
@@ -94,7 +95,11 @@ export async function GET(request: Request, { params }: RouteContext) {
           FROM sanjh.itemdcto i
           INNER JOIN sanjh.movidcto m ON i.knumfoli = m.knumfoli
           WHERE m.tipomovi = 'V'
-            AND m.kcodclie = ${kcodclie}
+            AND (
+              (${tipoCliente} = 'comprador' AND m.kcodcli2 = ${kcodclie})
+              OR
+              (${tipoCliente} = 'factura' AND m.kcodclie = ${kcodclie})
+            )
             AND i.precread > 0
             AND i.cantsali > 0
             AND (${desde || null}::date IS NULL OR m.fechanvt >= ${desde || null}::date)
@@ -112,7 +117,11 @@ export async function GET(request: Request, { params }: RouteContext) {
           FROM vida.itemdcto i
           INNER JOIN vida.movidcto m ON i.knumfoli = m.knumfoli
           WHERE m.tipomovi = 'V'
-            AND m.kcodclie = ${kcodclie}
+            AND (
+              (${tipoCliente} = 'comprador' AND m.kcodcli2 = ${kcodclie})
+              OR
+              (${tipoCliente} = 'factura' AND m.kcodclie = ${kcodclie})
+            )
             AND i.precread > 0
             AND i.cantsali > 0
             AND (${desde || null}::date IS NULL OR m.fechanvt >= ${desde || null}::date)

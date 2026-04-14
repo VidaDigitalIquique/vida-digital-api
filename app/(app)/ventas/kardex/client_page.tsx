@@ -67,6 +67,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   const [clientes, setClientes] = useState<ClienteBusqueda[]>([]);
   const [selectedCliente, setSelectedCliente] = useState<ClienteBusqueda | null>(null);
   const [productos, setProductos] = useState<KardexProducto[]>([]);
+  const [tipoCliente, setTipoCliente] = useState<'comprador' | 'factura'>('comprador');
   const [loading, setLoading] = useState(false);
   const [clientPhotoError, setClientPhotoError] = useState(false);
 
@@ -94,6 +95,12 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
       setClientPhotoError(false);
     }
   }, [selectedCliente]);
+
+  useEffect(() => {
+    if (!selectedCliente) return;
+    void handleBuscarKardex(selectedCliente);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipoCliente]);
 
   useEffect(() => {
     async function fetchClientes() {
@@ -134,6 +141,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
     try {
       const queryParams = new URLSearchParams({
         empresaSlug: 'vida',
+        tipoCliente,
       });
       const res = await fetch(
         `/api/ventas/clientes/${cliente.kcodclie}/kardex?${queryParams.toString()}`
@@ -255,6 +263,17 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
 
                   <div className="flex flex-col gap-1">
                     <h1 className="text-3xl font-extrabold tracking-tight">{selectedCliente.nombress}</h1>
+                    <div className="flex items-center gap-2 mt-1">
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={tipoCliente === 'factura'}
+                          onChange={e => setTipoCliente(e.target.checked ? 'factura' : 'comprador')}
+                          className="w-4 h-4 rounded"
+                        />
+                        Buscar como Cliente Factura
+                      </label>
+                    </div>
                     <p className="text-sm text-zinc-500">
                       {selectedCliente.rutclien
                         ? formatRut(`${selectedCliente.rutclien}${selectedCliente.digiveri || ''}`)
