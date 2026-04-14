@@ -3,10 +3,9 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle, ImageOff } from "lucide-react";
+import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { formatDespachoEstado, type DespachoRow } from "./dashboard-utils";
 
 type StockCompareRow = {
   empresaId: number;
@@ -27,10 +26,12 @@ type StockDetailRow = {
   diferencia: number;
 };
 
-export function DashboardClient({ stats, stockCompare, despachosRecientes }: {
+export function DashboardClient({ stats, stockCompare, despachosHoyCount, ultimoDia, penultimoDia }: {
   stats: Record<number, any>;
   stockCompare: StockCompareRow[];
-  despachosRecientes: DespachoRow[];
+  despachosHoyCount: number;
+  ultimoDia: { fecha: string; count: number } | null;
+  penultimoDia: { fecha: string; count: number } | null;
 }) {
   const [open, setOpen] = useState(false);
   const [drawerTitle, setDrawerTitle] = useState('');
@@ -168,51 +169,47 @@ export function DashboardClient({ stats, stockCompare, despachosRecientes }: {
       })}
 
       {/* ── DESPACHOS HOY ── */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
+      <div className="border rounded-xl p-5 bg-white dark:bg-zinc-900 shadow-sm">
+        <div className="flex items-center gap-2 mb-4">
           <Truck className="w-5 h-5 text-zinc-500" />
-          <h2 className="text-lg font-bold">Despachos Hoy</h2>
-          <span className="ml-1 text-sm text-zinc-400 font-normal">
-            ({despachosRecientes.length})
-          </span>
+          <h2 className="text-lg font-bold">Despachos de Bodega</h2>
         </div>
 
-        {despachosRecientes.length === 0 ? (
-          <div className="flex items-center gap-3 text-zinc-400 text-sm py-6 px-4 border border-dashed rounded-xl">
-            <ImageOff className="w-5 h-5 opacity-50" />
-            Sin despachos registrados hoy.
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className={`rounded-xl p-4 border ${despachosHoyCount > 0
+            ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900'
+            : 'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900'}`}>
+            <p className="text-xs uppercase tracking-wide font-medium text-zinc-500 mb-1">Hoy</p>
+            <p className={`text-4xl font-black ${despachosHoyCount > 0
+              ? 'text-emerald-600 dark:text-emerald-400'
+              : 'text-amber-500 dark:text-amber-400'}`}>
+              {despachosHoyCount}
+            </p>
+            <p className="text-sm text-zinc-400 mt-1">
+              {despachosHoyCount > 0
+                ? `despacho${despachosHoyCount > 1 ? 's' : ''} registrado${despachosHoyCount > 1 ? 's' : ''}`
+                : 'sin despachos aún'}
+            </p>
           </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {despachosRecientes.map((d) => {
-              const esOk = d.estado === "ok";
-              return (
-                <div
-                  key={d.id}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg border text-sm
-                    ${esOk
-                      ? "bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900"
-                      : "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900"
-                    }`}
-                >
-                  <span className={`font-mono font-bold text-base ${esOk ? "text-emerald-700 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
-                    {d.folio ? `#${d.folio}` : "—"}
-                  </span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold
-                    ${esOk
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40"
-                      : "bg-amber-100 text-amber-700 dark:bg-amber-900/40"
-                    }`}>
-                    {formatDespachoEstado(d.estado)}
-                  </span>
-                  <span className="text-zinc-400 text-xs ml-auto">
-                    Empresa {d.empresa_id}
-                  </span>
-                </div>
-              );
-            })}
+
+          <div className="rounded-xl p-4 border bg-zinc-50 border-zinc-200 dark:bg-zinc-800/50 dark:border-zinc-700">
+            <p className="text-xs uppercase tracking-wide font-medium text-zinc-500 mb-1">
+              Último día activo
+            </p>
+            {ultimoDia ? (
+              <>
+                <p className="text-4xl font-black text-zinc-700 dark:text-zinc-200">
+                  {ultimoDia.count}
+                </p>
+                <p className="text-sm text-zinc-400 mt-1">
+                  {format(new Date(ultimoDia.fecha), "dd MMM yyyy", { locale: es })}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-zinc-400 mt-2">Sin datos</p>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* ── COMPARACIÓN DE STOCK (secundario) ── */}

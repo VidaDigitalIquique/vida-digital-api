@@ -2,7 +2,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { DashboardClient } from "./client_page";
-import type { DespachoRow } from "./dashboard-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -28,19 +27,30 @@ export default async function DashboardPage() {
   const groupedStats: Record<number, any> = {};
   const empresasInfo = await sql`SELECT id, nombre, slug FROM empresas`;
 
-  // Query despachos de hoy para todas las empresas del usuario
-  const despachosRecientes: DespachoRow[] = userEmpresas.length > 0
-    ? (await sql`
-        SELECT id, empresa_id, folio, imagen_url,
-               created_at::text as fecha_despacho,
-               subido_por
+  // Despachos de HOY
+  const despachosHoyCount = userEmpresas.length > 0
+    ? Number((await sql`
+        SELECT COUNT(*)::int as count
         FROM public.despachos_bodega
         WHERE empresa_id = ANY(${userEmpresas})
           AND DATE(created_at) = CURRENT_DATE
-        ORDER BY id DESC
-        LIMIT 20
-      `) as DespachoRow[]
+      `)[0]?.count ?? 0)
+    : 0;
+
+  // Último día con despachos y su conteo
+  const ultimoDiaRows = userEmpresas.length > 0
+    ? await sql`
+        SELECT DATE(created_at) as fecha, COUNT(*)::int as count
+        FROM public.despachos_bodega
+        WHERE empresa_id = ANY(${userEmpresas})
+        GROUP BY DATE(created_at)
+        ORDER BY DATE(created_at) DESC
+        LIMIT 2
+      `
     : [];
+
+  const ultimoDia = ultimoDiaRows[0] ?? null;
+  const penultimoDia = ultimoDiaRows[1] ?? null;
 
   for (const empId of userEmpresas) {
     const [{ count: totalProds }] = await sql`SELECT COUNT(*)::int FROM productos WHERE empresa_id = ${empId}`;
@@ -122,7 +132,9 @@ export default async function DashboardPage() {
     <DashboardClient
       stats={groupedStats}
       stockCompare={stockCompare}
-      despachosRecientes={despachosRecientes}
+      despachosHoyCount={despachosHoyCount}
+      ultimoDia={ultimoDia}
+      penultimoDia={penultimoDia}
     />
   );
 }
