@@ -31,10 +31,12 @@ export default async function DashboardPage() {
   // Query despachos de hoy para todas las empresas del usuario
   const despachosRecientes: DespachoRow[] = userEmpresas.length > 0
     ? (await sql`
-        SELECT id, empresa_id, folio, estado, fecha_despacho::text, imagen_url
-        FROM despachos
+        SELECT id, empresa_id, folio, imagen_url,
+               created_at::text as fecha_despacho,
+               subido_por
+        FROM public.despachos_bodega
         WHERE empresa_id = ANY(${userEmpresas})
-          AND fecha_despacho = CURRENT_DATE
+          AND DATE(created_at) = CURRENT_DATE
         ORDER BY id DESC
         LIMIT 20
       `) as DespachoRow[]
@@ -50,8 +52,8 @@ export default async function DashboardPage() {
     const lastImport = maxDateRows[0]?.max_date ? new Date(maxDateRows[0].max_date) : null;
 
     const [{ count: despachosHoy }] = await sql`
-      SELECT COUNT(*)::int FROM despachos 
-      WHERE empresa_id = ${empId} AND fecha_despacho = CURRENT_DATE
+      SELECT COUNT(*)::int FROM public.despachos_bodega
+      WHERE empresa_id = ${empId} AND DATE(created_at) = CURRENT_DATE
     `;
 
     groupedStats[empId] = {
