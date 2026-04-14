@@ -357,24 +357,13 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                   >
                     <div className="flex flex-col p-3 gap-3">
                       <div className="flex gap-3">
-                        <div className="relative flex-shrink-0 w-20 h-20">
-                          <div className="w-full h-full rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border">
-                            <ImageWithFallback
-                              src={producto.imagen_url}
-                              codigo={producto.codigo}
-                              empresaSlug={empresaSlug}
-                              fill
-                            />
-                          </div>
-                          {producto.imagen_url && (
-                            <button
-                              type="button"
-                              onClick={() => shareImage(producto.imagen_url!, `${producto.codigo}.jpg`, producto.detalle)}
-                              className="absolute bottom-0.5 right-0.5 p-0.5 rounded bg-white/80 dark:bg-black/60 hover:bg-white dark:hover:bg-black transition-colors"
-                            >
-                              <Share2 className="w-3 h-3 text-zinc-600 dark:text-zinc-300" />
-                            </button>
-                          )}
+                        <div className="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border">
+                          <ImageWithFallback
+                            src={producto.imagen_url}
+                            codigo={producto.codigo}
+                            empresaSlug={empresaSlug}
+                            fill
+                          />
                         </div>
                         <div className="flex flex-col flex-1 min-w-0 gap-1">
                           <div className="flex items-center justify-between gap-1">
@@ -384,6 +373,18 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                             <Badge className={`text-[10px] px-1.5 py-0 h-4 ${empresaBadge.color}`}>
                               {empresaBadge.label}
                             </Badge>
+                            {producto.imagen_url && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  shareImage(producto.imagen_url!, `${producto.codigo}.jpg`, producto.detalle);
+                                }}
+                                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors flex-shrink-0"
+                              >
+                                <Share2 className="w-3 h-3 text-zinc-400" />
+                              </button>
+                            )}
                           </div>
                           <h3
                             className="text-sm font-medium leading-snug text-foreground line-clamp-3"
