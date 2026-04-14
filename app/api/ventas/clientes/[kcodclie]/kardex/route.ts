@@ -16,6 +16,7 @@ type CompraRow = {
   nvta: string;
   cantidad: number;
   precio: number;
+  empresa_id: number;
 };
 
 type SaldoRow = {
@@ -46,7 +47,6 @@ export async function GET(request: Request, { params }: RouteContext) {
   }
 
   const schema = empresaSlug === 'sanjh' ? 'sanjh' : 'vida';
-  const empresaId = schema === 'sanjh' ? 1 : 2;
 
   try {
     const clienteRows = schema === 'sanjh'
@@ -83,51 +83,56 @@ export async function GET(request: Request, { params }: RouteContext) {
           LIMIT 1
         `;
 
-    const compras = schema === 'sanjh'
-      ? await sql`
-          SELECT
-            i.codunico as codigo,
-            i.descrip as detalle,
-            m.fechanvt as fecha,
-            m.knumfoli as nvta,
-            i.cantsali as cantidad,
-            i.precread as precio
-          FROM sanjh.itemdcto i
-          INNER JOIN sanjh.movidcto m ON i.knumfoli = m.knumfoli
-          WHERE m.tipomovi = 'V'
-            AND (
-              (${tipoCliente} = 'comprador' AND m.kcodcli2 = ${kcodclie})
-              OR
-              (${tipoCliente} = 'factura' AND m.kcodclie = ${kcodclie})
-            )
-            AND i.precread > 0
-            AND i.cantsali > 0
-            AND (${desde || null}::date IS NULL OR m.fechanvt >= ${desde || null}::date)
-            AND (${hasta || null}::date IS NULL OR m.fechanvt <= ${hasta || null}::date)
-          ORDER BY m.fechanvt DESC
-        `
-      : await sql`
-          SELECT
-            i.codunico as codigo,
-            i.descrip as detalle,
-            m.fechanvt as fecha,
-            m.knumfoli as nvta,
-            i.cantsali as cantidad,
-            i.precread as precio
-          FROM vida.itemdcto i
-          INNER JOIN vida.movidcto m ON i.knumfoli = m.knumfoli
-          WHERE m.tipomovi = 'V'
-            AND (
-              (${tipoCliente} = 'comprador' AND m.kcodcli2 = ${kcodclie})
-              OR
-              (${tipoCliente} = 'factura' AND m.kcodclie = ${kcodclie})
-            )
-            AND i.precread > 0
-            AND i.cantsali > 0
-            AND (${desde || null}::date IS NULL OR m.fechanvt >= ${desde || null}::date)
-            AND (${hasta || null}::date IS NULL OR m.fechanvt <= ${hasta || null}::date)
-          ORDER BY m.fechanvt DESC
-        `;
+    const [comprasSanjh, comprasVida] = await Promise.all([
+      sql`
+        SELECT
+          i.codunico as codigo,
+          i.descrip as detalle,
+          m.fechanvt as fecha,
+          m.knumfoli as nvta,
+          i.cantsali as cantidad,
+          i.precread as precio,
+          1 as empresa_id
+        FROM sanjh.itemdcto i
+        INNER JOIN sanjh.movidcto m ON i.knumfoli = m.knumfoli
+        WHERE m.tipomovi = 'V'
+          AND (
+            (${tipoCliente} = 'comprador' AND m.kcodcli2 = ${kcodclie})
+            OR
+            (${tipoCliente} = 'factura' AND m.kcodclie = ${kcodclie})
+          )
+          AND i.precread > 0
+          AND i.cantsali > 0
+          AND (${desde || null}::date IS NULL OR m.fechanvt >= ${desde || null}::date)
+          AND (${hasta || null}::date IS NULL OR m.fechanvt <= ${hasta || null}::date)
+        ORDER BY m.fechanvt DESC
+      `,
+      sql`
+        SELECT
+          i.codunico as codigo,
+          i.descrip as detalle,
+          m.fechanvt as fecha,
+          m.knumfoli as nvta,
+          i.cantsali as cantidad,
+          i.precread as precio,
+          2 as empresa_id
+        FROM vida.itemdcto i
+        INNER JOIN vida.movidcto m ON i.knumfoli = m.knumfoli
+        WHERE m.tipomovi = 'V'
+          AND (
+            (${tipoCliente} = 'comprador' AND m.kcodcli2 = ${kcodclie})
+            OR
+            (${tipoCliente} = 'factura' AND m.kcodclie = ${kcodclie})
+          )
+          AND i.precread > 0
+          AND i.cantsali > 0
+          AND (${desde || null}::date IS NULL OR m.fechanvt >= ${desde || null}::date)
+          AND (${hasta || null}::date IS NULL OR m.fechanvt <= ${hasta || null}::date)
+        ORDER BY m.fechanvt DESC
+      `,
+    ]);
+
+    const compras = [...comprasSanjh, ...comprasVida];
 
     if (compras.length === 0) {
       return NextResponse.json({
@@ -145,8 +150,7 @@ export async function GET(request: Request, { params }: RouteContext) {
         SUM(saldo) as saldo_zofri,
         MAX(cantcaja) as cantcaja
       FROM public.productos
-      WHERE empresa_id = ${empresaId}
-        AND codigo = ANY(${codigosUnicos})
+      WHERE codigo = ANY(${codigosUnicos})
       GROUP BY codigo
     `;
 
@@ -155,8 +159,7 @@ export async function GET(request: Request, { params }: RouteContext) {
         codigo,
         SUM(fisico) as saldo_bodega
       FROM public.ubicaciones_bodega
-      WHERE empresa_id = ${empresaId}
-        AND codigo = ANY(${codigosUnicos})
+      WHERE codigo = ANY(${codigosUnicos})
       GROUP BY codigo
     `;
 
@@ -185,6 +188,7 @@ export async function GET(request: Request, { params }: RouteContext) {
         productosMap.set(compra.codigo, {
           codigo: compra.codigo,
           detalle: compra.detalle,
+          empresa_id: compra.empresa_id,
           precio_min: Number(compra.precio),
           precio_max: Number(compra.precio),
           precio_ultimo: Number(compra.precio),
@@ -201,6 +205,7 @@ export async function GET(request: Request, { params }: RouteContext) {
       if (new Date(compra.fecha) > new Date(existente.ultima_compra)) {
         existente.ultima_compra = compra.fecha;
         existente.precio_ultimo = Number(compra.precio);
+        existente.empresa_id = compra.empresa_id;
       }
       existente.compras.push(compra);
     }
