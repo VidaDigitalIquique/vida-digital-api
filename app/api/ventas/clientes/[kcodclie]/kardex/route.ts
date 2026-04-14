@@ -138,20 +138,39 @@ export async function GET(request: Request, { params }: RouteContext) {
 
     const codigosUnicos = Array.from(new Set(compras.map((compra: CompraRow) => compra.codigo)));
 
-    const saldos = await sql`
+    const saldosZofri = await sql`
       SELECT
-        p.codigo,
-        p.imagen_url,
-        SUM(p.saldo) as saldo_zofri,
-        SUM(u.fisico) as saldo_bodega,
-        MAX(p.cantcaja) as cantcaja
-      FROM public.productos p
-      LEFT JOIN public.ubicaciones_bodega u
-        ON u.empresa_id = p.empresa_id AND u.codigo = p.codigo
-      WHERE p.empresa_id = ${empresaId}
-        AND p.codigo = ANY(${codigosUnicos})
-      GROUP BY p.codigo, p.imagen_url
+        codigo,
+        MAX(imagen_url) as imagen_url,
+        SUM(saldo) as saldo_zofri,
+        MAX(cantcaja) as cantcaja
+      FROM public.productos
+      WHERE empresa_id = ${empresaId}
+        AND codigo = ANY(${codigosUnicos})
+      GROUP BY codigo
     `;
+
+    const saldosBodega = await sql`
+      SELECT
+        codigo,
+        SUM(fisico) as saldo_bodega
+      FROM public.ubicaciones_bodega
+      WHERE empresa_id = ${empresaId}
+        AND codigo = ANY(${codigosUnicos})
+      GROUP BY codigo
+    `;
+
+    const saldosBodegaMap = new Map(
+      saldosBodega.map((r: any) => [r.codigo, Number(r.saldo_bodega ?? 0)])
+    );
+
+    const saldos = saldosZofri.map((r: any) => ({
+      codigo: r.codigo,
+      imagen_url: r.imagen_url,
+      saldo_zofri: Number(r.saldo_zofri ?? 0),
+      saldo_bodega: saldosBodegaMap.get(r.codigo) ?? null,
+      cantcaja: Number(r.cantcaja ?? 1),
+    }));
 
     const saldosMap = new Map(
       (saldos as SaldoRow[]).map((saldo) => [saldo.codigo, saldo])
