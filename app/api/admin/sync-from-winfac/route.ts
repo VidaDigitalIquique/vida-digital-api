@@ -24,6 +24,7 @@ export async function POST(request: Request) {
           updated_at = NOW()
         FROM sanjh.inventar inv
         WHERE prod.codigo = inv.codunico
+          AND prod.nroingreso = inv.knumezet
           AND prod.empresa_id = 1
         RETURNING prod.id
       )
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
           updated_at = NOW()
         FROM vida.inventar inv
         WHERE prod.codigo = inv.codunico
+          AND prod.nroingreso = inv.knumezet
           AND prod.empresa_id = 2
         RETURNING prod.id
       )
