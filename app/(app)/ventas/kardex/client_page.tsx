@@ -1,12 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Share2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { cn, formatRut, formatUSD } from '@/lib/utils';
+import { useShareImage } from '@/hooks/useShareImage';
 
 interface KardexClientePageProps {
   session: any;
@@ -35,9 +38,19 @@ type KardexProducto = {
   total_unidades: number;
   ultima_compra: string;
   imagen_url?: string | null;
+  costo?: number | null;
   saldo_zofri?: number | null;
   saldo_bodega?: number | null;
   cantcaja?: number | null;
+  compras?: Array<{ fecha: string; precio: number; nvta: string; cantidad: number; empresa_id: number }>;
+};
+
+type KardexGeneral = {
+  precio_minimo: number | null;
+  precio_maximo: number | null;
+  precio_medio: number | null;
+  precio_medio_status: string;
+  total_ventas: number;
 };
 
 function formatSaldo(unidades?: number | null, cantcaja?: number | null) {
@@ -61,12 +74,14 @@ function formatSaldo(unidades?: number | null, cantcaja?: number | null) {
 
 export function KardexClientePage({ session, empresasMap }: KardexClientePageProps) {
   void session;
+  const { shareImage } = useShareImage();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [searching, setSearching] = useState(false);
   const [clientes, setClientes] = useState<ClienteBusqueda[]>([]);
   const [selectedCliente, setSelectedCliente] = useState<ClienteBusqueda | null>(null);
   const [productos, setProductos] = useState<KardexProducto[]>([]);
+  const [kardexMap, setKardexMap] = useState<Record<string, KardexGeneral>>({});
   const [tipoCliente, setTipoCliente] = useState<'comprador' | 'factura'>('comprador');
   const [loading, setLoading] = useState(false);
   const [clientPhotoError, setClientPhotoError] = useState(false);
@@ -151,6 +166,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
         const { cliente: clienteData, productos: productosData } = await res.json();
         setSelectedCliente(clienteData || cliente);
         setProductos(productosData || []);
+        void fetchKardexGenerales(productosData || []);
       } else {
         setProductos([]);
       }
@@ -160,6 +176,27 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
     } finally {
       setLoading(false);
     }
+  }
+
+  async function fetchKardexGenerales(prods: KardexProducto[]) {
+    const codigos = [...new Set(prods.map((p) => p.codigo))];
+    const results = await Promise.allSettled(
+      codigos.map(async (codigo) => {
+        const res = await fetch(
+          `/api/kardex?codigo=${encodeURIComponent(codigo)}&empresaSlug=vida`
+        );
+        if (!res.ok) return null;
+        const data = await res.json();
+        return { codigo, data };
+      })
+    );
+    const map: Record<string, KardexGeneral> = {};
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value) {
+        map[r.value.codigo] = r.value.data;
+      }
+    }
+    setKardexMap(map);
   }
 
   function handleSelectCliente(cliente: ClienteBusqueda) {
@@ -320,13 +357,24 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                   >
                     <div className="flex flex-col p-3 gap-3">
                       <div className="flex gap-3">
-                        <div className="flex-shrink-0 w-20 h-20 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border">
-                          <ImageWithFallback
-                            src={producto.imagen_url}
-                            codigo={producto.codigo}
-                            empresaSlug={empresaSlug}
-                            fill
-                          />
+                        <div className="relative flex-shrink-0 w-20 h-20">
+                          <div className="w-full h-full rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border">
+                            <ImageWithFallback
+                              src={producto.imagen_url}
+                              codigo={producto.codigo}
+                              empresaSlug={empresaSlug}
+                              fill
+                            />
+                          </div>
+                          {producto.imagen_url && (
+                            <button
+                              type="button"
+                              onClick={() => shareImage(producto.imagen_url!, `${producto.codigo}.jpg`, producto.detalle)}
+                              className="absolute bottom-0.5 right-0.5 p-0.5 rounded bg-white/80 dark:bg-black/60 hover:bg-white dark:hover:bg-black transition-colors"
+                            >
+                              <Share2 className="w-3 h-3 text-zinc-600 dark:text-zinc-300" />
+                            </button>
+                          )}
                         </div>
                         <div className="flex flex-col flex-1 min-w-0 gap-1">
                           <div className="flex items-center justify-between gap-1">
@@ -349,32 +397,65 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                       <div className="border-t border-border" />
 
                       <div className="grid grid-cols-1 gap-3">
-                        <div className="grid grid-cols-3 gap-2 text-sm">
-                          <div>
-                            <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-0.5">
-                              Mínimo
-                            </div>
-                            <div className="font-semibold text-zinc-900 dark:text-zinc-100">
-                              {formatUSD(producto.precio_min)}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-0.5">
-                              Máximo
-                            </div>
-                            <div className="font-semibold text-zinc-900 dark:text-zinc-100">
-                              {formatUSD(producto.precio_max)}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-0.5">
-                              Último
-                            </div>
-                            <div className="font-semibold text-zinc-900 dark:text-zinc-100">
-                              {formatUSD(producto.precio_ultimo)}
-                            </div>
-                          </div>
+                        {/* MERCADO */}
+                        <div className="text-sm">
+                          <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-1">Mercado</div>
+                          {(() => {
+                            const km = kardexMap[producto.codigo];
+                            if (!km) return <span className="text-xs text-zinc-400">...</span>;
+                            return (
+                              <div className="flex gap-4">
+                                <div>
+                                  <div className="text-[10px] text-zinc-400">Mínimo</div>
+                                  <div className="font-semibold text-zinc-900 dark:text-zinc-100">{km.precio_minimo != null ? formatUSD(km.precio_minimo) : '—'}</div>
+                                </div>
+                                {km.precio_medio_status === 'ok' && km.precio_medio != null && (
+                                  <div>
+                                    <div className="text-[10px] text-zinc-400">Medio</div>
+                                    <div className="font-semibold text-zinc-900 dark:text-zinc-100">{formatUSD(km.precio_medio)}</div>
+                                  </div>
+                                )}
+                                <div>
+                                  <div className="text-[10px] text-zinc-400">Máximo</div>
+                                  <div className="font-semibold text-zinc-900 dark:text-zinc-100">{km.precio_maximo != null ? formatUSD(km.precio_maximo) : '—'}</div>
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </div>
+
+                        {/* COMPRÓ */}
+                        <div className="text-sm">
+                          <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-1">Compró</div>
+                          {(() => {
+                            const comprasArr = (producto.compras || []) as Array<{ fecha: string; precio: number }>;
+                            const uniqueByPrecio = Object.values(
+                              comprasArr.reduce((acc: Record<string, { fecha: string; precio: number }>, c) => {
+                                const key = String(c.precio);
+                                if (!acc[key] || new Date(c.fecha) > new Date(acc[key].fecha)) {
+                                  acc[key] = { fecha: c.fecha, precio: c.precio };
+                                }
+                                return acc;
+                              }, {})
+                            )
+                              .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
+                              .slice(0, 3);
+                            return uniqueByPrecio.map((c) => (
+                              <div key={c.precio} className="flex items-center justify-between">
+                                <span className="text-zinc-400">{format(new Date(c.fecha), 'dd MMM yyyy', { locale: es })}</span>
+                                <span className="font-semibold text-zinc-900 dark:text-zinc-100">{formatUSD(c.precio)}</span>
+                              </div>
+                            ));
+                          })()}
+                        </div>
+
+                        {/* COSTO */}
+                        {producto.costo != null && (
+                          <div className="text-sm flex items-center justify-between">
+                            <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium">Costo</div>
+                            <div className="font-semibold text-zinc-900 dark:text-zinc-100">{formatUSD(producto.costo)}</div>
+                          </div>
+                        )}
 
                         <div className="grid grid-cols-1 gap-2 text-sm">
                           <div className="flex items-start justify-between gap-3">

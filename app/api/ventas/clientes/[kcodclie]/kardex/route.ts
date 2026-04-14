@@ -22,6 +22,7 @@ type CompraRow = {
 type SaldoRow = {
   codigo: string;
   imagen_url: string | null;
+  costo: number | null;
   saldo_zofri: number | null;
   saldo_bodega: number | null;
   cantcaja: number | null;
@@ -88,7 +89,7 @@ export async function GET(request: Request, { params }: RouteContext) {
         SELECT
           i.codunico as codigo,
           i.descrip as detalle,
-          m.fechanvt as fecha,
+          m.fechanvt::text as fecha,
           m.knumfoli as nvta,
           i.cantsali as cantidad,
           i.precread as precio,
@@ -111,7 +112,7 @@ export async function GET(request: Request, { params }: RouteContext) {
         SELECT
           i.codunico as codigo,
           i.descrip as detalle,
-          m.fechanvt as fecha,
+          m.fechanvt::text as fecha,
           m.knumfoli as nvta,
           i.cantsali as cantidad,
           i.precread as precio,
@@ -147,6 +148,7 @@ export async function GET(request: Request, { params }: RouteContext) {
       SELECT
         codigo,
         MAX(imagen_url) as imagen_url,
+        MAX(costo) as costo,
         SUM(saldo) as saldo_zofri,
         MAX(cantcaja) as cantcaja
       FROM public.productos
@@ -170,6 +172,7 @@ export async function GET(request: Request, { params }: RouteContext) {
     const saldos = saldosZofri.map((r: any) => ({
       codigo: r.codigo,
       imagen_url: r.imagen_url,
+      costo: r.costo ? Number(r.costo) : null,
       saldo_zofri: Number(r.saldo_zofri ?? 0),
       saldo_bodega: saldosBodegaMap.get(r.codigo) ?? null,
       cantcaja: Number(r.cantcaja ?? 1),
@@ -216,6 +219,7 @@ export async function GET(request: Request, { params }: RouteContext) {
       return {
         ...producto,
         imagen_url: saldo?.imagen_url ?? null,
+        costo: saldo?.costo ?? null,
         saldo_zofri: saldo?.saldo_zofri ?? null,
         saldo_bodega: saldo?.saldo_bodega ?? null,
         cantcaja: saldo?.cantcaja ?? null,
