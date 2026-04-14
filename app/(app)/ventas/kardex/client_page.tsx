@@ -399,7 +399,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                       <div className="grid grid-cols-1 gap-3">
                         {/* MERCADO */}
                         <div className="text-sm">
-                          <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-1">Mercado</div>
+                          <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-1">Se ha vendido</div>
                           {(() => {
                             const km = kardexMap[producto.codigo];
                             if (!km) return <span className="text-xs text-zinc-400">...</span>;
@@ -428,24 +428,35 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                         <div className="text-sm">
                           <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-1">Compró</div>
                           {(() => {
-                            const comprasArr = (producto.compras || []) as Array<{ fecha: string; precio: number }>;
+                            const comprasArr = (producto.compras || []) as Array<{ fecha: string; precio: number; cantidad: number }>;
                             const uniqueByPrecio = Object.values(
-                              comprasArr.reduce((acc: Record<string, { fecha: string; precio: number }>, c) => {
+                              comprasArr.reduce((acc: Record<string, { fecha: string; precio: number; cantidad: number }>, c) => {
                                 const key = String(c.precio);
                                 if (!acc[key] || new Date(c.fecha) > new Date(acc[key].fecha)) {
-                                  acc[key] = { fecha: c.fecha, precio: c.precio };
+                                  acc[key] = { fecha: c.fecha, precio: c.precio, cantidad: Number(c.cantidad) };
                                 }
                                 return acc;
                               }, {})
                             )
                               .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
                               .slice(0, 3);
-                            return uniqueByPrecio.map((c) => (
-                              <div key={c.precio} className="flex items-center justify-between">
-                                <span className="text-zinc-400">{format(new Date(c.fecha), 'dd MMM yyyy', { locale: es })}</span>
-                                <span className="font-semibold text-zinc-900 dark:text-zinc-100">{formatUSD(c.precio)}</span>
-                              </div>
-                            ));
+                            return uniqueByPrecio.map((c) => {
+                              const cajas = producto.cantcaja && producto.cantcaja > 0
+                                ? Math.floor(c.cantidad / producto.cantcaja)
+                                : null;
+                              return (
+                                <div key={c.precio} className="flex items-center justify-between">
+                                  <span className="text-zinc-400">{format(new Date(c.fecha), 'dd MMM yyyy', { locale: es })}</span>
+                                  <div className="text-right">
+                                    <span className="font-semibold text-zinc-900 dark:text-zinc-100">{formatUSD(c.precio)}</span>
+                                    {cajas !== null
+                                      ? <span className="text-[11px] text-zinc-400 ml-1">({cajas} cajas)</span>
+                                      : <span className="text-[11px] text-zinc-400 ml-1">({c.cantidad} uds)</span>
+                                    }
+                                  </div>
+                                </div>
+                              );
+                            });
                           })()}
                         </div>
 
