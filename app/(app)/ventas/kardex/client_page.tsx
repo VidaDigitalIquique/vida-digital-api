@@ -40,13 +40,6 @@ type KardexProducto = {
   cantcaja?: number | null;
 };
 
-function toDateInputValue(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 function formatSaldo(unidades?: number | null, cantcaja?: number | null) {
   const unidadesValue = Number(unidades ?? 0);
   const cajas =
@@ -76,17 +69,6 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   const [productos, setProductos] = useState<KardexProducto[]>([]);
   const [loading, setLoading] = useState(false);
   const [clientPhotoError, setClientPhotoError] = useState(false);
-  const [hasSearchedKardex, setHasSearchedKardex] = useState(false);
-
-  const today = useMemo(() => new Date(), []);
-  const oneYearAgo = useMemo(() => {
-    const value = new Date();
-    value.setFullYear(value.getFullYear() - 1);
-    return value;
-  }, []);
-
-  const [desde, setDesde] = useState(toDateInputValue(oneYearAgo));
-  const [hasta, setHasta] = useState(toDateInputValue(today));
 
   const hasSearch = debouncedSearch.trim().length >= 2;
 
@@ -145,24 +127,21 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
     fetchClientes();
   }, [debouncedSearch]);
 
-  async function handleBuscarKardex() {
-    if (!selectedCliente) return;
+  async function handleBuscarKardex(cliente: ClienteBusqueda) {
+    if (!cliente) return;
 
     setLoading(true);
-    setHasSearchedKardex(true);
     try {
       const queryParams = new URLSearchParams({
         empresaSlug: 'vida',
-        desde,
-        hasta,
       });
       const res = await fetch(
-        `/api/ventas/clientes/${selectedCliente.kcodclie}/kardex?${queryParams.toString()}`
+        `/api/ventas/clientes/${cliente.kcodclie}/kardex?${queryParams.toString()}`
       );
 
       if (res.ok) {
-        const { cliente, productos: productosData } = await res.json();
-        setSelectedCliente(cliente || selectedCliente);
+        const { cliente: clienteData, productos: productosData } = await res.json();
+        setSelectedCliente(clienteData || cliente);
         setProductos(productosData || []);
       } else {
         setProductos([]);
@@ -177,14 +156,12 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
 
   function handleSelectCliente(cliente: ClienteBusqueda) {
     setSelectedCliente(cliente);
-    setProductos([]);
-    setHasSearchedKardex(false);
+    void handleBuscarKardex(cliente);
   }
 
   function handleVolver() {
     setSelectedCliente(null);
     setProductos([]);
-    setHasSearchedKardex(false);
   }
 
   return (
@@ -287,26 +264,6 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                     <p className="text-sm text-zinc-500">{selectedCliente.ciudad || 'Sin ciudad'}</p>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:min-w-[420px]">
-                  <div className="flex flex-col gap-1">
-                    <label htmlFor="desde" className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                      Desde
-                    </label>
-                    <Input id="desde" type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <label htmlFor="hasta" className="text-sm font-medium text-zinc-600 dark:text-zinc-300">
-                      Hasta
-                    </label>
-                    <Input id="hasta" type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
-                  </div>
-                  <div className="flex items-end">
-                    <Button type="button" className="w-full" onClick={handleBuscarKardex}>
-                      Buscar
-                    </Button>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -317,14 +274,9 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                 <div key={i} className="h-36 bg-zinc-200 dark:bg-zinc-800 rounded-xl"></div>
               ))}
             </div>
-          ) : !hasSearchedKardex ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-              <p className="text-zinc-500 font-medium">Selecciona el rango de fechas y busca el kardex</p>
-              <p className="text-zinc-400 text-sm">Se mostrarán los productos comprados por este cliente</p>
-            </div>
           ) : productos.length === 0 ? (
             <div className="text-center py-12 text-zinc-500">
-              No hay compras del cliente en el rango seleccionado.
+              No hay compras del cliente.
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-12">
