@@ -95,6 +95,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   const [productSearching, setProductSearching] = useState(false);
   const [drawerProduct, setDrawerProduct] = useState<Producto | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [filtroKardex, setFiltroKardex] = useState('');
 
   const hasSearch = debouncedSearch.trim().length >= 2;
 
@@ -228,11 +229,13 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   }
 
   function handleSelectCliente(cliente: ClienteBusqueda) {
+    setFiltroKardex('');
     setSelectedCliente(cliente);
     void handleBuscarKardex(cliente);
   }
 
   function handleVolver() {
+    setFiltroKardex('');
     setSelectedCliente(null);
     setProductos([]);
   }
@@ -267,6 +270,13 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
       if (fotoInputRef.current) fotoInputRef.current.value = '';
     }
   }
+
+  const productosFiltrados = filtroKardex.trim().length >= 1
+    ? productos.filter(p =>
+        p.codigo.toLowerCase().includes(filtroKardex.toLowerCase()) ||
+        (p.detalle || '').toLowerCase().includes(filtroKardex.toLowerCase())
+      )
+    : productos;
 
   return (
     <div className="flex flex-col gap-6 fade-in zoom-in-95 duration-200">
@@ -430,6 +440,21 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                         </div>
                       )}
                     </div>
+                    <div className="relative mt-2 max-w-xs">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                      <Input
+                        type="text"
+                        placeholder="Filtrar en kardex..."
+                        className="pl-9 h-9 text-sm"
+                        value={filtroKardex}
+                        onChange={e => setFiltroKardex(e.target.value)}
+                      />
+                      {filtroKardex && (
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">
+                          {productosFiltrados.length}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -442,13 +467,17 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                 <div key={i} className="h-36 bg-zinc-200 dark:bg-zinc-800 rounded-xl"></div>
               ))}
             </div>
+          ) : productosFiltrados.length === 0 && filtroKardex ? (
+            <div className="text-center py-12 text-zinc-500">
+              No se encontró "{filtroKardex}" en el kardex de este cliente.
+            </div>
           ) : productos.length === 0 ? (
             <div className="text-center py-12 text-zinc-500">
               No hay compras del cliente.
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-12">
-              {productos.map((producto) => {
+              {productosFiltrados.map((producto) => {
                 const empresaId = producto.empresa_id ?? vidaEmpresaId;
                 const empresaSlug = empresaSlugById(empresaId);
                 const empresaBadge =
