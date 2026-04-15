@@ -64,16 +64,9 @@ export async function GET(request: Request, { params }: { params: { slug: string
         BOOL_OR(p.es_nuevo) as es_nuevo
       FROM productos p
       WHERE (${cat.ambas_empresas} = true OR p.empresa_id = ${cat.empresa_id})
-        AND p.saldo > 0
+        AND (${soloStock} = false OR p.saldo > 0)
         AND (${cat.categoria} IS NULL OR p.categoria = ${cat.categoria})
         AND (${soloNuevo} = false OR p.es_nuevo = true)
-        AND EXISTS (
-          SELECT 1 FROM ubicaciones_bodega ub
-          WHERE ub.empresa_id = p.empresa_id
-            AND ub.codigo = p.codigo
-            AND ub.fisico IS NOT NULL
-            AND ub.diferencia >= 0
-        )
       GROUP BY p.codigo
       ORDER BY p.codigo ASC
     `;
