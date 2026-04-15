@@ -22,6 +22,7 @@ export interface Producto {
   detalle: string | null;
   imagen_url: string | null;
   es_nuevo: boolean;
+  categoria: string | null;
   fecha_ingreso: Date;
   updated_at: Date;
 }

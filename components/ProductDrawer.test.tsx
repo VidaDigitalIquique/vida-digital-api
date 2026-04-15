@@ -2,6 +2,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ProductDrawer } from './ProductDrawer';
 import { Producto, UserSession } from '@/types';
 
+global.fetch = jest.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(null) });
+
 const mockProducto: Producto = {
   id: 1,
   empresa_id: 1,
@@ -18,6 +20,7 @@ const mockProducto: Producto = {
   cubicaja: 1,
   nroingreso: '2024-001',
   es_nuevo: true,
+  categoria: null,
   imagen_url: 'http://test.com/image.png',
   fecha_ingreso: new Date(),
   updated_at: new Date()

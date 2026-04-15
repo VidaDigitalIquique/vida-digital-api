@@ -33,11 +33,14 @@ const EMPRESA_SLUG: Record<string, string> = {
   'IMPORT EXPORT VIDA DIGITAL LTDA.': 'vidadigital',
 };
 
+const CATEGORIAS = ['Ortopedia', 'Electrodomésticos', 'Deporte', 'Belleza', 'Médico', 'Vidrio', 'Juguetes'];
+
 export function ProductDrawer({ producto, empresaNombre, session, open, onOpenChange, onUpdated }: ProductDrawerProps) {
   const { shareImage } = useShareImage();
   const [isEditing, setIsEditing] = useState(false);
   const [prcVenta, setPrcVenta] = useState('');
   const [prcMinimo, setPrcMinimo] = useState('');
+  const [categoria, setCategoria] = useState(producto?.categoria ?? '');
   const [isSaving, setIsSaving] = useState(false);
   const [kardex, setKardex] = useState<{
     precio_minimo: number | null;
@@ -91,6 +94,7 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
     if (isOpen && producto) {
       setPrcVenta(producto.prcventa.toString());
       setPrcMinimo(producto.prcminimo.toString());
+      setCategoria(producto.categoria ?? '');
       setIsEditing(false);
     }
     setPreviewUrl(null);
@@ -186,6 +190,24 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
        toast.error('No se pudo actualizar el precio');
     } finally {
        setIsSaving(false);
+    }
+  };
+
+  const handleCategoriaChange = async (valor: string) => {
+    if (!producto) return;
+    setCategoria(valor);
+    try {
+      const res = await fetch(`/api/productos/${producto.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoria: valor || null }),
+      });
+      if (!res.ok) throw new Error('Error actualizando categoría');
+      const { data } = await res.json();
+      onUpdated(data);
+      toast.success('Categoría actualizada');
+    } catch {
+      toast.error('No se pudo actualizar la categoría');
     }
   };
 
@@ -366,24 +388,38 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
 
                    {selectedFile && (
                      <div className="flex gap-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-xs text-red-500 hover:text-red-700" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs text-red-500 hover:text-red-700"
                           onClick={() => { setSelectedFile(null); setPreviewUrl(null); }}
                         >
                           Limpiar
                         </Button>
-                        <Button 
-                          size="sm" 
-                          className="flex-1 font-bold bg-blue-600 hover:bg-blue-700 h-9" 
-                          onClick={handleUpload} 
+                        <Button
+                          size="sm"
+                          className="flex-1 font-bold bg-blue-600 hover:bg-blue-700 h-9"
+                          onClick={handleUpload}
                           disabled={isUploading}
                         >
                           {isUploading ? 'Subiendo...' : 'SUBIR IMAGEN'}
                         </Button>
                      </div>
                    )}
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-zinc-500 uppercase tracking-wider">Categoría</Label>
+                  <select
+                    value={categoria}
+                    onChange={e => handleCategoriaChange(e.target.value)}
+                    className="w-full h-9 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900"
+                  >
+                    <option value="">Sin categoría</option>
+                    {CATEGORIAS.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
                 </div>
              </div>
           )}

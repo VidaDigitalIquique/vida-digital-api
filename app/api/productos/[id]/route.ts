@@ -3,6 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
 
+const CATEGORIAS_VALIDAS = ['Ortopedia', 'Electrodomésticos', 'Deporte', 'Belleza', 'Médico', 'Vidrio', 'Juguetes'];
+
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -11,7 +13,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
 
   try {
     const body = await request.json();
-    const { prcventa, prcminimo, imagen_url, es_nuevo } = body;
+    const { prcventa, prcminimo, imagen_url, es_nuevo, categoria } = body;
     const pid = parseInt(params.id, 10);
 
     // Must be admin or supervisor to edit prices.
@@ -24,6 +26,17 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     const isImageOrNuevoEdit = imagen_url !== undefined || es_nuevo !== undefined;
     if (isImageOrNuevoEdit && user.rol !== 'admin') {
       return NextResponse.json({ error: "Permisos insuficientes para modificar producto" }, { status: 403 });
+    }
+
+    // Must be admin or supervisor to edit categoria
+    const isCategoriaEdit = categoria !== undefined;
+    if (isCategoriaEdit && !['admin', 'supervisor'].includes(user.rol)) {
+      return NextResponse.json({ error: "Permisos insuficientes para editar categoría" }, { status: 403 });
+    }
+
+    // Validate categoria value before hitting the DB
+    if (categoria !== undefined && categoria !== null && !CATEGORIAS_VALIDAS.includes(categoria)) {
+      return NextResponse.json({ error: "Categoría no válida" }, { status: 400 });
     }
 
     // Fetch existing product to verify enterprise access
@@ -52,6 +65,8 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       updated = await sql`UPDATE productos SET imagen_url = ${imagen_url}, updated_at = NOW() WHERE id = ${pid} RETURNING *`;
     } else if (es_nuevo !== undefined) {
       updated = await sql`UPDATE productos SET es_nuevo = ${es_nuevo}, updated_at = NOW() WHERE id = ${pid} RETURNING *`;
+    } else if (categoria !== undefined) {
+      updated = await sql`UPDATE productos SET categoria = ${categoria}, updated_at = NOW() WHERE id = ${pid} RETURNING *`;
     } else {
       return NextResponse.json({ message: "Nada que actualizar" });
     }
