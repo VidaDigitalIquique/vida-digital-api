@@ -19,6 +19,7 @@ const mockProduct: Producto = {
   detalle: 'Test Product',
   imagen_url: null,
   es_nuevo: false,
+  categoria: null,
   fecha_ingreso: new Date(),
   updated_at: new Date(),
 };

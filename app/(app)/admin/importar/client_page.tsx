@@ -6,11 +6,12 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
-import { UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2 } from 'lucide-react';
+import { UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2, Sparkles } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { parseImportWorkbook } from './parser';
+import { useSession } from 'next-auth/react';
 
 export function ImportarClient({ 
   lastSyncSanjh, 
@@ -20,6 +21,9 @@ export function ImportarClient({
   lastSyncVida: Date | null; 
 }) {
   const router = useRouter();
+  const { data: sessionData } = useSession();
+  const isAdmin = (sessionData?.user as any)?.rol === 'admin';
+
   const [empresaNombre, setEmpresaNombre] = useState<string | null>(null);
   const [parsedData, setParsedData] = useState<any[]>([]);
   const [importProgress, setImportProgress] = useState<number | null>(null);
@@ -28,6 +32,43 @@ export function ImportarClient({
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncResult, setSyncResult] = useState<{ sanjh: number; vida: number } | null>(null);
   const [stats, setStats] = useState({ total: 0, valid: 0, error: 0 });
+  const [isCategorizing, setIsCategorizing] = useState(false);
+  const [categorizandoProgreso, setCategorizandoProgreso] = useState<{ procesados: number; total: number; categorizados: number } | null>(null);
+  const [categorizandoFin, setCategorizandoFin] = useState<{ procesados: number; categorizados: number; errores: number } | null>(null);
+
+  const handleCategorizar = () => {
+    setIsCategorizing(true);
+    setCategorizandoProgreso(null);
+    setCategorizandoFin(null);
+
+    const es = new EventSource('/api/admin/categorizar-productos');
+
+    es.onmessage = (event) => {
+      if (event.data === '[DONE]') {
+        es.close();
+        setIsCategorizing(false);
+        return;
+      }
+      try {
+        const parsed = JSON.parse(event.data);
+        if (parsed.tipo === 'progreso') {
+          setCategorizandoProgreso({ procesados: parsed.procesados, total: parsed.total, categorizados: parsed.categorizados });
+        } else if (parsed.tipo === 'fin') {
+          setCategorizandoFin({ procesados: parsed.procesados, categorizados: parsed.categorizados, errores: parsed.errores });
+          setIsCategorizing(false);
+          es.close();
+        }
+      } catch {
+        // ignorar líneas no parseables
+      }
+    };
+
+    es.onerror = () => {
+      es.close();
+      setIsCategorizing(false);
+      toast.error('Error al conectar con el servicio de categorización');
+    };
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -181,13 +222,27 @@ export function ImportarClient({
                     Actualiza precios y stock directamente desde los DBFs de WinFac vía Neon. Corre automáticamente todos los días a las 10:30 AM.
                   </p>
                 </div>
-                <Button
-                  onClick={handleSyncWinfac}
-                  disabled={isSyncing}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
-                >
-                  {isSyncing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sincronizando...</> : 'Sincronizar ahora'}
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+                  <Button
+                    onClick={handleSyncWinfac}
+                    disabled={isSyncing}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    {isSyncing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Sincronizando...</> : 'Sincronizar ahora'}
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      onClick={handleCategorizar}
+                      disabled={isCategorizing}
+                      variant="outline"
+                      className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                    >
+                      {isCategorizing
+                        ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Categorizando...</>
+                        : <><Sparkles className="w-4 h-4 mr-2" /> Categorizar con IA</>}
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -212,6 +267,26 @@ export function ImportarClient({
                   )}
                 </div>
               </div>
+
+              {isCategorizing && categorizandoProgreso && (
+                <div className="space-y-1.5">
+                  <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                    Procesando {categorizandoProgreso.procesados} de {categorizandoProgreso.total} productos...
+                  </p>
+                  <div className="w-full bg-emerald-100 dark:bg-emerald-900/30 rounded-full h-2 overflow-hidden">
+                    <div
+                      className="h-2 bg-emerald-500 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.round((categorizandoProgreso.procesados / categorizandoProgreso.total) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {categorizandoFin && (
+                <p className={`text-sm font-medium ${categorizandoFin.errores === 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'}`}>
+                  {categorizandoFin.errores === 0 ? '✅' : '⚠️'} Completado: {categorizandoFin.categorizados} categorizados, {categorizandoFin.errores} errores de {categorizandoFin.procesados} productos
+                </p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3 my-2">
