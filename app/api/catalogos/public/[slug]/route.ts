@@ -65,6 +65,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
       FROM productos p
       WHERE (${cat.ambas_empresas} = true OR p.empresa_id = ${cat.empresa_id})
         AND p.saldo > 0
+        AND (${cat.categoria} IS NULL OR p.categoria = ${cat.categoria})
         AND (${soloNuevo} = false OR p.es_nuevo = true)
         AND EXISTS (
           SELECT 1 FROM ubicaciones_bodega ub

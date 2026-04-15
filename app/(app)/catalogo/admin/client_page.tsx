@@ -32,6 +32,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
   const [newMargen, setNewMargen] = useState(0);
   const [newPalabrasIncluir, setNewPalabrasIncluir] = useState('');
   const [newPalabrasExcluir, setNewPalabrasExcluir] = useState('');
+  const [newCategoria, setNewCategoria] = useState('');
 
   const fetchCatalogos = async () => {
     if (!activeEmpresaId || activeEmpresaId === 0) {
@@ -92,6 +93,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
           solo_nuevo: newSoloNuevo,
           palabras_incluir: newPalabrasIncluir,
           palabras_excluir: newPalabrasExcluir,
+          categoria: newCategoria || null,
         }),
       });
       if (res.ok) {
@@ -106,6 +108,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
         setNewMargen(0);
         setNewPalabrasIncluir('');
         setNewPalabrasExcluir('');
+        setNewCategoria('');
         fetchCatalogos();
       } else throw new Error();
     } catch {
@@ -293,6 +296,24 @@ export function CatalogoAdminClient({ session }: { session: any }) {
               <label className="text-sm font-medium">Título Comercial</label>
               <Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Ej: Ofertas Mayo 2026" />
             </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Categoría (Opcional)</label>
+              <select
+                value={newCategoria}
+                onChange={e => setNewCategoria(e.target.value)}
+                className="w-full h-9 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900"
+              >
+                <option value="">Sin filtro de categoría</option>
+                <option value="Ortopedia">Ortopedia</option>
+                <option value="Electrodomésticos">Electrodomésticos</option>
+                <option value="Deporte">Deporte</option>
+                <option value="Belleza">Belleza</option>
+                <option value="Médico">Médico</option>
+                <option value="Vidrio">Vidrio</option>
+                <option value="Juguetes">Juguetes</option>
+              </select>
+            </div>
+
             <div className="space-y-2">
               <label className="text-sm font-medium">Descripción (Opcional)</label>
               <Input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Breve mensaje para el cliente" />
