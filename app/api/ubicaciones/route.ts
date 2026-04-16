@@ -61,8 +61,7 @@ export async function GET(request: Request) {
       LEFT JOIN productos p ON u.codigo = p.codigo
         AND u.empresa_id = p.empresa_id
         AND u.nroingreso = p.nroingreso
-      WHERE u.empresa_id = ${eid}
-        AND (
+      WHERE (
           ${search} = ''
           OR LOWER(u.codigo) LIKE ${searchPattern}
           OR LOWER(u.ubicacion) LIKE ${searchPattern}
