@@ -77,6 +77,12 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
   }, []);
 
   useEffect(() => {
+    if (producto) {
+      setCategoria(producto.categoria ?? '');
+    }
+  }, [producto]);
+
+  useEffect(() => {
     if (skipNextSync.current) {
       skipNextSync.current = false;
       return;
