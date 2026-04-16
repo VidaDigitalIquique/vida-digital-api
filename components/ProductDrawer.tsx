@@ -33,7 +33,6 @@ const EMPRESA_SLUG: Record<string, string> = {
   'IMPORT EXPORT VIDA DIGITAL LTDA.': 'vidadigital',
 };
 
-const CATEGORIAS = ['Ortopedia', 'Electrodomésticos', 'Deporte', 'Belleza', 'Médico', 'Vidrio', 'Juguetes'];
 
 export function ProductDrawer({ producto, empresaNombre, session, open, onOpenChange, onUpdated }: ProductDrawerProps) {
   const { shareImage } = useShareImage();
@@ -41,6 +40,7 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
   const [prcVenta, setPrcVenta] = useState('');
   const [prcMinimo, setPrcMinimo] = useState('');
   const [categoria, setCategoria] = useState(producto?.categoria ?? '');
+  const [categoriasDisponibles, setCategoriasDisponibles] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [kardex, setKardex] = useState<{
     precio_minimo: number | null;
@@ -64,6 +64,17 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
 
   const canEditPrices = ['admin', 'supervisor'].includes(session.rol);
   const isAdmin = session.rol === 'admin';
+
+  useEffect(() => {
+    fetch('/api/categorias')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCategoriasDisponibles(data.map((c: any) => c.nombre));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (skipNextSync.current) {
@@ -416,7 +427,7 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
                     className="w-full h-9 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900"
                   >
                     <option value="">Sin categoría</option>
-                    {CATEGORIAS.map(cat => (
+                    {categoriasDisponibles.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>

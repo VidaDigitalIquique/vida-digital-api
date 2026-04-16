@@ -33,6 +33,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
   const [newPalabrasIncluir, setNewPalabrasIncluir] = useState('');
   const [newPalabrasExcluir, setNewPalabrasExcluir] = useState('');
   const [newCategoria, setNewCategoria] = useState('');
+  const [categoriasDisponibles, setCategoriasDisponibles] = useState<string[]>([]);
 
   const fetchCatalogos = async () => {
     if (!activeEmpresaId || activeEmpresaId === 0) {
@@ -52,6 +53,17 @@ export function CatalogoAdminClient({ session }: { session: any }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetch('/api/categorias')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setCategoriasDisponibles(data.map((c: any) => c.nombre));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!isLoaded || !activeEmpresaId || activeEmpresaId === 0) return;
@@ -304,13 +316,9 @@ export function CatalogoAdminClient({ session }: { session: any }) {
                 className="w-full h-9 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900"
               >
                 <option value="">Sin filtro de categoría</option>
-                <option value="Ortopedia">Ortopedia</option>
-                <option value="Electrodomésticos">Electrodomésticos</option>
-                <option value="Deporte">Deporte</option>
-                <option value="Belleza">Belleza</option>
-                <option value="Médico">Médico</option>
-                <option value="Vidrio">Vidrio</option>
-                <option value="Juguetes">Juguetes</option>
+                {categoriasDisponibles.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
               </select>
             </div>
 
