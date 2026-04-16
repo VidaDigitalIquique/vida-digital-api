@@ -289,16 +289,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
       {!selectedCliente ? (
         <>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold tracking-tight">Kardex Cliente</h1>
-              <button
-                onClick={() => setOcultarPrecios(v => !v)}
-                className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                title={ocultarPrecios ? 'Mostrar precios' : 'Ocultar precios'}
-              >
-                {ocultarPrecios ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
+            <h1 className="text-3xl font-extrabold tracking-tight">Kardex Cliente</h1>
           </div>
 
           <div className="sticky top-16 md:top-20 z-40 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-xl py-2 -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -403,7 +394,16 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-extrabold tracking-tight">{selectedCliente.nombress}</h1>
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-3xl font-extrabold tracking-tight">{selectedCliente.nombress}</h1>
+                      <button
+                        onClick={() => setOcultarPrecios(v => !v)}
+                        className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                        title={ocultarPrecios ? 'Mostrar precios' : 'Ocultar precios'}
+                      >
+                        {ocultarPrecios ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      </button>
+                    </div>
                     <div className="flex items-center gap-2 mt-1">
                       <label className="flex items-center gap-2 text-sm cursor-pointer">
                         <input
