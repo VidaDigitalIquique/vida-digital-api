@@ -50,27 +50,46 @@ export async function GET(request: Request, { params }: { params: { slug: string
       ? cat.palabras_excluir.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean)
       : [];
 
-    // Query products with physical availability filter (OBLIGATORIO)
-    const rows = await sql`
-      SELECT
-        p.codigo,
-        MAX(p.id) as id,
-        MAX(p.detalle) as detalle,
-        MAX(p.imagen_url) as imagen_url,
-        MAX(p.cantcaja) as cantcaja,
-        MAX(p.umed) as umed,
-        MAX(p.costo) as costo,
-        SUM(p.saldo) as saldo,
-        BOOL_OR(p.es_nuevo) as es_nuevo
-      FROM productos p
-      WHERE (${cat.ambas_empresas} = true OR p.empresa_id = ${cat.empresa_id})
-        AND (${soloStock} = false OR p.saldo > 0)
-        AND (${cat.categoria} IS NULL OR p.categoria = ${cat.categoria})
-        AND (${soloNuevo} = false OR p.es_nuevo = true)
-      GROUP BY p.codigo
-      ORDER BY p.codigo ASC
-    `;
-    console.log('DEBUG rows count:', rows.length, 'empresa_id:', cat.empresa_id);
+    const categoriaFilter = cat.categoria;
+
+    const rows = categoriaFilter
+      ? await sql`
+          SELECT
+            p.codigo,
+            MAX(p.id) as id,
+            MAX(p.detalle) as detalle,
+            MAX(p.imagen_url) as imagen_url,
+            MAX(p.cantcaja) as cantcaja,
+            MAX(p.umed) as umed,
+            MAX(p.costo) as costo,
+            SUM(p.saldo) as saldo,
+            BOOL_OR(p.es_nuevo) as es_nuevo
+          FROM productos p
+          WHERE (${cat.ambas_empresas} = true OR p.empresa_id = ${cat.empresa_id})
+            AND (${soloStock} = false OR p.saldo > 0)
+            AND (${soloNuevo} = false OR p.es_nuevo = true)
+            AND p.categoria = ${categoriaFilter}
+          GROUP BY p.codigo
+          ORDER BY p.codigo ASC
+        `
+      : await sql`
+          SELECT
+            p.codigo,
+            MAX(p.id) as id,
+            MAX(p.detalle) as detalle,
+            MAX(p.imagen_url) as imagen_url,
+            MAX(p.cantcaja) as cantcaja,
+            MAX(p.umed) as umed,
+            MAX(p.costo) as costo,
+            SUM(p.saldo) as saldo,
+            BOOL_OR(p.es_nuevo) as es_nuevo
+          FROM productos p
+          WHERE (${cat.ambas_empresas} = true OR p.empresa_id = ${cat.empresa_id})
+            AND (${soloStock} = false OR p.saldo > 0)
+            AND (${soloNuevo} = false OR p.es_nuevo = true)
+          GROUP BY p.codigo
+          ORDER BY p.codigo ASC
+        `;
 
     // Apply keyword filters in JS (simpler than complex SQL)
     let productos = filterProducts(rows as CatalogoProducto[], codigosIncluir, keywordsIncluir, excluir);
