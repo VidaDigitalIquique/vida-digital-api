@@ -183,6 +183,7 @@ export function CategoriasClient({
   const [hasMore, setHasMore] = useState(false);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [sinCategoria, setSinCategoria] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeProduct, setActiveProduct] = useState<Producto | null>(null);
   const [panelWidth, setPanelWidth] = useState(420);
@@ -220,11 +221,12 @@ export function CategoriasClient({
   // ---------------------------------------------------------------------------
   // Fetch productos
   // ---------------------------------------------------------------------------
-  const fetchProductos = useCallback(async (searchVal: string, offsetVal: number, append: boolean) => {
+  const fetchProductos = useCallback(async (searchVal: string, offsetVal: number, append: boolean, sinCat: boolean) => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({ limit: '50', offset: String(offsetVal) });
       if (searchVal) params.set('search', searchVal);
+      if (sinCat) params.set('sinCategoria', 'true');
       const res = await fetch(`/api/admin/productos-lista?${params}`);
       const json = await res.json();
       setProductos(prev => append ? [...prev, ...json.productos] : json.productos);
@@ -238,13 +240,13 @@ export function CategoriasClient({
 
   // Initial load
   useEffect(() => {
-    fetchProductos('', 0, false);
+    fetchProductos('', 0, false, false);
   }, [fetchProductos]);
 
-  // On search change
+  // On search or sinCategoria change
   useEffect(() => {
-    fetchProductos(debouncedSearch, 0, false);
-  }, [debouncedSearch, fetchProductos]);
+    fetchProductos(debouncedSearch, 0, false, sinCategoria);
+  }, [debouncedSearch, sinCategoria, fetchProductos]);
 
   // ---------------------------------------------------------------------------
   // Intersection observer — infinite scroll sentinel
@@ -254,7 +256,7 @@ export function CategoriasClient({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoading) {
-          fetchProductos(debouncedSearch, offset, true);
+          fetchProductos(debouncedSearch, offset, true, sinCategoria);
         }
       },
       { threshold: 0.1 }
@@ -311,7 +313,9 @@ export function CategoriasClient({
 
     // Optimistic update
     setProductos(prev =>
-      prev.map(p => p.id === activeProduct.id ? { ...p, categoria: nombre } : p)
+      sinCategoria
+        ? prev.filter(p => p.id !== activeProduct.id)
+        : prev.map(p => p.id === activeProduct.id ? { ...p, categoria: nombre } : p)
     );
     setCategorias(prev =>
       prev.map(c => {
@@ -332,7 +336,9 @@ export function CategoriasClient({
     } catch {
       // Revert on error
       setProductos(prev =>
-        prev.map(p => p.id === activeProduct.id ? { ...p, categoria: prevCategoria } : p)
+        sinCategoria
+          ? [...prev, { ...activeProduct, categoria: prevCategoria }]
+          : prev.map(p => p.id === activeProduct.id ? { ...p, categoria: prevCategoria } : p)
       );
       setCategorias(prev =>
         prev.map(c => {
@@ -426,6 +432,15 @@ export function CategoriasClient({
                 </button>
               )}
             </div>
+            <label className="flex items-center gap-2 text-sm text-zinc-500 cursor-pointer mt-2">
+              <input
+                type="checkbox"
+                checked={sinCategoria}
+                onChange={e => setSinCategoria(e.target.checked)}
+                className="w-4 h-4 rounded border-zinc-300"
+              />
+              Solo sin categoría
+            </label>
           </div>
 
           {/* Product list */}
