@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Box, Menu, ImageIcon, Camera, Users } from 'lucide-react';
+import { Home, Box, Menu, ImageIcon, Camera, Users, Heart } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { signOut, useSession } from 'next-auth/react';
 import { Button } from './ui/button';
@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { name: 'Kardex', href: '/ventas/kardex', icon: Users },
   { name: 'Bodega', href: '/bodega', icon: Box },
   { name: 'Despachos', href: '/bodega/despachos', icon: Camera },
+  { name: 'Deseados', href: '/deseados', icon: Heart },
 ];
 
 export function BottomNav() {
@@ -22,8 +23,8 @@ export function BottomNav() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const RUTAS_POR_ROL: Record<string, string[]> = {
-    admin: ['/precios', '/ventas', '/bodega'],
-    vendedor: ['/precios', '/ventas', '/catalogo'],
+    admin: ['/precios', '/ventas', '/bodega', '/deseados'],
+    vendedor: ['/precios', '/ventas', '/catalogo', '/deseados'],
     bodeguero: ['/bodega', '/bodega/despachos'],
   };
 

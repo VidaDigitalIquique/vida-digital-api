@@ -23,7 +23,8 @@ import {
   LayoutList,
   Filter,
   Camera,
-  Tag
+  Tag,
+  Heart
 } from 'lucide-react';
 
 const NAV_LINKS = [
@@ -31,6 +32,7 @@ const NAV_LINKS = [
   { name: 'Bodega', href: '/bodega', icon: Box },
   { name: 'Despachos', href: '/bodega/despachos', icon: Camera },
   { name: 'Catálogos', href: '/catalogo/admin', icon: LayoutList },
+  { name: 'Deseados', href: '/deseados', icon: Heart },
 ];
 
 export function TopNav() {
@@ -40,8 +42,8 @@ export function TopNav() {
   const rol = (session?.user as any)?.rol as string;
 
   const RUTAS_POR_ROL: Record<string, string[]> = {
-    admin: ['/dashboard', '/precios', '/ventas', '/bodega', '/catalogo'],
-    vendedor: ['/precios', '/ventas', '/catalogo'],
+    admin: ['/dashboard', '/precios', '/ventas', '/bodega', '/catalogo', '/deseados'],
+    vendedor: ['/precios', '/ventas', '/catalogo', '/deseados'],
     bodeguero: ['/bodega'],
   };
 

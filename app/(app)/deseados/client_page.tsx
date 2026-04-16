@@ -1,0 +1,695 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { toast } from 'sonner';
+import { PlusCircle, CheckCircle, X, Trash2, Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+
+type Tab = 'pendiente' | 'avisado' | 'descartado';
+
+interface Deseado {
+  id: number;
+  cliente_winfac_id: string | null;
+  cliente_deseado_id: number | null;
+  codigo: string | null;
+  descripcion: string;
+  nota: string | null;
+  estado: Tab;
+  alerta_activa: boolean;
+  created_at: string;
+  cliente_nombre: string | null;
+  cliente_deseado_nombre: string | null;
+  cliente_deseado_whatsapp: string | null;
+  cliente_deseado_ciudad: string | null;
+  cliente_ciudad: string | null;
+}
+
+interface ClienteWinfac {
+  kcodclie: string;
+  nombress: string;
+  ciudad?: string | null;
+  celular?: string | null;
+}
+
+interface ProductoResult {
+  id: number;
+  codigo: string;
+  detalle: string;
+}
+
+export function DeseadosClient({ session }: { session: any }) {
+  const isAdmin = session?.rol === 'admin';
+
+  // --- Lista principal ---
+  const [tab, setTab] = useState<Tab>('pendiente');
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [deseados, setDeseados] = useState<Deseado[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // --- Modal ---
+  const [modalOpen, setModalOpen] = useState(false);
+  const [pasoModal, setPasoModal] = useState<'cliente' | 'producto'>('cliente');
+  const [tipoCliente, setTipoCliente] = useState<'winfac' | 'nuevo'>('winfac');
+  const [tipoProducto, setTipoProducto] = useState<'codigo' | 'libre'>('codigo');
+
+  const [clienteWinfacSearch, setClienteWinfacSearch] = useState('');
+  const [clienteWinfacResultados, setClienteWinfacResultados] = useState<ClienteWinfac[]>([]);
+  const [clienteWinfacLoading, setClienteWinfacLoading] = useState(false);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState<{
+    id: string;
+    nombre: string;
+    tipo: 'winfac' | 'nuevo';
+  } | null>(null);
+
+  const [nuevoClienteForm, setNuevoClienteForm] = useState({
+    nombre: '',
+    pais: '',
+    ciudad: '',
+    whatsapp: '',
+  });
+
+  const [productoSearch, setProductoSearch] = useState('');
+  const [productoResultados, setProductoResultados] = useState<ProductoResult[]>([]);
+  const [productoLoading, setProductoLoading] = useState(false);
+  const [productoSeleccionado, setProductoSeleccionado] = useState<{
+    codigo: string;
+    descripcion: string;
+  } | null>(null);
+
+  const [descripcionLibre, setDescripcionLibre] = useState('');
+  const [nota, setNota] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  // --- Debounce búsqueda principal ---
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 400);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  // --- Fetch deseados ---
+  useEffect(() => {
+    async function fetchDeseados() {
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({ estado: tab });
+        if (debouncedSearch.trim().length >= 2) params.set('search', debouncedSearch.trim());
+        const res = await fetch(`/api/deseados?${params.toString()}`);
+        if (res.ok) {
+          const { data } = await res.json();
+          setDeseados(data || []);
+        }
+      } catch {
+        toast.error('Error cargando deseados');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDeseados();
+  }, [tab, debouncedSearch]);
+
+  // --- Debounce búsqueda cliente WinFac ---
+  useEffect(() => {
+    if (clienteWinfacSearch.trim().length < 2) {
+      setClienteWinfacResultados([]);
+      return;
+    }
+    const t = setTimeout(async () => {
+      setClienteWinfacLoading(true);
+      try {
+        const res = await fetch(
+          `/api/ventas/clientes?q=${encodeURIComponent(clienteWinfacSearch.trim())}&empresaSlug=vida`
+        );
+        if (res.ok) {
+          const { data } = await res.json();
+          setClienteWinfacResultados(data || []);
+        }
+      } catch {
+        // silencioso
+      } finally {
+        setClienteWinfacLoading(false);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [clienteWinfacSearch]);
+
+  // --- Debounce búsqueda producto ---
+  useEffect(() => {
+    if (productoSearch.trim().length < 2) {
+      setProductoResultados([]);
+      return;
+    }
+    const t = setTimeout(async () => {
+      setProductoLoading(true);
+      try {
+        const res = await fetch(
+          `/api/productos?search=${encodeURIComponent(productoSearch.trim())}`
+        );
+        if (res.ok) {
+          const { data } = await res.json();
+          setProductoResultados(data || []);
+        }
+      } catch {
+        // silencioso
+      } finally {
+        setProductoLoading(false);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [productoSearch]);
+
+  // --- Reset modal ---
+  const resetModal = () => {
+    setPasoModal('cliente');
+    setTipoCliente('winfac');
+    setTipoProducto('codigo');
+    setClienteWinfacSearch('');
+    setClienteWinfacResultados([]);
+    setClienteSeleccionado(null);
+    setNuevoClienteForm({ nombre: '', pais: '', ciudad: '', whatsapp: '' });
+    setProductoSearch('');
+    setProductoResultados([]);
+    setProductoSeleccionado(null);
+    setDescripcionLibre('');
+    setNota('');
+  };
+
+  const handleOpenModal = () => {
+    resetModal();
+    setModalOpen(true);
+  };
+
+  // --- Validación paso 1 ---
+  const paso1Valido =
+    tipoCliente === 'winfac'
+      ? clienteSeleccionado !== null
+      : nuevoClienteForm.nombre.trim().length > 0;
+
+  // --- Validación paso 2 ---
+  const paso2Valido =
+    tipoProducto === 'codigo'
+      ? productoSeleccionado !== null
+      : descripcionLibre.trim().length > 0;
+
+  // --- Crear deseo ---
+  const handleCrearDeseo = async () => {
+    if (!paso2Valido) return;
+    setSaving(true);
+    try {
+      let cliente_deseado_id: number | undefined;
+      let cliente_winfac_id: string | undefined;
+
+      if (tipoCliente === 'nuevo') {
+        const resCliente = await fetch('/api/clientes-deseados', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre: nuevoClienteForm.nombre.trim(),
+            pais: nuevoClienteForm.pais.trim() || undefined,
+            ciudad: nuevoClienteForm.ciudad.trim() || undefined,
+            whatsapp: nuevoClienteForm.whatsapp.trim() || undefined,
+          }),
+        });
+        if (!resCliente.ok) {
+          const err = await resCliente.json();
+          throw new Error(err.error || 'Error creando cliente');
+        }
+        const { data: clienteCreado } = await resCliente.json();
+        cliente_deseado_id = clienteCreado.id;
+      } else {
+        cliente_winfac_id = clienteSeleccionado?.id;
+      }
+
+      const resDeseado = await fetch('/api/deseados', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cliente_winfac_id,
+          cliente_deseado_id,
+          codigo: tipoProducto === 'codigo' ? productoSeleccionado?.codigo : undefined,
+          descripcion:
+            tipoProducto === 'codigo'
+              ? productoSeleccionado!.descripcion
+              : descripcionLibre.trim(),
+          nota: nota.trim() || undefined,
+        }),
+      });
+
+      if (!resDeseado.ok) {
+        const err = await resDeseado.json();
+        throw new Error(err.error || 'Error guardando deseo');
+      }
+
+      toast.success('Deseo registrado');
+      setModalOpen(false);
+      resetModal();
+      // Refetch
+      const params = new URLSearchParams({ estado: tab });
+      if (debouncedSearch.trim().length >= 2) params.set('search', debouncedSearch.trim());
+      const res = await fetch(`/api/deseados?${params.toString()}`);
+      if (res.ok) {
+        const { data } = await res.json();
+        setDeseados(data || []);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Error guardando');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --- Acciones ---
+  const handleAvisar = async (id: number) => {
+    setDeseados(prev =>
+      prev.map(d => (d.id === id ? { ...d, estado: 'avisado', alerta_activa: false } : d))
+    );
+    try {
+      await fetch(`/api/deseados/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'avisado' }),
+      });
+      toast.success('Marcado como avisado');
+      setDeseados(prev => prev.filter(d => d.id !== id));
+    } catch {
+      toast.error('Error al avisar');
+    }
+  };
+
+  const handleDescartar = async (id: number) => {
+    setDeseados(prev =>
+      prev.map(d => (d.id === id ? { ...d, estado: 'descartado' } : d))
+    );
+    try {
+      await fetch(`/api/deseados/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'descartado' }),
+      });
+      toast.success('Descartado');
+      setDeseados(prev => prev.filter(d => d.id !== id));
+    } catch {
+      toast.error('Error al descartar');
+    }
+  };
+
+  const handleEliminar = async (id: number) => {
+    if (!confirm('¿Eliminar este registro?')) return;
+    try {
+      await fetch(`/api/deseados/${id}`, { method: 'DELETE' });
+      toast.success('Eliminado');
+      setDeseados(prev => prev.filter(d => d.id !== id));
+    } catch {
+      toast.error('Error al eliminar');
+    }
+  };
+
+  const TABS: { key: Tab; label: string }[] = [
+    { key: 'pendiente', label: 'Pendientes' },
+    { key: 'avisado', label: 'Avisados' },
+    { key: 'descartado', label: 'Descartados' },
+  ];
+
+  return (
+    <div className="flex flex-col gap-6 fade-in zoom-in-95 duration-200">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h1 className="text-3xl font-extrabold tracking-tight">Productos Deseados</h1>
+        <Button onClick={handleOpenModal} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md w-fit">
+          <PlusCircle className="w-5 h-5 mr-2" />
+          Nuevo deseo
+        </Button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-800">
+        {TABS.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`pb-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+              tab === t.key
+                ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Buscador */}
+      <div className="relative">
+        <Input
+          placeholder="Buscar por descripción, código o cliente..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="h-10"
+        />
+      </div>
+
+      {/* Lista */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-40 bg-zinc-200 dark:bg-zinc-800 rounded-xl" />
+          ))}
+        </div>
+      ) : deseados.length === 0 ? (
+        <div className="text-center py-16 text-zinc-400">
+          No hay productos deseados en esta categoría.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
+          {deseados.map(d => {
+            const clienteNombre = d.cliente_nombre || d.cliente_deseado_nombre || 'Cliente desconocido';
+            const ciudad = d.cliente_ciudad || d.cliente_deseado_ciudad;
+            const whatsapp = d.cliente_deseado_whatsapp;
+            return (
+              <div
+                key={d.id}
+                className="bg-white dark:bg-zinc-900 border border-border rounded-xl p-4 shadow-sm flex flex-col gap-3"
+              >
+                {/* Badge alerta */}
+                {d.alerta_activa && (
+                  <div className="flex items-center gap-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-semibold px-2.5 py-1 rounded-full w-fit animate-pulse">
+                    <Bell className="w-3.5 h-3.5" />
+                    ¡Llegó!
+                  </div>
+                )}
+
+                {/* Cliente */}
+                <div>
+                  <p className="font-semibold text-base leading-tight">{clienteNombre}</p>
+                  {(ciudad || whatsapp) && (
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      {[ciudad, whatsapp].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
+                </div>
+
+                {/* Producto */}
+                <div className="flex flex-col gap-1">
+                  {d.codigo && (
+                    <span className="font-mono text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded w-fit">
+                      {d.codigo}
+                    </span>
+                  )}
+                  <p className="text-sm font-medium leading-snug">{d.descripcion}</p>
+                  {d.nota && (
+                    <p className="text-xs text-zinc-400 italic">{d.nota}</p>
+                  )}
+                </div>
+
+                {/* Fecha */}
+                <p className="text-xs text-zinc-400">
+                  {format(new Date(d.created_at), "dd MMM yyyy", { locale: es })}
+                </p>
+
+                {/* Acciones */}
+                <div className="flex gap-2 mt-auto border-t pt-3">
+                  {tab === 'pendiente' && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={`flex-1 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20 ${d.alerta_activa ? 'ring-2 ring-emerald-400' : ''}`}
+                        onClick={() => handleAvisar(d.id)}
+                      >
+                        <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                        Avisar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                        onClick={() => handleDescartar(d.id)}
+                      >
+                        <X className="w-3.5 h-3.5 mr-1" />
+                        Descartar
+                      </Button>
+                    </>
+                  )}
+                  {tab === 'avisado' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                      onClick={() => handleDescartar(d.id)}
+                    >
+                      <X className="w-3.5 h-3.5 mr-1" />
+                      Descartar
+                    </Button>
+                  )}
+                  {tab === 'descartado' && isAdmin && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="flex-1 text-xs"
+                      onClick={() => handleEliminar(d.id)}
+                    >
+                      <Trash2 className="w-3.5 h-3.5 mr-1" />
+                      Eliminar
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Modal nuevo deseo */}
+      <Dialog open={modalOpen} onOpenChange={open => { if (!open) { setModalOpen(false); resetModal(); } }}>
+        <DialogContent className="w-full h-full sm:h-auto sm:max-w-lg sm:max-h-[90vh] sm:mx-4 overflow-y-auto p-5 rounded-none sm:rounded-xl">
+          <DialogHeader>
+            <DialogTitle>
+              {pasoModal === 'cliente' ? 'Paso 1 — Cliente' : 'Paso 2 — Producto'}
+            </DialogTitle>
+          </DialogHeader>
+
+          {pasoModal === 'cliente' ? (
+            <div className="space-y-4 py-4">
+              {/* Toggle tipo cliente */}
+              <div className="flex rounded-lg border overflow-hidden">
+                <button
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${tipoCliente === 'winfac' ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
+                  onClick={() => { setTipoCliente('winfac'); setClienteSeleccionado(null); }}
+                >
+                  Cliente WinFac
+                </button>
+                <button
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${tipoCliente === 'nuevo' ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
+                  onClick={() => { setTipoCliente('nuevo'); setClienteSeleccionado(null); }}
+                >
+                  Cliente nuevo
+                </button>
+              </div>
+
+              {tipoCliente === 'winfac' ? (
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Buscar cliente por nombre..."
+                    value={clienteWinfacSearch}
+                    onChange={e => { setClienteWinfacSearch(e.target.value); setClienteSeleccionado(null); }}
+                  />
+                  {clienteWinfacLoading && (
+                    <p className="text-xs text-zinc-400 animate-pulse">Buscando...</p>
+                  )}
+                  {clienteWinfacResultados.length > 0 && !clienteSeleccionado && (
+                    <ul className="border rounded-lg overflow-hidden divide-y max-h-48 overflow-y-auto">
+                      {clienteWinfacResultados.map(c => (
+                        <li
+                          key={c.kcodclie}
+                          className="px-3 py-2 text-sm cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                          onClick={() => {
+                            setClienteSeleccionado({ id: c.kcodclie, nombre: c.nombress, tipo: 'winfac' });
+                            setClienteWinfacResultados([]);
+                          }}
+                        >
+                          <p className="font-medium">{c.nombress}</p>
+                          {c.ciudad && <p className="text-xs text-zinc-400">{c.ciudad}</p>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {clienteSeleccionado && (
+                    <div className="flex items-center justify-between bg-blue-50 dark:bg-blue-900/20 rounded-lg px-3 py-2">
+                      <div>
+                        <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{clienteSeleccionado.nombre}</p>
+                        <p className="text-xs text-blue-500">{clienteSeleccionado.id}</p>
+                      </div>
+                      <button
+                        className="text-blue-400 hover:text-blue-600"
+                        onClick={() => { setClienteSeleccionado(null); setClienteWinfacSearch(''); }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Nombre *</label>
+                    <Input
+                      value={nuevoClienteForm.nombre}
+                      onChange={e => setNuevoClienteForm(f => ({ ...f, nombre: e.target.value }))}
+                      placeholder="Nombre completo"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">País</label>
+                      <Input
+                        value={nuevoClienteForm.pais}
+                        onChange={e => setNuevoClienteForm(f => ({ ...f, pais: e.target.value }))}
+                        placeholder="Ej: Chile"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Ciudad</label>
+                      <Input
+                        value={nuevoClienteForm.ciudad}
+                        onChange={e => setNuevoClienteForm(f => ({ ...f, ciudad: e.target.value }))}
+                        placeholder="Ej: Iquique"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">WhatsApp</label>
+                    <Input
+                      value={nuevoClienteForm.whatsapp}
+                      onChange={e => setNuevoClienteForm(f => ({ ...f, whatsapp: e.target.value }))}
+                      placeholder="+56912345678"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4 py-4">
+              {/* Toggle tipo producto */}
+              <div className="flex rounded-lg border overflow-hidden">
+                <button
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${tipoProducto === 'codigo' ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
+                  onClick={() => { setTipoProducto('codigo'); setProductoSeleccionado(null); }}
+                >
+                  Tiene código
+                </button>
+                <button
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${tipoProducto === 'libre' ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
+                  onClick={() => { setTipoProducto('libre'); setProductoSeleccionado(null); }}
+                >
+                  Descripción libre
+                </button>
+              </div>
+
+              {tipoProducto === 'codigo' ? (
+                <div className="space-y-2">
+                  <Input
+                    placeholder="Buscar por código o descripción..."
+                    value={productoSearch}
+                    onChange={e => { setProductoSearch(e.target.value); setProductoSeleccionado(null); }}
+                  />
+                  {productoLoading && (
+                    <p className="text-xs text-zinc-400 animate-pulse">Buscando...</p>
+                  )}
+                  {productoResultados.length > 0 && !productoSeleccionado && (
+                    <ul className="border rounded-lg overflow-hidden divide-y max-h-48 overflow-y-auto">
+                      {productoResultados.map(p => (
+                        <li
+                          key={p.id}
+                          className="px-3 py-2 text-sm cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                          onClick={() => {
+                            setProductoSeleccionado({ codigo: p.codigo, descripcion: p.detalle });
+                            setProductoResultados([]);
+                          }}
+                        >
+                          <p className="font-mono text-xs text-zinc-500">{p.codigo}</p>
+                          <p className="font-medium leading-tight">{p.detalle}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {productoSeleccionado && (
+                    <div className="flex items-start justify-between bg-blue-50 dark:bg-blue-900/20 rounded-lg px-3 py-2">
+                      <div>
+                        <p className="font-mono text-xs text-blue-500">{productoSeleccionado.codigo}</p>
+                        <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 leading-tight">{productoSeleccionado.descripcion}</p>
+                      </div>
+                      <button
+                        className="text-blue-400 hover:text-blue-600 flex-shrink-0 ml-2"
+                        onClick={() => { setProductoSeleccionado(null); setProductoSearch(''); }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Descripción *</label>
+                  <textarea
+                    value={descripcionLibre}
+                    onChange={e => setDescripcionLibre(e.target.value)}
+                    placeholder="Describir el producto que busca el cliente..."
+                    rows={3}
+                    className="mt-1 w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900 resize-none"
+                  />
+                </div>
+              )}
+
+              {/* Nota */}
+              <div>
+                <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Nota (opcional)</label>
+                <Input
+                  value={nota}
+                  onChange={e => setNota(e.target.value)}
+                  placeholder="Alguna observación..."
+                  className="mt-1"
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2">
+            {pasoModal === 'cliente' ? (
+              <>
+                <Button variant="outline" onClick={() => { setModalOpen(false); resetModal(); }}>
+                  Cancelar
+                </Button>
+                <Button onClick={() => setPasoModal('producto')} disabled={!paso1Valido}>
+                  Siguiente →
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setPasoModal('cliente')}>
+                  ← Volver
+                </Button>
+                <Button onClick={handleCrearDeseo} disabled={!paso2Valido || saving}>
+                  {saving ? 'Guardando...' : 'Guardar'}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
