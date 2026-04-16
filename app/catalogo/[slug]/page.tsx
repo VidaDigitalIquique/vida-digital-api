@@ -89,7 +89,11 @@ async function getCatalogData(slug: string) {
           ORDER BY p.codigo ASC
         `;
 
+    console.log('ROWS FROM SQL:', rows.length);
+
     let productos = filterProducts(rows as CatalogoProducto[], codigosIncluir, keywordsIncluir, excluir);
+
+    console.log('AFTER FILTER:', productos.length);
 
     productos = productos.map((p: any) => ({
       ...p,
