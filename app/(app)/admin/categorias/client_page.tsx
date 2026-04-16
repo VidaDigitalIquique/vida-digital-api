@@ -264,7 +264,7 @@ export function CategoriasClient({
 
   // Initial load
   useEffect(() => {
-    fetchProductos('', 0, false, false);
+    fetchProductos('', 0, false, true);
   }, [fetchProductos]);
 
   // On search or sinCategoria change
