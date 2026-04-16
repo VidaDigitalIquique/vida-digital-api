@@ -48,25 +48,46 @@ async function getCatalogData(slug: string) {
 
     const excluir = parseCSVField(cat.palabras_excluir).map((s) => s.toLowerCase());
 
-    const rows = await sql`
-      SELECT
-        p.codigo,
-        MAX(p.id) as id,
-        MAX(p.detalle) as detalle,
-        MAX(p.imagen_url) as imagen_url,
-        MAX(p.cantcaja) as cantcaja,
-        MAX(p.umed) as umed,
-        MAX(p.costo) as costo,
-        SUM(p.saldo) as saldo,
-        BOOL_OR(p.es_nuevo) as es_nuevo
-      FROM productos p
-      WHERE (${cat.ambas_empresas} = true OR p.empresa_id = ${cat.empresa_id})
-        AND (${cat.solo_stock} = false OR p.saldo > 0)
-        AND (${soloNuevo} = false OR p.es_nuevo = true)
-        AND (${cat.categoria} IS NULL OR p.categoria = ${cat.categoria})
-      GROUP BY p.codigo
-      ORDER BY p.codigo ASC
-    `;
+    const categoriaFilter = cat.categoria;
+
+    const rows = categoriaFilter
+      ? await sql`
+          SELECT
+            p.codigo,
+            MAX(p.id) as id,
+            MAX(p.detalle) as detalle,
+            MAX(p.imagen_url) as imagen_url,
+            MAX(p.cantcaja) as cantcaja,
+            MAX(p.umed) as umed,
+            MAX(p.costo) as costo,
+            SUM(p.saldo) as saldo,
+            BOOL_OR(p.es_nuevo) as es_nuevo
+          FROM productos p
+          WHERE (${cat.ambas_empresas} = true OR p.empresa_id = ${cat.empresa_id})
+            AND (${cat.solo_stock} = false OR p.saldo > 0)
+            AND (${soloNuevo} = false OR p.es_nuevo = true)
+            AND p.categoria = ${categoriaFilter}
+          GROUP BY p.codigo
+          ORDER BY p.codigo ASC
+        `
+      : await sql`
+          SELECT
+            p.codigo,
+            MAX(p.id) as id,
+            MAX(p.detalle) as detalle,
+            MAX(p.imagen_url) as imagen_url,
+            MAX(p.cantcaja) as cantcaja,
+            MAX(p.umed) as umed,
+            MAX(p.costo) as costo,
+            SUM(p.saldo) as saldo,
+            BOOL_OR(p.es_nuevo) as es_nuevo
+          FROM productos p
+          WHERE (${cat.ambas_empresas} = true OR p.empresa_id = ${cat.empresa_id})
+            AND (${cat.solo_stock} = false OR p.saldo > 0)
+            AND (${soloNuevo} = false OR p.es_nuevo = true)
+          GROUP BY p.codigo
+          ORDER BY p.codigo ASC
+        `;
 
     let productos = filterProducts(rows as CatalogoProducto[], codigosIncluir, keywordsIncluir, excluir);
 
