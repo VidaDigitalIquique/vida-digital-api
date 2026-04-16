@@ -5,7 +5,7 @@ import { Producto, UserSession } from '@/types';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductDrawer } from '@/components/ProductDrawer';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, Eye, EyeOff } from 'lucide-react';
 
 interface PreciosClientProps {
   session: UserSession;
@@ -26,6 +26,8 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
   const [soloStock, setSoloStock] = useState(false);
   const [soloNuevo, setSoloNuevo] = useState(false);
 
+  const [ocultarPrecios, setOcultarPrecios] = useState(false);
+
   const [selectedProduct, setSelectedProduct] = useState<Producto | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -38,10 +40,12 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
   useEffect(() => {
     setSoloStock(localStorage.getItem('precios_soloStock') === 'true');
     setSoloNuevo(localStorage.getItem('precios_soloNuevo') === 'true');
+    setOcultarPrecios(localStorage.getItem('ocultar_precios') === 'true');
   }, []);
 
   useEffect(() => { localStorage.setItem('precios_soloStock', soloStock.toString()); }, [soloStock]);
   useEffect(() => { localStorage.setItem('precios_soloNuevo', soloNuevo.toString()); }, [soloNuevo]);
+  useEffect(() => { localStorage.setItem('ocultar_precios', ocultarPrecios.toString()); }, [ocultarPrecios]);
 
   // Fetch logic
   useEffect(() => {
@@ -87,7 +91,16 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
   return (
     <div className="flex flex-col gap-6 fade-in zoom-in-95 duration-200">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-3xl font-extrabold tracking-tight">Lista de Precios</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-extrabold tracking-tight">Lista de Precios</h1>
+          <button
+            onClick={() => setOcultarPrecios(v => !v)}
+            className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            title={ocultarPrecios ? 'Mostrar precios' : 'Ocultar precios'}
+          >
+            {ocultarPrecios ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       <div className="sticky top-16 md:top-20 z-40 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-xl py-2 -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -139,18 +152,20 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
               empresaSlug={EMPRESA_SLUG[(p as any).nombre_empresa] || 'sanjh'}
               empresaNombre={(p as any).nombre_empresa}
               onClick={openDrawer}
+              ocultarPrecios={ocultarPrecios}
             />
           ))}
         </div>
       )}
 
-      <ProductDrawer 
-        producto={selectedProduct} 
-        open={drawerOpen} 
-        onOpenChange={setDrawerOpen} 
-        session={session} 
+      <ProductDrawer
+        producto={selectedProduct}
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        session={session}
         empresaNombre={(selectedProduct as any)?.nombre_empresa || ''}
         onUpdated={handleProductUpdate}
+        ocultarPrecios={ocultarPrecios}
       />
     </div>
   );

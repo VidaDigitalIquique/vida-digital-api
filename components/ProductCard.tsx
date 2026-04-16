@@ -10,6 +10,7 @@ interface ProductCardProps {
   empresaSlug: string;
   empresaNombre: string;
   onClick: (producto: Producto) => void;
+  ocultarPrecios?: boolean;
 }
 
 const EMPRESA_SHORT: Record<string, { label: string; color: string }> = {
@@ -17,7 +18,7 @@ const EMPRESA_SHORT: Record<string, { label: string; color: string }> = {
   'IMPORT EXPORT VIDA DIGITAL LTDA.': { label: 'VIDA DIGITAL', color: 'bg-teal-100 text-teal-700' },
 };
 
-export function ProductCard({ producto, empresaSlug, empresaNombre, onClick }: ProductCardProps) {
+export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocultarPrecios }: ProductCardProps) {
   const empresa =
     EMPRESA_SHORT[empresaNombre] ||
     (empresaNombre ? { label: empresaNombre, color: 'bg-zinc-100 text-zinc-600' } : null);
@@ -68,7 +69,7 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick }: P
           <div className="flex-1 flex flex-col justify-center">
             <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-0.5">Precio venta</div>
             <div className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 leading-none">
-              {formatUSD(producto.prcventa)}
+              {ocultarPrecios ? '••••' : formatUSD(producto.prcventa)}
             </div>
           </div>
 

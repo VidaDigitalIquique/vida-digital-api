@@ -21,6 +21,7 @@ interface ProductDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdated: (updatedProduct: Producto) => void;
+  ocultarPrecios?: boolean;
 }
 
 const EMPRESA_SHORT: Record<string, { label: string; color: string }> = {
@@ -34,7 +35,7 @@ const EMPRESA_SLUG: Record<string, string> = {
 };
 
 
-export function ProductDrawer({ producto, empresaNombre, session, open, onOpenChange, onUpdated }: ProductDrawerProps) {
+export function ProductDrawer({ producto, empresaNombre, session, open, onOpenChange, onUpdated, ocultarPrecios }: ProductDrawerProps) {
   const { shareImage } = useShareImage();
   const [isEditing, setIsEditing] = useState(false);
   const [prcVenta, setPrcVenta] = useState('');
@@ -310,6 +311,7 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
           </div>
 
           {/* Pricing Table */}
+          {!ocultarPrecios && (
           <div>
             <div className="flex items-center justify-between mb-2">
                <h3 className="font-semibold uppercase tracking-wider text-xs text-zinc-500">Precios (USD)</h3>
@@ -319,7 +321,7 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
                )}
                */}
             </div>
-            
+
             <div className="border rounded-lg overflow-hidden">
               <Table>
                 <TableBody>
@@ -364,6 +366,7 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
               </div>
             )}
           </div>
+          )}
 
           {/* Admin Tools */}
           {canEditPrices && (

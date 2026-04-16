@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, Search, Share2 } from 'lucide-react';
+import { Camera, Eye, EyeOff, Search, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -96,6 +96,12 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   const [drawerProduct, setDrawerProduct] = useState<Producto | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filtroKardex, setFiltroKardex] = useState('');
+  const [ocultarPrecios, setOcultarPrecios] = useState(false);
+
+  useEffect(() => {
+    setOcultarPrecios(localStorage.getItem('ocultar_precios') === 'true');
+  }, []);
+  useEffect(() => { localStorage.setItem('ocultar_precios', ocultarPrecios.toString()); }, [ocultarPrecios]);
 
   const hasSearch = debouncedSearch.trim().length >= 2;
 
@@ -283,7 +289,16 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
       {!selectedCliente ? (
         <>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h1 className="text-3xl font-extrabold tracking-tight">Kardex Cliente</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-extrabold tracking-tight">Kardex Cliente</h1>
+              <button
+                onClick={() => setOcultarPrecios(v => !v)}
+                className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                title={ocultarPrecios ? 'Mostrar precios' : 'Ocultar precios'}
+              >
+                {ocultarPrecios ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
 
           <div className="sticky top-16 md:top-20 z-40 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-xl py-2 -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -545,6 +560,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
 
                       <div className="grid grid-cols-1 gap-3">
                         {/* MERCADO */}
+                        {!ocultarPrecios && (
                         <div className="text-sm">
                           <div className="text-xs uppercase tracking-wide text-zinc-400 font-medium mb-1">Se ha vendido</div>
                           {(() => {
@@ -570,8 +586,10 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                             );
                           })()}
                         </div>
+                        )}
 
                         {/* COMPRÓ */}
+                        {!ocultarPrecios && (
                         <div className="text-sm">
                           <div className="text-xs uppercase tracking-wide text-zinc-400 font-medium mb-1">Compró</div>
                           {(() => {
@@ -606,9 +624,10 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                             });
                           })()}
                         </div>
+                        )}
 
                         {/* COSTO */}
-                        {producto.costo != null && (
+                        {!ocultarPrecios && producto.costo != null && (
                           <div className="text-sm flex items-center justify-between">
                             <div className="text-xs uppercase tracking-wide text-zinc-400 font-medium">Costo</div>
                             <div className="text-base font-bold text-zinc-900 dark:text-zinc-100">{formatUSD(producto.costo)}</div>
