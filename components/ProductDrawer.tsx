@@ -105,6 +105,7 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
     if (isOpen && producto) {
       setPrcVenta(producto.prcventa.toString());
       setPrcMinimo(producto.prcminimo.toString());
+      console.log('DRAWER OPEN - producto.categoria:', producto.categoria);
       setCategoria(producto.categoria ?? '');
       setIsEditing(false);
     }
