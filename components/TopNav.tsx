@@ -22,7 +22,8 @@ import {
   ShoppingCart,
   LayoutList,
   Filter,
-  Camera
+  Camera,
+  Tag
 } from 'lucide-react';
 
 const NAV_LINKS = [
@@ -125,6 +126,11 @@ export function TopNav() {
                   <DropdownMenuItem>
                     <Link href="/admin/kardex-exclusiones" className="flex items-center gap-2 w-full">
                       <Filter className="w-4 h-4" /> Exclusiones Kardex
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/admin/categorias" className="flex items-center gap-2 w-full">
+                      <Tag className="w-4 h-4" /> Categorías
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

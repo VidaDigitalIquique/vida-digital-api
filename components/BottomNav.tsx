@@ -80,6 +80,9 @@ export function BottomNav() {
                      <Link href="/admin/kardex-exclusiones" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">
                        Exclusiones Kardex
                      </Link>
+                     <Link href="/admin/categorias" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">
+                       Categorías
+                     </Link>
                   </div>
                 )}
                </div>
