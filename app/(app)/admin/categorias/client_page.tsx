@@ -183,7 +183,7 @@ export function CategoriasClient({
   const [hasMore, setHasMore] = useState(false);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [sinCategoria, setSinCategoria] = useState(false);
+  const [sinCategoria] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [activeProduct, setActiveProduct] = useState<Producto | null>(null);
   const [panelWidth, setPanelWidth] = useState(420);
@@ -432,15 +432,6 @@ export function CategoriasClient({
                 </button>
               )}
             </div>
-            <label className="flex items-center gap-2 text-sm text-zinc-500 cursor-pointer mt-2">
-              <input
-                type="checkbox"
-                checked={sinCategoria}
-                onChange={e => setSinCategoria(e.target.checked)}
-                className="w-4 h-4 rounded border-zinc-300"
-              />
-              Solo sin categoría
-            </label>
           </div>
 
           {/* Product list */}
