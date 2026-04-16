@@ -29,7 +29,7 @@ export async function GET(request: Request) {
             cd.whatsapp as cliente_deseado_whatsapp,
             cd.ciudad  as cliente_deseado_ciudad
           FROM productos_deseados pd
-          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id = c.kcodclie
+          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
           LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
           WHERE pd.estado = ${estado}
             AND (
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
             cd.whatsapp as cliente_deseado_whatsapp,
             cd.ciudad  as cliente_deseado_ciudad
           FROM productos_deseados pd
-          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id = c.kcodclie
+          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
           LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
           WHERE pd.estado = ${estado}
           ORDER BY pd.created_at DESC
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
             cd.whatsapp as cliente_deseado_whatsapp,
             cd.ciudad  as cliente_deseado_ciudad
           FROM productos_deseados pd
-          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id = c.kcodclie
+          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
           LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
           WHERE
             LOWER(pd.descripcion) LIKE ${searchPattern}
@@ -89,7 +89,7 @@ export async function GET(request: Request) {
             cd.whatsapp as cliente_deseado_whatsapp,
             cd.ciudad  as cliente_deseado_ciudad
           FROM productos_deseados pd
-          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id = c.kcodclie
+          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
           LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
           ORDER BY pd.created_at DESC
         `;
