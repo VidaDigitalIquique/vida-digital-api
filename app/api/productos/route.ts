@@ -37,6 +37,7 @@ export async function GET(request: Request) {
         MAX(p.cubicaja) as cubicaja,
         MAX(p.nroingreso) as nroingreso,
         MAX(p.empresa_id) as empresa_id,
+        MAX(p.categoria) as categoria,
         MAX(e.nombre) as nombre_empresa
       FROM productos p
       JOIN empresas e ON e.id = p.empresa_id
