@@ -12,11 +12,13 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { GripVertical, Plus, Trash2, Search, Loader2, X, Tag } from 'lucide-react';
+import { GripVertical, Plus, Trash2, Search, Loader2, X, Tag, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
+import { CrearCatalogoDialog } from '@/components/CrearCatalogoDialog';
+import { useEmpresaId } from '@/hooks/useEmpresaId';
 
 type Producto = {
   id: number;
@@ -108,9 +110,11 @@ function ProductoCard({
 function CategoriaCard({
   categoria,
   onDelete,
+  onGenerarCatalogo,
 }: {
   categoria: Categoria;
   onDelete: (id: number) => void;
+  onGenerarCatalogo: (nombre: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `categoria-${categoria.id}`,
@@ -146,6 +150,14 @@ function CategoriaCard({
           )}
         </div>
       </div>
+      <button
+        onClick={() => onGenerarCatalogo(categoria.nombre)}
+        className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 mt-2"
+        title="Generar catálogo para esta categoría"
+      >
+        <BookOpen className="w-3 h-3" />
+        Generar catálogo
+      </button>
       {isOver && (
         <div className="flex-1 flex items-center justify-center text-blue-400 text-xs font-medium">
           Soltar aquí
@@ -198,6 +210,8 @@ export function CategoriasClient({
 }: {
   categorias: Categoria[];
 }) {
+  const { empresaId: activeEmpresaId } = useEmpresaId();
+  const [creandoCatalogoParaCategoria, setCreandoCatalogoParaCategoria] = useState<string | null>(null);
   const [categorias, setCategorias] = useState<Categoria[]>(initialCategorias);
   const [productos, setProductos] = useState<Producto[]>([]);
   const [total, setTotal] = useState(0);
@@ -592,6 +606,7 @@ export function CategoriasClient({
                     key={c.id}
                     categoria={c}
                     onDelete={handleEliminarCategoria}
+                    onGenerarCatalogo={(nombre) => setCreandoCatalogoParaCategoria(nombre)}
                   />
                 ))}
               </div>
@@ -599,6 +614,14 @@ export function CategoriasClient({
           </div>
         </div>
       </div>
+
+      <CrearCatalogoDialog
+        open={creandoCatalogoParaCategoria !== null}
+        onOpenChange={(open) => { if (!open) setCreandoCatalogoParaCategoria(null); }}
+        empresaId={activeEmpresaId}
+        categoriaInicial={creandoCatalogoParaCategoria ?? undefined}
+        onCreated={() => setCreandoCatalogoParaCategoria(null)}
+      />
 
       {/* Drag overlay */}
       <DragOverlay>
