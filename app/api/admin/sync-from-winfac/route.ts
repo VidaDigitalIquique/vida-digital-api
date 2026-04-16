@@ -22,8 +22,13 @@ export async function POST(request: Request) {
         SELECT
           1, inv.codunico, inv.knumezet,
           inv.stocdisp, inv.cifunita, inv.cosunita, inv.cantcaja, inv.pesocaja, inv.cubicaja, inv.desunida, inv.descript,
-          NULL, NULL, NULL, NULL, NULL, false,
-          NOW(), NOW()
+          NULL, NULL, NULL, NULL,
+          (SELECT categoria FROM public.productos
+           WHERE codigo = inv.codunico
+             AND empresa_id = 1
+             AND categoria IS NOT NULL
+           LIMIT 1),
+          false, NOW(), NOW()
         FROM sanjh.inventar inv
         ON CONFLICT ON CONSTRAINT productos_empresa_id_codigo_nroingreso_key
         DO UPDATE SET
@@ -51,8 +56,13 @@ export async function POST(request: Request) {
         SELECT
           2, inv.codunico, inv.knumezet,
           inv.stocdisp, inv.cifunita, inv.cosunita, inv.cantcaja, inv.pesocaja, inv.cubicaja, inv.desunida, inv.descript,
-          NULL, NULL, NULL, NULL, NULL, false,
-          NOW(), NOW()
+          NULL, NULL, NULL, NULL,
+          (SELECT categoria FROM public.productos
+           WHERE codigo = inv.codunico
+             AND empresa_id = 2
+             AND categoria IS NOT NULL
+           LIMIT 1),
+          false, NOW(), NOW()
         FROM vida.inventar inv
         ON CONFLICT ON CONSTRAINT productos_empresa_id_codigo_nroingreso_key
         DO UPDATE SET
