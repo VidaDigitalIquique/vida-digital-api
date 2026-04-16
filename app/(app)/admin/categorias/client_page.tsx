@@ -35,7 +35,15 @@ type Categoria = {
 // ---------------------------------------------------------------------------
 // Draggable product card
 // ---------------------------------------------------------------------------
-function ProductoCard({ producto }: { producto: Producto }) {
+function ProductoCard({
+  producto,
+  isSelected,
+  onToggle,
+}: {
+  producto: Producto;
+  isSelected: boolean;
+  onToggle: (id: number) => void;
+}) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `producto-${producto.id}`,
     data: { producto },
@@ -44,8 +52,17 @@ function ProductoCard({ producto }: { producto: Producto }) {
   return (
     <div
       ref={setNodeRef}
-      className={`flex items-center gap-2 bg-white dark:bg-zinc-900 border rounded-lg px-2 py-2 h-[80px] select-none transition-opacity ${isDragging ? 'opacity-40' : 'hover:border-blue-300'}`}
+      className={`flex items-center gap-2 bg-white dark:bg-zinc-900 border rounded-lg px-2 py-2 h-[80px] select-none transition-opacity ${
+        isDragging ? 'opacity-40' : isSelected ? 'ring-2 ring-blue-400 hover:border-blue-300' : 'hover:border-blue-300'
+      }`}
     >
+      <input
+        type="checkbox"
+        checked={isSelected}
+        onClick={e => e.stopPropagation()}
+        onChange={() => onToggle(producto.id)}
+        className="w-4 h-4 rounded border-zinc-300 flex-shrink-0 cursor-pointer"
+      />
       <div
         {...listeners}
         {...attributes}
@@ -141,9 +158,14 @@ function CategoriaCard({
 // ---------------------------------------------------------------------------
 // Drag overlay — compact card shown while dragging
 // ---------------------------------------------------------------------------
-function DragOverlayCard({ producto }: { producto: Producto }) {
+function DragOverlayCard({ producto, count }: { producto: Producto; count?: number }) {
   return (
-    <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-blue-300 rounded-lg px-2 py-2 h-[80px] shadow-lg opacity-95 w-[280px]">
+    <div className="relative flex items-center gap-2 bg-white dark:bg-zinc-900 border border-blue-300 rounded-lg px-2 py-2 h-[80px] shadow-lg opacity-95 w-[280px]">
+      {count && count > 1 && (
+        <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center z-10">
+          {count}
+        </span>
+      )}
       <GripVertical className="w-4 h-4 text-zinc-300 flex-shrink-0" />
       <div className="flex-shrink-0 w-12 h-12 rounded bg-zinc-100 dark:bg-zinc-800 overflow-hidden relative">
         {producto.imagen_url ? (
@@ -184,6 +206,8 @@ export function CategoriasClient({
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [sinCategoria] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isGroupDrag, setIsGroupDrag] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeProduct, setActiveProduct] = useState<Producto | null>(null);
   const [panelWidth, setPanelWidth] = useState(420);
@@ -296,57 +320,108 @@ export function CategoriasClient({
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
 
+  const toggleSelected = useCallback((id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
   const handleDragStart = (event: DragStartEvent) => {
     const producto = event.active.data.current?.producto as Producto;
     setActiveProduct(producto ?? null);
+    setIsGroupDrag(!!producto && selectedIds.has(producto.id) && selectedIds.size > 1);
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { over } = event;
     if (!over || !activeProduct) {
       setActiveProduct(null);
+      setIsGroupDrag(false);
       return;
     }
 
     const { categoriaId, nombre } = over.data.current as { categoriaId: number; nombre: string };
-    const prevCategoria = activeProduct.categoria;
 
-    // Optimistic update
-    setProductos(prev =>
-      sinCategoria
-        ? prev.filter(p => p.id !== activeProduct.id)
-        : prev.map(p => p.id === activeProduct.id ? { ...p, categoria: nombre } : p)
-    );
-    setCategorias(prev =>
-      prev.map(c => {
-        if (c.id === categoriaId) return { ...c, total_productos: c.total_productos + 1 };
-        if (prevCategoria && c.nombre === prevCategoria) return { ...c, total_productos: c.total_productos - 1 };
-        return c;
-      })
-    );
+    if (isGroupDrag) {
+      const ids = Array.from(selectedIds);
+      const productosSeleccionados = productos.filter(p => selectedIds.has(p.id));
 
-    setActiveProduct(null);
+      // Optimistic: remover todos del panel izquierdo
+      setProductos(prev => prev.filter(p => !selectedIds.has(p.id)));
+      setCategorias(prev =>
+        prev.map(c =>
+          c.id === categoriaId
+            ? { ...c, total_productos: c.total_productos + ids.length }
+            : c
+        )
+      );
+      setSelectedIds(new Set());
+      setActiveProduct(null);
+      setIsGroupDrag(false);
 
-    try {
-      await fetch(`/api/productos/${activeProduct.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categoria: nombre }),
-      });
-    } catch {
-      // Revert on error
+      try {
+        await Promise.all(
+          ids.map(id =>
+            fetch(`/api/productos/${id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ categoria: nombre }),
+            })
+          )
+        );
+      } catch {
+        // Rollback
+        setProductos(prev => [...productosSeleccionados, ...prev]);
+        setCategorias(prev =>
+          prev.map(c =>
+            c.id === categoriaId
+              ? { ...c, total_productos: c.total_productos - ids.length }
+              : c
+          )
+        );
+      }
+    } else {
+      // --- Single drag ---
+      const prevCategoria = activeProduct.categoria;
+
       setProductos(prev =>
         sinCategoria
-          ? [...prev, { ...activeProduct, categoria: prevCategoria }]
-          : prev.map(p => p.id === activeProduct.id ? { ...p, categoria: prevCategoria } : p)
+          ? prev.filter(p => p.id !== activeProduct.id)
+          : prev.map(p => p.id === activeProduct.id ? { ...p, categoria: nombre } : p)
       );
       setCategorias(prev =>
         prev.map(c => {
-          if (c.id === categoriaId) return { ...c, total_productos: c.total_productos - 1 };
-          if (prevCategoria && c.nombre === prevCategoria) return { ...c, total_productos: c.total_productos + 1 };
+          if (c.id === categoriaId) return { ...c, total_productos: c.total_productos + 1 };
+          if (prevCategoria && c.nombre === prevCategoria) return { ...c, total_productos: c.total_productos - 1 };
           return c;
         })
       );
+
+      setActiveProduct(null);
+
+      try {
+        await fetch(`/api/productos/${activeProduct.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ categoria: nombre }),
+        });
+      } catch {
+        setProductos(prev =>
+          sinCategoria
+            ? [...prev, { ...activeProduct, categoria: prevCategoria }]
+            : prev.map(p => p.id === activeProduct.id ? { ...p, categoria: prevCategoria } : p)
+        );
+        setCategorias(prev =>
+          prev.map(c => {
+            if (c.id === categoriaId) return { ...c, total_productos: c.total_productos - 1 };
+            if (prevCategoria && c.nombre === prevCategoria) return { ...c, total_productos: c.total_productos + 1 };
+            return c;
+          })
+        );
+      }
     }
   };
 
@@ -437,7 +512,12 @@ export function CategoriasClient({
           {/* Product list */}
           <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
             {productos.map(p => (
-              <ProductoCard key={p.id} producto={p} />
+              <ProductoCard
+                key={p.id}
+                producto={p}
+                isSelected={selectedIds.has(p.id)}
+                onToggle={toggleSelected}
+              />
             ))}
 
             {/* Sentinel for infinite scroll */}
@@ -522,7 +602,12 @@ export function CategoriasClient({
 
       {/* Drag overlay */}
       <DragOverlay>
-        {activeProduct && <DragOverlayCard producto={activeProduct} />}
+        {activeProduct && (
+          <DragOverlayCard
+            producto={activeProduct}
+            count={isGroupDrag ? selectedIds.size : undefined}
+          />
+        )}
       </DragOverlay>
     </DndContext>
   );
