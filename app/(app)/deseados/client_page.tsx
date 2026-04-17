@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAlertas } from '@/contexts/AlertasContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
@@ -52,6 +53,7 @@ interface ProductoResult {
 
 export function DeseadosClient({ session }: { session: any }) {
   const isAdmin = session?.rol === 'admin';
+  const { refreshAlertas } = useAlertas();
 
   // --- Lista principal ---
   const [tab, setTab] = useState<Tab>('pendiente');
@@ -290,6 +292,7 @@ export function DeseadosClient({ session }: { session: any }) {
       setAvisandoId(null);
       setComentarioAviso('');
       setDeseados(prev => prev.filter(d => d.id !== id));
+      await refreshAlertas();
     } catch {
       toast.error('Error al avisar');
     }

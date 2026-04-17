@@ -8,11 +8,13 @@ import { Home, ShoppingCart, Users, LayoutList, Tag, Box, Camera, Heart, Setting
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { signOut, useSession } from 'next-auth/react';
+import { useAlertas } from '@/contexts/AlertasContext';
 
-export function BottomNav({ alertasCount = 0 }: { alertasCount?: number }) {
+export function BottomNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const rol = (session?.user as any)?.rol as string;
+  const { alertasCount } = useAlertas();
   const [adminOpen, setAdminOpen] = useState(false);
 
   const linkClass = (active: boolean) => cn(

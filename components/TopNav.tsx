@@ -26,13 +26,14 @@ import {
   Camera,
   Tag,
   Heart,
-  Bell,
   Warehouse
 } from 'lucide-react';
+import { useAlertas } from '@/contexts/AlertasContext';
 
-export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
+export function TopNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const { alertasCount } = useAlertas();
   const isAdmin = (session?.user as any)?.rol === 'admin';
   const rol = (session?.user as any)?.rol as string;
 
@@ -156,8 +157,15 @@ export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
             {/* 5. Deseados — admin y vendedor */}
             {(isAdmin || rol === 'vendedor') && (
               <Link href="/deseados" className={navLink(pathname.startsWith('/deseados'))}>
-                <Heart className="w-4 h-4" />
-                Deseados
+                <span className="relative flex items-center gap-2">
+                  <Heart className="w-4 h-4" />
+                  Deseados
+                  {alertasCount > 0 && (
+                    <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[15px] h-3.5 flex items-center justify-center px-0.5 leading-none">
+                      {alertasCount > 99 ? '99+' : alertasCount}
+                    </span>
+                  )}
+                </span>
               </Link>
             )}
 
@@ -200,18 +208,6 @@ export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
           </nav>
         </div>
         <div className="flex items-center gap-4">
-          <Link
-            href="/deseados"
-            className="relative p-2 text-zinc-500 hover:text-blue-500 transition-colors"
-            title="Productos deseados con alerta"
-          >
-            <Bell className="w-5 h-5" />
-            {alertasCount > 0 && (
-              <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5 leading-none">
-                {alertasCount > 99 ? '99+' : alertasCount}
-              </span>
-            )}
-          </Link>
           <button onClick={() => signOut()} className="p-2 text-zinc-500 hover:text-red-500 transition-colors" title="Cerrar sesión">
             <LogOut className="w-5 h-5" />
           </button>
