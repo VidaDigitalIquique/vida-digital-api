@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 import { PlusCircle, CheckCircle, X, Trash2, Bell, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ImageWithFallback } from '@/components/ImageWithFallback';
 import {
   Dialog,
   DialogContent,
@@ -66,6 +65,7 @@ interface ClienteAgrupado {
 }
 
 export function DeseadosClient({ session }: { session: any }) {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dxkidwxjl';
   const isAdmin = session?.rol === 'admin';
   const { refreshAlertas } = useAlertas();
   const searchParams = useSearchParams();
@@ -527,12 +527,11 @@ export function DeseadosClient({ session }: { session: any }) {
                       {/* Imagen del producto */}
                       {d.codigo && !d.es_china ? (
                         <div className="w-full h-32 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border mt-1 relative">
-                          <ImageWithFallback
-                            src={d.imagen_url}
-                            codigo={d.codigo}
-                            empresaSlug="vidadigital"
-                            fill
-                            className="object-contain"
+                          <img
+                            src={`https://res.cloudinary.com/${cloudName}/image/upload/productos/${d.codigo}.jpg`}
+                            alt={d.codigo}
+                            className="w-full h-full object-contain"
+                            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                           />
                         </div>
                       ) : d.imagen_url ? (
