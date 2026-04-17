@@ -19,6 +19,7 @@ interface AgregarADeseadosModalProps {
   codigo: string;
   descripcion: string;
   esChina?: boolean;
+  clientePreseleccionado?: { id: string; nombre: string };
 }
 
 interface ClienteWinfac {
@@ -33,6 +34,7 @@ export function AgregarADeseadosModal({
   codigo,
   descripcion,
   esChina,
+  clientePreseleccionado,
 }: AgregarADeseadosModalProps) {
   const [tipoDestino, setTipoDestino] = useState<'deseados' | 'china'>(esChina ? 'china' : 'deseados');
   const [tipoCliente, setTipoCliente] = useState<'winfac' | 'nuevo'>('winfac');
@@ -50,11 +52,11 @@ export function AgregarADeseadosModal({
       setTipoCliente('winfac');
       setClienteWinfacSearch('');
       setClienteWinfacResultados([]);
-      setClienteSeleccionado(null);
+      setClienteSeleccionado(clientePreseleccionado ?? null);
       setNuevoClienteForm({ nombre: '', pais: '', ciudad: '', whatsapp: '' });
       setNota('');
     }
-  }, [open, esChina]);
+  }, [open, esChina, clientePreseleccionado]);
 
   useEffect(() => {
     if (clienteWinfacSearch.trim().length < 2) {
@@ -172,6 +174,14 @@ export function AgregarADeseadosModal({
             <span className="text-sm font-medium leading-snug">{descripcion}</span>
           </div>
 
+          {/* Selección de cliente */}
+          {clientePreseleccionado ? (
+            <div className="bg-zinc-50 dark:bg-zinc-900 rounded-lg px-3 py-2 border">
+              <p className="text-xs text-zinc-400 mb-0.5">Cliente</p>
+              <p className="text-sm font-semibold">{clientePreseleccionado.nombre}</p>
+            </div>
+          ) : (
+          <>
           {/* Toggle tipo cliente */}
           <div className="flex rounded-lg border overflow-hidden">
             <button
@@ -271,6 +281,8 @@ export function AgregarADeseadosModal({
                 />
               </div>
             </div>
+          )}
+          </>
           )}
 
           {/* Nota */}

@@ -102,6 +102,8 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
     codigo: string;
     descripcion: string;
     esChina: boolean;
+    clienteId: string;
+    clienteNombre: string;
   } | null>(null);
 
   useEffect(() => {
@@ -549,7 +551,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                             )}
                             <button
                               type="button"
-                              onClick={e => { e.stopPropagation(); setDeseadoModal({ codigo: producto.codigo, descripcion: producto.detalle || '', esChina: false }); }}
+                              onClick={e => { e.stopPropagation(); setDeseadoModal({ codigo: producto.codigo, descripcion: producto.detalle || '', esChina: false, clienteId: selectedCliente.kcodclie, clienteNombre: selectedCliente.nombress }); }}
                               className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-300 hover:text-red-400 flex-shrink-0"
                               title="Agregar a deseados"
                             >
@@ -704,6 +706,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
           codigo={deseadoModal.codigo}
           descripcion={deseadoModal.descripcion}
           esChina={deseadoModal.esChina}
+          clientePreseleccionado={{ id: deseadoModal.clienteId, nombre: deseadoModal.clienteNombre }}
         />
       )}
     </div>
