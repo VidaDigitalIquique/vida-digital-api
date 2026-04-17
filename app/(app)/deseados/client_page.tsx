@@ -525,7 +525,7 @@ export function DeseadosClient({ session }: { session: any }) {
                           className="w-full max-h-40 object-contain rounded-md border border-border mt-1"
                         />
                       )}
-                      {modoChina && !d.imagen_url && (
+                      {!d.codigo && !d.imagen_url && (
                         <label className={`inline-flex items-center gap-1 cursor-pointer text-xs px-2 py-1 rounded border border-dashed border-zinc-300 dark:border-zinc-600 text-zinc-400 hover:text-blue-500 hover:border-blue-400 transition-colors mt-1 ${uploadingId === d.id ? 'opacity-50 pointer-events-none' : ''}`}>
                           <Camera className="w-3.5 h-3.5" />
                           {uploadingId === d.id ? 'Subiendo...' : 'Agregar foto'}
