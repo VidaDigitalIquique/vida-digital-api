@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { PlusCircle, CheckCircle, X, Trash2, Bell, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ImageWithFallback } from '@/components/ImageWithFallback';
 import {
   Dialog,
   DialogContent,
@@ -523,14 +524,24 @@ export function DeseadosClient({ session }: { session: any }) {
                       {d.nota && (
                         <p className="text-xs text-zinc-400 italic">{d.nota}</p>
                       )}
-                      {d.imagen_url && (
+                      {/* Imagen del producto */}
+                      {d.codigo && !d.es_china ? (
+                        <div className="w-full h-32 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border mt-1 relative">
+                          <ImageWithFallback
+                            src={d.imagen_url}
+                            codigo={d.codigo}
+                            empresaSlug="vidadigital"
+                            fill
+                            className="object-contain"
+                          />
+                        </div>
+                      ) : d.imagen_url ? (
                         <img
                           src={d.imagen_url}
                           alt={d.descripcion}
                           className="w-full max-h-40 object-contain rounded-md border border-border mt-1"
                         />
-                      )}
-                      {d.es_china && !d.imagen_url && (
+                      ) : d.es_china ? (
                         <label className={`inline-flex items-center gap-1 cursor-pointer text-xs px-2 py-1 rounded border border-dashed border-zinc-300 dark:border-zinc-600 text-zinc-400 hover:text-blue-500 hover:border-blue-400 transition-colors mt-1 ${uploadingId === d.id ? 'opacity-50 pointer-events-none' : ''}`}>
                           <Camera className="w-3.5 h-3.5" />
                           {uploadingId === d.id ? 'Subiendo...' : 'Agregar foto'}
@@ -541,7 +552,7 @@ export function DeseadosClient({ session }: { session: any }) {
                             onChange={e => { if (e.target.files?.[0]) handleSubirImagen(d.id, e.target.files[0]); }}
                           />
                         </label>
-                      )}
+                      ) : null}
                       <p className="text-xs text-zinc-400">
                         {format(new Date(d.created_at), 'dd MMM yyyy', { locale: es })}
                       </p>
