@@ -6,7 +6,7 @@ import { useAlertas } from '@/contexts/AlertasContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { PlusCircle, CheckCircle, X, Trash2, Bell } from 'lucide-react';
+import { PlusCircle, CheckCircle, X, Trash2, Bell, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -32,6 +32,8 @@ interface Deseado {
   avisado_por: string | null;
   comentario_aviso: string | null;
   avisado_at: string | null;
+  imagen_url: string | null;
+  imagen_public_id: string | null;
   cliente_nombre: string | null;
   cliente_deseado_nombre: string | null;
   cliente_deseado_whatsapp: string | null;
@@ -131,6 +133,7 @@ export function DeseadosClient({ session }: { session: any }) {
   const [notaItem, setNotaItem] = useState('');
   const [productosLista, setProductosLista] = useState<Array<{ codigo: string | null; descripcion: string; nota: string }>>([]);
   const [saving, setSaving] = useState(false);
+  const [uploadingId, setUploadingId] = useState<number | null>(null);
 
   // --- Debounce búsqueda principal ---
   useEffect(() => {
@@ -380,6 +383,30 @@ export function DeseadosClient({ session }: { session: any }) {
     }
   };
 
+  const handleSubirImagen = (deseadoId: number, file: File) => {
+    setUploadingId(deseadoId);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const base64 = reader.result as string;
+        const res = await fetch('/api/deseados/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ deseadoId, imageBase64: base64 }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error || 'Error subiendo imagen');
+        const { data } = await res.json();
+        setDeseados(prev => prev.map(d => d.id === deseadoId ? { ...d, imagen_url: data.imagen_url, imagen_public_id: data.imagen_public_id } : d));
+        toast.success('Imagen subida');
+      } catch (err: any) {
+        toast.error(err.message || 'Error subiendo imagen');
+      } finally {
+        setUploadingId(null);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const TABS: { key: Tab; label: string }[] = [
     { key: 'pendiente', label: 'Pendientes' },
     { key: 'avisado', label: 'Avisados' },
@@ -490,6 +517,25 @@ export function DeseadosClient({ session }: { session: any }) {
                       <p className="text-sm font-medium leading-snug">{d.descripcion}</p>
                       {d.nota && (
                         <p className="text-xs text-zinc-400 italic">{d.nota}</p>
+                      )}
+                      {d.imagen_url && (
+                        <img
+                          src={d.imagen_url}
+                          alt={d.descripcion}
+                          className="w-full max-h-40 object-contain rounded-md border border-border mt-1"
+                        />
+                      )}
+                      {modoChina && !d.imagen_url && (
+                        <label className={`inline-flex items-center gap-1 cursor-pointer text-xs px-2 py-1 rounded border border-dashed border-zinc-300 dark:border-zinc-600 text-zinc-400 hover:text-blue-500 hover:border-blue-400 transition-colors mt-1 ${uploadingId === d.id ? 'opacity-50 pointer-events-none' : ''}`}>
+                          <Camera className="w-3.5 h-3.5" />
+                          {uploadingId === d.id ? 'Subiendo...' : 'Agregar foto'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={e => { if (e.target.files?.[0]) handleSubirImagen(d.id, e.target.files[0]); }}
+                          />
+                        </label>
                       )}
                       <p className="text-xs text-zinc-400">
                         {format(new Date(d.created_at), 'dd MMM yyyy', { locale: es })}

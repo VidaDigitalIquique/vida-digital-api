@@ -1,7 +1,10 @@
+export const runtime = 'nodejs';
+
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { deleteImage } from '@/lib/cloudinary';
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -58,6 +61,11 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
   try {
     const { id } = params;
+
+    const existing = await sql`SELECT imagen_public_id FROM productos_deseados WHERE id = ${id}`;
+    if (existing.length > 0 && existing[0].imagen_public_id) {
+      await deleteImage(existing[0].imagen_public_id);
+    }
 
     await sql`DELETE FROM productos_deseados WHERE id = ${id}`;
 
