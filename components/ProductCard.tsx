@@ -27,6 +27,7 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
     (empresaNombre ? { label: empresaNombre, color: 'bg-zinc-100 text-zinc-600' } : null);
   const [deseadoOpen, setDeseadoOpen] = useState(false);
   return (
+    <>
     <div
       className="group relative bg-card hover:bg-zinc-50 dark:hover:bg-zinc-900 border border-border shadow-sm rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-md"
       onClick={() => onClick(producto)}
@@ -108,5 +109,6 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
       codigo={producto.codigo}
       descripcion={producto.detalle || ''}
     />
+    </>
   );
 }
