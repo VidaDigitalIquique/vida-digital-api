@@ -113,7 +113,7 @@ function CategoriaCard({
   onGenerarCatalogo,
 }: {
   categoria: Categoria;
-  onDelete: (id: number) => void;
+  onDelete: (id: number, total_productos: number) => void;
   onGenerarCatalogo: (nombre: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({
@@ -139,15 +139,13 @@ function CategoriaCard({
           <Badge variant="secondary" className="text-xs">
             {categoria.total_productos}
           </Badge>
-          {categoria.total_productos === 0 && (
-            <button
-              onClick={() => onDelete(categoria.id)}
-              className="text-zinc-300 hover:text-red-500 transition-colors p-0.5"
-              title="Eliminar categoría"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          )}
+          <button
+            onClick={() => onDelete(categoria.id, categoria.total_productos)}
+            className="text-zinc-300 hover:text-red-500 transition-colors p-0.5"
+            title="Eliminar categoría"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
       <button
@@ -461,8 +459,11 @@ export function CategoriasClient({
   // ---------------------------------------------------------------------------
   // Delete category
   // ---------------------------------------------------------------------------
-  const handleEliminarCategoria = async (id: number) => {
-    if (!window.confirm('¿Eliminar esta categoría?')) return;
+  const handleEliminarCategoria = async (id: number, total_productos: number) => {
+    const mensaje = total_productos === 0
+      ? '¿Eliminar esta categoría?'
+      : `Esta categoría tiene ${total_productos} producto(s) asignado(s). Al eliminarla, esos productos quedarán sin categoría. ¿Deseas continuar?`;
+    if (!window.confirm(mensaje)) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/categorias/${id}`, { method: 'DELETE' });
@@ -605,7 +606,7 @@ export function CategoriasClient({
                   <CategoriaCard
                     key={c.id}
                     categoria={c}
-                    onDelete={handleEliminarCategoria}
+                    onDelete={(id, total) => handleEliminarCategoria(id, total)}
                     onGenerarCatalogo={(nombre) => setCreandoCatalogoParaCategoria(nombre)}
                   />
                 ))}

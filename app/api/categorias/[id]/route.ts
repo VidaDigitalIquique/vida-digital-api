@@ -23,18 +23,16 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
       WHERE categoria = (SELECT nombre FROM categorias WHERE id = ${id})
     `;
 
-    if (count[0].total > 0) {
-      return NextResponse.json(
-        { error: 'No se puede eliminar una categoría con productos asignados' },
-        { status: 400 }
-      );
-    }
+    await sql`
+      UPDATE productos SET categoria = NULL
+      WHERE categoria = (SELECT nombre FROM categorias WHERE id = ${id})
+    `;
 
     await sql`
       DELETE FROM categorias WHERE id = ${id}
     `;
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, productos_desasignados: count[0].total });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
