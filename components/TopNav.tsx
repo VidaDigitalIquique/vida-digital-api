@@ -34,7 +34,7 @@ import { useAlertas } from '@/contexts/AlertasContext';
 export function TopNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const { alertasCount } = useAlertas();
+  const { alertasCount, stockBajoCount } = useAlertas();
   const isAdmin = (session?.user as any)?.rol === 'admin';
   const rol = (session?.user as any)?.rol as string;
 
@@ -175,8 +175,15 @@ export function TopNav() {
             {/* 5b. Pedir a China — admin y vendedor */}
             {(isAdmin || rol === 'vendedor') && (
               <Link href="/deseados?modo=china" className={navLink(pathname.startsWith('/deseados') && modoChina)}>
-                <Package className="w-4 h-4" />
-                Pedir a China
+                <span className="relative flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  China
+                  {stockBajoCount > 0 && (
+                    <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[15px] h-3.5 flex items-center justify-center px-0.5 leading-none">
+                      {stockBajoCount > 99 ? '99+' : stockBajoCount}
+                    </span>
+                  )}
+                </span>
               </Link>
             )}
 

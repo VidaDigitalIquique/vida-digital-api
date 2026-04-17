@@ -14,7 +14,7 @@ export function BottomNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const rol = (session?.user as any)?.rol as string;
-  const { alertasCount } = useAlertas();
+  const { alertasCount, stockBajoCount } = useAlertas();
   const searchParams = useSearchParams();
   const modoChina = searchParams.get('modo') === 'china';
   const [adminOpen, setAdminOpen] = useState(false);
@@ -79,7 +79,14 @@ export function BottomNav() {
               <span className="text-[10px] font-medium">Deseados</span>
             </Link>
             <Link href="/deseados?modo=china" className={linkClass(pathname.startsWith('/deseados') && modoChina)}>
-              <Package className="w-6 h-6" />
+              <div className="relative">
+                <Package className="w-6 h-6" />
+                {stockBajoCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 leading-none">
+                    {stockBajoCount > 99 ? '99+' : stockBajoCount}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-medium">China</span>
             </Link>
             <button
@@ -111,7 +118,14 @@ export function BottomNav() {
               <span className="text-[10px] font-medium">Deseados</span>
             </Link>
             <Link href="/deseados?modo=china" className={linkClass(pathname.startsWith('/deseados') && modoChina)}>
-              <Package className="w-6 h-6" />
+              <div className="relative">
+                <Package className="w-6 h-6" />
+                {stockBajoCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 leading-none">
+                    {stockBajoCount > 99 ? '99+' : stockBajoCount}
+                  </span>
+                )}
+              </div>
               <span className="text-[10px] font-medium">China</span>
             </Link>
           </>
