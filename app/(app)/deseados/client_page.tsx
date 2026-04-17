@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAlertas } from '@/contexts/AlertasContext';
 import { format } from 'date-fns';
@@ -52,6 +52,15 @@ interface ProductoResult {
   detalle: string;
 }
 
+interface ClienteAgrupado {
+  clienteKey: string;
+  clienteNombre: string;
+  ciudad: string | null;
+  whatsapp: string | null;
+  items: Deseado[];
+  tieneAlerta: boolean;
+}
+
 export function DeseadosClient({ session }: { session: any }) {
   const isAdmin = session?.rol === 'admin';
   const { refreshAlertas } = useAlertas();
@@ -64,6 +73,25 @@ export function DeseadosClient({ session }: { session: any }) {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [deseados, setDeseados] = useState<Deseado[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const clientesAgrupados = useMemo(() => {
+    const map = new Map<string, ClienteAgrupado>();
+    for (const d of deseados) {
+      const key = d.cliente_winfac_id
+        ? `winfac-${d.cliente_winfac_id}`
+        : `deseado-${d.cliente_deseado_id}`;
+      const nombre = d.cliente_nombre || d.cliente_deseado_nombre || 'Cliente desconocido';
+      const ciudad = d.cliente_ciudad || d.cliente_deseado_ciudad || null;
+      const whatsapp = d.cliente_deseado_whatsapp || null;
+      if (!map.has(key)) {
+        map.set(key, { clienteKey: key, clienteNombre: nombre, ciudad, whatsapp, items: [], tieneAlerta: false });
+      }
+      const entry = map.get(key)!;
+      entry.items.push(d);
+      if (d.alerta_activa) entry.tieneAlerta = true;
+    }
+    return Array.from(map.values());
+  }, [deseados]);
 
   // --- Modal aviso ---
   const [avisandoId, setAvisandoId] = useState<number | null>(null);
@@ -387,127 +415,135 @@ export function DeseadosClient({ session }: { session: any }) {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
-          {deseados.map(d => {
-            const clienteNombre = d.cliente_nombre || d.cliente_deseado_nombre || 'Cliente desconocido';
-            const ciudad = d.cliente_ciudad || d.cliente_deseado_ciudad;
-            const whatsapp = d.cliente_deseado_whatsapp;
-            return (
-              <div
-                key={d.id}
-                className="bg-white dark:bg-zinc-900 border border-border rounded-xl p-4 shadow-sm flex flex-col gap-3"
-              >
-                {/* Badge alerta */}
-                {d.alerta_activa && (
-                  <div className="flex items-center gap-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-xs font-semibold px-2.5 py-1 rounded-full w-fit animate-pulse">
-                    <Bell className="w-3.5 h-3.5" />
-                    ¡Llegó!
-                  </div>
-                )}
-
-                {/* Cliente */}
+          {clientesAgrupados.map(cliente => (
+            <div
+              key={cliente.clienteKey}
+              className="bg-white dark:bg-zinc-900 border border-border rounded-xl shadow-sm flex flex-col"
+            >
+              {/* Header del cliente */}
+              <div className="p-4 border-b border-border flex items-start justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-base leading-tight">{clienteNombre}</p>
-                    {d.codigo === null && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 w-fit">
-                        Pedir a China
+                    <p className="font-bold text-base leading-tight">{cliente.clienteNombre}</p>
+                    {cliente.tieneAlerta && (
+                      <span className="flex items-center gap-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
+                        <Bell className="w-3 h-3" />
+                        ¡Llegó!
                       </span>
                     )}
                   </div>
-                  {(ciudad || whatsapp) && (
+                  {(cliente.ciudad || cliente.whatsapp) && (
                     <p className="text-xs text-zinc-400 mt-0.5">
-                      {[ciudad, whatsapp].filter(Boolean).join(' · ')}
+                      {[cliente.ciudad, cliente.whatsapp].filter(Boolean).join(' · ')}
                     </p>
                   )}
                 </div>
-
-                {/* Producto */}
-                <div className="flex flex-col gap-1">
-                  {d.codigo && (
-                    <span className="font-mono text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded w-fit">
-                      {d.codigo}
-                    </span>
-                  )}
-                  <p className="text-sm font-medium leading-snug">{d.descripcion}</p>
-                  {d.nota && (
-                    <p className="text-xs text-zinc-400 italic">{d.nota}</p>
-                  )}
-                </div>
-
-                {/* Fecha */}
-                <p className="text-xs text-zinc-400">
-                  {format(new Date(d.created_at), "dd MMM yyyy", { locale: es })}
-                </p>
-
-                {/* Info aviso (solo tab avisados) */}
-                {tab === 'avisado' && (
-                  <div className="flex flex-col gap-0.5">
-                    {d.avisado_por && (
-                      <p className="text-xs text-zinc-400">Avisado por {d.avisado_por}</p>
-                    )}
-                    {d.avisado_at && (
-                      <p className="text-xs text-zinc-400">
-                        el {format(new Date(d.avisado_at), 'dd MMM yyyy', { locale: es })}
-                      </p>
-                    )}
-                    {d.comentario_aviso && (
-                      <p className="text-xs text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 rounded p-2 mt-1">
-                        {d.comentario_aviso}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Acciones */}
-                <div className="flex gap-2 mt-auto border-t pt-3">
-                  {tab === 'pendiente' && (
-                    <>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className={`flex-1 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20 ${d.alerta_activa ? 'ring-2 ring-emerald-400' : ''}`}
-                        onClick={() => { setAvisandoId(d.id); setComentarioAviso(''); }}
-                      >
-                        <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                        Avisar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
-                        onClick={() => handleDescartar(d.id)}
-                      >
-                        <X className="w-3.5 h-3.5 mr-1" />
-                        Descartar
-                      </Button>
-                    </>
-                  )}
-                  {tab === 'avisado' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
-                      onClick={() => handleDescartar(d.id)}
-                    >
-                      <X className="w-3.5 h-3.5 mr-1" />
-                      Descartar
-                    </Button>
-                  )}
-                  {tab === 'descartado' && isAdmin && (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      className="flex-1 text-xs"
-                      onClick={() => handleEliminar(d.id)}
-                    >
-                      <Trash2 className="w-3.5 h-3.5 mr-1" />
-                      Eliminar
-                    </Button>
-                  )}
-                </div>
+                <span className="text-xs text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full flex-shrink-0">
+                  {cliente.items.length} {cliente.items.length === 1 ? 'producto' : 'productos'}
+                </span>
               </div>
-            );
-          })}
+
+              {/* Lista de productos */}
+              <div className="flex flex-col divide-y divide-border">
+                {cliente.items.map(d => (
+                  <div key={d.id} className="p-3 flex flex-col gap-2">
+                    {/* Producto info */}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {d.alerta_activa && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                            ¡Llegó!
+                          </span>
+                        )}
+                        {d.codigo ? (
+                          <span className="font-mono text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded">
+                            {d.codigo}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                            Pedir a China
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium leading-snug">{d.descripcion}</p>
+                      {d.nota && (
+                        <p className="text-xs text-zinc-400 italic">{d.nota}</p>
+                      )}
+                      <p className="text-xs text-zinc-400">
+                        {format(new Date(d.created_at), 'dd MMM yyyy', { locale: es })}
+                      </p>
+                      {/* Info aviso solo en tab avisados */}
+                      {tab === 'avisado' && (d.avisado_por || d.avisado_at || d.comentario_aviso) && (
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          {d.avisado_por && (
+                            <p className="text-xs text-zinc-400">Avisado por {d.avisado_por}</p>
+                          )}
+                          {d.avisado_at && (
+                            <p className="text-xs text-zinc-400">
+                              el {format(new Date(d.avisado_at), 'dd MMM yyyy', { locale: es })}
+                            </p>
+                          )}
+                          {d.comentario_aviso && (
+                            <p className="text-xs text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 rounded p-2 mt-1">
+                              {d.comentario_aviso}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Acciones por ítem */}
+                    <div className="flex gap-2">
+                      {tab === 'pendiente' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className={`flex-1 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20 ${d.alerta_activa ? 'ring-2 ring-emerald-400' : ''}`}
+                            onClick={() => { setAvisandoId(d.id); setComentarioAviso(''); }}
+                          >
+                            <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                            Avisar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                            onClick={() => handleDescartar(d.id)}
+                          >
+                            <X className="w-3.5 h-3.5 mr-1" />
+                            Descartar
+                          </Button>
+                        </>
+                      )}
+                      {tab === 'avisado' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                          onClick={() => handleDescartar(d.id)}
+                        >
+                          <X className="w-3.5 h-3.5 mr-1" />
+                          Descartar
+                        </Button>
+                      )}
+                      {tab === 'descartado' && isAdmin && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="flex-1 text-xs"
+                          onClick={() => handleEliminar(d.id)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-1" />
+                          Eliminar
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
