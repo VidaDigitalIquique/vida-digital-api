@@ -74,7 +74,7 @@ export async function GET(request: Request) {
             FROM productos_deseados pd
             LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
             LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
-            WHERE pd.codigo IS NULL
+            WHERE pd.es_china = true
               AND (
                 LOWER(pd.descripcion) LIKE ${searchPattern}
                 OR LOWER(c.nombress) LIKE ${searchPattern}
@@ -95,7 +95,7 @@ export async function GET(request: Request) {
             FROM productos_deseados pd
             LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
             LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
-            WHERE pd.codigo IS NULL
+            WHERE pd.es_china = true
             ORDER BY pd.created_at DESC
           `
       : estado && hasSearch
@@ -113,6 +113,7 @@ export async function GET(request: Request) {
           LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
           LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
           WHERE pd.estado = ${estado}
+            AND (pd.es_china = false OR pd.es_china IS NULL)
             AND (
               LOWER(pd.descripcion) LIKE ${searchPattern}
               OR LOWER(pd.codigo) LIKE ${searchPattern}
@@ -136,6 +137,7 @@ export async function GET(request: Request) {
           LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
           LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
           WHERE pd.estado = ${estado}
+            AND (pd.es_china = false OR pd.es_china IS NULL)
           ORDER BY pd.created_at DESC
         `
       : hasSearch
@@ -152,11 +154,13 @@ export async function GET(request: Request) {
           FROM productos_deseados pd
           LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
           LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
-          WHERE
-            LOWER(pd.descripcion) LIKE ${searchPattern}
-            OR LOWER(pd.codigo) LIKE ${searchPattern}
-            OR LOWER(c.nombress) LIKE ${searchPattern}
-            OR LOWER(cd.nombre) LIKE ${searchPattern}
+          WHERE (pd.es_china = false OR pd.es_china IS NULL)
+            AND (
+              LOWER(pd.descripcion) LIKE ${searchPattern}
+              OR LOWER(pd.codigo) LIKE ${searchPattern}
+              OR LOWER(c.nombress) LIKE ${searchPattern}
+              OR LOWER(cd.nombre) LIKE ${searchPattern}
+            )
           ORDER BY pd.created_at DESC
         `
       : await sql`
@@ -172,6 +176,7 @@ export async function GET(request: Request) {
           FROM productos_deseados pd
           LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
           LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+          WHERE (pd.es_china = false OR pd.es_china IS NULL)
           ORDER BY pd.created_at DESC
         `;
 
