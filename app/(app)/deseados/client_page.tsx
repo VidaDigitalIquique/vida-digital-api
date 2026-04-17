@@ -185,7 +185,7 @@ export function DeseadosClient({ session }: { session: any }) {
   const resetModal = () => {
     setPasoModal('cliente');
     setTipoCliente('winfac');
-    setTipoProducto('codigo');
+    setTipoProducto(modoChina ? 'libre' : 'codigo');
     setClienteWinfacSearch('');
     setClienteWinfacResultados([]);
     setClienteSeleccionado(null);
