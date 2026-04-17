@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { AgregarADeseadosModal } from '@/components/AgregarADeseadosModal';
 
 type Tab = 'pendiente' | 'avisado' | 'descartado';
 
@@ -64,6 +65,18 @@ interface ClienteAgrupado {
   tieneAlerta: boolean;
 }
 
+interface AlertaStock {
+  id: number;
+  codigo: string;
+  empresa_id: number;
+  detalle: string;
+  saldo: number;
+  cantcaja: number;
+  activa: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export function DeseadosClient({ session }: { session: any }) {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dxkidwxjl';
   const isAdmin = session?.rol === 'admin';
@@ -96,6 +109,14 @@ export function DeseadosClient({ session }: { session: any }) {
     }
     return Array.from(map.values());
   }, [deseados]);
+
+  // --- Alertas stock bajo ---
+  const [alertasStock, setAlertasStock] = useState<AlertaStock[]>([]);
+  const [loadingAlertas, setLoadingAlertas] = useState(false);
+  const [deseadoModalExterno, setDeseadoModalExterno] = useState<{
+    codigo: string;
+    descripcion: string;
+  } | null>(null);
 
   // --- Modal aviso ---
   const [avisandoId, setAvisandoId] = useState<number | null>(null);
@@ -412,6 +433,52 @@ export function DeseadosClient({ session }: { session: any }) {
     reader.readAsDataURL(file);
   };
 
+  // --- Fetch alertas stock bajo ---
+  useEffect(() => {
+    if (!modoChina) return;
+    async function fetchAlertas() {
+      setLoadingAlertas(true);
+      try {
+        const res = await fetch('/api/alertas-stock/lista');
+        if (res.ok) {
+          const { data } = await res.json();
+          setAlertasStock(data || []);
+        }
+      } catch {}
+      finally { setLoadingAlertas(false); }
+    }
+    fetchAlertas();
+  }, [modoChina]);
+
+  const handleIgnorarAlerta = async (id: number) => {
+    setAlertasStock(prev => prev.filter(a => a.id !== id));
+    try {
+      await fetch(`/api/alertas-stock/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'ignorar' }),
+      });
+      toast.success('Alerta ignorada');
+    } catch {
+      toast.error('Error al ignorar alerta');
+    }
+  };
+
+  const handleNoReponer = async (id: number, codigo: string) => {
+    if (!confirm(`¿Marcar "${codigo}" como NO REPONER nunca más?`)) return;
+    setAlertasStock(prev => prev.filter(a => a.id !== id));
+    try {
+      await fetch(`/api/alertas-stock/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'no_reponer' }),
+      });
+      toast.success('Producto marcado como no reponer');
+    } catch {
+      toast.error('Error');
+    }
+  };
+
   const TABS: { key: Tab; label: string }[] = [
     { key: 'pendiente', label: 'Pendientes' },
     { key: 'avisado', label: 'Avisados' },
@@ -445,6 +512,72 @@ export function DeseadosClient({ session }: { session: any }) {
           </button>
         ))}
       </div>
+
+      {/* Alertas stock bajo — solo modo China */}
+      {modoChina && alertasStock.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
+              ⚠️ Stock Bajo ({alertasStock.length})
+            </span>
+            <span className="text-xs text-zinc-400">
+              Productos con menos de 1 caja disponible
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {alertasStock.map(alerta => (
+              <div
+                key={alerta.id}
+                className="bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded-xl p-3 flex flex-col gap-2"
+              >
+                <div className="w-full h-24 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border relative">
+                  <img
+                    src={`https://res.cloudinary.com/${cloudName}/image/upload/productos/${alerta.codigo}.jpg`}
+                    alt={alerta.codigo}
+                    className="w-full h-full object-contain"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                </div>
+                <div>
+                  <span className="font-mono text-[11px] font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
+                    {alerta.codigo}
+                  </span>
+                  <p className="text-sm font-medium leading-snug mt-1 line-clamp-2">{alerta.detalle}</p>
+                  <p className="text-xs text-orange-600 dark:text-orange-400 font-semibold mt-1">
+                    Stock: {alerta.saldo} u ({Math.floor(alerta.saldo / alerta.cantcaja * 10) / 10} cajas)
+                  </p>
+                </div>
+                <div className="flex gap-1.5 mt-auto">
+                  <Button
+                    size="sm"
+                    className="flex-1 text-xs bg-amber-500 hover:bg-amber-600 text-white"
+                    onClick={() => setDeseadoModalExterno({ codigo: alerta.codigo, descripcion: alerta.detalle })}
+                  >
+                    Pedir
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1 text-xs"
+                    onClick={() => handleIgnorarAlerta(alerta.id)}
+                  >
+                    Ignorar
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="text-xs text-red-500 border-red-200 hover:bg-red-50 px-2"
+                    onClick={() => handleNoReponer(alerta.id, alerta.codigo)}
+                    title="No reponer nunca"
+                  >
+                    🚫
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Buscador */}
       <div className="relative">
@@ -931,6 +1064,22 @@ export function DeseadosClient({ session }: { session: any }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {deseadoModalExterno && (
+        <AgregarADeseadosModal
+          open={deseadoModalExterno !== null}
+          onOpenChange={open => {
+            if (!open) {
+              const alerta = alertasStock.find(a => a.codigo === deseadoModalExterno?.codigo);
+              if (alerta) handleIgnorarAlerta(alerta.id);
+              setDeseadoModalExterno(null);
+            }
+          }}
+          codigo={deseadoModalExterno.codigo}
+          descripcion={deseadoModalExterno.descripcion}
+          esChina={true}
+        />
+      )}
     </div>
   );
 }
