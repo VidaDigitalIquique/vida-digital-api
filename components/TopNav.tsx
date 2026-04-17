@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -25,16 +26,9 @@ import {
   Camera,
   Tag,
   Heart,
-  Bell
+  Bell,
+  Warehouse
 } from 'lucide-react';
-
-const NAV_LINKS = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Bodega', href: '/bodega', icon: Box },
-  { name: 'Despachos', href: '/bodega/despachos', icon: Camera },
-  { name: 'Catálogos', href: '/catalogo/admin', icon: LayoutList },
-  { name: 'Deseados', href: '/deseados', icon: Heart },
-];
 
 export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
   const pathname = usePathname();
@@ -42,52 +36,52 @@ export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
   const isAdmin = (session?.user as any)?.rol === 'admin';
   const rol = (session?.user as any)?.rol as string;
 
-  const RUTAS_POR_ROL: Record<string, string[]> = {
-    admin: ['/dashboard', '/precios', '/ventas', '/bodega', '/catalogo', '/deseados'],
-    vendedor: ['/precios', '/ventas', '/catalogo', '/deseados'],
-    bodeguero: ['/bodega'],
-  };
+  const logoHref = rol === 'bodeguero' ? '/bodega' : rol === 'vendedor' ? '/precios' : '/dashboard';
 
-  const rutasVisibles = RUTAS_POR_ROL[rol] || [];
-  const visibleLinks = NAV_LINKS.filter(link =>
-    rutasVisibles.some(ruta => link.href.startsWith(ruta))
+  const [ventasOpen, setVentasOpen] = useState(false);
+  const [catalogoOpen, setCatalogoOpen] = useState(false);
+  const [bodegaOpen, setBodegaOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
+
+  const navLink = (active: boolean) => cn(
+    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900',
+    active ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
+  );
+
+  const dropdownTrigger = (active: boolean) => cn(
+    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none',
+    active ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
   );
 
   return (
     <header className="hidden md:flex sticky top-0 z-50 w-full h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl transition-all">
       <div className="container flex h-16 max-w-7xl items-center justify-between mx-auto px-4">
         <div className="flex items-center gap-8">
-          <Link href={rutasVisibles[0] || '/dashboard'} className="font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
+          <Link href={logoHref} className="font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
             VidaDigital
           </Link>
           <nav className="flex items-center space-x-1">
-            {visibleLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname.startsWith(link.href);
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900',
-                    isActive ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
+
+            {/* 1. Dashboard — solo admin */}
+            {isAdmin && (
+              <Link href="/dashboard" className={navLink(pathname === '/dashboard')}>
+                <Home className="w-4 h-4" />
+                Dashboard
+              </Link>
+            )}
+
+            {/* 2. Ventas — admin y vendedor */}
+            {(isAdmin || rol === 'vendedor') && (
+              <DropdownMenu open={ventasOpen} onOpenChange={setVentasOpen}>
+                <DropdownMenuTrigger
+                  onMouseEnter={() => setVentasOpen(true)}
+                  className={dropdownTrigger(
+                    pathname.startsWith('/precios') || pathname.startsWith('/ventas')
                   )}
                 >
-                  <Icon className="w-4 h-4" />
-                  {link.name}
-                </Link>
-              );
-            })}
-
-            {(rol === 'admin' || rol === 'vendedor') && (
-              <DropdownMenu>
-                <DropdownMenuTrigger className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none',
-                  (pathname.startsWith('/precios') || pathname.startsWith('/ventas')) ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
-                )}>
                   Ventas <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="start" className="w-48" onMouseLeave={() => setVentasOpen(false)}>
                   <DropdownMenuItem>
                     <Link href="/precios" className="flex items-center gap-2 w-full">
                       <ShoppingCart className="w-4 h-4" /> Sala de Venta
@@ -102,15 +96,76 @@ export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
               </DropdownMenu>
             )}
 
+            {/* 3. Catálogo — admin y vendedor */}
+            {(isAdmin || rol === 'vendedor') && (
+              <DropdownMenu open={catalogoOpen} onOpenChange={setCatalogoOpen}>
+                <DropdownMenuTrigger
+                  onMouseEnter={() => setCatalogoOpen(true)}
+                  className={dropdownTrigger(
+                    pathname.startsWith('/catalogo') || pathname.startsWith('/admin/categorias')
+                  )}
+                >
+                  Catálogo <ChevronDown className="w-4 h-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-48" onMouseLeave={() => setCatalogoOpen(false)}>
+                  <DropdownMenuItem>
+                    <Link href="/catalogo/admin" className="flex items-center gap-2 w-full">
+                      <LayoutList className="w-4 h-4" /> Crear Catálogo
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/admin/categorias" className="flex items-center gap-2 w-full">
+                      <Tag className="w-4 h-4" /> Categorías
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* 4. Bodega — admin y bodeguero */}
+            {(isAdmin || rol === 'bodeguero') && (
+              <DropdownMenu open={bodegaOpen} onOpenChange={setBodegaOpen}>
+                <DropdownMenuTrigger
+                  onMouseEnter={() => setBodegaOpen(true)}
+                  className={dropdownTrigger(pathname.startsWith('/bodega'))}
+                >
+                  Bodega <ChevronDown className="w-4 h-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-52" onMouseLeave={() => setBodegaOpen(false)}>
+                  <DropdownMenuItem>
+                    <Link href="/bodega" className="flex items-center gap-2 w-full">
+                      <Box className="w-4 h-4" /> Ubicaciones en Bodega
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/bodega/despachos" className="flex items-center gap-2 w-full">
+                      <Camera className="w-4 h-4" /> Despachos
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* 5. Deseados — admin y vendedor */}
+            {(isAdmin || rol === 'vendedor') && (
+              <Link href="/deseados" className={navLink(pathname.startsWith('/deseados'))}>
+                <Heart className="w-4 h-4" />
+                Deseados
+              </Link>
+            )}
+
+            {/* 6. Administración — solo admin */}
             {isAdmin && (
-              <DropdownMenu>
-                <DropdownMenuTrigger className={cn(
-                  'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none',
-                  pathname.startsWith('/admin') ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
-                )}>
+              <DropdownMenu open={adminOpen} onOpenChange={setAdminOpen}>
+                <DropdownMenuTrigger
+                  onMouseEnter={() => setAdminOpen(true)}
+                  className={dropdownTrigger(
+                    pathname.startsWith('/admin') && !pathname.startsWith('/admin/categorias')
+                  )}
+                >
                   Administración <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-48" onMouseLeave={() => setAdminOpen(false)}>
                   <DropdownMenuItem>
                     <Link href="/admin/importar" className="flex items-center gap-2 w-full">
                       <RefreshCw className="w-4 h-4" /> Sincronizar WinFac
@@ -139,6 +194,7 @@ export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
+
           </nav>
         </div>
         <div className="flex items-center gap-4">

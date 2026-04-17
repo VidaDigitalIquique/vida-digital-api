@@ -1,111 +1,101 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Box, Menu, ImageIcon, Camera, Users, Heart, Bell } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
-import { signOut, useSession } from 'next-auth/react';
-import { Button } from './ui/button';
-
-const NAV_LINKS = [
-  { name: 'Kardex', href: '/ventas/kardex', icon: Users },
-  { name: 'Bodega', href: '/bodega', icon: Box },
-  { name: 'Despachos', href: '/bodega/despachos', icon: Camera },
-  { name: 'Deseados', href: '/deseados', icon: Heart },
-];
+import { Home, Box, Camera, Users, Heart, ShoppingCart, LayoutList } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 
 export function BottomNav({ alertasCount = 0 }: { alertasCount?: number }) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const rol = (session?.user as any)?.rol as string;
-  const [menuOpen, setMenuOpen] = useState(false);
 
-  const RUTAS_POR_ROL: Record<string, string[]> = {
-    admin: ['/precios', '/ventas', '/bodega', '/deseados'],
-    vendedor: ['/precios', '/ventas', '/catalogo', '/deseados'],
-    bodeguero: ['/bodega', '/bodega/despachos'],
-  };
+  const linkClass = (active: boolean) => cn(
+    'flex flex-col items-center justify-center w-full h-full gap-1 transition-colors',
+    active ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+  );
 
-  const rutasVisibles = RUTAS_POR_ROL[rol] || [];
-  const visibleLinks = NAV_LINKS.filter(link =>
-    rutasVisibles.some(ruta => link.href.startsWith(ruta))
+  const deseadosClass = cn(
+    'relative flex flex-col items-center justify-center w-full h-full gap-1 transition-colors',
+    pathname.startsWith('/deseados') ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+  );
+
+  const deseadosBadge = alertasCount > 0 && (
+    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 leading-none">
+      {alertasCount > 99 ? '99+' : alertasCount}
+    </span>
   );
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 h-16 border-t border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl pb-safe">
       <div className="flex items-center justify-around h-full px-2">
+
         {rol === 'admin' && (
-          <Link href="/dashboard" className={cn("flex flex-col items-center justify-center w-full h-full gap-1 transition-colors", pathname === '/dashboard' ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100')}>
-            <Home className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Inicio</span>
-          </Link>
+          <>
+            <Link href="/dashboard" className={linkClass(pathname === '/dashboard')}>
+              <Home className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Dashboard</span>
+            </Link>
+            <Link href="/precios" className={linkClass(pathname.startsWith('/precios'))}>
+              <ShoppingCart className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Ventas</span>
+            </Link>
+            <Link href="/catalogo/admin" className={linkClass(pathname.startsWith('/catalogo'))}>
+              <LayoutList className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Catálogo</span>
+            </Link>
+            <Link href="/bodega" className={linkClass(pathname.startsWith('/bodega'))}>
+              <Box className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Bodega</span>
+            </Link>
+            <Link href="/deseados" className={deseadosClass}>
+              <div className="relative">
+                <Heart className="w-6 h-6" />
+                {deseadosBadge}
+              </div>
+              <span className="text-[10px] font-medium">Deseados</span>
+            </Link>
+          </>
         )}
 
-        {visibleLinks.map((link) => {
-          const Icon = link.icon;
-          const isActive = pathname.startsWith(link.href);
-          return (
-            <Link key={link.href} href={link.href} className={cn("flex flex-col items-center justify-center w-full h-full gap-1 transition-colors", isActive ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100')}>
-              <Icon className="w-5 h-5" />
-              <span className="text-[10px] font-medium">{link.name}</span>
+        {rol === 'vendedor' && (
+          <>
+            <Link href="/precios" className={linkClass(pathname.startsWith('/precios'))}>
+              <ShoppingCart className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Ventas</span>
             </Link>
-          );
-        })}
+            <Link href="/ventas/kardex" className={linkClass(pathname.startsWith('/ventas/kardex'))}>
+              <Users className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Kardex</span>
+            </Link>
+            <Link href="/catalogo/admin" className={linkClass(pathname.startsWith('/catalogo'))}>
+              <LayoutList className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Catálogo</span>
+            </Link>
+            <Link href="/deseados" className={deseadosClass}>
+              <div className="relative">
+                <Heart className="w-6 h-6" />
+                {deseadosBadge}
+              </div>
+              <span className="text-[10px] font-medium">Deseados</span>
+            </Link>
+          </>
+        )}
 
-        <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-          <SheetTrigger className="flex flex-col items-center justify-center w-full h-full gap-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors focus:outline-none">
-            <Menu className="w-5 h-5" />
-            <span className="text-[10px] font-medium">Más</span>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[80vw] sm:w-[350px] p-6">
-            <div className="flex justify-between flex-col h-full pt-10">
-               <div className="space-y-6">
-                 {(rol === 'admin' || rol === 'vendedor') && (
-                   <div>
-                      <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Herramientas</h3>
-                      <Link href="/precios" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Sala de Venta</Link>
-                      <Link href="/ventas/kardex" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Kardex Cliente</Link>
-                      <Link href="/catalogo/admin" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Mis Catálogos</Link>
-                      <Link
-                        href="/deseados"
-                        onClick={() => setMenuOpen(false)}
-                        className="relative flex items-center gap-2 py-2 font-medium"
-                      >
-                        <Bell className="w-4 h-4" />
-                        Deseados
-                        {alertasCount > 0 && (
-                          <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
-                            {alertasCount > 99 ? '99+' : alertasCount}
-                          </span>
-                        )}
-                      </Link>
-                   </div>
-                 )}
-                 {rol === 'admin' && (
-                  <div>
-                     <h3 className="text-sm font-semibold text-zinc-500 uppercase mb-3">Administración</h3>
-                     <Link href="/admin/importar" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Sincronizar WinFac</Link>
-                     <Link href="/admin/subir-imagenes" onClick={() => setMenuOpen(false)} className="block py-2 font-medium flex items-center gap-2">
-                        <ImageIcon className="w-4 h-4" /> Subir Imágenes
-                     </Link>
-                     <Link href="/admin/usuarios" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Usuarios</Link>
-                     <Link href="/admin/kardex-exclusiones" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">
-                       Exclusiones Kardex
-                     </Link>
-                     <Link href="/admin/categorias" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">
-                       Categorías
-                     </Link>
-                  </div>
-                )}
-               </div>
-               <Button variant="destructive" onClick={() => signOut()} className="w-full">
-                 Cerrar sesión
-               </Button>
-            </div>
-          </SheetContent>
-        </Sheet>
+        {rol === 'bodeguero' && (
+          <>
+            <Link href="/bodega" className={linkClass(pathname.startsWith('/bodega') && !pathname.startsWith('/bodega/despachos'))}>
+              <Box className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Bodega</span>
+            </Link>
+            <Link href="/bodega/despachos" className={linkClass(pathname.startsWith('/bodega/despachos'))}>
+              <Camera className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Despachos</span>
+            </Link>
+          </>
+        )}
+
       </div>
     </nav>
   );
