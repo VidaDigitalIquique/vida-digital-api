@@ -128,7 +128,8 @@ export function DeseadosClient({ session }: { session: any }) {
   } | null>(null);
 
   const [descripcionLibre, setDescripcionLibre] = useState('');
-  const [nota, setNota] = useState('');
+  const [notaItem, setNotaItem] = useState('');
+  const [productosLista, setProductosLista] = useState<Array<{ codigo: string | null; descripcion: string; nota: string }>>([]);
   const [saving, setSaving] = useState(false);
 
   // --- Debounce búsqueda principal ---
@@ -222,7 +223,8 @@ export function DeseadosClient({ session }: { session: any }) {
     setProductoResultados([]);
     setProductoSeleccionado(null);
     setDescripcionLibre('');
-    setNota('');
+    setNotaItem('');
+    setProductosLista([]);
   };
 
   const handleOpenModal = () => {
@@ -237,10 +239,28 @@ export function DeseadosClient({ session }: { session: any }) {
       : nuevoClienteForm.nombre.trim().length > 0;
 
   // --- Validación paso 2 ---
-  const paso2Valido =
-    tipoProducto === 'codigo'
-      ? productoSeleccionado !== null
-      : descripcionLibre.trim().length > 0;
+  const paso2Valido = productosLista.length > 0;
+
+  // --- Agregar ítem a la lista ---
+  const handleAgregarProducto = () => {
+    if (tipoProducto === 'codigo' && !productoSeleccionado) return;
+    if (tipoProducto === 'libre' && !descripcionLibre.trim()) return;
+
+    const nuevoItem = {
+      codigo: tipoProducto === 'codigo' ? productoSeleccionado!.codigo : null,
+      descripcion: tipoProducto === 'codigo'
+        ? productoSeleccionado!.descripcion
+        : descripcionLibre.trim(),
+      nota: notaItem.trim(),
+    };
+
+    setProductosLista(prev => [...prev, nuevoItem]);
+    setProductoSeleccionado(null);
+    setProductoSearch('');
+    setProductoResultados([]);
+    setDescripcionLibre('');
+    setNotaItem('');
+  };
 
   // --- Crear deseo ---
   const handleCrearDeseo = async () => {
@@ -271,27 +291,29 @@ export function DeseadosClient({ session }: { session: any }) {
         cliente_winfac_id = clienteSeleccionado?.id;
       }
 
-      const resDeseado = await fetch('/api/deseados', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cliente_winfac_id,
-          cliente_deseado_id,
-          codigo: tipoProducto === 'codigo' ? productoSeleccionado?.codigo : undefined,
-          descripcion:
-            tipoProducto === 'codigo'
-              ? productoSeleccionado!.descripcion
-              : descripcionLibre.trim(),
-          nota: nota.trim() || undefined,
-        }),
-      });
+      const resultados = await Promise.all(
+        productosLista.map(item =>
+          fetch('/api/deseados', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              cliente_winfac_id,
+              cliente_deseado_id,
+              codigo: item.codigo ?? undefined,
+              descripcion: item.descripcion,
+              nota: item.nota || undefined,
+            }),
+          })
+        )
+      );
 
-      if (!resDeseado.ok) {
-        const err = await resDeseado.json();
+      const fallido = resultados.find(r => !r.ok);
+      if (fallido) {
+        const err = await fallido.json();
         throw new Error(err.error || 'Error guardando deseo');
       }
 
-      toast.success('Deseo registrado');
+      toast.success(productosLista.length > 1 ? `${productosLista.length} deseos registrados` : 'Deseo registrado');
       setModalOpen(false);
       resetModal();
       // Refetch
@@ -764,16 +786,60 @@ export function DeseadosClient({ session }: { session: any }) {
                 </div>
               )}
 
-              {/* Nota */}
+              {/* Nota del ítem */}
               <div>
-                <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Nota (opcional)</label>
+                <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Nota del ítem (opcional)</label>
                 <Input
-                  value={nota}
-                  onChange={e => setNota(e.target.value)}
+                  value={notaItem}
+                  onChange={e => setNotaItem(e.target.value)}
                   placeholder="Alguna observación..."
                   className="mt-1"
                 />
               </div>
+
+              {/* Botón Agregar */}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleAgregarProducto}
+                disabled={
+                  (tipoProducto === 'codigo' && !productoSeleccionado) ||
+                  (tipoProducto === 'libre' && !descripcionLibre.trim())
+                }
+              >
+                Agregar +
+              </Button>
+
+              {/* Lista de productos agregados */}
+              {productosLista.length > 0 && (
+                <div className="border rounded-lg divide-y mt-2">
+                  {productosLista.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between px-3 py-2 gap-2">
+                      <div className="flex-1 min-w-0">
+                        {item.codigo ? (
+                          <span className="font-mono text-[11px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded mr-1">
+                            {item.codigo}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 mr-1">
+                            China
+                          </span>
+                        )}
+                        <span className="text-sm truncate">{item.descripcion}</span>
+                        {item.nota && (
+                          <p className="text-xs text-zinc-400 italic mt-0.5">{item.nota}</p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setProductosLista(prev => prev.filter((_, i) => i !== idx))}
+                        className="text-zinc-300 hover:text-red-500 transition-colors flex-shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -793,7 +859,7 @@ export function DeseadosClient({ session }: { session: any }) {
                   ← Volver
                 </Button>
                 <Button onClick={handleCrearDeseo} disabled={!paso2Valido || saving}>
-                  {saving ? 'Guardando...' : 'Guardar'}
+                  {saving ? 'Guardando...' : productosLista.length > 1 ? 'Guardar todo' : 'Guardar'}
                 </Button>
               </>
             )}
