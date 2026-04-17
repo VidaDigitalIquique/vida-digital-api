@@ -798,17 +798,21 @@ export function DeseadosClient({ session }: { session: any }) {
               </div>
 
               {/* Botón Agregar */}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleAgregarProducto}
-                disabled={
-                  (tipoProducto === 'codigo' && !productoSeleccionado) ||
-                  (tipoProducto === 'libre' && !descripcionLibre.trim())
-                }
-              >
-                Agregar +
-              </Button>
+              {(() => {
+                const puedeAgregar =
+                  (tipoProducto === 'codigo' && productoSeleccionado !== null) ||
+                  (tipoProducto === 'libre' && descripcionLibre.trim().length > 0);
+                return (
+                  <Button
+                    variant={puedeAgregar ? 'default' : 'outline'}
+                    className={`w-full transition-all ${puedeAgregar ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' : ''}`}
+                    onClick={handleAgregarProducto}
+                    disabled={!puedeAgregar}
+                  >
+                    Agregar +
+                  </Button>
+                );
+              })()}
 
               {/* Lista de productos agregados */}
               {productosLista.length > 0 && (
