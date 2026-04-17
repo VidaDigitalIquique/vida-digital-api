@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { signOut, useSession } from 'next-auth/react';
 import {
@@ -26,6 +26,7 @@ import {
   Camera,
   Tag,
   Heart,
+  Package,
   Warehouse
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
@@ -38,6 +39,8 @@ export function TopNav() {
   const rol = (session?.user as any)?.rol as string;
 
   const logoHref = rol === 'bodeguero' ? '/bodega' : rol === 'vendedor' ? '/precios' : '/dashboard';
+  const searchParams = useSearchParams();
+  const modoChina = searchParams.get('modo') === 'china';
 
   const [ventasOpen, setVentasOpen] = useState(false);
   const [catalogoOpen, setCatalogoOpen] = useState(false);
@@ -156,7 +159,7 @@ export function TopNav() {
 
             {/* 5. Deseados — admin y vendedor */}
             {(isAdmin || rol === 'vendedor') && (
-              <Link href="/deseados" className={navLink(pathname.startsWith('/deseados'))}>
+              <Link href="/deseados" className={navLink(pathname.startsWith('/deseados') && !modoChina)}>
                 <span className="relative flex items-center gap-2">
                   <Heart className="w-4 h-4" />
                   Deseados
@@ -166,6 +169,14 @@ export function TopNav() {
                     </span>
                   )}
                 </span>
+              </Link>
+            )}
+
+            {/* 5b. Pedir a China — admin y vendedor */}
+            {(isAdmin || rol === 'vendedor') && (
+              <Link href="/deseados?modo=china" className={navLink(pathname.startsWith('/deseados') && modoChina)}>
+                <Package className="w-4 h-4" />
+                Pedir a China
               </Link>
             )}
 

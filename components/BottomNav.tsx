@@ -2,9 +2,9 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, ShoppingCart, Users, LayoutList, Tag, Box, Camera, Heart, Settings, RefreshCw, ImageIcon, Filter } from 'lucide-react';
+import { Home, ShoppingCart, Users, LayoutList, Tag, Box, Camera, Heart, Package, Settings, RefreshCw, ImageIcon, Filter } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { signOut, useSession } from 'next-auth/react';
@@ -15,6 +15,8 @@ export function BottomNav() {
   const { data: session } = useSession();
   const rol = (session?.user as any)?.rol as string;
   const { alertasCount } = useAlertas();
+  const searchParams = useSearchParams();
+  const modoChina = searchParams.get('modo') === 'china';
   const [adminOpen, setAdminOpen] = useState(false);
 
   const linkClass = (active: boolean) => cn(
@@ -22,7 +24,7 @@ export function BottomNav() {
     active ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
   );
 
-  const deseadosActive = pathname.startsWith('/deseados');
+  const deseadosActive = pathname.startsWith('/deseados') && !modoChina;
 
   const DeseadosIcon = (
     <div className="relative">
@@ -76,6 +78,10 @@ export function BottomNav() {
               {DeseadosIcon}
               <span className="text-[10px] font-medium">Deseados</span>
             </Link>
+            <Link href="/deseados?modo=china" className={linkClass(pathname.startsWith('/deseados') && modoChina)}>
+              <Package className="w-6 h-6" />
+              <span className="text-[10px] font-medium">China</span>
+            </Link>
             <button
               onClick={() => setAdminOpen(true)}
               className="flex flex-col items-center justify-center flex-shrink-0 w-16 h-full gap-1 transition-colors text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
@@ -103,6 +109,10 @@ export function BottomNav() {
             <Link href="/deseados" className={linkClass(deseadosActive)}>
               {DeseadosIcon}
               <span className="text-[10px] font-medium">Deseados</span>
+            </Link>
+            <Link href="/deseados?modo=china" className={linkClass(pathname.startsWith('/deseados') && modoChina)}>
+              <Package className="w-6 h-6" />
+              <span className="text-[10px] font-medium">China</span>
             </Link>
           </>
         )}

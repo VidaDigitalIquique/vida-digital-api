@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAlertas } from '@/contexts/AlertasContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -54,6 +55,8 @@ interface ProductoResult {
 export function DeseadosClient({ session }: { session: any }) {
   const isAdmin = session?.rol === 'admin';
   const { refreshAlertas } = useAlertas();
+  const searchParams = useSearchParams();
+  const modoChina = searchParams.get('modo') === 'china';
 
   // --- Lista principal ---
   const [tab, setTab] = useState<Tab>('pendiente');
@@ -113,6 +116,7 @@ export function DeseadosClient({ session }: { session: any }) {
       try {
         const params = new URLSearchParams({ estado: tab });
         if (debouncedSearch.trim().length >= 2) params.set('search', debouncedSearch.trim());
+        if (modoChina) params.set('sinCodigo', 'true');
         const res = await fetch(`/api/deseados?${params.toString()}`);
         if (res.ok) {
           const { data } = await res.json();
@@ -125,7 +129,7 @@ export function DeseadosClient({ session }: { session: any }) {
       }
     }
     fetchDeseados();
-  }, [tab, debouncedSearch]);
+  }, [tab, debouncedSearch, modoChina]);
 
   // --- Debounce búsqueda cliente WinFac ---
   useEffect(() => {
@@ -336,7 +340,7 @@ export function DeseadosClient({ session }: { session: any }) {
     <div className="flex flex-col gap-6 fade-in zoom-in-95 duration-200">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-3xl font-extrabold tracking-tight">Productos Deseados</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight">{modoChina ? 'Pedir a China' : 'Productos Deseados'}</h1>
         <Button onClick={handleOpenModal} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md w-fit">
           <PlusCircle className="w-5 h-5 mr-2" />
           Nuevo deseo
@@ -402,7 +406,14 @@ export function DeseadosClient({ session }: { session: any }) {
 
                 {/* Cliente */}
                 <div>
-                  <p className="font-semibold text-base leading-tight">{clienteNombre}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-base leading-tight">{clienteNombre}</p>
+                    {d.codigo === null && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 w-fit">
+                        Pedir a China
+                      </span>
+                    )}
+                  </div>
                   {(ciudad || whatsapp) && (
                     <p className="text-xs text-zinc-400 mt-0.5">
                       {[ciudad, whatsapp].filter(Boolean).join(' · ')}
@@ -658,7 +669,7 @@ export function DeseadosClient({ session }: { session: any }) {
                   className={`flex-1 py-2 text-sm font-medium transition-colors ${tipoProducto === 'libre' ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
                   onClick={() => { setTipoProducto('libre'); setProductoSeleccionado(null); }}
                 >
-                  Descripción libre
+                  Pedir a China
                 </button>
               </div>
 
