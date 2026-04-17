@@ -96,6 +96,76 @@ export async function POST(request: Request) {
     `;
     const alertas_generadas = alertasResult.length;
 
+    const stockBajoVida = await sql`
+      WITH stock_grouped AS (
+        SELECT
+          codigo,
+          empresa_id,
+          MAX(detalle) as detalle,
+          SUM(saldo)::int as saldo_total,
+          MAX(cantcaja)::int as cantcaja,
+          BOOL_OR(no_reponer) as no_reponer
+        FROM public.productos
+        WHERE empresa_id = 2 AND cantcaja > 0
+        GROUP BY codigo, empresa_id
+      )
+      INSERT INTO public.alertas_stock_bajo (codigo, empresa_id, detalle, saldo, cantcaja)
+      SELECT codigo, empresa_id, detalle, saldo_total, cantcaja
+      FROM stock_grouped
+      WHERE saldo_total > 0
+        AND saldo_total <= cantcaja
+        AND no_reponer = false
+      ON CONFLICT (codigo, empresa_id) DO UPDATE SET
+        saldo = EXCLUDED.saldo,
+        detalle = EXCLUDED.detalle,
+        activa = true,
+        updated_at = NOW()
+      RETURNING id
+    `;
+
+    await sql`
+      UPDATE public.alertas_stock_bajo asb
+      SET activa = false, updated_at = NOW()
+      WHERE activa = true
+        AND EXISTS (
+          SELECT 1 FROM (
+            SELECT codigo, empresa_id, SUM(saldo) as saldo_total, MAX(cantcaja) as cantcaja
+            FROM public.productos
+            GROUP BY codigo, empresa_id
+          ) p
+          WHERE p.codigo = asb.codigo
+            AND p.empresa_id = asb.empresa_id
+            AND p.saldo_total > p.cantcaja
+        )
+    `;
+
+    const stockBajoSanjh = await sql`
+      WITH stock_grouped AS (
+        SELECT
+          codigo,
+          empresa_id,
+          MAX(detalle) as detalle,
+          SUM(saldo)::int as saldo_total,
+          MAX(cantcaja)::int as cantcaja,
+          BOOL_OR(no_reponer) as no_reponer
+        FROM public.productos
+        WHERE empresa_id = 1 AND cantcaja > 0
+        GROUP BY codigo, empresa_id
+      )
+      INSERT INTO public.alertas_stock_bajo (codigo, empresa_id, detalle, saldo, cantcaja)
+      SELECT codigo, empresa_id, detalle, saldo_total, cantcaja
+      FROM stock_grouped
+      WHERE saldo_total > 0
+        AND saldo_total <= cantcaja
+        AND no_reponer = false
+      ON CONFLICT (codigo, empresa_id) DO UPDATE SET
+        saldo = EXCLUDED.saldo,
+        detalle = EXCLUDED.detalle,
+        activa = true,
+        updated_at = NOW()
+      RETURNING id
+    `;
+
     await recalculateNuevoFlags(1);
     await recalculateNuevoFlags(2);
 
@@ -104,6 +174,7 @@ export async function POST(request: Request) {
       sanjh_count,
       vida_count,
       alertas_generadas,
+      alertas_stock_bajo: stockBajoVida.length + stockBajoSanjh.length,
     });
   } catch (error: any) {
     console.error('POST /api/admin/sync-from-winfac error:', error);
