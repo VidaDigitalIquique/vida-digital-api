@@ -82,6 +82,20 @@ export async function POST(request: Request) {
     const sanjh_count = Number(sanjhResult?.[0]?.count ?? 0);
     const vida_count = Number(vidaResult?.[0]?.count ?? 0);
 
+    const alertasResult = await sql`
+      UPDATE public.productos_deseados
+      SET alerta_activa = true, alerta_generada_at = NOW(), updated_at = NOW()
+      WHERE estado = 'pendiente'
+        AND alerta_activa = false
+        AND codigo IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM public.productos p
+          WHERE p.codigo = productos_deseados.codigo AND p.saldo > 0
+        )
+      RETURNING id
+    `;
+    const alertas_generadas = alertasResult.length;
+
     await recalculateNuevoFlags(1);
     await recalculateNuevoFlags(2);
 
@@ -89,6 +103,7 @@ export async function POST(request: Request) {
       message: 'Sincronizacion completada con exito',
       sanjh_count,
       vida_count,
+      alertas_generadas,
     });
   } catch (error: any) {
     console.error('POST /api/admin/sync-from-winfac error:', error);

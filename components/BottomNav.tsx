@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Box, Menu, ImageIcon, Camera, Users, Heart } from 'lucide-react';
+import { Home, Box, Menu, ImageIcon, Camera, Users, Heart, Bell } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
 import { signOut, useSession } from 'next-auth/react';
 import { Button } from './ui/button';
@@ -16,7 +16,7 @@ const NAV_LINKS = [
   { name: 'Deseados', href: '/deseados', icon: Heart },
 ];
 
-export function BottomNav() {
+export function BottomNav({ alertasCount = 0 }: { alertasCount?: number }) {
   const pathname = usePathname();
   const { data: session } = useSession();
   const rol = (session?.user as any)?.rol as string;
@@ -68,6 +68,19 @@ export function BottomNav() {
                       <Link href="/precios" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Sala de Venta</Link>
                       <Link href="/ventas/kardex" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Kardex Cliente</Link>
                       <Link href="/catalogo/admin" onClick={() => setMenuOpen(false)} className="block py-2 font-medium">Mis Catálogos</Link>
+                      <Link
+                        href="/deseados"
+                        onClick={() => setMenuOpen(false)}
+                        className="relative flex items-center gap-2 py-2 font-medium"
+                      >
+                        <Bell className="w-4 h-4" />
+                        Deseados
+                        {alertasCount > 0 && (
+                          <span className="ml-auto bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+                            {alertasCount > 99 ? '99+' : alertasCount}
+                          </span>
+                        )}
+                      </Link>
                    </div>
                  )}
                  {rol === 'admin' && (
