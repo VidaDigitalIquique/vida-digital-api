@@ -43,6 +43,13 @@ export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
   const [bodegaOpen, setBodegaOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
 
+  const openOnly = (which: 'ventas' | 'catalogo' | 'bodega' | 'admin') => {
+    setVentasOpen(which === 'ventas');
+    setCatalogoOpen(which === 'catalogo');
+    setBodegaOpen(which === 'bodega');
+    setAdminOpen(which === 'admin');
+  };
+
   const navLink = (active: boolean) => cn(
     'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900',
     active ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
@@ -74,7 +81,7 @@ export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
             {(isAdmin || rol === 'vendedor') && (
               <DropdownMenu open={ventasOpen} onOpenChange={setVentasOpen}>
                 <DropdownMenuTrigger
-                  onMouseEnter={() => setVentasOpen(true)}
+                  onMouseEnter={() => openOnly('ventas')}
                   className={dropdownTrigger(
                     pathname.startsWith('/precios') || pathname.startsWith('/ventas')
                   )}
@@ -100,7 +107,7 @@ export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
             {(isAdmin || rol === 'vendedor') && (
               <DropdownMenu open={catalogoOpen} onOpenChange={setCatalogoOpen}>
                 <DropdownMenuTrigger
-                  onMouseEnter={() => setCatalogoOpen(true)}
+                  onMouseEnter={() => openOnly('catalogo')}
                   className={dropdownTrigger(
                     pathname.startsWith('/catalogo') || pathname.startsWith('/admin/categorias')
                   )}
@@ -126,7 +133,7 @@ export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
             {(isAdmin || rol === 'bodeguero') && (
               <DropdownMenu open={bodegaOpen} onOpenChange={setBodegaOpen}>
                 <DropdownMenuTrigger
-                  onMouseEnter={() => setBodegaOpen(true)}
+                  onMouseEnter={() => openOnly('bodega')}
                   className={dropdownTrigger(pathname.startsWith('/bodega'))}
                 >
                   Bodega <ChevronDown className="w-4 h-4" />
@@ -158,7 +165,7 @@ export function TopNav({ alertasCount = 0 }: { alertasCount?: number }) {
             {isAdmin && (
               <DropdownMenu open={adminOpen} onOpenChange={setAdminOpen}>
                 <DropdownMenuTrigger
-                  onMouseEnter={() => setAdminOpen(true)}
+                  onMouseEnter={() => openOnly('admin')}
                   className={dropdownTrigger(
                     pathname.startsWith('/admin') && !pathname.startsWith('/admin/categorias')
                   )}
