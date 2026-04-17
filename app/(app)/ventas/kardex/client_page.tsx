@@ -555,14 +555,6 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                             >
                               <Heart className="w-3.5 h-3.5" />
                             </button>
-                            <button
-                              type="button"
-                              onClick={e => { e.stopPropagation(); setDeseadoModal({ codigo: producto.codigo, descripcion: producto.detalle || '', esChina: true }); }}
-                              className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-300 hover:text-amber-500 flex-shrink-0 text-[10px] font-bold"
-                              title="Pedir a China"
-                            >
-                              🇨🇳
-                            </button>
                           </div>
                           <h3
                             className="text-base font-medium leading-snug text-foreground line-clamp-3"

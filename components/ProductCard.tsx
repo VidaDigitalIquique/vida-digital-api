@@ -59,7 +59,8 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
                 </Badge>
               )}
               <button
-                onClick={e => { e.stopPropagation(); setDeseadoOpen(true); }}
+                onMouseDown={e => e.stopPropagation()}
+                onClick={e => { e.preventDefault(); e.stopPropagation(); setDeseadoOpen(true); }}
                 className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-300 hover:text-red-400 flex-shrink-0 ml-auto"
                 title="Agregar a deseados"
               >
@@ -100,12 +101,12 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
         </div>
 
       </div>
-      <AgregarADeseadosModal
-        open={deseadoOpen}
-        onOpenChange={setDeseadoOpen}
-        codigo={producto.codigo}
-        descripcion={producto.detalle || ''}
-      />
     </div>
+    <AgregarADeseadosModal
+      open={deseadoOpen}
+      onOpenChange={setDeseadoOpen}
+      codigo={producto.codigo}
+      descripcion={producto.detalle || ''}
+    />
   );
 }
