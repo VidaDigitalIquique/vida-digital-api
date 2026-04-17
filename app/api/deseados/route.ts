@@ -34,7 +34,7 @@ export async function GET(request: Request) {
             LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
             LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
             WHERE pd.estado = ${estado}
-              AND pd.codigo IS NULL
+              AND pd.es_china = true
               AND (
                 LOWER(pd.descripcion) LIKE ${searchPattern}
                 OR LOWER(c.nombress) LIKE ${searchPattern}
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
             LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
             LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
             WHERE pd.estado = ${estado}
-              AND pd.codigo IS NULL
+              AND pd.es_china = true
             ORDER BY pd.created_at DESC
           `
         : hasSearch
