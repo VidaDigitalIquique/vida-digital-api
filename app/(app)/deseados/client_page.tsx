@@ -325,6 +325,7 @@ export function DeseadosClient({ session }: { session: any }) {
       // Refetch
       const params = new URLSearchParams({ estado: tab });
       if (debouncedSearch.trim().length >= 2) params.set('search', debouncedSearch.trim());
+      if (modoChina) params.set('sinCodigo', 'true');
       const res = await fetch(`/api/deseados?${params.toString()}`);
       if (res.ok) {
         const { data } = await res.json();
