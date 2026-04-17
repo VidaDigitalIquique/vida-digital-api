@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, Eye, EyeOff, Search, Share2 } from 'lucide-react';
+import { Camera, Eye, EyeOff, Heart, Search, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,7 @@ import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { cn, formatRut, formatUSD } from '@/lib/utils';
 import { useShareImage } from '@/hooks/useShareImage';
 import { ProductDrawer } from '@/components/ProductDrawer';
+import { AgregarADeseadosModal } from '@/components/AgregarADeseadosModal';
 import { Producto } from '@/types';
 
 interface KardexClientePageProps {
@@ -97,6 +98,11 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filtroKardex, setFiltroKardex] = useState('');
   const [ocultarPrecios, setOcultarPrecios] = useState(false);
+  const [deseadoModal, setDeseadoModal] = useState<{
+    codigo: string;
+    descripcion: string;
+    esChina: boolean;
+  } | null>(null);
 
   useEffect(() => {
     setOcultarPrecios(localStorage.getItem('ocultar_precios') === 'true');
@@ -541,6 +547,22 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                                 <Share2 className="w-3 h-3 text-zinc-400" />
                               </button>
                             )}
+                            <button
+                              type="button"
+                              onClick={e => { e.stopPropagation(); setDeseadoModal({ codigo: producto.codigo, descripcion: producto.detalle || '', esChina: false }); }}
+                              className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-300 hover:text-red-400 flex-shrink-0"
+                              title="Agregar a deseados"
+                            >
+                              <Heart className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={e => { e.stopPropagation(); setDeseadoModal({ codigo: producto.codigo, descripcion: producto.detalle || '', esChina: true }); }}
+                              className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-300 hover:text-amber-500 flex-shrink-0 text-[10px] font-bold"
+                              title="Pedir a China"
+                            >
+                              🇨🇳
+                            </button>
                           </div>
                           <h3
                             className="text-base font-medium leading-snug text-foreground line-clamp-3"
@@ -683,6 +705,15 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
         empresaNombre={(drawerProduct as any)?.nombre_empresa || ''}
         onUpdated={(updated) => setDrawerProduct(updated)}
       />
+      {deseadoModal && (
+        <AgregarADeseadosModal
+          open={deseadoModal !== null}
+          onOpenChange={open => { if (!open) setDeseadoModal(null); }}
+          codigo={deseadoModal.codigo}
+          descripcion={deseadoModal.descripcion}
+          esChina={deseadoModal.esChina}
+        />
+      )}
     </div>
   );
 }

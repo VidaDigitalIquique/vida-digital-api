@@ -1,9 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { Producto } from '@/types';
 import { formatUSD } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ImageWithFallback } from './ImageWithFallback';
+import { Heart } from 'lucide-react';
+import { AgregarADeseadosModal } from './AgregarADeseadosModal';
 
 interface ProductCardProps {
   producto: Producto;
@@ -22,6 +25,7 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
   const empresa =
     EMPRESA_SHORT[empresaNombre] ||
     (empresaNombre ? { label: empresaNombre, color: 'bg-zinc-100 text-zinc-600' } : null);
+  const [deseadoOpen, setDeseadoOpen] = useState(false);
   return (
     <div
       className="group relative bg-card hover:bg-zinc-50 dark:hover:bg-zinc-900 border border-border shadow-sm rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-md"
@@ -54,6 +58,13 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
                   NUEVO
                 </Badge>
               )}
+              <button
+                onClick={e => { e.stopPropagation(); setDeseadoOpen(true); }}
+                className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors text-zinc-300 hover:text-red-400 flex-shrink-0 ml-auto"
+                title="Agregar a deseados"
+              >
+                <Heart className="w-3.5 h-3.5" />
+              </button>
             </div>
             <h3 className="text-sm font-medium leading-snug text-foreground line-clamp-3" title={producto.detalle || ''}>
               {producto.detalle || 'Sin descripción'}
@@ -89,6 +100,12 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
         </div>
 
       </div>
+      <AgregarADeseadosModal
+        open={deseadoOpen}
+        onOpenChange={setDeseadoOpen}
+        codigo={producto.codigo}
+        descripcion={producto.detalle || ''}
+      />
     </div>
   );
 }
