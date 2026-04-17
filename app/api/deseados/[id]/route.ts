@@ -13,18 +13,24 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   try {
     const { id } = params;
     const body = await request.json();
-    const { estado, nota, alerta_activa } = body;
+    const { estado, nota, alerta_activa, comentario_aviso } = body;
 
     // Si se avisa al cliente, desactivar alerta automáticamente
     const alertaFinal = estado === 'avisado' ? false : alerta_activa;
 
+    const avisadoPor = estado === 'avisado' ? (session.user as any).nombre ?? null : null;
+    const comentarioAvisoFinal = estado === 'avisado' ? (comentario_aviso ?? null) : null;
+
     const rows = await sql`
       UPDATE productos_deseados
       SET
-        estado       = COALESCE(${estado ?? null}, estado),
-        nota         = COALESCE(${nota ?? null}, nota),
+        estado        = COALESCE(${estado ?? null}, estado),
+        nota          = COALESCE(${nota ?? null}, nota),
         alerta_activa = COALESCE(${alertaFinal ?? null}, alerta_activa),
-        updated_at   = NOW()
+        avisado_por   = CASE WHEN ${estado ?? null} = 'avisado' THEN ${avisadoPor} ELSE avisado_por END,
+        avisado_at    = CASE WHEN ${estado ?? null} = 'avisado' THEN NOW() ELSE avisado_at END,
+        comentario_aviso = CASE WHEN ${estado ?? null} = 'avisado' THEN ${comentarioAvisoFinal} ELSE comentario_aviso END,
+        updated_at    = NOW()
       WHERE id = ${id}
       RETURNING *
     `;

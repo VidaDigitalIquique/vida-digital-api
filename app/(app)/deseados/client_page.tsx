@@ -27,6 +27,9 @@ interface Deseado {
   estado: Tab;
   alerta_activa: boolean;
   created_at: string;
+  avisado_por: string | null;
+  comentario_aviso: string | null;
+  avisado_at: string | null;
   cliente_nombre: string | null;
   cliente_deseado_nombre: string | null;
   cliente_deseado_whatsapp: string | null;
@@ -56,6 +59,10 @@ export function DeseadosClient({ session }: { session: any }) {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [deseados, setDeseados] = useState<Deseado[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // --- Modal aviso ---
+  const [avisandoId, setAvisandoId] = useState<number | null>(null);
+  const [comentarioAviso, setComentarioAviso] = useState('');
 
   // --- Modal ---
   const [modalOpen, setModalOpen] = useState(false);
@@ -269,7 +276,7 @@ export function DeseadosClient({ session }: { session: any }) {
   };
 
   // --- Acciones ---
-  const handleAvisar = async (id: number) => {
+  const handleAvisar = async (id: number, comentario: string) => {
     setDeseados(prev =>
       prev.map(d => (d.id === id ? { ...d, estado: 'avisado', alerta_activa: false } : d))
     );
@@ -277,9 +284,11 @@ export function DeseadosClient({ session }: { session: any }) {
       await fetch(`/api/deseados/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ estado: 'avisado' }),
+        body: JSON.stringify({ estado: 'avisado', comentario_aviso: comentario || null }),
       });
       toast.success('Marcado como avisado');
+      setAvisandoId(null);
+      setComentarioAviso('');
       setDeseados(prev => prev.filter(d => d.id !== id));
     } catch {
       toast.error('Error al avisar');
@@ -416,6 +425,25 @@ export function DeseadosClient({ session }: { session: any }) {
                   {format(new Date(d.created_at), "dd MMM yyyy", { locale: es })}
                 </p>
 
+                {/* Info aviso (solo tab avisados) */}
+                {tab === 'avisado' && (
+                  <div className="flex flex-col gap-0.5">
+                    {d.avisado_por && (
+                      <p className="text-xs text-zinc-400">Avisado por {d.avisado_por}</p>
+                    )}
+                    {d.avisado_at && (
+                      <p className="text-xs text-zinc-400">
+                        el {format(new Date(d.avisado_at), 'dd MMM yyyy', { locale: es })}
+                      </p>
+                    )}
+                    {d.comentario_aviso && (
+                      <p className="text-xs text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 rounded p-2 mt-1">
+                        {d.comentario_aviso}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Acciones */}
                 <div className="flex gap-2 mt-auto border-t pt-3">
                   {tab === 'pendiente' && (
@@ -424,7 +452,7 @@ export function DeseadosClient({ session }: { session: any }) {
                         size="sm"
                         variant="outline"
                         className={`flex-1 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20 ${d.alerta_activa ? 'ring-2 ring-emerald-400' : ''}`}
-                        onClick={() => handleAvisar(d.id)}
+                        onClick={() => { setAvisandoId(d.id); setComentarioAviso(''); }}
                       >
                         <CheckCircle className="w-3.5 h-3.5 mr-1" />
                         Avisar
@@ -468,6 +496,38 @@ export function DeseadosClient({ session }: { session: any }) {
           })}
         </div>
       )}
+
+      {/* Modal confirmación aviso */}
+      <Dialog
+        open={avisandoId !== null}
+        onOpenChange={open => { if (!open) { setAvisandoId(null); setComentarioAviso(''); } }}
+      >
+        <DialogContent className="sm:max-w-md p-5">
+          <DialogHeader>
+            <DialogTitle>Confirmar aviso al cliente</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <textarea
+              value={comentarioAviso}
+              onChange={e => setComentarioAviso(e.target.value)}
+              placeholder="Comentario u observación (opcional)..."
+              rows={3}
+              className="w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900 resize-none"
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setAvisandoId(null); setComentarioAviso(''); }}>
+              Cancelar
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              onClick={() => { if (avisandoId !== null) handleAvisar(avisandoId, comentarioAviso); }}
+            >
+              Confirmar aviso
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal nuevo deseo */}
       <Dialog open={modalOpen} onOpenChange={open => { if (!open) { setModalOpen(false); resetModal(); } }}>
