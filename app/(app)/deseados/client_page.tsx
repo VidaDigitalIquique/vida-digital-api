@@ -507,7 +507,7 @@ export function DeseadosClient({ session }: { session: any }) {
                             ¡Llegó!
                           </span>
                         )}
-                        {d.codigo ? (
+                        {d.codigo && (
                           <span className="font-mono text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded">
                             {d.codigo}
                           </span>
