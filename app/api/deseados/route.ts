@@ -192,6 +192,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { cliente_winfac_id, cliente_deseado_id, codigo, descripcion, nota } = body;
+    const es_china = body.es_china === true;
 
     if (!descripcion?.trim()) {
       return NextResponse.json({ error: 'descripcion es requerida' }, { status: 400 });
@@ -202,9 +203,9 @@ export async function POST(request: Request) {
 
     const rows = await sql`
       INSERT INTO productos_deseados
-        (cliente_winfac_id, cliente_deseado_id, codigo, descripcion, nota)
+        (cliente_winfac_id, cliente_deseado_id, codigo, descripcion, nota, es_china)
       VALUES
-        (${cliente_winfac_id ?? null}, ${cliente_deseado_id ?? null}, ${codigo ?? null}, ${descripcion.trim()}, ${nota ?? null})
+        (${cliente_winfac_id ?? null}, ${cliente_deseado_id ?? null}, ${codigo ?? null}, ${descripcion.trim()}, ${nota ?? null}, ${es_china})
       RETURNING *
     `;
 

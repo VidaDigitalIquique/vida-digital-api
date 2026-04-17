@@ -34,6 +34,7 @@ interface Deseado {
   avisado_at: string | null;
   imagen_url: string | null;
   imagen_public_id: string | null;
+  es_china: boolean;
   cliente_nombre: string | null;
   cliente_deseado_nombre: string | null;
   cliente_deseado_whatsapp: string | null;
@@ -131,7 +132,7 @@ export function DeseadosClient({ session }: { session: any }) {
 
   const [descripcionLibre, setDescripcionLibre] = useState('');
   const [notaItem, setNotaItem] = useState('');
-  const [productosLista, setProductosLista] = useState<Array<{ codigo: string | null; descripcion: string; nota: string }>>([]);
+  const [productosLista, setProductosLista] = useState<Array<{ codigo: string | null; descripcion: string; nota: string; esChina: boolean }>>([]);
   const [saving, setSaving] = useState(false);
   const [uploadingId, setUploadingId] = useState<number | null>(null);
 
@@ -255,6 +256,7 @@ export function DeseadosClient({ session }: { session: any }) {
         ? productoSeleccionado!.descripcion
         : descripcionLibre.trim(),
       nota: notaItem.trim(),
+      esChina: tipoProducto === 'libre',
     };
 
     setProductosLista(prev => [...prev, nuevoItem]);
@@ -305,6 +307,7 @@ export function DeseadosClient({ session }: { session: any }) {
               codigo: item.codigo ?? undefined,
               descripcion: item.descripcion,
               nota: item.nota || undefined,
+              es_china: item.esChina,
             }),
           })
         )
@@ -508,7 +511,8 @@ export function DeseadosClient({ session }: { session: any }) {
                           <span className="font-mono text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded">
                             {d.codigo}
                           </span>
-                        ) : (
+                        )}
+                        {d.es_china && (
                           <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
                             Pedir a China
                           </span>
@@ -525,7 +529,7 @@ export function DeseadosClient({ session }: { session: any }) {
                           className="w-full max-h-40 object-contain rounded-md border border-border mt-1"
                         />
                       )}
-                      {!d.codigo && !d.imagen_url && (
+                      {d.es_china && !d.imagen_url && (
                         <label className={`inline-flex items-center gap-1 cursor-pointer text-xs px-2 py-1 rounded border border-dashed border-zinc-300 dark:border-zinc-600 text-zinc-400 hover:text-blue-500 hover:border-blue-400 transition-colors mt-1 ${uploadingId === d.id ? 'opacity-50 pointer-events-none' : ''}`}>
                           <Camera className="w-3.5 h-3.5" />
                           {uploadingId === d.id ? 'Subiendo...' : 'Agregar foto'}
