@@ -13,7 +13,7 @@ export default async function CategoriasPage() {
 
   const categorias = await sql`
     SELECT c.id, c.nombre, c.created_at,
-           COUNT(p.id)::int as total_productos
+           COUNT(DISTINCT p.codigo)::int as total_productos
     FROM categorias c
     LEFT JOIN productos p ON p.categoria = c.nombre
     GROUP BY c.id, c.nombre, c.created_at
