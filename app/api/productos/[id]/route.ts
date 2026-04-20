@@ -41,7 +41,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
 
     // Fetch existing product to verify enterprise access
-    const existing = await sql`SELECT empresa_id FROM productos WHERE id = ${pid}`;
+    const existing = await sql`SELECT empresa_id, codigo FROM productos WHERE id = ${pid}`;
     if (existing.length === 0) return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
     
     if (!user.empresas.includes(existing[0].empresa_id)) {
@@ -67,7 +67,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     } else if (es_nuevo !== undefined) {
       updated = await sql`UPDATE productos SET es_nuevo = ${es_nuevo}, updated_at = NOW() WHERE id = ${pid} RETURNING *`;
     } else if (categoria !== undefined) {
-      updated = await sql`UPDATE productos SET categoria = ${categoria}, updated_at = NOW() WHERE id = ${pid} RETURNING *`;
+      updated = await sql`UPDATE productos SET categoria = ${categoria}, updated_at = NOW() WHERE codigo = ${existing[0].codigo} AND empresa_id = ${existing[0].empresa_id} RETURNING *`;
     } else {
       return NextResponse.json({ message: "Nada que actualizar" });
     }
