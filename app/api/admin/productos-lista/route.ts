@@ -15,68 +15,105 @@ export async function GET(request: Request) {
     const offset = Number(searchParams.get('offset')) || 0;
     const search = searchParams.get('search')?.trim() || '';
     const sinCategoria = searchParams.get('sinCategoria') === 'true';
+    const categoriaFiltro = searchParams.get('categoriaFiltro') ?? null;
     const hasSearch = search.length > 0;
     const sp = `%${search}%`;
 
     let rows;
     let countRows;
 
-    if (!hasSearch && !sinCategoria) {
-      rows = await sql`
-        SELECT DISTINCT ON (p.codigo)
-          p.id, p.codigo, p.detalle, p.imagen_url, p.categoria
-        FROM public.productos p
-        ORDER BY p.codigo ASC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countRows = await sql`
-        SELECT COUNT(DISTINCT p.codigo)::int as total
-        FROM public.productos p
-      `;
-    } else if (hasSearch && !sinCategoria) {
-      rows = await sql`
-        SELECT DISTINCT ON (p.codigo)
-          p.id, p.codigo, p.detalle, p.imagen_url, p.categoria
-        FROM public.productos p
-        WHERE p.codigo ILIKE ${sp} OR p.detalle ILIKE ${sp}
-        ORDER BY p.codigo ASC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countRows = await sql`
-        SELECT COUNT(DISTINCT p.codigo)::int as total
-        FROM public.productos p
-        WHERE p.codigo ILIKE ${sp} OR p.detalle ILIKE ${sp}
-      `;
-    } else if (!hasSearch && sinCategoria) {
-      rows = await sql`
-        SELECT DISTINCT ON (p.codigo)
-          p.id, p.codigo, p.detalle, p.imagen_url, p.categoria
-        FROM public.productos p
-        WHERE p.categoria IS NULL
-        ORDER BY p.codigo ASC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countRows = await sql`
-        SELECT COUNT(DISTINCT p.codigo)::int as total
-        FROM public.productos p
-        WHERE p.categoria IS NULL
-      `;
+    if (categoriaFiltro && categoriaFiltro !== '__sin__') {
+      if (hasSearch) {
+        rows = await sql`
+          SELECT DISTINCT ON (p.codigo)
+            p.id, p.codigo, p.detalle, p.imagen_url, p.categoria
+          FROM public.productos p
+          WHERE (p.codigo ILIKE ${sp} OR p.detalle ILIKE ${sp})
+            AND p.categoria = ${categoriaFiltro}
+          ORDER BY p.codigo ASC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+        countRows = await sql`
+          SELECT COUNT(DISTINCT p.codigo)::int as total
+          FROM public.productos p
+          WHERE (p.codigo ILIKE ${sp} OR p.detalle ILIKE ${sp})
+            AND p.categoria = ${categoriaFiltro}
+        `;
+      } else {
+        rows = await sql`
+          SELECT DISTINCT ON (p.codigo)
+            p.id, p.codigo, p.detalle, p.imagen_url, p.categoria
+          FROM public.productos p
+          WHERE p.categoria = ${categoriaFiltro}
+          ORDER BY p.codigo ASC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+        countRows = await sql`
+          SELECT COUNT(DISTINCT p.codigo)::int as total
+          FROM public.productos p
+          WHERE p.categoria = ${categoriaFiltro}
+        `;
+      }
+    } else if (categoriaFiltro === '__sin__' || sinCategoria) {
+      if (hasSearch) {
+        rows = await sql`
+          SELECT DISTINCT ON (p.codigo)
+            p.id, p.codigo, p.detalle, p.imagen_url, p.categoria
+          FROM public.productos p
+          WHERE (p.codigo ILIKE ${sp} OR p.detalle ILIKE ${sp})
+            AND p.categoria IS NULL
+          ORDER BY p.codigo ASC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+        countRows = await sql`
+          SELECT COUNT(DISTINCT p.codigo)::int as total
+          FROM public.productos p
+          WHERE (p.codigo ILIKE ${sp} OR p.detalle ILIKE ${sp})
+            AND p.categoria IS NULL
+        `;
+      } else {
+        rows = await sql`
+          SELECT DISTINCT ON (p.codigo)
+            p.id, p.codigo, p.detalle, p.imagen_url, p.categoria
+          FROM public.productos p
+          WHERE p.categoria IS NULL
+          ORDER BY p.codigo ASC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+        countRows = await sql`
+          SELECT COUNT(DISTINCT p.codigo)::int as total
+          FROM public.productos p
+          WHERE p.categoria IS NULL
+        `;
+      }
     } else {
-      rows = await sql`
-        SELECT DISTINCT ON (p.codigo)
-          p.id, p.codigo, p.detalle, p.imagen_url, p.categoria
-        FROM public.productos p
-        WHERE (p.codigo ILIKE ${sp} OR p.detalle ILIKE ${sp})
-          AND p.categoria IS NULL
-        ORDER BY p.codigo ASC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
-      countRows = await sql`
-        SELECT COUNT(DISTINCT p.codigo)::int as total
-        FROM public.productos p
-        WHERE (p.codigo ILIKE ${sp} OR p.detalle ILIKE ${sp})
-          AND p.categoria IS NULL
-      `;
+      if (hasSearch) {
+        rows = await sql`
+          SELECT DISTINCT ON (p.codigo)
+            p.id, p.codigo, p.detalle, p.imagen_url, p.categoria
+          FROM public.productos p
+          WHERE p.codigo ILIKE ${sp} OR p.detalle ILIKE ${sp}
+          ORDER BY p.codigo ASC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+        countRows = await sql`
+          SELECT COUNT(DISTINCT p.codigo)::int as total
+          FROM public.productos p
+          WHERE p.codigo ILIKE ${sp} OR p.detalle ILIKE ${sp}
+        `;
+      } else {
+        rows = await sql`
+          SELECT DISTINCT ON (p.codigo)
+            p.id, p.codigo, p.detalle, p.imagen_url, p.categoria
+          FROM public.productos p
+          ORDER BY p.codigo ASC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+        countRows = await sql`
+          SELECT COUNT(DISTINCT p.codigo)::int as total
+          FROM public.productos p
+        `;
+      }
     }
 
     const total = countRows[0].total;

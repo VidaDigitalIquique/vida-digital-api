@@ -217,7 +217,7 @@ export function CategoriasClient({
   const [hasMore, setHasMore] = useState(false);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [sinCategoria] = useState(true);
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string>('__sin__');
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [isGroupDrag, setIsGroupDrag] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -257,12 +257,12 @@ export function CategoriasClient({
   // ---------------------------------------------------------------------------
   // Fetch productos
   // ---------------------------------------------------------------------------
-  const fetchProductos = useCallback(async (searchVal: string, offsetVal: number, append: boolean, sinCat: boolean) => {
+  const fetchProductos = useCallback(async (searchVal: string, offsetVal: number, append: boolean, categoriaFiltro: string) => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams({ limit: '50', offset: String(offsetVal) });
       if (searchVal) params.set('search', searchVal);
-      if (sinCat) params.set('sinCategoria', 'true');
+      params.set('categoriaFiltro', categoriaFiltro);
       const res = await fetch(`/api/admin/productos-lista?${params}`);
       const json = await res.json();
       setProductos(prev => append ? [...prev, ...json.productos] : json.productos);
@@ -276,13 +276,13 @@ export function CategoriasClient({
 
   // Initial load
   useEffect(() => {
-    fetchProductos('', 0, false, true);
+    fetchProductos('', 0, false, categoriaFiltro);
   }, [fetchProductos]);
 
-  // On search or sinCategoria change
+  // On search or categoriaFiltro change
   useEffect(() => {
-    fetchProductos(debouncedSearch, 0, false, sinCategoria);
-  }, [debouncedSearch, sinCategoria, fetchProductos]);
+    fetchProductos(debouncedSearch, 0, false, categoriaFiltro);
+  }, [debouncedSearch, categoriaFiltro, fetchProductos]);
 
   // ---------------------------------------------------------------------------
   // Intersection observer — infinite scroll sentinel
@@ -292,7 +292,7 @@ export function CategoriasClient({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoading) {
-          fetchProductos(debouncedSearch, offset, true, sinCategoria);
+          fetchProductos(debouncedSearch, offset, true, categoriaFiltro);
         }
       },
       { threshold: 0.1 }
@@ -400,7 +400,7 @@ export function CategoriasClient({
       const prevCategoria = activeProduct.categoria;
 
       setProductos(prev =>
-        sinCategoria
+        categoriaFiltro === '__sin__'
           ? prev.filter(p => p.id !== activeProduct.id)
           : prev.map(p => p.id === activeProduct.id ? { ...p, categoria: nombre } : p)
       );
@@ -422,7 +422,7 @@ export function CategoriasClient({
         });
       } catch {
         setProductos(prev =>
-          sinCategoria
+          categoriaFiltro === '__sin__'
             ? [...prev, { ...activeProduct, categoria: prevCategoria }]
             : prev.map(p => p.id === activeProduct.id ? { ...p, categoria: prevCategoria } : p)
         );
@@ -501,6 +501,20 @@ export function CategoriasClient({
               <span className="font-semibold text-sm">Productos</span>
               <Badge variant="secondary" className="text-xs">{total}</Badge>
             </div>
+          </div>
+
+          {/* Category filter dropdown */}
+          <div className="px-3 py-2 border-b bg-white dark:bg-zinc-950 flex-shrink-0">
+            <select
+              value={categoriaFiltro}
+              onChange={e => { setCategoriaFiltro(e.target.value); setOffset(0); }}
+              className="w-full h-8 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-2 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              <option value="__sin__">Sin categoría</option>
+              {categorias.map(c => (
+                <option key={c.id} value={c.nombre}>{c.nombre}</option>
+              ))}
+            </select>
           </div>
 
           {/* Search */}
