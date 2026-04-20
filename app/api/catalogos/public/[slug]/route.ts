@@ -66,8 +66,6 @@ export async function GET(request: Request, { params }: { params: { slug: string
             BOOL_OR(p.es_nuevo) as es_nuevo
           FROM productos p
           WHERE (${cat.ambas_empresas} = true OR p.empresa_id = ${cat.empresa_id})
-            AND (${soloStock} = false OR p.saldo > 0)
-            AND (${soloNuevo} = false OR p.es_nuevo = true)
             AND p.categoria = ${categoriaFilter}
           GROUP BY p.codigo
           ORDER BY p.codigo ASC
@@ -85,14 +83,19 @@ export async function GET(request: Request, { params }: { params: { slug: string
             BOOL_OR(p.es_nuevo) as es_nuevo
           FROM productos p
           WHERE (${cat.ambas_empresas} = true OR p.empresa_id = ${cat.empresa_id})
-            AND (${soloStock} = false OR p.saldo > 0)
-            AND (${soloNuevo} = false OR p.es_nuevo = true)
           GROUP BY p.codigo
           ORDER BY p.codigo ASC
         `;
 
     // Apply keyword filters in JS (simpler than complex SQL)
     let productos = filterProducts(rows as CatalogoProducto[], codigosIncluir, keywordsIncluir, excluir);
+
+    if (soloStock) {
+      productos = productos.filter((p: any) => Number(p.saldo) > 0);
+    }
+    if (soloNuevo) {
+      productos = productos.filter((p: any) => p.es_nuevo === true);
+    }
 
     // Compute precio_catalogo
     productos = productos.map((p: any) => ({
