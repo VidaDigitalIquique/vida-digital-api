@@ -67,7 +67,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     } else if (es_nuevo !== undefined) {
       updated = await sql`UPDATE productos SET es_nuevo = ${es_nuevo}, updated_at = NOW() WHERE id = ${pid} RETURNING *`;
     } else if (categoria !== undefined) {
-      updated = await sql`UPDATE productos SET categoria = ${categoria}, updated_at = NOW() WHERE codigo = ${existing[0].codigo} AND empresa_id = ${existing[0].empresa_id} RETURNING *`;
+      updated = await sql`UPDATE productos SET categoria = ${categoria}, updated_at = NOW() WHERE codigo = ${existing[0].codigo} RETURNING *`;
     } else {
       return NextResponse.json({ message: "Nada que actualizar" });
     }
