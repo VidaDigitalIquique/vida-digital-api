@@ -3,8 +3,6 @@ import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-const CATEGORIAS_VALIDAS = ['Ortopedia', 'Electrodomésticos', 'Deporte', 'Belleza', 'Médico', 'Vidrio', 'Juguetes'];
-
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -34,9 +32,12 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: "Permisos insuficientes para editar categoría" }, { status: 403 });
     }
 
-    // Validate categoria value before hitting the DB
-    if (categoria !== undefined && categoria !== null && !CATEGORIAS_VALIDAS.includes(categoria)) {
-      return NextResponse.json({ error: "Categoría no válida" }, { status: 400 });
+    // Validate categoria value against public.categorias table
+    if (categoria !== undefined && categoria !== null) {
+      const catFound = await sql`SELECT nombre FROM categorias WHERE nombre = ${categoria} LIMIT 1`;
+      if (catFound.length === 0) {
+        return NextResponse.json({ error: "Categoría no válida" }, { status: 400 });
+      }
     }
 
     // Fetch existing product to verify enterprise access
