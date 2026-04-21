@@ -90,7 +90,7 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
 
           <div className="flex flex-col items-end justify-center gap-1">
             <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium text-right">Saldo Zofri</div>
-            <div className={`text-sm font-semibold text-right ${producto.saldo > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-zinc-400'}`}>
+            <div className={`text-sm font-semibold text-right ${producto.saldo > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-500 dark:text-red-400'}`}>
               {producto.saldo} {producto.umed}
             </div>
             {producto.cantcaja > 1 && (
