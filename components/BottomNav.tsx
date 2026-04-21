@@ -58,9 +58,13 @@ export function BottomNav() {
               <Users className="w-6 h-6" />
               <span className="text-[10px] font-medium">Kardex</span>
             </Link>
-            <Link href="/catalogo/admin" className={linkClass(pathname.startsWith('/catalogo'))}>
+            <Link href="/catalogo/admin" className={linkClass(pathname === '/catalogo/admin')}>
               <LayoutList className="w-6 h-6" />
               <span className="text-[10px] font-medium">Catálogo</span>
+            </Link>
+            <Link href="/catalogo/clientes" className={linkClass(pathname.startsWith('/catalogo/clientes'))}>
+              <Users className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Cat. Cliente</span>
             </Link>
             <Link href="/admin/categorias" className={linkClass(pathname.startsWith('/admin/categorias'))}>
               <Tag className="w-6 h-6" />
@@ -109,9 +113,13 @@ export function BottomNav() {
               <Users className="w-6 h-6" />
               <span className="text-[10px] font-medium">Kardex</span>
             </Link>
-            <Link href="/catalogo/admin" className={linkClass(pathname.startsWith('/catalogo'))}>
+            <Link href="/catalogo/admin" className={linkClass(pathname === '/catalogo/admin')}>
               <LayoutList className="w-6 h-6" />
               <span className="text-[10px] font-medium">Catálogo</span>
+            </Link>
+            <Link href="/catalogo/clientes" className={linkClass(pathname.startsWith('/catalogo/clientes'))}>
+              <Users className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Cat. Cliente</span>
             </Link>
             <Link href="/deseados" className={linkClass(deseadosActive)}>
               {DeseadosIcon}
