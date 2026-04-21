@@ -82,6 +82,34 @@ export async function POST(request: Request) {
     const sanjh_count = Number(sanjhResult?.[0]?.count ?? 0);
     const vida_count = Number(vidaResult?.[0]?.count ?? 0);
 
+    // Sync saldo y cantcaja en ubicaciones_bodega desde public.productos (empresa 1 - sanjh)
+    await sql`
+      UPDATE ubicaciones_bodega ub
+      SET
+        saldo = p.saldo,
+        cantcaja = p.cantcaja,
+        updated_at = NOW()
+      FROM public.productos p
+      WHERE ub.empresa_id = p.empresa_id
+        AND ub.codigo = p.codigo
+        AND ub.nroingreso = p.nroingreso
+        AND ub.empresa_id = 1
+    `;
+
+    // Sync saldo y cantcaja en ubicaciones_bodega desde public.productos (empresa 2 - vida)
+    await sql`
+      UPDATE ubicaciones_bodega ub
+      SET
+        saldo = p.saldo,
+        cantcaja = p.cantcaja,
+        updated_at = NOW()
+      FROM public.productos p
+      WHERE ub.empresa_id = p.empresa_id
+        AND ub.codigo = p.codigo
+        AND ub.nroingreso = p.nroingreso
+        AND ub.empresa_id = 2
+    `;
+
     const alertasResult = await sql`
       UPDATE public.productos_deseados
       SET alerta_activa = true, alerta_generada_at = NOW(), updated_at = NOW()
