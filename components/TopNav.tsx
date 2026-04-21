@@ -49,7 +49,7 @@ export function TopNav() {
     return 'Buenas noches';
   };
 
-  const primerNombre = session?.user?.name?.split(' ')[0] ?? '';
+  const primerNombre = ((session?.user as any)?.nombre as string)?.split(' ')[0] ?? '';
 
   const [ventasOpen, setVentasOpen] = useState(false);
   const [catalogoOpen, setCatalogoOpen] = useState(false);
