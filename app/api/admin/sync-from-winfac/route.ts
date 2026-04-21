@@ -3,6 +3,7 @@ import { authOptions } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { recalculateNuevoFlags } from '@/lib/services/product-service';
+import { syncClientRatings } from '@/lib/sync-client-ratings';
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
@@ -196,6 +197,8 @@ export async function POST(request: Request) {
 
     await recalculateNuevoFlags(1);
     await recalculateNuevoFlags(2);
+
+    await syncClientRatings(sql);
 
     return NextResponse.json({
       message: 'Sincronizacion completada con exito',
