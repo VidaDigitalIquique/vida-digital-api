@@ -42,6 +42,15 @@ export function TopNav() {
   const searchParams = useSearchParams();
   const modoChina = searchParams.get('modo') === 'china';
 
+  const getSaludo = () => {
+    const hora = new Date().getHours();
+    if (hora >= 5 && hora < 12) return 'Buenos días';
+    if (hora >= 12 && hora < 20) return 'Buenas tardes';
+    return 'Buenas noches';
+  };
+
+  const primerNombre = session?.user?.name?.split(' ')[0] ?? '';
+
   const [ventasOpen, setVentasOpen] = useState(false);
   const [catalogoOpen, setCatalogoOpen] = useState(false);
   const [bodegaOpen, setBodegaOpen] = useState(false);
@@ -231,6 +240,11 @@ export function TopNav() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
+          {primerNombre && (
+            <span className="text-sm text-zinc-500 dark:text-zinc-400 hidden lg:block">
+              {getSaludo()}, <span className="font-semibold text-zinc-700 dark:text-zinc-300">{primerNombre}</span>
+            </span>
+          )}
           <button onClick={() => signOut()} className="p-2 text-zinc-500 hover:text-red-500 transition-colors" title="Cerrar sesión">
             <LogOut className="w-5 h-5" />
           </button>
