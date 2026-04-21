@@ -2,10 +2,18 @@
 
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+
+type DespachoHoy = {
+  id: number;
+  folio: string;
+  imagen_url: string;
+  created_at: string;
+};
 
 type StockCompareRow = {
   empresaId: number;
@@ -26,14 +34,16 @@ type StockDetailRow = {
   diferencia: number;
 };
 
-export function DashboardClient({ stats, stockCompare, despachosHoyCount, ultimoDia, penultimoDia }: {
+export function DashboardClient({ stats, stockCompare, despachosHoyCount, ultimoDia, penultimoDia, despachosHoy }: {
   stats: Record<number, any>;
   stockCompare: StockCompareRow[];
   despachosHoyCount: number;
   ultimoDia: { fecha: string; count: number } | null;
   penultimoDia: { fecha: string; count: number } | null;
+  despachosHoy?: DespachoHoy[];
 }) {
   const [open, setOpen] = useState(false);
+  const [despachoModal, setDespachoModal] = useState<DespachoHoy | null>(null);
   const [drawerTitle, setDrawerTitle] = useState('');
   const [drawerRows, setDrawerRows] = useState<StockDetailRow[]>([]);
   const [drawerLoading, setDrawerLoading] = useState(false);
@@ -45,6 +55,30 @@ export function DashboardClient({ stats, stockCompare, despachosHoyCount, ultimo
         <h1 className="text-3xl font-extrabold tracking-tight">Resumen General</h1>
         <p className="text-zinc-500 dark:text-zinc-400 mt-1">Métricas principales en tiempo real.</p>
       </div>
+
+      <Dialog open={despachoModal !== null} onOpenChange={(open) => { if (!open) setDespachoModal(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Nota de Venta #{despachoModal?.folio}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="text-sm text-zinc-500">
+              {despachoModal?.created_at
+                ? format(new Date(despachoModal.created_at), "dd MMM yyyy, HH:mm", { locale: es })
+                : ''}
+            </div>
+            {despachoModal?.imagen_url && (
+              <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden border bg-zinc-100">
+                <img
+                  src={despachoModal.imagen_url}
+                  alt={`Despacho ${despachoModal.folio}`}
+                  className="object-contain w-full h-full"
+                />
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="w-screen h-screen sm:w-[500px] sm:h-full max-w-full overflow-y-auto flex flex-col p-0">
@@ -209,6 +243,19 @@ export function DashboardClient({ stats, stockCompare, despachosHoyCount, ultimo
               <p className="text-sm text-zinc-400 mt-2">Sin datos</p>
             )}
           </div>
+          {despachosHoy && despachosHoy.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {despachosHoy.map(d => (
+                <button
+                  key={d.id}
+                  onClick={() => setDespachoModal(d)}
+                  className="text-xs font-mono font-semibold px-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-colors border border-zinc-200 dark:border-zinc-700"
+                >
+                  #{d.folio}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

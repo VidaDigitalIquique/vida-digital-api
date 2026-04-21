@@ -37,6 +37,16 @@ export default async function DashboardPage() {
       `)[0]?.count ?? 0)
     : 0;
 
+  const despachosHoyList = userEmpresas.length > 0
+    ? await sql`
+        SELECT id, folio, imagen_url, created_at
+        FROM public.despachos_bodega
+        WHERE empresa_id = ANY(${userEmpresas})
+          AND DATE(created_at) = CURRENT_DATE
+        ORDER BY created_at DESC
+      `
+    : [];
+
   // Último día con despachos y su conteo
   const ultimoDiaRows = userEmpresas.length > 0
     ? await sql`
@@ -135,6 +145,7 @@ export default async function DashboardPage() {
       despachosHoyCount={despachosHoyCount}
       ultimoDia={ultimoDia}
       penultimoDia={penultimoDia}
+      despachosHoy={despachosHoyList as any}
     />
   );
 }
