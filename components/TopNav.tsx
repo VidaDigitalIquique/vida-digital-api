@@ -241,7 +241,7 @@ export function TopNav() {
         </div>
         <div className="flex items-center gap-4">
           {primerNombre && (
-            <span className="text-sm text-zinc-500 dark:text-zinc-400 hidden lg:block">
+            <span className="text-sm text-blue-400 dark:text-blue-400 hidden lg:block">
               {getSaludo()}, <span className="font-semibold text-zinc-700 dark:text-zinc-300">{primerNombre}</span>
             </span>
           )}
