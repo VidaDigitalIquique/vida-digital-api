@@ -27,7 +27,8 @@ import {
   Tag,
   Heart,
   Package,
-  Warehouse
+  Warehouse,
+  UserPlus
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 
@@ -186,7 +187,15 @@ export function TopNav() {
               </Link>
             )}
 
-            {/* 5b. Pedir a China — admin y vendedor */}
+            {/* 5b. Clientes Nuevos — admin, vendedor y supervisor */}
+            {(isAdmin || rol === 'vendedor' || rol === 'supervisor') && (
+              <Link href="/clientes-nuevos" className={navLink(pathname.startsWith('/clientes-nuevos'))}>
+                <UserPlus className="w-4 h-4" />
+                Clientes Nuevos
+              </Link>
+            )}
+
+            {/* 5c. Pedir a China — admin y vendedor */}
             {(isAdmin || rol === 'vendedor') && (
               <Link href="/deseados?modo=china" className={navLink(pathname.startsWith('/deseados') && modoChina)}>
                 <span className="relative flex items-center gap-2">

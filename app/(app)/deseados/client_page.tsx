@@ -83,6 +83,7 @@ export function DeseadosClient({ session }: { session: any }) {
   const { refreshAlertas } = useAlertas();
   const searchParams = useSearchParams();
   const modoChina = searchParams.get('modo') === 'china';
+  const clienteDeseadoId = searchParams.get('cliente_deseado_id') ?? '';
 
   // --- Lista principal ---
   const [tab, setTab] = useState<Tab>('pendiente');
@@ -172,6 +173,7 @@ export function DeseadosClient({ session }: { session: any }) {
         const params = new URLSearchParams({ estado: tab });
         if (debouncedSearch.trim().length >= 2) params.set('search', debouncedSearch.trim());
         if (modoChina) params.set('sinCodigo', 'true');
+        if (clienteDeseadoId) params.set('cliente_deseado_id', clienteDeseadoId);
         const res = await fetch(`/api/deseados?${params.toString()}`);
         if (res.ok) {
           const { data } = await res.json();
@@ -184,7 +186,7 @@ export function DeseadosClient({ session }: { session: any }) {
       }
     }
     fetchDeseados();
-  }, [tab, debouncedSearch, modoChina]);
+  }, [tab, debouncedSearch, modoChina, clienteDeseadoId]);
 
   // --- Debounce búsqueda cliente WinFac ---
   useEffect(() => {

@@ -15,11 +15,265 @@ export async function GET(request: Request) {
     const estado = searchParams.get('estado')?.trim() ?? '';
     const search = searchParams.get('search')?.trim() ?? '';
     const sinCodigo = searchParams.get('sinCodigo') === 'true';
+    const clienteDeseadoId = searchParams.get('cliente_deseado_id')?.trim() ?? '';
     const hasSearch = search.length >= 2;
+    const hasClienteDeseadoId = clienteDeseadoId.length > 0;
     const searchPattern = `%${search.toLowerCase()}%`;
 
-    const rows = sinCodigo
-      ? estado && hasSearch
+    let rows;
+
+    if (hasClienteDeseadoId) {
+      rows = sinCodigo
+        ? estado && hasSearch
+          ? await sql`
+              SELECT
+                pd.*,
+                c.nombress as cliente_nombre,
+                c.rutclien as cliente_rut,
+                c.celular  as cliente_celular,
+                c.ciudad   as cliente_ciudad,
+                cd.nombre  as cliente_deseado_nombre,
+                cd.whatsapp as cliente_deseado_whatsapp,
+                cd.ciudad  as cliente_deseado_ciudad
+              FROM productos_deseados pd
+              LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+              LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+              WHERE pd.cliente_deseado_id = ${clienteDeseadoId}
+                AND pd.estado = ${estado}
+                AND pd.es_china = true
+                AND (
+                  LOWER(pd.descripcion) LIKE ${searchPattern}
+                  OR LOWER(c.nombress) LIKE ${searchPattern}
+                  OR LOWER(cd.nombre) LIKE ${searchPattern}
+                )
+              ORDER BY pd.created_at DESC
+            `
+          : estado
+          ? await sql`
+              SELECT
+                pd.*,
+                c.nombress as cliente_nombre,
+                c.rutclien as cliente_rut,
+                c.celular  as cliente_celular,
+                c.ciudad   as cliente_ciudad,
+                cd.nombre  as cliente_deseado_nombre,
+                cd.whatsapp as cliente_deseado_whatsapp,
+                cd.ciudad  as cliente_deseado_ciudad
+              FROM productos_deseados pd
+              LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+              LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+              WHERE pd.cliente_deseado_id = ${clienteDeseadoId}
+                AND pd.estado = ${estado}
+                AND pd.es_china = true
+              ORDER BY pd.created_at DESC
+            `
+          : hasSearch
+          ? await sql`
+              SELECT
+                pd.*,
+                c.nombress as cliente_nombre,
+                c.rutclien as cliente_rut,
+                c.celular  as cliente_celular,
+                c.ciudad   as cliente_ciudad,
+                cd.nombre  as cliente_deseado_nombre,
+                cd.whatsapp as cliente_deseado_whatsapp,
+                cd.ciudad  as cliente_deseado_ciudad
+              FROM productos_deseados pd
+              LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+              LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+              WHERE pd.cliente_deseado_id = ${clienteDeseadoId}
+                AND pd.es_china = true
+                AND (
+                  LOWER(pd.descripcion) LIKE ${searchPattern}
+                  OR LOWER(c.nombress) LIKE ${searchPattern}
+                  OR LOWER(cd.nombre) LIKE ${searchPattern}
+                )
+              ORDER BY pd.created_at DESC
+            `
+          : await sql`
+              SELECT
+                pd.*,
+                c.nombress as cliente_nombre,
+                c.rutclien as cliente_rut,
+                c.celular  as cliente_celular,
+                c.ciudad   as cliente_ciudad,
+                cd.nombre  as cliente_deseado_nombre,
+                cd.whatsapp as cliente_deseado_whatsapp,
+                cd.ciudad  as cliente_deseado_ciudad
+              FROM productos_deseados pd
+              LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+              LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+              WHERE pd.cliente_deseado_id = ${clienteDeseadoId}
+                AND pd.es_china = true
+              ORDER BY pd.created_at DESC
+            `
+        : estado && hasSearch
+        ? await sql`
+            SELECT
+              pd.*,
+              c.nombress as cliente_nombre,
+              c.rutclien as cliente_rut,
+              c.celular  as cliente_celular,
+              c.ciudad   as cliente_ciudad,
+              cd.nombre  as cliente_deseado_nombre,
+              cd.whatsapp as cliente_deseado_whatsapp,
+              cd.ciudad  as cliente_deseado_ciudad
+            FROM productos_deseados pd
+            LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+            LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+            WHERE pd.cliente_deseado_id = ${clienteDeseadoId}
+              AND pd.estado = ${estado}
+              AND (pd.es_china = false OR pd.es_china IS NULL)
+              AND (
+                LOWER(pd.descripcion) LIKE ${searchPattern}
+                OR LOWER(pd.codigo) LIKE ${searchPattern}
+                OR LOWER(c.nombress) LIKE ${searchPattern}
+                OR LOWER(cd.nombre) LIKE ${searchPattern}
+              )
+            ORDER BY pd.created_at DESC
+          `
+        : estado
+        ? await sql`
+            SELECT
+              pd.*,
+              c.nombress as cliente_nombre,
+              c.rutclien as cliente_rut,
+              c.celular  as cliente_celular,
+              c.ciudad   as cliente_ciudad,
+              cd.nombre  as cliente_deseado_nombre,
+              cd.whatsapp as cliente_deseado_whatsapp,
+              cd.ciudad  as cliente_deseado_ciudad
+            FROM productos_deseados pd
+            LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+            LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+            WHERE pd.cliente_deseado_id = ${clienteDeseadoId}
+              AND pd.estado = ${estado}
+              AND (pd.es_china = false OR pd.es_china IS NULL)
+            ORDER BY pd.created_at DESC
+          `
+        : hasSearch
+        ? await sql`
+            SELECT
+              pd.*,
+              c.nombress as cliente_nombre,
+              c.rutclien as cliente_rut,
+              c.celular  as cliente_celular,
+              c.ciudad   as cliente_ciudad,
+              cd.nombre  as cliente_deseado_nombre,
+              cd.whatsapp as cliente_deseado_whatsapp,
+              cd.ciudad  as cliente_deseado_ciudad
+            FROM productos_deseados pd
+            LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+            LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+            WHERE pd.cliente_deseado_id = ${clienteDeseadoId}
+              AND (pd.es_china = false OR pd.es_china IS NULL)
+              AND (
+                LOWER(pd.descripcion) LIKE ${searchPattern}
+                OR LOWER(pd.codigo) LIKE ${searchPattern}
+                OR LOWER(c.nombress) LIKE ${searchPattern}
+                OR LOWER(cd.nombre) LIKE ${searchPattern}
+              )
+            ORDER BY pd.created_at DESC
+          `
+        : await sql`
+            SELECT
+              pd.*,
+              c.nombress as cliente_nombre,
+              c.rutclien as cliente_rut,
+              c.celular  as cliente_celular,
+              c.ciudad   as cliente_ciudad,
+              cd.nombre  as cliente_deseado_nombre,
+              cd.whatsapp as cliente_deseado_whatsapp,
+              cd.ciudad  as cliente_deseado_ciudad
+            FROM productos_deseados pd
+            LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+            LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+            WHERE pd.cliente_deseado_id = ${clienteDeseadoId}
+              AND (pd.es_china = false OR pd.es_china IS NULL)
+            ORDER BY pd.created_at DESC
+          `;
+    } else {
+      rows = sinCodigo
+        ? estado && hasSearch
+          ? await sql`
+              SELECT
+                pd.*,
+                c.nombress as cliente_nombre,
+                c.rutclien as cliente_rut,
+                c.celular  as cliente_celular,
+                c.ciudad   as cliente_ciudad,
+                cd.nombre  as cliente_deseado_nombre,
+                cd.whatsapp as cliente_deseado_whatsapp,
+                cd.ciudad  as cliente_deseado_ciudad
+              FROM productos_deseados pd
+              LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+              LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+              WHERE pd.estado = ${estado}
+                AND pd.es_china = true
+                AND (
+                  LOWER(pd.descripcion) LIKE ${searchPattern}
+                  OR LOWER(c.nombress) LIKE ${searchPattern}
+                  OR LOWER(cd.nombre) LIKE ${searchPattern}
+                )
+              ORDER BY pd.created_at DESC
+            `
+          : estado
+          ? await sql`
+              SELECT
+                pd.*,
+                c.nombress as cliente_nombre,
+                c.rutclien as cliente_rut,
+                c.celular  as cliente_celular,
+                c.ciudad   as cliente_ciudad,
+                cd.nombre  as cliente_deseado_nombre,
+                cd.whatsapp as cliente_deseado_whatsapp,
+                cd.ciudad  as cliente_deseado_ciudad
+              FROM productos_deseados pd
+              LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+              LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+              WHERE pd.estado = ${estado}
+                AND pd.es_china = true
+              ORDER BY pd.created_at DESC
+            `
+          : hasSearch
+          ? await sql`
+              SELECT
+                pd.*,
+                c.nombress as cliente_nombre,
+                c.rutclien as cliente_rut,
+                c.celular  as cliente_celular,
+                c.ciudad   as cliente_ciudad,
+                cd.nombre  as cliente_deseado_nombre,
+                cd.whatsapp as cliente_deseado_whatsapp,
+                cd.ciudad  as cliente_deseado_ciudad
+              FROM productos_deseados pd
+              LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+              LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+              WHERE pd.es_china = true
+                AND (
+                  LOWER(pd.descripcion) LIKE ${searchPattern}
+                  OR LOWER(c.nombress) LIKE ${searchPattern}
+                  OR LOWER(cd.nombre) LIKE ${searchPattern}
+                )
+              ORDER BY pd.created_at DESC
+            `
+          : await sql`
+              SELECT
+                pd.*,
+                c.nombress as cliente_nombre,
+                c.rutclien as cliente_rut,
+                c.celular  as cliente_celular,
+                c.ciudad   as cliente_ciudad,
+                cd.nombre  as cliente_deseado_nombre,
+                cd.whatsapp as cliente_deseado_whatsapp,
+                cd.ciudad  as cliente_deseado_ciudad
+              FROM productos_deseados pd
+              LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
+              LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
+              WHERE pd.es_china = true
+              ORDER BY pd.created_at DESC
+            `
+        : estado && hasSearch
         ? await sql`
             SELECT
               pd.*,
@@ -34,9 +288,10 @@ export async function GET(request: Request) {
             LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
             LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
             WHERE pd.estado = ${estado}
-              AND pd.es_china = true
+              AND (pd.es_china = false OR pd.es_china IS NULL)
               AND (
                 LOWER(pd.descripcion) LIKE ${searchPattern}
+                OR LOWER(pd.codigo) LIKE ${searchPattern}
                 OR LOWER(c.nombress) LIKE ${searchPattern}
                 OR LOWER(cd.nombre) LIKE ${searchPattern}
               )
@@ -57,7 +312,7 @@ export async function GET(request: Request) {
             LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
             LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
             WHERE pd.estado = ${estado}
-              AND pd.es_china = true
+              AND (pd.es_china = false OR pd.es_china IS NULL)
             ORDER BY pd.created_at DESC
           `
         : hasSearch
@@ -74,9 +329,10 @@ export async function GET(request: Request) {
             FROM productos_deseados pd
             LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
             LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
-            WHERE pd.es_china = true
+            WHERE (pd.es_china = false OR pd.es_china IS NULL)
               AND (
                 LOWER(pd.descripcion) LIKE ${searchPattern}
+                OR LOWER(pd.codigo) LIKE ${searchPattern}
                 OR LOWER(c.nombress) LIKE ${searchPattern}
                 OR LOWER(cd.nombre) LIKE ${searchPattern}
               )
@@ -95,90 +351,10 @@ export async function GET(request: Request) {
             FROM productos_deseados pd
             LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
             LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
-            WHERE pd.es_china = true
+            WHERE (pd.es_china = false OR pd.es_china IS NULL)
             ORDER BY pd.created_at DESC
-          `
-      : estado && hasSearch
-      ? await sql`
-          SELECT
-            pd.*,
-            c.nombress as cliente_nombre,
-            c.rutclien as cliente_rut,
-            c.celular  as cliente_celular,
-            c.ciudad   as cliente_ciudad,
-            cd.nombre  as cliente_deseado_nombre,
-            cd.whatsapp as cliente_deseado_whatsapp,
-            cd.ciudad  as cliente_deseado_ciudad
-          FROM productos_deseados pd
-          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
-          LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
-          WHERE pd.estado = ${estado}
-            AND (pd.es_china = false OR pd.es_china IS NULL)
-            AND (
-              LOWER(pd.descripcion) LIKE ${searchPattern}
-              OR LOWER(pd.codigo) LIKE ${searchPattern}
-              OR LOWER(c.nombress) LIKE ${searchPattern}
-              OR LOWER(cd.nombre) LIKE ${searchPattern}
-            )
-          ORDER BY pd.created_at DESC
-        `
-      : estado
-      ? await sql`
-          SELECT
-            pd.*,
-            c.nombress as cliente_nombre,
-            c.rutclien as cliente_rut,
-            c.celular  as cliente_celular,
-            c.ciudad   as cliente_ciudad,
-            cd.nombre  as cliente_deseado_nombre,
-            cd.whatsapp as cliente_deseado_whatsapp,
-            cd.ciudad  as cliente_deseado_ciudad
-          FROM productos_deseados pd
-          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
-          LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
-          WHERE pd.estado = ${estado}
-            AND (pd.es_china = false OR pd.es_china IS NULL)
-          ORDER BY pd.created_at DESC
-        `
-      : hasSearch
-      ? await sql`
-          SELECT
-            pd.*,
-            c.nombress as cliente_nombre,
-            c.rutclien as cliente_rut,
-            c.celular  as cliente_celular,
-            c.ciudad   as cliente_ciudad,
-            cd.nombre  as cliente_deseado_nombre,
-            cd.whatsapp as cliente_deseado_whatsapp,
-            cd.ciudad  as cliente_deseado_ciudad
-          FROM productos_deseados pd
-          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
-          LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
-          WHERE (pd.es_china = false OR pd.es_china IS NULL)
-            AND (
-              LOWER(pd.descripcion) LIKE ${searchPattern}
-              OR LOWER(pd.codigo) LIKE ${searchPattern}
-              OR LOWER(c.nombress) LIKE ${searchPattern}
-              OR LOWER(cd.nombre) LIKE ${searchPattern}
-            )
-          ORDER BY pd.created_at DESC
-        `
-      : await sql`
-          SELECT
-            pd.*,
-            c.nombress as cliente_nombre,
-            c.rutclien as cliente_rut,
-            c.celular  as cliente_celular,
-            c.ciudad   as cliente_ciudad,
-            cd.nombre  as cliente_deseado_nombre,
-            cd.whatsapp as cliente_deseado_whatsapp,
-            cd.ciudad  as cliente_deseado_ciudad
-          FROM productos_deseados pd
-          LEFT JOIN vida.clientes c ON pd.cliente_winfac_id::bigint = c.kcodclie
-          LEFT JOIN clientes_deseados cd ON pd.cliente_deseado_id = cd.id
-          WHERE (pd.es_china = false OR pd.es_china IS NULL)
-          ORDER BY pd.created_at DESC
-        `;
+          `;
+    }
 
     return NextResponse.json({ data: rows });
   } catch (error: any) {

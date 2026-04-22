@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, ShoppingCart, Users, LayoutList, Tag, Box, Camera, Heart, Package, Settings, RefreshCw, ImageIcon, Filter } from 'lucide-react';
+import { Home, ShoppingCart, Users, LayoutList, Tag, Box, Camera, Heart, Package, Settings, RefreshCw, ImageIcon, Filter, UserPlus } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { signOut, useSession } from 'next-auth/react';
@@ -93,6 +93,10 @@ export function BottomNav() {
               </div>
               <span className="text-[10px] font-medium">China</span>
             </Link>
+            <Link href="/clientes-nuevos" className={linkClass(pathname.startsWith('/clientes-nuevos'))}>
+              <UserPlus className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Clientes</span>
+            </Link>
             <button
               onClick={() => setAdminOpen(true)}
               className="flex flex-col items-center justify-center flex-shrink-0 w-16 h-full gap-1 transition-colors text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
@@ -135,6 +139,10 @@ export function BottomNav() {
                 )}
               </div>
               <span className="text-[10px] font-medium">China</span>
+            </Link>
+            <Link href="/clientes-nuevos" className={linkClass(pathname.startsWith('/clientes-nuevos'))}>
+              <UserPlus className="w-6 h-6" />
+              <span className="text-[10px] font-medium">Clientes</span>
             </Link>
           </>
         )}
