@@ -216,7 +216,7 @@ export function CatalogoClientesClient({ session }: { session: any }) {
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-blue-500" />
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col">
                   <span className="font-bold">{selectedCliente.nombress}</span>
                   <ClienteStars kcodclie={selectedCliente.kcodclie} />
                 </div>

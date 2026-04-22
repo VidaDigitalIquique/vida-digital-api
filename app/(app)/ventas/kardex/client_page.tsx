@@ -404,8 +404,10 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
 
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-3">
-                      <h1 className="text-3xl font-extrabold tracking-tight">{selectedCliente.nombress}</h1>
-                      <ClienteStars kcodclie={selectedCliente.kcodclie} />
+                      <div className="flex flex-col">
+                        <h1 className="text-3xl font-extrabold tracking-tight">{selectedCliente.nombress}</h1>
+                        <ClienteStars kcodclie={selectedCliente.kcodclie} />
+                      </div>
                       <button
                         onClick={() => setOcultarPrecios(v => !v)}
                         className="p-1.5 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
