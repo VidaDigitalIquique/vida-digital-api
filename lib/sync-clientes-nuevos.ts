@@ -1,10 +1,82 @@
 export async function matchClientesNuevos(
-  _nuevos: { kcodclie: number; nombre: string }[],
-  _deseados: { id: number; nombre: string }[],
-  _sql: any,
+  nuevo: { kcodclie: number; nombre: string; empresa_id: number },
+  deseados: { id: number; nombre: string }[],
+  sql: any,
 ): Promise<number> {
-  // Stub — Slice 3 implementará la lógica heurística + IA
-  return 0;
+  // FASE HEURÍSTICA: normalizar y tokenizar nombres
+  const normalizar = (s: string) =>
+    s.toUpperCase().trim().replace(/[^A-Z0-9\s]/g, '').split(/\s+/).filter(t => t.length > 3);
+
+  const tokensNuevo = new Set(normalizar(nuevo.nombre));
+
+  const candidatos = deseados.filter(d => {
+    const tokensDeseado = normalizar(d.nombre);
+    return tokensDeseado.some(t => tokensNuevo.has(t));
+  });
+
+  if (candidatos.length === 0) return 0;
+
+  // FASE IA: llamar a Gemini con fallback de modelos y keys
+  const GEMINI_API_KEYS = [
+    process.env.GEMINI_API_KEY_1!,
+    process.env.GEMINI_API_KEY_2!,
+    process.env.GEMINI_API_KEY_3!,
+  ];
+  const GEMINI_MODELS = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro'];
+  const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+
+  const prompt = `Dado el nombre de un cliente recién registrado en el sistema ERP: "${nuevo.nombre}"
+Y esta lista de clientes potencialmente relacionados:
+${candidatos.map(c => `ID ${c.id}: ${c.nombre}`).join('\n')}
+
+¿Alguno de estos clientes es la misma persona o empresa?
+Responde ÚNICAMENTE con JSON válido sin markdown:
+{"match": true/false, "cliente_deseado_id": number_or_null, "confidence": 0.0_to_1.0}`;
+
+  const payload = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0, maxOutputTokens: 100 },
+  };
+
+  try {
+    let responseText = '';
+    outer: for (const model of GEMINI_MODELS) {
+      for (const apiKey of GEMINI_API_KEYS) {
+        if (!apiKey) continue;
+        const url = `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`;
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (res.status === 429 || res.status === 403) continue;
+        if (!res.ok) continue;
+        const data = await res.json();
+        responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+        if (responseText) break outer;
+      }
+    }
+
+    if (!responseText) return 0;
+
+    const clean = responseText.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    if (parsed.match === true && parsed.confidence >= 0.7 && parsed.cliente_deseado_id) {
+      await sql`
+        INSERT INTO public.conversion_sugerencias
+          (kcodclie, empresa_id, nombre_winfac, cliente_deseado_id, score, estado)
+        VALUES
+          (${nuevo.kcodclie}, ${nuevo.empresa_id}, ${nuevo.nombre},
+           ${parsed.cliente_deseado_id}, ${parsed.confidence}, 'pendiente')
+        ON CONFLICT DO NOTHING
+      `;
+      return 1;
+    }
+    return 0;
+  } catch {
+    return 0;
+  }
 }
 
 async function insertKnownClients(kcodclieList: any[], sql: any): Promise<void> {
@@ -31,11 +103,11 @@ async function insertKnownClients(kcodclieList: any[], sql: any): Promise<void> 
 export async function syncClientesNuevos(
   sql: any,
 ): Promise<{ nuevos: number; sugerencias: number }> {
-  // Paso 1 — kcodclie actuales en WinFac
+  // Paso 1 — kcodclie actuales en WinFac con nombre y empresa_id
   const winfacRows = await sql`
-    SELECT DISTINCT kcodclie FROM vida.clientes
+    SELECT kcodclie, nombress AS nombre, 2 AS empresa_id FROM vida.clientes
     UNION
-    SELECT DISTINCT kcodclie FROM sanjh.clientes
+    SELECT kcodclie, nombress AS nombre, 1 AS empresa_id FROM sanjh.clientes
   `;
 
   // Paso 2 — kcodclie ya conocidos en public
@@ -55,11 +127,11 @@ export async function syncClientesNuevos(
   }
 
   // Paso 4 — Detectar nuevos
-  const nuevosKcodclie = winfacRows
-    .map((r: any) => r.kcodclie)
-    .filter((k: any) => !conocidosSet.has(Number(k)));
+  const nuevosClientes = winfacRows.filter(
+    (r: any) => !conocidosSet.has(Number(r.kcodclie)),
+  );
 
-  if (nuevosKcodclie.length === 0) {
+  if (nuevosClientes.length === 0) {
     return { nuevos: 0, sugerencias: 0 };
   }
 
@@ -68,16 +140,22 @@ export async function syncClientesNuevos(
     SELECT id, nombre FROM public.clientes_deseados
   `;
 
-  // Paso 6 — Match heurístico (stub en este slice)
-  const sugerencias = await matchClientesNuevos(
-    nuevosKcodclie.map((k: any) => ({ kcodclie: Number(k), nombre: '' })),
-    deseadosRows,
+  // Paso 6 — Match heurístico + IA por cada cliente nuevo
+  let totalSugerencias = 0;
+  for (const nuevo of nuevosClientes) {
+    totalSugerencias += await matchClientesNuevos(
+      { kcodclie: Number(nuevo.kcodclie), nombre: nuevo.nombre ?? '', empresa_id: Number(nuevo.empresa_id) },
+      deseadosRows,
+      sql,
+    );
+  }
+
+  // Paso 7 — Registrar los nuevos como conocidos
+  await insertKnownClients(
+    nuevosClientes.map((r: any) => r.kcodclie),
     sql,
   );
 
-  // Paso 7 — Registrar los nuevos como conocidos
-  await insertKnownClients(nuevosKcodclie, sql);
-
   // Paso 8 — Retornar resultado
-  return { nuevos: nuevosKcodclie.length, sugerencias };
+  return { nuevos: nuevosClientes.length, sugerencias: totalSugerencias };
 }
