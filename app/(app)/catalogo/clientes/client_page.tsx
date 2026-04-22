@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useEmpresaId } from '@/hooks/useEmpresaId';
 import { Search, PlusCircle, Trash2, ExternalLink, FileDown, Link as LinkIcon, Users } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { ClienteStars } from '@/components/ClienteStars';
 
 const QRCodeSVG = dynamic(() => import('qrcode.react').then(m => m.QRCodeSVG), { ssr: false });
 
@@ -215,7 +216,10 @@ export function CatalogoClientesClient({ session }: { session: any }) {
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-blue-500" />
               <div>
-                <div className="font-bold">{selectedCliente.nombress}</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold">{selectedCliente.nombress}</span>
+                  <ClienteStars kcodclie={selectedCliente.kcodclie} />
+                </div>
                 <div className="text-xs text-zinc-400 font-mono">{selectedCliente.kcodclie}</div>
               </div>
             </div>
