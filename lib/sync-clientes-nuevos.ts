@@ -20,7 +20,7 @@ export async function matchClientesNuevos(
           VALUES
             (${nuevo.kcodclie}, ${nuevo.empresa_id}, ${nuevo.nombre},
              ${matchTel.id}, ${0.95}, 'pendiente')
-          ON CONFLICT DO NOTHING
+          ON CONFLICT (kcodclie, cliente_deseado_id) DO NOTHING
         `;
         return 1;
       }
@@ -93,7 +93,7 @@ Responde ÚNICAMENTE con JSON válido sin markdown:
         VALUES
           (${nuevo.kcodclie}, ${nuevo.empresa_id}, ${nuevo.nombre},
            ${parsed.cliente_deseado_id}, ${parsed.confidence}, 'pendiente')
-        ON CONFLICT DO NOTHING
+        ON CONFLICT (kcodclie, cliente_deseado_id) DO NOTHING
       `;
       return 1;
     }
