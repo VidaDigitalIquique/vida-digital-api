@@ -15,7 +15,7 @@ jest.mock('@/lib/db', () => ({
   sql: (...args: any[]) => sql(...args),
 }));
 
-describe('GET /api/productos/[codigo]/compradores', () => {
+describe('GET /api/productos/[id]/compradores', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -23,9 +23,9 @@ describe('GET /api/productos/[codigo]/compradores', () => {
   test('sin sesión → 401', async () => {
     getServerSession.mockResolvedValue(null);
 
-    const { GET } = await import('@/app/api/productos/[codigo]/compradores/route');
+    const { GET } = await import('@/app/api/productos/[id]/compradores/route');
     const req = new NextRequest('http://localhost/api/productos/ABC123/compradores');
-    const res = await GET(req, { params: { codigo: 'ABC123' } });
+    const res = await GET(req, { params: { id: 'ABC123' } });
     const data = await res.json();
 
     expect(res.status).toBe(401);
@@ -35,9 +35,9 @@ describe('GET /api/productos/[codigo]/compradores', () => {
   test('con rol bodeguero → 403', async () => {
     getServerSession.mockResolvedValue({ user: { rol: 'bodeguero' } });
 
-    const { GET } = await import('@/app/api/productos/[codigo]/compradores/route');
+    const { GET } = await import('@/app/api/productos/[id]/compradores/route');
     const req = new NextRequest('http://localhost/api/productos/ABC123/compradores');
-    const res = await GET(req, { params: { codigo: 'ABC123' } });
+    const res = await GET(req, { params: { id: 'ABC123' } });
     const data = await res.json();
 
     expect(res.status).toBe(403);
@@ -62,9 +62,9 @@ describe('GET /api/productos/[codigo]/compradores', () => {
       },
     ]);
 
-    const { GET } = await import('@/app/api/productos/[codigo]/compradores/route');
+    const { GET } = await import('@/app/api/productos/[id]/compradores/route');
     const req = new NextRequest('http://localhost/api/productos/ABC123/compradores');
-    const res = await GET(req, { params: { codigo: 'ABC123' } });
+    const res = await GET(req, { params: { id: 'ABC123' } });
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -95,9 +95,9 @@ describe('GET /api/productos/[codigo]/compradores', () => {
     getServerSession.mockResolvedValue({ user: { rol: 'vendedor' } });
     sql.mockResolvedValue([]);
 
-    const { GET } = await import('@/app/api/productos/[codigo]/compradores/route');
+    const { GET } = await import('@/app/api/productos/[id]/compradores/route');
     const req = new NextRequest('http://localhost/api/productos/ABC123/compradores');
-    const res = await GET(req, { params: { codigo: 'ABC123' } });
+    const res = await GET(req, { params: { id: 'ABC123' } });
     const body = await res.json();
 
     expect(res.status).toBe(200);
