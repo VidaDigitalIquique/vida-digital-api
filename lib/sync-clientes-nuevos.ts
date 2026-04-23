@@ -1,8 +1,32 @@
+import { normalizePhone } from '@/lib/phone-utils';
+
 export async function matchClientesNuevos(
-  nuevo: { kcodclie: number; nombre: string; empresa_id: number },
-  deseados: { id: number; nombre: string }[],
+  nuevo: { kcodclie: number; nombre: string; empresa_id: number; celular?: string | null },
+  deseados: { id: number; nombre: string; whatsapp?: string | null }[],
   sql: any,
 ): Promise<number> {
+  // FASE TELÉFONO: match directo si últimos 8 dígitos coinciden
+  if (nuevo.celular) {
+    const telNuevo = normalizePhone(nuevo.celular);
+    if (telNuevo.length >= 7) {
+      const matchTel = deseados.find(d => {
+        if (!d.whatsapp) return false;
+        return normalizePhone(d.whatsapp) === telNuevo;
+      });
+      if (matchTel) {
+        await sql`
+          INSERT INTO public.conversion_sugerencias
+            (kcodclie, empresa_id, nombre_winfac, cliente_deseado_id, score, estado)
+          VALUES
+            (${nuevo.kcodclie}, ${nuevo.empresa_id}, ${nuevo.nombre},
+             ${matchTel.id}, ${0.95}, 'pendiente')
+          ON CONFLICT DO NOTHING
+        `;
+        return 1;
+      }
+    }
+  }
+
   // FASE HEURÍSTICA: normalizar y tokenizar nombres
   const normalizar = (s: string) =>
     s.toUpperCase().trim().replace(/[^A-Z0-9\s]/g, '').split(/\s+/).filter(t => t.length > 3);
@@ -105,9 +129,9 @@ export async function syncClientesNuevos(
 ): Promise<{ nuevos: number; sugerencias: number }> {
   // Paso 1 — kcodclie actuales en WinFac con nombre y empresa_id
   const winfacRows = await sql`
-    SELECT kcodclie, nombress AS nombre, 2 AS empresa_id FROM vida.clientes
+    SELECT kcodclie, nombress AS nombre, celular, 2 AS empresa_id FROM vida.clientes
     UNION
-    SELECT kcodclie, nombress AS nombre, 1 AS empresa_id FROM sanjh.clientes
+    SELECT kcodclie, nombress AS nombre, celular, 1 AS empresa_id FROM sanjh.clientes
   `;
 
   // Paso 2 — kcodclie ya conocidos en public
@@ -137,14 +161,14 @@ export async function syncClientesNuevos(
 
   // Paso 5 — Obtener clientes_deseados para intentar el match
   const deseadosRows = await sql`
-    SELECT id, nombre FROM public.clientes_deseados
+    SELECT id, nombre, whatsapp FROM public.clientes_deseados
   `;
 
   // Paso 6 — Match heurístico + IA por cada cliente nuevo
   let totalSugerencias = 0;
   for (const nuevo of nuevosClientes) {
     totalSugerencias += await matchClientesNuevos(
-      { kcodclie: Number(nuevo.kcodclie), nombre: nuevo.nombre ?? '', empresa_id: Number(nuevo.empresa_id) },
+      { kcodclie: Number(nuevo.kcodclie), nombre: nuevo.nombre ?? '', empresa_id: Number(nuevo.empresa_id), celular: nuevo.celular ?? null },
       deseadosRows,
       sql,
     );

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { inferPaisDesdePhone } from '@/lib/phone-utils';
 import { toast } from 'sonner';
 import { Search, PlusCircle, Trash2, ExternalLink, Pencil, X, Check } from 'lucide-react';
 import flags from '@/config/feature-flags.json';
@@ -228,7 +229,13 @@ export function ClientesNuevosPage({ session }: { session: any }) {
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">WhatsApp</label>
               <Input
                 value={form.whatsapp}
-                onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))}
+                onChange={e => {
+                  const val = e.target.value;
+                  setForm(f => {
+                    const pais = !f.pais.trim() ? (inferPaisDesdePhone(val) ?? f.pais) : f.pais;
+                    return { ...f, whatsapp: val, pais };
+                  });
+                }}
                 placeholder="+56912345678"
                 className="mt-1"
               />
