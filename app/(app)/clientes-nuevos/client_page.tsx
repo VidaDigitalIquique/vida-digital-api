@@ -36,6 +36,8 @@ export function ClientesNuevosPage({ session }: { session: any }) {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [clientes, setClientes] = useState<ClienteDeseado[]>([]);
+  const [sugerencias, setSugerencias] = useState<any[]>([]);
+  const [sugerenciaActiva, setSugerenciaActiva] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
@@ -45,10 +47,26 @@ export function ClientesNuevosPage({ session }: { session: any }) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<FormState>(FORM_EMPTY);
 
+  async function fetchSugerencias() {
+    try {
+      const res = await fetch('/api/conversion-sugerencias');
+      if (res.ok) {
+        const { data } = await res.json();
+        setSugerencias(data || []);
+      }
+    } catch {
+      toast.error('Error cargando sugerencias');
+    }
+  }
+
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(t);
   }, [search]);
+
+  useEffect(() => {
+    fetchSugerencias();
+  }, []);
 
   useEffect(() => {
     async function fetchClientes() {
@@ -79,6 +97,27 @@ export function ClientesNuevosPage({ session }: { session: any }) {
       setClientes(data || []);
     }
   }
+
+  const handleAccion = async (id: number, accion: 'aprobar' | 'rechazar') => {
+    try {
+      const res = await fetch(`/api/conversion-sugerencias/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion }),
+      });
+      if (res.ok) {
+        toast.success(accion === 'aprobar' ? 'Conversión aprobada' : 'Sugerencia rechazada');
+        setSugerenciaActiva(null);
+        await fetchSugerencias();
+        await refetch();
+      } else {
+        const { error } = await res.json();
+        toast.error(error || 'Error procesando sugerencia');
+      }
+    } catch {
+      toast.error('Error procesando sugerencia');
+    }
+  };
 
   const handleCrear = async () => {
     if (!form.nombre.trim()) return;
@@ -242,6 +281,25 @@ export function ClientesNuevosPage({ session }: { session: any }) {
         />
       </div>
 
+      {sugerencias.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <p className="text-amber-800 font-medium">
+            {sugerencias.length} sugerencia{sugerencias.length > 1 ? 's' : ''} de conversión pendiente{sugerencias.length > 1 ? 's' : ''}
+          </p>
+          <div className="mt-2 flex flex-col gap-2">
+            {sugerencias.map(s => (
+              <button
+                key={s.id}
+                onClick={() => setSugerenciaActiva(s)}
+                className="text-left text-sm text-amber-700 hover:text-amber-900 underline"
+              >
+                {s.nombre_winfac} → {s.nombre_lead} ({Math.round(s.score * 100)}% confianza)
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Lista */}
       {loading ? (
         <div className="flex flex-col gap-3 animate-pulse">
@@ -375,6 +433,38 @@ export function ClientesNuevosPage({ session }: { session: any }) {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {sugerenciaActiva && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl p-6 max-w-md w-full mx-4 flex flex-col gap-4">
+            <h2 className="text-lg font-bold">Sugerencia de conversión</h2>
+            <p><span className="font-medium">Cliente WinFac:</span> {sugerenciaActiva.nombre_winfac}</p>
+            <p><span className="font-medium">Lead en agenda:</span> {sugerenciaActiva.nombre_lead}</p>
+            {sugerenciaActiva.whatsapp_lead && <p><span className="font-medium">WhatsApp:</span> {sugerenciaActiva.whatsapp_lead}</p>}
+            <p><span className="font-medium">Confianza:</span> {Math.round(sugerenciaActiva.score * 100)}%</p>
+            <div className="flex gap-3 mt-2">
+              <button
+                onClick={() => handleAccion(sugerenciaActiva.id, 'aprobar')}
+                className="flex-1 bg-green-600 text-white rounded-lg px-4 py-2 font-medium hover:bg-green-700"
+              >
+                Aprobar conversión
+              </button>
+              <button
+                onClick={() => handleAccion(sugerenciaActiva.id, 'rechazar')}
+                className="flex-1 bg-red-100 text-red-700 rounded-lg px-4 py-2 font-medium hover:bg-red-200"
+              >
+                Rechazar
+              </button>
+              <button
+                onClick={() => setSugerenciaActiva(null)}
+                className="px-4 py-2 text-zinc-500 hover:text-zinc-700"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

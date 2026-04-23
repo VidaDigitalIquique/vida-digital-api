@@ -32,10 +32,12 @@ describe('ClientesNuevosPage', () => {
   });
 
   test('smoke test — renderiza sin errores con lista vacía', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({ data: [] }),
-    } as any);
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('conversion-sugerencias')) {
+        return Promise.resolve({ ok: true, json: async () => ({ data: [] }) });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ data: [] }) });
+    });
 
     const { ClientesNuevosPage } = require('@/app/(app)/clientes-nuevos/client_page');
     const { container } = render(<ClientesNuevosPage />);
@@ -44,10 +46,12 @@ describe('ClientesNuevosPage', () => {
   });
 
   test('renderiza lista de clientes — muestra nombre ACME en el DOM', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({ data: [CLIENTE_ACME] }),
-    } as any);
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('conversion-sugerencias')) {
+        return Promise.resolve({ ok: true, json: async () => ({ data: [] }) });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ data: [CLIENTE_ACME] }) });
+    });
 
     const { ClientesNuevosPage } = require('@/app/(app)/clientes-nuevos/client_page');
     render(<ClientesNuevosPage />);
@@ -58,15 +62,15 @@ describe('ClientesNuevosPage', () => {
   });
 
   test('buscador filtra resultados — muestra mensaje de lista vacía', async () => {
-    global.fetch = jest.fn()
-      .mockResolvedValueOnce({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ data: [CLIENTE_ACME] }),
-      } as any)
-      .mockResolvedValue({
-        ok: true,
-        json: jest.fn().mockResolvedValue({ data: [] }),
-      } as any);
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('conversion-sugerencias')) {
+        return Promise.resolve({ ok: true, json: async () => ({ data: [] }) });
+      }
+      if (url.includes('search=')) {
+        return Promise.resolve({ ok: true, json: async () => ({ data: [] }) });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ data: [CLIENTE_ACME] }) });
+    });
 
     const { ClientesNuevosPage } = require('@/app/(app)/clientes-nuevos/client_page');
     render(<ClientesNuevosPage />);
@@ -84,10 +88,12 @@ describe('ClientesNuevosPage', () => {
   });
 
   test('botón "Nuevo Cliente" abre formulario con campo de nombre', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      json: jest.fn().mockResolvedValue({ data: [] }),
-    } as any);
+    global.fetch = jest.fn().mockImplementation((url: string) => {
+      if (url.includes('conversion-sugerencias')) {
+        return Promise.resolve({ ok: true, json: async () => ({ data: [] }) });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ data: [] }) });
+    });
 
     const { ClientesNuevosPage } = require('@/app/(app)/clientes-nuevos/client_page');
     render(<ClientesNuevosPage />);
