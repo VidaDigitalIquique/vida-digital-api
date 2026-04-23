@@ -153,6 +153,7 @@ export function PreciosClient({ session, empresasMap }: PreciosClientProps) {
               empresaNombre={(p as any).nombre_empresa}
               onClick={openDrawer}
               ocultarPrecios={ocultarPrecios}
+              rol={(session as any)?.user?.rol ?? session?.rol}
             />
           ))}
         </div>
