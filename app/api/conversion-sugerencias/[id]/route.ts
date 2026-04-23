@@ -50,14 +50,20 @@ export async function PATCH(
     `;
 
     await sql`
-      DELETE FROM public.clientes_deseados
-      WHERE id = ${sugerencia.cliente_deseado_id}
+      UPDATE public.conversion_sugerencias
+      SET estado = 'aprobada', updated_at = now()
+      WHERE id = ${id}
     `;
 
     await sql`
       UPDATE public.conversion_sugerencias
-      SET estado = 'aprobada', updated_at = now()
-      WHERE id = ${id}
+      SET estado = 'rechazada', updated_at = now()
+      WHERE cliente_deseado_id = ${sugerencia.cliente_deseado_id} AND estado = 'pendiente'
+    `;
+
+    await sql`
+      DELETE FROM public.clientes_deseados
+      WHERE id = ${sugerencia.cliente_deseado_id}
     `;
   }
 
