@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -167,6 +168,29 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
     }
   };
 
+  const exportarExcel = () => {
+    if (!prenota?.items?.length) return;
+    const sanjhItems = prenota.items.filter((i: any) => i.empresa_id === 1);
+    const vidaItems = prenota.items.filter((i: any) => i.empresa_id === 2);
+
+    const toRows = (items: any[]) => items.map(i => ({
+      'Código': i.codigo,
+      'Descripción': i.descripcion,
+      'Cajas': Number(i.cajas),
+      'Unidades': Number(i.unidades),
+      'Precio USD': Number(i.precio),
+      'Stock Zofri': Number(i.saldo_zofri),
+      'Total USD': Number(i.unidades) * Number(i.precio),
+    }));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toRows(sanjhItems)), 'SANJH');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toRows(vidaItems)), 'VIDA DIGITAL');
+
+    const filename = `${prenota.titulo}${prenota.nombre_cliente ? ' — ' + prenota.nombre_cliente : ''}.xlsx`;
+    XLSX.writeFile(wb, filename);
+  };
+
   return (
     <div className="flex flex-col gap-6 fade-in zoom-in-95 duration-200">
       <div className="flex flex-col gap-3">
@@ -180,7 +204,9 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight">{prenota?.titulo || 'Pre-Nota'}</h1>
           </div>
-          <Button disabled>Exportar Excel</Button>
+          <Button onClick={exportarExcel} disabled={!prenota?.items?.length}>
+            Exportar Excel
+          </Button>
         </div>
       </div>
 
