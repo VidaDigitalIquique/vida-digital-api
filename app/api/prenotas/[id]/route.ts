@@ -55,13 +55,14 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
 
   const id = Number(params.id);
   const body = await request.json();
-  const titulo = body?.titulo ?? null;
-  const kcodclie = body?.kcodclie ?? null;
-  const nombre_cliente = body?.nombre_cliente ?? null;
 
   const rows = await sql`
     UPDATE public.prenotas
-    SET titulo = ${titulo}, kcodclie = ${kcodclie}, nombre_cliente = ${nombre_cliente}, updated_at = now()
+    SET
+      titulo         = CASE WHEN ${body?.titulo !== undefined} THEN ${body?.titulo ?? null} ELSE titulo END,
+      kcodclie       = CASE WHEN ${body?.kcodclie !== undefined} THEN ${body?.kcodclie ?? null} ELSE kcodclie END,
+      nombre_cliente = CASE WHEN ${body?.nombre_cliente !== undefined} THEN ${body?.nombre_cliente ?? null} ELSE nombre_cliente END,
+      updated_at     = now()
     WHERE id = ${id} AND usuario_id = ${auth.usuarioId}
     RETURNING *
   `;
