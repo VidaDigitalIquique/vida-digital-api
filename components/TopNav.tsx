@@ -28,7 +28,8 @@ import {
   Heart,
   Package,
   Warehouse,
-  UserPlus
+  UserPlus,
+  FileText
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 
@@ -192,6 +193,13 @@ export function TopNav() {
               <Link href="/clientes-nuevos" className={navLink(pathname.startsWith('/clientes-nuevos'))}>
                 <UserPlus className="w-4 h-4" />
                 Clientes Nuevos
+              </Link>
+            )}
+
+            {(isAdmin || rol === 'vendedor') && (
+              <Link href="/prenotas" className={navLink(pathname.startsWith('/prenotas'))}>
+                <FileText className="w-4 h-4" />
+                Pre-Notas
               </Link>
             )}
 
