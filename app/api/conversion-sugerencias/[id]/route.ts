@@ -45,7 +45,7 @@ export async function PATCH(
 
     await sql`
       UPDATE public.productos_deseados
-      SET cliente_winfac_id = ${sugerencia.kcodclie}, cliente_deseado_id = NULL
+      SET cliente_winfac_id = ${String(sugerencia.kcodclie)}, cliente_deseado_id = NULL
       WHERE cliente_deseado_id = ${sugerencia.cliente_deseado_id}
     `;
 
