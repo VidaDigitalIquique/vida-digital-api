@@ -53,8 +53,8 @@ export async function POST() {
   });
   const titulo = `Pre-nota #${n} — ${fecha}`;
   const rows = await sql`
-    INSERT INTO public.prenotas (titulo, usuario_id)
-    VALUES (${titulo}, ${usuarioId})
+    INSERT INTO public.prenotas (titulo, titulo_base, usuario_id)
+    VALUES (${titulo}, ${titulo}, ${usuarioId})
     RETURNING *
   `;
 
