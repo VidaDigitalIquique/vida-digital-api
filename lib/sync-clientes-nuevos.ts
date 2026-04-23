@@ -103,20 +103,25 @@ Responde ÚNICAMENTE con JSON válido sin markdown:
   }
 }
 
-async function insertKnownClients(kcodclieList: any[], sql: any): Promise<void> {
-  if (kcodclieList.length === 0) return;
+async function insertKnownClients(
+  clients: { kcodclie: any; empresa_id: any }[],
+  sql: any,
+): Promise<void> {
+  if (clients.length === 0) return;
 
   // Construye TemplateStringsArray dinámicamente.
   // Invariante: strings.length === values.length + 1
-  const strings: string[] = ['INSERT INTO public.clientes_conocidos (kcodclie) VALUES ('];
+  const strings: string[] = ['INSERT INTO public.clientes_conocidos (kcodclie, empresa_id) VALUES ('];
   const values: any[] = [];
 
-  kcodclieList.forEach((kcodclie, i) => {
-    values.push(kcodclie);
+  clients.forEach((client, i) => {
+    values.push(client.kcodclie);
+    strings.push(', ');
+    values.push(client.empresa_id);
     strings.push(
-      i < kcodclieList.length - 1
+      i < clients.length - 1
         ? '), ('
-        : ') ON CONFLICT (kcodclie) DO NOTHING',
+        : ') ON CONFLICT (kcodclie, empresa_id) DO NOTHING',
     );
   });
 
@@ -144,7 +149,7 @@ export async function syncClientesNuevos(
   // Paso 3 — Cold start: registrar baseline sin contar como nuevos
   if (conocidosSet.size === 0) {
     await insertKnownClients(
-      winfacRows.map((r: any) => r.kcodclie),
+      winfacRows.map((r: any) => ({ kcodclie: r.kcodclie, empresa_id: r.empresa_id })),
       sql,
     );
     return { nuevos: 0, sugerencias: 0 };
@@ -176,7 +181,7 @@ export async function syncClientesNuevos(
 
   // Paso 7 — Registrar los nuevos como conocidos
   await insertKnownClients(
-    nuevosClientes.map((r: any) => r.kcodclie),
+    nuevosClientes.map((r: any) => ({ kcodclie: r.kcodclie, empresa_id: r.empresa_id })),
     sql,
   );
 
