@@ -5,8 +5,9 @@ import { Producto } from '@/types';
 import { formatUSD } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { ImageWithFallback } from './ImageWithFallback';
-import { Heart, Users } from 'lucide-react';
+import { ClipboardList, Heart, Users } from 'lucide-react';
 import { AgregarADeseadosModal } from './AgregarADeseadosModal';
+import { AgregarAPrenotaModal } from '@/components/AgregarAPrenotaModal';
 import { ClienteStars } from '@/components/ClienteStars';
 import { useShareImage } from '@/hooks/useShareImage';
 
@@ -33,6 +34,7 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
   const [compradores, setCompradores] = useState<any[]>([]);
   const [loadingCompradores, setLoadingCompradores] = useState(false);
   const [compradorActivo, setCompradorActivo] = useState<any | null>(null);
+  const [showPrenota, setShowPrenota] = useState(false);
   const { shareImage } = useShareImage();
 
   const handleVerCompradores = async () => {
@@ -147,6 +149,16 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
           </button>
         )}
 
+        {rol !== 'bodeguero' && (
+          <button
+            onClick={e => { e.stopPropagation(); setShowPrenota(true); }}
+            className="w-full text-xs text-green-600 hover:text-green-800 flex items-center justify-center gap-1 pt-1 border-t border-border mt-1"
+          >
+            <ClipboardList className="w-3 h-3" />
+            Agregar a Pre-Nota
+          </button>
+        )}
+
       </div>
     </div>
     {showCompradores && (
@@ -205,6 +217,11 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
       onOpenChange={setDeseadoOpen}
       codigo={producto.codigo}
       descripcion={producto.detalle || ''}
+    />
+    <AgregarAPrenotaModal
+      open={showPrenota}
+      onClose={() => setShowPrenota(false)}
+      producto={producto}
     />
     </>
   );

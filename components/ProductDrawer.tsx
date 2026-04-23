@@ -10,9 +10,10 @@ import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ImageWithFallback } from './ImageWithFallback';
 import { formatUSD } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Share2 } from 'lucide-react';
+import { ClipboardList, Share2 } from 'lucide-react';
 import { useShareImage } from '@/hooks/useShareImage';
 import { Badge } from '@/components/ui/badge';
+import { AgregarAPrenotaModal } from '@/components/AgregarAPrenotaModal';
 
 interface ProductDrawerProps {
   producto: Producto | null;
@@ -55,6 +56,7 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showPrenota, setShowPrenota] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(null);
   const skipNextSync = useRef(false);
@@ -277,6 +279,14 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
               fill
               className="object-contain"
             />
+            {session.rol !== 'bodeguero' && (
+              <button
+                onClick={() => setShowPrenota(true)}
+                className="absolute top-2 left-2 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm rounded-full p-2 shadow-md hover:bg-white dark:hover:bg-zinc-800 transition-colors z-10"
+              >
+                <ClipboardList className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
+              </button>
+            )}
             {(currentImageUrl || producto.imagen_url) && (
               <button
                 onClick={() => shareImage(
@@ -447,6 +457,13 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
           </div>
         </div>
       </SheetContent>
+      {producto && (
+        <AgregarAPrenotaModal
+          open={showPrenota}
+          onClose={() => setShowPrenota(false)}
+          producto={producto}
+        />
+      )}
     </Sheet>
   );
 }
