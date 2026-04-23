@@ -184,8 +184,8 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
     }));
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toRows(sanjhItems)), 'SANJH');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toRows(vidaItems)), 'VIDA DIGITAL');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toRows(sanjhItems)), 'SANJH');
 
     const filename = `${prenota.titulo}${prenota.nombre_cliente ? ' — ' + prenota.nombre_cliente : ''}.xlsx`;
     XLSX.writeFile(wb, filename);

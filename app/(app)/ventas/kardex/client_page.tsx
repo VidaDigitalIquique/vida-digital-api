@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Camera, Eye, EyeOff, Heart, Search, Share2 } from 'lucide-react';
+import { Camera, ClipboardList, Eye, EyeOff, Heart, Search, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { cn, formatRut, formatUSD } from '@/lib/utils';
 import { useShareImage } from '@/hooks/useShareImage';
 import { ProductDrawer } from '@/components/ProductDrawer';
 import { AgregarADeseadosModal } from '@/components/AgregarADeseadosModal';
+import { AgregarAPrenotaModal } from '@/components/AgregarAPrenotaModal';
 import { Producto } from '@/types';
 import { ClienteStars } from '@/components/ClienteStars';
 
@@ -77,7 +78,7 @@ function formatSaldo(unidades?: number | null, cantcaja?: number | null) {
 }
 
 export function KardexClientePage({ session, empresasMap }: KardexClientePageProps) {
-  void session;
+  const rol = (session?.user as any)?.rol as string;
   const { shareImage } = useShareImage();
   const fotoInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
@@ -106,6 +107,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
     clienteId: string;
     clienteNombre: string;
   } | null>(null);
+  const [prenotaProducto, setPrenotaProducto] = useState<any | null>(null);
 
   useEffect(() => {
     setOcultarPrecios(localStorage.getItem('ocultar_precios') === 'true');
@@ -687,6 +689,27 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                         </div>
                       </div>
                     </div>
+
+                    {rol !== 'bodeguero' && (
+                      <button
+                        onClick={e => {
+                          e.stopPropagation();
+                          setPrenotaProducto({
+                            codigo: producto.codigo,
+                            detalle: producto.detalle || null,
+                            imagen_url: producto.imagen_url || null,
+                            empresa_id: empresaId,
+                            prcventa: producto.precio_ultimo,
+                            cantcaja: producto.cantcaja ?? 1,
+                            saldo: producto.saldo_zofri ?? 0,
+                          });
+                        }}
+                        className="w-full text-xs text-green-600 hover:text-green-800 flex items-center justify-center gap-1 pt-2 border-t border-border mt-2"
+                      >
+                        <ClipboardList className="w-3 h-3" />
+                        Agregar a Pre-Nota
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -711,6 +734,13 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
           descripcion={deseadoModal.descripcion}
           esChina={deseadoModal.esChina}
           clientePreseleccionado={{ id: deseadoModal.clienteId, nombre: deseadoModal.clienteNombre }}
+        />
+      )}
+      {prenotaProducto && (
+        <AgregarAPrenotaModal
+          open={!!prenotaProducto}
+          onClose={() => setPrenotaProducto(null)}
+          producto={prenotaProducto}
         />
       )}
     </div>
