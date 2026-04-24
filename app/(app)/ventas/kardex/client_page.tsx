@@ -29,6 +29,7 @@ type ClienteBusqueda = {
   celular?: string | null;
   ciudad?: string | null;
   pais?: string | null;
+  estrellas?: number | null;
   comprador?: string | null;
   foto_url?: string | null;
 };
@@ -99,6 +100,9 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   const [drawerProduct, setDrawerProduct] = useState<Producto | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [filtroKardex, setFiltroKardex] = useState('');
+  const [filtroCiudad, setFiltroCiudad] = useState('');
+  const [filtroPais, setFiltroPais] = useState('');
+  const [filtroEstrellas, setFiltroEstrellas] = useState('');
   const [ocultarPrecios, setOcultarPrecios] = useState(false);
   const [deseadoModal, setDeseadoModal] = useState<{
     codigo: string;
@@ -114,7 +118,8 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   }, []);
   useEffect(() => { localStorage.setItem('ocultar_precios', ocultarPrecios.toString()); }, [ocultarPrecios]);
 
-  const hasSearch = debouncedSearch.trim().length >= 2;
+  const hayFiltroActivo = !!(filtroCiudad || filtroPais || filtroEstrellas);
+  const hasSearch = debouncedSearch.trim().length >= 2 || hayFiltroActivo;
 
   const vidaEmpresaId = useMemo(() => {
     const match = Object.entries(empresasMap).find(([, slug]) => slug.includes('vida'));
@@ -165,7 +170,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
 
   useEffect(() => {
     async function fetchClientes() {
-      if (debouncedSearch.trim().length < 2) {
+      if (debouncedSearch.trim().length < 2 && !hayFiltroActivo) {
         setClientes([]);
         setSearching(false);
         return;
@@ -177,6 +182,9 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
           q: debouncedSearch.trim(),
           empresaSlug: 'vida',
         });
+        if (filtroCiudad) queryParams.set('ciudad', filtroCiudad);
+        if (filtroPais) queryParams.set('pais', filtroPais);
+        if (filtroEstrellas) queryParams.set('estrellas', filtroEstrellas);
         const res = await fetch(`/api/ventas/clientes?${queryParams.toString()}`);
         if (res.ok) {
           const { data } = await res.json();
@@ -193,7 +201,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
     }
 
     fetchClientes();
-  }, [debouncedSearch]);
+  }, [debouncedSearch, filtroCiudad, filtroPais, filtroEstrellas, hayFiltroActivo]);
 
   async function handleBuscarKardex(cliente: ClienteBusqueda) {
     if (!cliente) return;
@@ -313,6 +321,42 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
+            </div>
+            <div className="flex gap-2 mt-2 flex-wrap">
+              <select
+                value={filtroCiudad}
+                onChange={e => setFiltroCiudad(e.target.value)}
+                className="text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200"
+              >
+                <option value="">Todas las ciudades</option>
+                {Array.from(new Set(clientes.map(c => c.ciudad).filter((x): x is string => !!x))).sort().map(ciudad => (
+                  <option key={ciudad} value={ciudad!}>{ciudad}</option>
+                ))}
+              </select>
+
+              <select
+                value={filtroPais}
+                onChange={e => setFiltroPais(e.target.value)}
+                className="text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200"
+              >
+                <option value="">Todos los países</option>
+                {Array.from(new Set(clientes.map(c => c.pais).filter((x): x is string => !!x))).sort().map(pais => (
+                  <option key={pais} value={pais!}>{pais}</option>
+                ))}
+              </select>
+
+              <select
+                value={filtroEstrellas}
+                onChange={e => setFiltroEstrellas(e.target.value)}
+                className="text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200"
+              >
+                <option value="">Todas las estrellas</option>
+                <option value="5">⭐⭐⭐⭐⭐</option>
+                <option value="4">⭐⭐⭐⭐</option>
+                <option value="3">⭐⭐⭐</option>
+                <option value="2">⭐⭐</option>
+                <option value="1">⭐</option>
+              </select>
             </div>
           </div>
 
