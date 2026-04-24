@@ -103,6 +103,8 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   const [filtroCiudad, setFiltroCiudad] = useState('');
   const [filtroPais, setFiltroPais] = useState('');
   const [filtroEstrellas, setFiltroEstrellas] = useState('');
+  const [opcionesCiudades, setOpcionesCiudades] = useState<string[]>([]);
+  const [opcionesPaises, setOpcionesPaises] = useState<string[]>([]);
   const [ocultarPrecios, setOcultarPrecios] = useState(false);
   const [deseadoModal, setDeseadoModal] = useState<{
     codigo: string;
@@ -161,6 +163,16 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
       setClientPhotoError(false);
     }
   }, [selectedCliente]);
+
+  useEffect(() => {
+    fetch('/api/ventas/clientes/opciones')
+      .then(res => res.ok ? res.json() : { ciudades: [], paises: [] })
+      .then(({ ciudades, paises }) => {
+        setOpcionesCiudades(ciudades || []);
+        setOpcionesPaises(paises || []);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!selectedCliente) return;
@@ -329,8 +341,8 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                 className="text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200"
               >
                 <option value="">Todas las ciudades</option>
-                {Array.from(new Set(clientes.map(c => c.ciudad).filter((x): x is string => !!x))).sort().map(ciudad => (
-                  <option key={ciudad} value={ciudad!}>{ciudad}</option>
+                {opcionesCiudades.map(ciudad => (
+                  <option key={ciudad} value={ciudad}>{ciudad}</option>
                 ))}
               </select>
 
@@ -340,8 +352,8 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                 className="text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200"
               >
                 <option value="">Todos los países</option>
-                {Array.from(new Set(clientes.map(c => c.pais).filter((x): x is string => !!x))).sort().map(pais => (
-                  <option key={pais} value={pais!}>{pais}</option>
+                {opcionesPaises.map(pais => (
+                  <option key={pais} value={pais}>{pais}</option>
                 ))}
               </select>
 
