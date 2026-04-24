@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { ClipboardList, Trash2, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format, parseISO } from 'date-fns';
@@ -33,6 +34,8 @@ export function RegistroNotasPage({ session }: { session: any }) {
   const [empresaId, setEmpresaId] = useState<number>(2);
   const [observacion, setObservacion] = useState('');
   const [saving, setSaving] = useState(false);
+  const [eliminandoId, setEliminandoId] = useState<number | null>(null);
+  const [obsEliminacion, setObsEliminacion] = useState('');
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedFolio(filtroFolio), 400);
@@ -87,13 +90,19 @@ export function RegistroNotasPage({ session }: { session: any }) {
     }
   };
 
-  const handleEliminar = async (id: number) => {
-    if (!confirm('¿Eliminar este registro?')) return;
+  const handleEliminar = async () => {
+    if (!eliminandoId) return;
     try {
-      const res = await fetch(`/api/bodega/registro-notas/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/bodega/registro-notas/${eliminandoId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ observacion: obsEliminacion.trim() || null }),
+      });
       if (res.ok) {
-        setRegistros(prev => prev.filter(r => r.id !== id));
+        setRegistros(prev => prev.filter(r => r.id !== eliminandoId));
         toast.success('Registro eliminado');
+        setEliminandoId(null);
+        setObsEliminacion('');
       } else {
         toast.error('Error al eliminar');
       }
@@ -239,7 +248,7 @@ export function RegistroNotasPage({ session }: { session: any }) {
                             size="sm"
                             variant="outline"
                             className="text-xs text-red-500 border-red-200 hover:bg-red-50"
-                            onClick={() => handleEliminar(r.id)}
+                            onClick={() => { setEliminandoId(r.id); setObsEliminacion(''); }}
                           >
                             <Trash2 className="w-3 h-3 mr-1" /> Eliminar
                           </Button>
@@ -253,6 +262,42 @@ export function RegistroNotasPage({ session }: { session: any }) {
           </div>
         </div>
       )}
+
+      <Dialog open={eliminandoId !== null} onOpenChange={open => { if (!open) { setEliminandoId(null); setObsEliminacion(''); } }}>
+        <DialogContent className="sm:max-w-md p-5">
+          <DialogHeader>
+            <DialogTitle>Eliminar registro</DialogTitle>
+          </DialogHeader>
+          <div className="py-4 flex flex-col gap-3">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Esta acción quedará registrada en la auditoría del sistema.
+            </p>
+            <div>
+              <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
+                Observación (opcional)
+              </label>
+              <textarea
+                value={obsEliminacion}
+                onChange={e => setObsEliminacion(e.target.value)}
+                placeholder="Motivo de eliminación..."
+                rows={3}
+                className="mt-1 w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900 resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setEliminandoId(null); setObsEliminacion(''); }}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleEliminar}
+            >
+              Confirmar eliminación
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
