@@ -57,8 +57,14 @@ export async function PATCH(
 
     await sql`
       UPDATE public.conversion_sugerencias
-      SET estado = 'rechazada', updated_at = now()
+      SET estado = 'rechazada', cliente_deseado_id = NULL, updated_at = now()
       WHERE cliente_deseado_id = ${sugerencia.cliente_deseado_id} AND estado = 'pendiente'
+    `;
+
+    await sql`
+      UPDATE public.conversion_sugerencias
+      SET cliente_deseado_id = NULL
+      WHERE id = ${id}
     `;
 
     await sql`
