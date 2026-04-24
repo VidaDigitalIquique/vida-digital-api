@@ -153,6 +153,40 @@ export function ClientesNuevosPage({ session }: { session: any }) {
     }
   };
 
+  const handleCrearYAgregarDeseado = async () => {
+    if (!form.nombre.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch('/api/clientes-deseados', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: form.nombre.trim(),
+          whatsapp: form.whatsapp.trim() || undefined,
+          pais: form.pais.trim() || undefined,
+          ciudad: form.ciudad.trim() || undefined,
+          notas: form.notas.trim() || undefined,
+        }),
+      });
+      if (res.ok) {
+        const body = await res.json();
+        setForm(FORM_EMPTY);
+        setShowForm(false);
+        await refetch();
+        if (body?.data?.id) {
+          setDeseadoCliente({ id: String(body.data.id), nombre: body.data.nombre || form.nombre.trim() });
+        }
+      } else {
+        const { error } = await res.json();
+        toast.error(error || 'Error al crear');
+      }
+    } catch {
+      toast.error('Error al crear cliente');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleEditar = async (id: number) => {
     try {
       const res = await fetch(`/api/clientes-deseados/${id}`, {
@@ -270,8 +304,17 @@ export function ClientesNuevosPage({ session }: { session: any }) {
               />
             </div>
           </div>
-          <div className="flex gap-2 justify-end">
+          <div className="flex gap-2 justify-end flex-wrap">
             <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
+            <Button
+              variant="outline"
+              className="text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20"
+              onClick={handleCrearYAgregarDeseado}
+              disabled={!form.nombre.trim() || saving}
+            >
+              <PlusCircle className="w-4 h-4 mr-2" />
+              {saving ? 'Guardando...' : 'Crear y agregar deseado'}
+            </Button>
             <Button onClick={handleCrear} disabled={!form.nombre.trim() || saving}>
               {saving ? 'Guardando...' : 'Crear'}
             </Button>
