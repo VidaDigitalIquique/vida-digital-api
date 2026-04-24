@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, ClipboardList, Eye, EyeOff, Heart, Search, Share2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -689,7 +689,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                                 : null;
                               return (
                                 <div key={c.precio} className="flex items-center justify-between">
-                                  <span className="text-sm text-zinc-400">{format(new Date(c.fecha), 'dd MMM yyyy', { locale: es })}</span>
+                                  <span className="text-sm text-zinc-400">{format(parseISO(c.fecha), 'dd MMM yyyy', { locale: es })}</span>
                                   <div className="text-right">
                                     <span className="text-base font-bold text-zinc-900 dark:text-zinc-100">{formatUSD(c.precio)}</span>
                                     {cajas !== null
