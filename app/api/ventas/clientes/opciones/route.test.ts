@@ -39,7 +39,7 @@ describe('GET /api/ventas/clientes/opciones - ciudad_alias (tests rojos)', () =>
         { alias: 'CIUDAD DEL EST', ciudad_canonical: 'CIUDAD DEL ESTE' },
       ] as any);
 
-    const res = await getOpciones();
+    const res = await getOpciones(new Request('http://localhost/api/ventas/clientes/opciones') as any);
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -58,7 +58,7 @@ describe('GET /api/ventas/clientes/opciones - ciudad_alias (tests rojos)', () =>
         { alias: 'CIUDAD DEL EST', ciudad_canonical: 'CIUDAD DEL ESTE' },
       ] as any);
 
-    const res = await getOpciones();
+    const res = await getOpciones(new Request('http://localhost/api/ventas/clientes/opciones') as any);
     const body = await res.json();
 
     expect(res.status).toBe(200);
@@ -67,7 +67,9 @@ describe('GET /api/ventas/clientes/opciones - ciudad_alias (tests rojos)', () =>
   });
 
   it('Test 3 — búsqueda por ciudad canonical encuentra clientes con alias', async () => {
-    mockSql.mockResolvedValueOnce([] as any);
+    mockSql
+      .mockResolvedValueOnce([] as any)
+      .mockResolvedValueOnce([] as any);
 
     const res = await getClientes(
       makeRequest('/api/ventas/clientes?q=&empresaSlug=vida&ciudad=CIUDAD%20DEL%20ESTE')

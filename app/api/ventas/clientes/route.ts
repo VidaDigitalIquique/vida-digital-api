@@ -17,6 +17,7 @@ export async function GET(request: Request) {
   const ciudad = searchParams.get('ciudad')?.trim() || null;
   const pais = searchParams.get('pais')?.trim() || null;
   const estrellas = searchParams.get('estrellas') ? Number(searchParams.get('estrellas')) : null;
+  const offset = Number(searchParams.get('offset') || '0');
   const hayFiltro = ciudad || pais || estrellas;
 
   if (!empresaSlug || (!hayFiltro && (!q || q.length < 2))) {
@@ -63,7 +64,7 @@ export async function GET(request: Request) {
             AND (${pais}::text IS NULL OR c.pais ILIKE ${'%' + (pais || '') + '%'})
             AND (${estrellas}::int IS NULL OR r.estrellas = ${estrellas})
           ORDER BY c.nombress ASC
-          LIMIT 20
+          LIMIT 50 OFFSET ${offset}
         `
       : await sql`
           SELECT
@@ -93,10 +94,10 @@ export async function GET(request: Request) {
             AND (${pais}::text IS NULL OR c.pais ILIKE ${'%' + (pais || '') + '%'})
             AND (${estrellas}::int IS NULL OR r.estrellas = ${estrellas})
           ORDER BY c.nombress ASC
-          LIMIT 20
+          LIMIT 50 OFFSET ${offset}
         `;
 
-    return NextResponse.json({ data: rows });
+    return NextResponse.json({ data: rows, hasMore: (rows as any[]).length === 50 });
   } catch (error: any) {
     console.error('GET /api/ventas/clientes error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

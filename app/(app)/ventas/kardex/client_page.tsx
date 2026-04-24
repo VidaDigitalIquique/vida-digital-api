@@ -85,8 +85,11 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   const [search, setSearch] = useState('');
   const [uploadingFoto, setUploadingFoto] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [searching, setSearching] = useState(false);
   const [clientes, setClientes] = useState<ClienteBusqueda[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [selectedCliente, setSelectedCliente] = useState<ClienteBusqueda | null>(null);
   const [productos, setProductos] = useState<KardexProducto[]>([]);
   const [kardexMap, setKardexMap] = useState<Record<string, KardexGeneral>>({});
@@ -175,45 +178,71 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   }, []);
 
   useEffect(() => {
+    setFiltroCiudad('');
+    fetch(`/api/ventas/clientes/opciones${filtroPais ? `?pais=${encodeURIComponent(filtroPais)}` : ''}`)
+      .then(res => res.ok ? res.json() : { ciudades: [], paises: [] })
+      .then(({ ciudades }) => {
+        setOpcionesCiudades(ciudades || []);
+      })
+      .catch(() => {});
+  }, [filtroPais]);
+
+  useEffect(() => {
     if (!selectedCliente) return;
     void handleBuscarKardex(selectedCliente);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tipoCliente]);
 
-  useEffect(() => {
-    async function fetchClientes() {
-      if (debouncedSearch.trim().length < 2 && !hayFiltroActivo) {
-        setClientes([]);
-        setSearching(false);
-        return;
-      }
-
-      setSearching(true);
-      try {
-        const queryParams = new URLSearchParams({
-          q: debouncedSearch.trim(),
-          empresaSlug: 'vida',
-        });
-        if (filtroCiudad) queryParams.set('ciudad', filtroCiudad);
-        if (filtroPais) queryParams.set('pais', filtroPais);
-        if (filtroEstrellas) queryParams.set('estrellas', filtroEstrellas);
-        const res = await fetch(`/api/ventas/clientes?${queryParams.toString()}`);
-        if (res.ok) {
-          const { data } = await res.json();
-          setClientes(data || []);
+  const fetchClientes = async (newOffset: number, append: boolean) => {
+    if (newOffset === 0) setSearching(true);
+    else setLoadingMore(true);
+    try {
+      const queryParams = new URLSearchParams({
+        q: debouncedSearch.trim(),
+        empresaSlug: 'vida',
+      });
+      if (filtroCiudad) queryParams.set('ciudad', filtroCiudad);
+      if (filtroPais) queryParams.set('pais', filtroPais);
+      if (filtroEstrellas) queryParams.set('estrellas', filtroEstrellas);
+      queryParams.set('offset', String(newOffset));
+      const res = await fetch(`/api/ventas/clientes?${queryParams.toString()}`);
+      if (res.ok) {
+        const { data, hasMore: more } = await res.json();
+        if (append) {
+          setClientes(prev => [...prev, ...(data || [])]);
         } else {
-          setClientes([]);
+          setClientes(data || []);
         }
-      } catch (error) {
-        console.error(error);
-        setClientes([]);
-      } finally {
-        setSearching(false);
+        setHasMore(more ?? false);
+        setOffset(newOffset + (data?.length || 0));
+      } else {
+        if (!append) setClientes([]);
       }
+    } catch {
+      if (!append) setClientes([]);
+    } finally {
+      setSearching(false);
+      setLoadingMore(false);
     }
+  };
 
-    fetchClientes();
-  }, [debouncedSearch, filtroCiudad, filtroPais, filtroEstrellas, hayFiltroActivo]);
+  useEffect(() => {
+    const hayFiltroActivo = !!(filtroCiudad || filtroPais || filtroEstrellas);
+    const hasSearch = debouncedSearch.trim().length >= 2 || hayFiltroActivo;
+    if (!hasSearch) {
+      setClientes([]);
+      setHasMore(false);
+      setOffset(0);
+      return;
+    }
+    setOffset(0);
+    fetchClientes(0, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, filtroCiudad, filtroPais, filtroEstrellas]);
+
+  const handleLoadMore = () => {
+    fetchClientes(offset, true);
+  };
 
   async function handleBuscarKardex(cliente: ClienteBusqueda) {
     if (!cliente) return;
@@ -336,17 +365,6 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
             </div>
             <div className="flex gap-2 mt-2 flex-wrap">
               <select
-                value={filtroCiudad}
-                onChange={e => setFiltroCiudad(e.target.value)}
-                className="text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200"
-              >
-                <option value="">Todas las ciudades</option>
-                {opcionesCiudades.map(ciudad => (
-                  <option key={ciudad} value={ciudad}>{ciudad}</option>
-                ))}
-              </select>
-
-              <select
                 value={filtroPais}
                 onChange={e => setFiltroPais(e.target.value)}
                 className="text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200"
@@ -354,6 +372,17 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                 <option value="">Todos los países</option>
                 {opcionesPaises.map(pais => (
                   <option key={pais} value={pais}>{pais}</option>
+                ))}
+              </select>
+
+              <select
+                value={filtroCiudad}
+                onChange={e => setFiltroCiudad(e.target.value)}
+                className="text-sm border border-zinc-300 dark:border-zinc-700 rounded-lg px-3 py-1.5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200"
+              >
+                <option value="">Todas las ciudades</option>
+                {opcionesCiudades.map(ciudad => (
+                  <option key={ciudad} value={ciudad}>{ciudad}</option>
                 ))}
               </select>
 
@@ -414,6 +443,15 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
                   </button>
                 );
               })}
+              {hasMore && (
+                <button
+                  onClick={handleLoadMore}
+                  disabled={loadingMore}
+                  className="w-full py-3 text-sm text-blue-600 hover:text-blue-800 font-medium border border-blue-200 rounded-xl hover:bg-blue-50 transition-colors disabled:opacity-50"
+                >
+                  {loadingMore ? 'Cargando...' : 'Cargar más resultados'}
+                </button>
+              )}
             </div>
           )}
         </>
