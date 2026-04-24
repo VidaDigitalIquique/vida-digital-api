@@ -12,11 +12,36 @@ import { toast } from 'sonner';
 function PrenotaItemsTable({
   items,
   onEliminar,
+  prenotaId,
+  onActualizar,
 }: {
   items: any[];
   onEliminar: (itemId: number) => void;
+  prenotaId: string;
+  onActualizar: () => void;
 }) {
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [editCajas, setEditCajas] = useState<number>(0);
+  const [editUnidades, setEditUnidades] = useState<number>(0);
+  const [editPrecio, setEditPrecio] = useState<number>(0);
+  const [saving, setSaving] = useState(false);
+
+  const handleGuardar = async (itemId: number) => {
+    setSaving(true);
+    try {
+      await fetch(`/api/prenotas/${prenotaId}/items/${itemId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cajas: editCajas, unidades: editUnidades, precio: editPrecio }),
+      });
+      setEditingId(null);
+      onActualizar();
+    } catch {
+      // silencioso
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="border rounded-xl overflow-hidden bg-white dark:bg-zinc-900 shadow-sm">
@@ -53,11 +78,53 @@ function PrenotaItemsTable({
                 <td className="px-4 py-3 text-right">${Number(item.precio).toFixed(2)}</td>
                 <td className="px-4 py-3 text-right">
                   {editingId === item.id ? (
-                    <div className="flex flex-col gap-2 items-end">
+                    <div className="flex flex-col gap-2 items-end min-w-[140px]">
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-xs text-zinc-400">Cajas</label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={editCajas}
+                          onFocus={e => e.target.select()}
+                          onChange={e => setEditCajas(Number(e.target.value))}
+                          className="border rounded px-2 py-1 text-sm w-full"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-xs text-zinc-400">Unidades</label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={editUnidades}
+                          onFocus={e => e.target.select()}
+                          onChange={e => setEditUnidades(Number(e.target.value))}
+                          className="border rounded px-2 py-1 text-sm w-full"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1 w-full">
+                        <label className="text-xs text-zinc-400">Precio USD</label>
+                        <input
+                          type="number"
+                          min={0}
+                          step={0.01}
+                          value={editPrecio}
+                          onFocus={e => e.target.select()}
+                          onChange={e => setEditPrecio(Number(e.target.value))}
+                          className="border rounded px-2 py-1 text-sm w-full"
+                        />
+                      </div>
+                      <Button
+                        size="sm"
+                        className="text-xs w-full bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={() => handleGuardar(item.id)}
+                        disabled={saving}
+                      >
+                        {saving ? 'Guardando...' : 'Guardar'}
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                        className="text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20 w-full"
                         onClick={() => { onEliminar(item.id); setEditingId(null); }}
                       >
                         <Trash2 className="w-3 h-3 mr-1" /> Eliminar
@@ -65,7 +132,7 @@ function PrenotaItemsTable({
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-xs"
+                        className="text-xs w-full"
                         onClick={() => setEditingId(null)}
                       >
                         Cerrar
@@ -76,7 +143,12 @@ function PrenotaItemsTable({
                       size="sm"
                       variant="outline"
                       className="text-xs"
-                      onClick={() => setEditingId(item.id)}
+                      onClick={() => {
+                        setEditingId(item.id);
+                        setEditCajas(Number(item.cajas));
+                        setEditUnidades(Number(item.unidades));
+                        setEditPrecio(Number(item.precio));
+                      }}
                     >
                       <Pencil className="w-3 h-3 mr-1" /> Editar
                     </Button>
@@ -288,7 +360,7 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
               </div>
             );
           })()}
-          <PrenotaItemsTable items={prenota.items} onEliminar={eliminarItem} />
+          <PrenotaItemsTable items={prenota.items} onEliminar={eliminarItem} prenotaId={id} onActualizar={fetchPrenota} />
         </>
       ) : (
         <p className="text-zinc-400">No hay productos en esta pre-nota aún</p>
