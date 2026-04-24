@@ -42,7 +42,7 @@ export function ClienteStars({ kcodclie, className, _flagOverride }: Props) {
         <span
           key={i}
           data-filled={i < estrellas ? 'true' : 'false'}
-          className={i < estrellas ? 'text-yellow-500' : 'text-gray-300'}
+          className={i < estrellas ? 'text-red-500' : 'text-gray-300'}
         >
           ★
         </span>
