@@ -122,6 +122,25 @@ export function ClientesNuevosPage({ session }: { session: any }) {
     }
   };
 
+  const handleDescartarSugerencia = async (id: number) => {
+    try {
+      const res = await fetch(`/api/conversion-sugerencias/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'rechazar' }),
+      });
+      if (res.ok) {
+        toast.success('Sugerencia descartada');
+        setSugerencias(prev => prev.filter(s => s.id !== id));
+      } else {
+        const { error } = await res.json();
+        toast.error(error || 'Error al descartar');
+      }
+    } catch {
+      toast.error('Error al descartar');
+    }
+  };
+
   const handleCrear = async () => {
     if (!form.nombre.trim()) return;
     setSaving(true);
@@ -340,13 +359,21 @@ export function ClientesNuevosPage({ session }: { session: any }) {
           </p>
           <div className="mt-2 flex flex-col gap-2">
             {sugerencias.map(s => (
-              <button
-                key={s.id}
-                onClick={() => setSugerenciaActiva(s)}
-                className="text-left text-sm text-amber-700 hover:text-amber-900 underline"
-              >
-                {s.nombre_winfac} → {s.nombre_lead} ({Math.round(s.score * 100)}% confianza)
-              </button>
+              <div key={s.id} className="flex items-center justify-between gap-3">
+                <button
+                  onClick={() => setSugerenciaActiva(s)}
+                  className="text-left text-sm text-amber-700 hover:text-amber-900 underline"
+                >
+                  {s.nombre_winfac} → {s.nombre_lead} ({Math.round(s.score * 100)}% confianza)
+                </button>
+                <button
+                  onClick={() => handleDescartarSugerencia(s.id)}
+                  className="text-xs text-amber-500 hover:text-red-600 transition-colors flex-shrink-0"
+                  title="Descartar sugerencia"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
             ))}
           </div>
         </div>
