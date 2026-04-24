@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger
 } from './ui/dropdown-menu';
 import {
-  Home,
   Box,
   LogOut,
   ChevronDown,
@@ -27,7 +26,6 @@ import {
   Tag,
   Heart,
   Package,
-  Warehouse,
   UserPlus,
   FileText
 } from 'lucide-react';
@@ -84,21 +82,16 @@ export function TopNav() {
           </Link>
           <nav className="flex items-center space-x-1">
 
-            {/* 1. Dashboard — solo admin */}
-            {isAdmin && (
-              <Link href="/dashboard" className={navLink(pathname === '/dashboard')}>
-                <Home className="w-4 h-4" />
-                Dashboard
-              </Link>
-            )}
-
             {/* 2. Ventas — admin y vendedor */}
             {(isAdmin || rol === 'vendedor') && (
               <DropdownMenu open={ventasOpen} onOpenChange={setVentasOpen}>
                 <DropdownMenuTrigger
                   onMouseEnter={() => openOnly('ventas')}
                   className={dropdownTrigger(
-                    pathname.startsWith('/precios') || pathname.startsWith('/ventas')
+                    pathname.startsWith('/precios') ||
+                    pathname.startsWith('/ventas') ||
+                    pathname.startsWith('/prenotas') ||
+                    pathname.startsWith('/clientes-nuevos')
                   )}
                 >
                   Ventas <ChevronDown className="w-4 h-4" />
@@ -114,6 +107,18 @@ export function TopNav() {
                       <Users className="w-4 h-4" /> Kardex Cliente
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/prenotas" className="flex items-center gap-2 w-full">
+                      <FileText className="w-4 h-4" /> Pre-Notas
+                    </Link>
+                  </DropdownMenuItem>
+                  {(isAdmin || rol === 'vendedor' || rol === 'supervisor') && (
+                    <DropdownMenuItem>
+                      <Link href="/clientes-nuevos" className="flex items-center gap-2 w-full">
+                        <UserPlus className="w-4 h-4" /> Clientes Nuevos
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -124,7 +129,9 @@ export function TopNav() {
                 <DropdownMenuTrigger
                   onMouseEnter={() => openOnly('catalogo')}
                   className={dropdownTrigger(
-                    pathname.startsWith('/catalogo') || pathname.startsWith('/admin/categorias')
+                    pathname.startsWith('/catalogo') ||
+                    pathname.startsWith('/admin/categorias') ||
+                    (pathname.startsWith('/deseados') && modoChina)
                   )}
                 >
                   Catálogo <ChevronDown className="w-4 h-4" />
@@ -136,13 +143,26 @@ export function TopNav() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
+                    <Link href="/catalogo/clientes" className="flex items-center gap-2 w-full">
+                      <Users className="w-4 h-4" /> Catálogos por Cliente
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
                     <Link href="/admin/categorias" className="flex items-center gap-2 w-full">
                       <Tag className="w-4 h-4" /> Categorías
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <Link href="/catalogo/clientes" className="flex items-center gap-2 w-full">
-                      <Users className="w-4 h-4" /> Catálogos por Cliente
+                    <Link href="/deseados?modo=china" className="flex items-center gap-2 w-full">
+                      <span className="relative flex items-center gap-2">
+                        <Package className="w-4 h-4" />
+                        Pedir a China
+                        {stockBajoCount > 0 && (
+                          <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[15px] h-3.5 flex items-center justify-center px-0.5 leading-none">
+                            {stockBajoCount > 99 ? '99+' : stockBajoCount}
+                          </span>
+                        )}
+                      </span>
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -182,36 +202,6 @@ export function TopNav() {
                   {alertasCount > 0 && (
                     <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[15px] h-3.5 flex items-center justify-center px-0.5 leading-none">
                       {alertasCount > 99 ? '99+' : alertasCount}
-                    </span>
-                  )}
-                </span>
-              </Link>
-            )}
-
-            {/* 5b. Clientes Nuevos — admin, vendedor y supervisor */}
-            {(isAdmin || rol === 'vendedor' || rol === 'supervisor') && (
-              <Link href="/clientes-nuevos" className={navLink(pathname.startsWith('/clientes-nuevos'))}>
-                <UserPlus className="w-4 h-4" />
-                Clientes Nuevos
-              </Link>
-            )}
-
-            {(isAdmin || rol === 'vendedor') && (
-              <Link href="/prenotas" className={navLink(pathname.startsWith('/prenotas'))}>
-                <FileText className="w-4 h-4" />
-                Pre-Notas
-              </Link>
-            )}
-
-            {/* 5c. Pedir a China — admin y vendedor */}
-            {(isAdmin || rol === 'vendedor') && (
-              <Link href="/deseados?modo=china" className={navLink(pathname.startsWith('/deseados') && modoChina)}>
-                <span className="relative flex items-center gap-2">
-                  <Package className="w-4 h-4" />
-                  China
-                  {stockBajoCount > 0 && (
-                    <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[15px] h-3.5 flex items-center justify-center px-0.5 leading-none">
-                      {stockBajoCount > 99 ? '99+' : stockBajoCount}
                     </span>
                   )}
                 </span>
