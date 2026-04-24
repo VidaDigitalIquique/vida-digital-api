@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   ShoppingCart, Users, LayoutList, Tag, Box, Camera,
   Heart, Package, Settings, RefreshCw, ImageIcon,
-  Filter, UserPlus, FileText, ChevronRight
+  Filter, UserPlus, FileText, ChevronRight, ClipboardList
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -176,6 +176,7 @@ export function BottomNav() {
                 <div className="space-y-0">
                   {sheetLink('/bodega', <Box className="w-5 h-5" />, 'Ubicaciones en Bodega', () => setBodegaOpen(false))}
                   {sheetLink('/bodega/despachos', <Camera className="w-5 h-5" />, 'Despachos', () => setBodegaOpen(false))}
+                  {sheetLink('/bodega/registro-notas', <ClipboardList className="w-5 h-5" />, 'Registro de Notas', () => setBodegaOpen(false))}
                 </div>
               </SheetContent>
             </Sheet>

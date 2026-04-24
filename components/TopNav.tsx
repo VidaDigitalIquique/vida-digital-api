@@ -27,7 +27,8 @@ import {
   Heart,
   Package,
   UserPlus,
-  FileText
+  FileText,
+  ClipboardList
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 
@@ -187,6 +188,11 @@ export function TopNav() {
                   <DropdownMenuItem>
                     <Link href="/bodega/despachos" className="flex items-center gap-2 w-full">
                       <Camera className="w-4 h-4" /> Despachos
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/bodega/registro-notas" className="flex items-center gap-2 w-full">
+                      <ClipboardList className="w-4 h-4" /> Registro de Notas
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
