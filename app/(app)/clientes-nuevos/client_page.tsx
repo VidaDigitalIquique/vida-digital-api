@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { AgregarADeseadosModal } from '@/components/AgregarADeseadosModal';
 import { inferPaisDesdePhone } from '@/lib/phone-utils';
 import { toast } from 'sonner';
 import { Search, PlusCircle, Trash2, ExternalLink, Pencil, X, Check } from 'lucide-react';
@@ -39,6 +40,7 @@ export function ClientesNuevosPage({ session }: { session: any }) {
   const [clientes, setClientes] = useState<ClienteDeseado[]>([]);
   const [sugerencias, setSugerencias] = useState<any[]>([]);
   const [sugerenciaActiva, setSugerenciaActiva] = useState<any | null>(null);
+  const [deseadoCliente, setDeseadoCliente] = useState<{ id: string; nombre: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
@@ -420,6 +422,14 @@ export function ClientesNuevosPage({ session }: { session: any }) {
                     <Button
                       size="sm"
                       variant="outline"
+                      className="text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20"
+                      onClick={() => setDeseadoCliente({ id: String(cliente.id), nombre: cliente.nombre })}
+                    >
+                      <PlusCircle className="w-3 h-3 mr-1" /> Agregar Deseado
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="text-xs text-blue-600 border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-900/20"
                       onClick={() => router.push(`/deseados?cliente_deseado_id=${cliente.id}`)}
                     >
@@ -473,6 +483,17 @@ export function ClientesNuevosPage({ session }: { session: any }) {
             </div>
           </div>
         </div>
+      )}
+
+      {deseadoCliente && (
+        <AgregarADeseadosModal
+          open={deseadoCliente !== null}
+          onOpenChange={open => { if (!open) setDeseadoCliente(null); }}
+          codigo=""
+          descripcion=""
+          esChina={false}
+          clientePreseleccionado={deseadoCliente}
+        />
       )}
     </div>
   );

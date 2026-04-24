@@ -137,6 +137,9 @@ export function DeseadosClient({ session }: { session: any }) {
     nombre: string;
     tipo: 'winfac' | 'nuevo';
   } | null>(null);
+  const [busquedaClienteNuevo, setBusquedaClienteNuevo] = useState('');
+  const [resultadosClienteNuevo, setResultadosClienteNuevo] = useState<any[]>([]);
+  const [buscandoClienteNuevo, setBuscandoClienteNuevo] = useState(false);
 
   const [nuevoClienteForm, setNuevoClienteForm] = useState({
     nombre: '',
@@ -213,6 +216,28 @@ export function DeseadosClient({ session }: { session: any }) {
     return () => clearTimeout(t);
   }, [clienteWinfacSearch]);
 
+  useEffect(() => {
+    if (busquedaClienteNuevo.trim().length < 2) {
+      setResultadosClienteNuevo([]);
+      return;
+    }
+    const t = setTimeout(async () => {
+      setBuscandoClienteNuevo(true);
+      try {
+        const res = await fetch(`/api/clientes-deseados?search=${encodeURIComponent(busquedaClienteNuevo.trim())}`);
+        if (res.ok) {
+          const { data } = await res.json();
+          setResultadosClienteNuevo(data || []);
+        }
+      } catch {
+        // silencioso
+      } finally {
+        setBuscandoClienteNuevo(false);
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [busquedaClienteNuevo]);
+
   // --- Debounce búsqueda producto ---
   useEffect(() => {
     if (productoSearch.trim().length < 2) {
@@ -253,6 +278,8 @@ export function DeseadosClient({ session }: { session: any }) {
     setDescripcionLibre('');
     setNotaItem('');
     setProductosLista([]);
+    setBusquedaClienteNuevo('');
+    setResultadosClienteNuevo([]);
   };
 
   const handleOpenModal = () => {
@@ -867,45 +894,111 @@ export function DeseadosClient({ session }: { session: any }) {
                   )}
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Nombre *</label>
-                    <Input
-                      value={nuevoClienteForm.nombre}
-                      onChange={e => setNuevoClienteForm(f => ({ ...f, nombre: e.target.value }))}
-                      placeholder="Nombre completo"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">País</label>
+                <div className="space-y-4">
+                  {/* Buscador de cliente existente */}
+                  {!clienteSeleccionado && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
+                        ¿Ya existe este cliente?
+                      </label>
                       <Input
-                        value={nuevoClienteForm.pais}
-                        onChange={e => setNuevoClienteForm(f => ({ ...f, pais: e.target.value }))}
-                        placeholder="Ej: Chile"
-                        className="mt-1"
+                        placeholder="Buscar en clientes nuevos..."
+                        value={busquedaClienteNuevo}
+                        onChange={e => setBusquedaClienteNuevo(e.target.value)}
                       />
+                      {buscandoClienteNuevo && (
+                        <p className="text-xs text-zinc-400 animate-pulse">Buscando...</p>
+                      )}
+                      {resultadosClienteNuevo.length > 0 && (
+                        <ul className="border rounded-lg overflow-hidden divide-y max-h-36 overflow-y-auto">
+                          {resultadosClienteNuevo.map((c: any) => (
+                            <li
+                              key={c.id}
+                              className="px-3 py-2 text-sm cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-900/20"
+                              onClick={() => {
+                                setClienteSeleccionado({ id: String(c.id), nombre: c.nombre, tipo: 'nuevo' });
+                                setBusquedaClienteNuevo('');
+                                setResultadosClienteNuevo([]);
+                              }}
+                            >
+                              <p className="font-medium">{c.nombre}</p>
+                              {(c.ciudad || c.pais) && (
+                                <p className="text-xs text-zinc-400">{[c.ciudad, c.pais].filter(Boolean).join(', ')}</p>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {busquedaClienteNuevo.trim().length >= 2 && !buscandoClienteNuevo && resultadosClienteNuevo.length === 0 && (
+                        <p className="text-xs text-zinc-400">No encontrado - completa el formulario para crear uno nuevo.</p>
+                      )}
                     </div>
-                    <div>
-                      <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Ciudad</label>
-                      <Input
-                        value={nuevoClienteForm.ciudad}
-                        onChange={e => setNuevoClienteForm(f => ({ ...f, ciudad: e.target.value }))}
-                        placeholder="Ej: Iquique"
-                        className="mt-1"
-                      />
+                  )}
+
+                  {/* Si ya seleccionó un cliente existente, mostrarlo */}
+                  {clienteSeleccionado && clienteSeleccionado.tipo === 'nuevo' && (
+                    <div className="flex items-center justify-between bg-emerald-50 dark:bg-emerald-900/20 rounded-lg px-3 py-2">
+                      <div>
+                        <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">{clienteSeleccionado.nombre}</p>
+                        <p className="text-xs text-emerald-500">Cliente existente</p>
+                      </div>
+                      <button
+                        className="text-emerald-400 hover:text-emerald-600"
+                        onClick={() => { setClienteSeleccionado(null); setBusquedaClienteNuevo(''); }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">WhatsApp</label>
-                    <Input
-                      value={nuevoClienteForm.whatsapp}
-                      onChange={e => setNuevoClienteForm(f => ({ ...f, whatsapp: e.target.value }))}
-                      placeholder="+56912345678"
-                      className="mt-1"
-                    />
-                  </div>
+                  )}
+
+                  {/* Formulario de creación - solo si no hay cliente seleccionado */}
+                  {!clienteSeleccionado && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+                        <span className="text-xs text-zinc-400 font-medium">o crear nuevo</span>
+                        <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Nombre *</label>
+                        <Input
+                          value={nuevoClienteForm.nombre}
+                          onChange={e => setNuevoClienteForm(f => ({ ...f, nombre: e.target.value }))}
+                          placeholder="Nombre completo"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">País</label>
+                          <Input
+                            value={nuevoClienteForm.pais}
+                            onChange={e => setNuevoClienteForm(f => ({ ...f, pais: e.target.value }))}
+                            placeholder="Ej: Chile"
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Ciudad</label>
+                          <Input
+                            value={nuevoClienteForm.ciudad}
+                            onChange={e => setNuevoClienteForm(f => ({ ...f, ciudad: e.target.value }))}
+                            placeholder="Ej: Iquique"
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">WhatsApp</label>
+                        <Input
+                          value={nuevoClienteForm.whatsapp}
+                          onChange={e => setNuevoClienteForm(f => ({ ...f, whatsapp: e.target.value }))}
+                          placeholder="+56912345678"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
