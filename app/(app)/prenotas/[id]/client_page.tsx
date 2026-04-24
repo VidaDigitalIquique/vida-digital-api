@@ -3,10 +3,12 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Trash2, Pencil } from 'lucide-react';
+import { Search, Trash2, Pencil, FileDown, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 function PrenotaItemsTable({
@@ -284,6 +286,97 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
     XLSX.writeFile(wb, filename);
   };
 
+  const exportarPDF = () => {
+    if (!prenota?.items?.length) return;
+
+    const doc = new jsPDF();
+    const fecha = new Date().toLocaleDateString('es-CL', {
+      day: '2-digit', month: 'long', year: 'numeric'
+    });
+
+    // Header
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('VidaDigital — Pre-Nota de Venta', 14, 20);
+
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${prenota.titulo}`, 14, 30);
+    if (prenota.nombre_cliente) {
+      doc.text(`Cliente: ${prenota.nombre_cliente}`, 14, 37);
+    }
+    doc.text(`Fecha: ${fecha}`, 14, prenota.nombre_cliente ? 44 : 37);
+
+    // Tabla
+    const startY = prenota.nombre_cliente ? 52 : 45;
+    const rows = prenota.items.map((i: any) => [
+      i.codigo,
+      i.descripcion || '',
+      i.empresa_id === 1 ? 'SANJH' : 'VIDA DIGITAL',
+      Number(i.cajas),
+      Number(i.unidades),
+      `$${Number(i.precio).toFixed(2)}`,
+      `$${(Number(i.unidades) * Number(i.precio)).toFixed(2)}`,
+    ]);
+
+    autoTable(doc, {
+      startY,
+      head: [['Código', 'Descripción', 'Empresa', 'Cajas', 'Unidades', 'Precio', 'Total']],
+      body: rows,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [37, 99, 235] },
+      columnStyles: {
+        0: { cellWidth: 22 },
+        1: { cellWidth: 65 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 13, halign: 'right' },
+        4: { cellWidth: 18, halign: 'right' },
+        5: { cellWidth: 18, halign: 'right' },
+        6: { cellWidth: 18, halign: 'right' },
+      },
+    });
+
+    // Total general
+    const total = prenota.items.reduce(
+      (sum: number, i: any) => sum + Number(i.unidades) * Number(i.precio), 0
+    );
+    const finalY = (doc as any).lastAutoTable.finalY + 6;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text(
+      `Total: $${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      14, finalY
+    );
+
+    const filename = `${prenota.titulo}${prenota.nombre_cliente ? ' — ' + prenota.nombre_cliente : ''}.pdf`;
+    doc.save(filename);
+  };
+
+  const compartirWhatsApp = () => {
+    if (!prenota?.items?.length) return;
+
+    const total = prenota.items.reduce(
+      (sum: number, i: any) => sum + Number(i.unidades) * Number(i.precio), 0
+    );
+    const totalStr = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    const lineas = prenota.items.map((i: any) =>
+      `• ${i.codigo} — ${i.descripcion || ''} (${i.cajas} cajas / ${i.unidades} uds) $${Number(i.precio).toFixed(2)}`
+    ).join('\n');
+
+    const mensaje = [
+      `*${prenota.titulo}*`,
+      prenota.nombre_cliente ? `Cliente: ${prenota.nombre_cliente}` : null,
+      ``,
+      lineas,
+      ``,
+      `*Total: $${totalStr}*`,
+    ].filter(l => l !== null).join('\n');
+
+    const url = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="flex flex-col gap-6 fade-in zoom-in-95 duration-200">
       <div className="flex flex-col gap-3">
@@ -297,9 +390,31 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight">{prenota?.titulo || 'Pre-Nota'}</h1>
           </div>
-          <Button onClick={exportarExcel} disabled={!prenota?.items?.length}>
-            Exportar Excel
-          </Button>
+          <div className="flex gap-2 flex-wrap justify-end">
+            <Button
+              variant="outline"
+              onClick={exportarExcel}
+              disabled={!prenota?.items?.length}
+            >
+              Exportar Excel
+            </Button>
+            <Button
+              variant="outline"
+              onClick={exportarPDF}
+              disabled={!prenota?.items?.length}
+            >
+              <FileDown className="w-4 h-4 mr-2" />
+              Exportar PDF
+            </Button>
+            <Button
+              className="bg-green-600 hover:bg-green-700 text-white"
+              onClick={compartirWhatsApp}
+              disabled={!prenota?.items?.length}
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Enviar por WhatsApp
+            </Button>
+          </div>
         </div>
       </div>
 
