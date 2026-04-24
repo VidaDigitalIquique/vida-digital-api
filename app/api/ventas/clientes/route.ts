@@ -24,6 +24,16 @@ export async function GET(request: Request) {
   }
 
   try {
+    // Obtener aliases de la ciudad buscada (si aplica)
+    let ciudadVariants: string[] | null = null;
+    if (ciudad) {
+      const aliasRows = await sql`
+        SELECT alias FROM public.ciudad_alias
+        WHERE ciudad_canonical = ${ciudad}
+      `;
+      ciudadVariants = [ciudad, ...(aliasRows as any[]).map((r: any) => r.alias)];
+    }
+
     const rows = empresaSlug === 'sanjh'
       ? await sql`
           SELECT
@@ -42,11 +52,14 @@ export async function GET(request: Request) {
             ON f.empresa_id = 1 AND f.kcodclie::text = c.kcodclie::text
           LEFT JOIN public.cliente_ratings r
             ON r.kcodclie = c.kcodclie::bigint
+          LEFT JOIN public.ciudad_alias ca
+            ON BTRIM(c.ciudad) = ca.alias
           WHERE
             (${q ? '%' + q + '%' : null}::text IS NULL
               OR c.nombress ILIKE ${'%' + (q || '') + '%'}
               OR c.kcodclie::text = ${q || ''})
-            AND (${ciudad}::text IS NULL OR c.ciudad ILIKE ${'%' + (ciudad || '') + '%'})
+            AND (${ciudadVariants}::text[] IS NULL
+              OR BTRIM(c.ciudad) = ANY(${ciudadVariants}::text[]))
             AND (${pais}::text IS NULL OR c.pais ILIKE ${'%' + (pais || '') + '%'})
             AND (${estrellas}::int IS NULL OR r.estrellas = ${estrellas})
           ORDER BY c.nombress ASC
@@ -69,11 +82,14 @@ export async function GET(request: Request) {
             ON f.empresa_id = 2 AND f.kcodclie::text = c.kcodclie::text
           LEFT JOIN public.cliente_ratings r
             ON r.kcodclie = c.kcodclie::bigint
+          LEFT JOIN public.ciudad_alias ca
+            ON BTRIM(c.ciudad) = ca.alias
           WHERE
             (${q ? '%' + q + '%' : null}::text IS NULL
               OR c.nombress ILIKE ${'%' + (q || '') + '%'}
               OR c.kcodclie::text = ${q || ''})
-            AND (${ciudad}::text IS NULL OR c.ciudad ILIKE ${'%' + (ciudad || '') + '%'})
+            AND (${ciudadVariants}::text[] IS NULL
+              OR BTRIM(c.ciudad) = ANY(${ciudadVariants}::text[]))
             AND (${pais}::text IS NULL OR c.pais ILIKE ${'%' + (pais || '') + '%'})
             AND (${estrellas}::int IS NULL OR r.estrellas = ${estrellas})
           ORDER BY c.nombress ASC

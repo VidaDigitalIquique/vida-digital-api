@@ -42,12 +42,15 @@ describe('GET /api/ventas/clientes - filtros kardex (tests rojos)', () => {
   });
 
   it('Test 2 — filtro por ciudad viaja al SQL', async () => {
-    mockSql.mockResolvedValueOnce([] as any);
+    mockSql
+      .mockResolvedValueOnce([] as any)
+      .mockResolvedValueOnce([] as any);
 
     const res = await GET(makeRequest({ q: 'juan', empresaSlug: 'vida', ciudad: 'Iquique' }));
-    const sqlText = getSqlTextFromFirstCall();
+    const sqlText = mockSql.mock.calls[1][0].toString();
 
     expect(mockSql).toHaveBeenCalled();
+    expect(mockSql.mock.calls[0][0].toString()).toContain('ciudad_alias');
     expect(sqlText).toContain('cliente_ratings');
     expect(res.status).toBe(200);
   });

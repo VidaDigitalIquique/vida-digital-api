@@ -10,19 +10,39 @@ export async function GET() {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
   try {
-    const rows = await sql`
-      SELECT DISTINCT BTRIM(ciudad) as ciudad, BTRIM(pais) as pais
-      FROM vida.clientes
-      WHERE BTRIM(ciudad) != '' AND ciudad IS NOT NULL
-         OR BTRIM(pais) != '' AND pais IS NOT NULL
-      ORDER BY ciudad ASC
-    `;
-    const ciudades = [...new Set(
-      rows.map((r: any) => r.ciudad).filter(Boolean)
-    )].sort() as string[];
+    const [ciudadRows, aliasRows] = await Promise.all([
+      sql`
+        SELECT DISTINCT BTRIM(ciudad) as ciudad, BTRIM(pais) as pais
+        FROM vida.clientes
+        WHERE BTRIM(ciudad) != '' AND ciudad IS NOT NULL
+           OR BTRIM(pais) != '' AND pais IS NOT NULL
+        ORDER BY ciudad ASC
+      `,
+      sql`
+        SELECT alias, ciudad_canonical
+        FROM public.ciudad_alias
+      `,
+    ]);
+
+    // Construir mapa alias → canonical
+    const aliasMap = new Map<string, string>();
+    for (const row of aliasRows as any[]) {
+      aliasMap.set(row.alias, row.ciudad_canonical);
+    }
+
+    // Normalizar ciudades: reemplazar alias por canonical
+    const ciudadesNormalizadas = (ciudadRows as any[])
+      .map((r) => r.ciudad)
+      .filter(Boolean)
+      .map((c: string) => aliasMap.get(c) ?? c);
+
+    // Deduplicar y ordenar
+    const ciudades = [...new Set(ciudadesNormalizadas)].sort() as string[];
+
     const paises = [...new Set(
-      rows.map((r: any) => r.pais).filter(Boolean)
+      (ciudadRows as any[]).map((r) => r.pais).filter(Boolean)
     )].sort() as string[];
+
     return NextResponse.json({ ciudades, paises });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
