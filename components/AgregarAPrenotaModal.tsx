@@ -100,7 +100,7 @@ export function AgregarAPrenotaModal({ open, onClose, producto }: Props) {
         </div>
         <div>
           <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Precio USD</label>
-          <input type="number" min={0} step={0.01} value={precio} onChange={e => setPrecio(Number(e.target.value))} className="w-full mt-1 border rounded-lg px-3 py-2 text-sm" />
+          <input type="number" min={0} step={0.01} value={precio} onChange={e => setPrecio(Number(e.target.value))} onFocus={e => e.target.select()} className="w-full mt-1 border rounded-lg px-3 py-2 text-sm" />
         </div>
         <div className="flex gap-3 mt-2">
           <button onClick={onClose} className="flex-1 border rounded-lg px-4 py-2 text-sm hover:bg-zinc-50">Cancelar</button>

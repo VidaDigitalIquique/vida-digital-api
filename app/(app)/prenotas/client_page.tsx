@@ -27,7 +27,10 @@ export function PrenotasPage({ session }: { session: any }) {
         const res = await fetch('/api/prenotas');
         if (res.ok) {
           const { data } = await res.json();
-          setPrenotas(data || []);
+          const sorted = (data || []).sort((a: Prenota, b: Prenota) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+          setPrenotas(sorted);
         } else {
           toast.error('Error cargando pre-notas');
         }

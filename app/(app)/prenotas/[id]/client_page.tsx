@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Trash2 } from 'lucide-react';
+import { Search, Trash2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 function PrenotaItemsTable({
@@ -16,6 +16,8 @@ function PrenotaItemsTable({
   items: any[];
   onEliminar: (itemId: number) => void;
 }) {
+  const [editingId, setEditingId] = useState<number | null>(null);
+
   return (
     <div className="border rounded-xl overflow-hidden bg-white dark:bg-zinc-900 shadow-sm">
       <div className="overflow-x-auto">
@@ -28,7 +30,6 @@ function PrenotaItemsTable({
               <th className="text-right px-4 py-3 font-medium">Cajas</th>
               <th className="text-right px-4 py-3 font-medium">Unidades</th>
               <th className="text-right px-4 py-3 font-medium">Precio</th>
-              <th className="text-right px-4 py-3 font-medium">Stock</th>
               <th className="text-right px-4 py-3 font-medium">Acciones</th>
             </tr>
           </thead>
@@ -50,16 +51,36 @@ function PrenotaItemsTable({
                 <td className="px-4 py-3 text-right">{item.cajas}</td>
                 <td className="px-4 py-3 text-right">{item.unidades}</td>
                 <td className="px-4 py-3 text-right">${Number(item.precio).toFixed(2)}</td>
-                <td className="px-4 py-3 text-right">{item.saldo_zofri ?? 0}</td>
                 <td className="px-4 py-3 text-right">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
-                    onClick={() => onEliminar(item.id)}
-                  >
-                    <Trash2 className="w-3 h-3 mr-1" /> Eliminar
-                  </Button>
+                  {editingId === item.id ? (
+                    <div className="flex flex-col gap-2 items-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                        onClick={() => { onEliminar(item.id); setEditingId(null); }}
+                      >
+                        <Trash2 className="w-3 h-3 mr-1" /> Eliminar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-xs"
+                        onClick={() => setEditingId(null)}
+                      >
+                        Cerrar
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs"
+                      onClick={() => setEditingId(item.id)}
+                    >
+                      <Pencil className="w-3 h-3 mr-1" /> Editar
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -252,7 +273,23 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
           ))}
         </div>
       ) : prenota?.items?.length > 0 ? (
-        <PrenotaItemsTable items={prenota.items} onEliminar={eliminarItem} />
+        <>
+          {(() => {
+            const total = prenota.items.reduce(
+              (sum: number, item: any) => sum + Number(item.unidades) * Number(item.precio),
+              0
+            );
+            return (
+              <div className="flex items-center justify-end gap-2 px-1">
+                <span className="text-sm text-zinc-500 font-medium">Total prenota:</span>
+                <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+                  ${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            );
+          })()}
+          <PrenotaItemsTable items={prenota.items} onEliminar={eliminarItem} />
+        </>
       ) : (
         <p className="text-zinc-400">No hay productos en esta pre-nota aún</p>
       )}
