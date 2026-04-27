@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Producto } from '@/types';
 import { formatUSD } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -35,7 +35,35 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
   const [loadingCompradores, setLoadingCompradores] = useState(false);
   const [compradorActivo, setCompradorActivo] = useState<any | null>(null);
   const [showPrenota, setShowPrenota] = useState(false);
+  const [precioMaximo, setPrecioMaximo] = useState<number | null>(null);
+  const [loadingPrecio, setLoadingPrecio] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   const { shareImage } = useShareImage();
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          observer.disconnect();
+          setLoadingPrecio(true);
+          fetch(`/api/kardex?codigo=${encodeURIComponent(producto.codigo)}&empresaSlug=${encodeURIComponent(empresaSlug)}`)
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+              if (data?.precio_maximo != null) {
+                setPrecioMaximo(data.precio_maximo);
+              }
+            })
+            .catch(() => {})
+            .finally(() => setLoadingPrecio(false));
+        }
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [producto.codigo, empresaSlug]);
 
   const handleVerCompradores = async () => {
     setShowCompradores(true);
@@ -67,6 +95,7 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
   return (
     <>
     <div
+      ref={cardRef}
       className="group relative bg-card hover:bg-zinc-50 dark:hover:bg-zinc-900 border border-border shadow-sm rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-md"
       onClick={() => onClick(producto)}
     >
@@ -118,9 +147,15 @@ export function ProductCard({ producto, empresaSlug, empresaNombre, onClick, ocu
         {/* Bottom row: precio + stock */}
         <div className="flex items-stretch gap-0">
           <div className="flex-1 flex flex-col justify-center">
-            <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-0.5">Precio venta</div>
+            <div className="text-[10px] uppercase tracking-wide text-zinc-400 font-medium mb-0.5">Precio máx. venta</div>
             <div className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 leading-none">
-              {ocultarPrecios ? '••••' : formatUSD(producto.prcventa)}
+              {ocultarPrecios
+                ? '••••'
+                : loadingPrecio
+                  ? <span className="text-sm text-zinc-400 animate-pulse">...</span>
+                  : precioMaximo != null
+                    ? formatUSD(precioMaximo)
+                    : '—'}
             </div>
           </div>
 
