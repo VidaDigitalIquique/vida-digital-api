@@ -17,6 +17,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
   const [catalogos, setCatalogos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [busqueda, setBusqueda] = useState('');
+  const [mostrarSugerencias, setMostrarSugerencias] = useState(false);
   
   // --- Estado modal edición ---
   const [editingCatalog, setEditingCatalog] = useState<any | null>(null);
@@ -162,6 +163,10 @@ export function CatalogoAdminClient({ session }: { session: any }) {
     () => filtrarCatalogos(catalogos, busqueda),
     [catalogos, busqueda]
   );
+  const sugerencias = useMemo(
+    () => catalogosFiltrados.slice(0, 6),
+    [catalogosFiltrados]
+  );
 
   return (
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200">
@@ -182,8 +187,24 @@ export function CatalogoAdminClient({ session }: { session: any }) {
           placeholder="Buscar por título, descripción o categoría..."
           value={busqueda}
           onChange={e => setBusqueda(e.target.value)}
+          onFocus={() => setMostrarSugerencias(true)}
+          onBlur={() => setTimeout(() => setMostrarSugerencias(false), 150)}
           className="pl-9"
         />
+        {mostrarSugerencias && busqueda.trim().length >= 2 && sugerencias.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-1 z-20 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-lg shadow-lg overflow-hidden">
+            {sugerencias.map(cat => (
+              <button
+                key={cat.id}
+                type="button"
+                className="w-full text-left px-3 py-2 text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                onClick={() => window.open(getPublicUrl(cat.slug), '_blank')}
+              >
+                {cat.titulo}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {loading ? (

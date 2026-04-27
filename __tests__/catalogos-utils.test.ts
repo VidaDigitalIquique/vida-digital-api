@@ -48,4 +48,23 @@ describe('filtrarCatalogos', () => {
     expect(titulos).toContain('Set cocina');
     expect(titulos).toContain('Máquina para pelo');
   });
+
+  test('retorna todos si la búsqueda tiene menos de 2 caracteres', () => {
+    const result = filtrarCatalogos(CATALOGOS, 'a');
+    expect(result).toEqual(CATALOGOS);
+  });
+
+  test('"cafe" encuentra catálogo con título "Café"', () => {
+    const conAcento = [
+      ...CATALOGOS,
+      { titulo: 'Café en grano', descripcion: 'Tueste medio', categoria: 'Alimentos' },
+    ];
+    const result = filtrarCatalogos(conAcento, 'cafe');
+    expect(result.map(c => c.titulo)).toContain('Café en grano');
+  });
+
+  test('"maquina" encuentra catálogo con título "Máquina para pelo"', () => {
+    const result = filtrarCatalogos(CATALOGOS, 'maquina');
+    expect(result.map(c => c.titulo)).toContain('Máquina para pelo');
+  });
 });
