@@ -342,6 +342,12 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
     if (!prenota?.items?.length) return;
     const sanjhItems = prenota.items.filter((i: any) => i.empresa_id === 1);
     const vidaItems = prenota.items.filter((i: any) => i.empresa_id === 2);
+    const infoRows = [
+      { Campo: 'Título', Valor: prenota.titulo },
+      { Campo: 'Cliente comprador', Valor: prenota.nombre_cliente || '-' },
+      { Campo: 'A quién va el documento', Valor: prenota.nombre_cliente_factura || '-' },
+      { Campo: 'Tipo de documento', Valor: prenota.tipo_documento || '-' },
+    ];
 
     const toRows = (items: any[]) => items.map(i => ({
       'Código': i.codigo,
@@ -354,6 +360,7 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
     }));
 
     const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(infoRows), 'Info');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toRows(vidaItems)), 'VIDA DIGITAL');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(toRows(sanjhItems)), 'SANJH');
 
@@ -377,13 +384,24 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.text(`${prenota.titulo}`, 14, 30);
+    let y = 37;
     if (prenota.nombre_cliente) {
-      doc.text(`Cliente: ${prenota.nombre_cliente}`, 14, 37);
+      doc.text(`Cliente: ${prenota.nombre_cliente}`, 14, y);
+      y += 7;
     }
-    doc.text(`Fecha: ${fecha}`, 14, prenota.nombre_cliente ? 44 : 37);
+    if (prenota.nombre_cliente_factura) {
+      doc.text(`A quién va: ${prenota.nombre_cliente_factura}`, 14, y);
+      y += 7;
+    }
+    if (prenota.tipo_documento) {
+      doc.text(`Tipo: ${prenota.tipo_documento}`, 14, y);
+      y += 7;
+    }
+    doc.text(`Fecha: ${fecha}`, 14, y);
+    y += 8;
 
     // Tabla
-    const startY = prenota.nombre_cliente ? 52 : 45;
+    const startY = y;
     const rows = prenota.items.map((i: any) => [
       i.codigo,
       i.descripcion || '',
@@ -442,6 +460,8 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
     const mensaje = [
       `*${prenota.titulo}*`,
       prenota.nombre_cliente ? `Cliente: ${prenota.nombre_cliente}` : null,
+      prenota.nombre_cliente_factura ? `A quién va: ${prenota.nombre_cliente_factura}` : null,
+      prenota.tipo_documento ? `Tipo: ${prenota.tipo_documento}` : null,
       ``,
       lineas,
       ``,
