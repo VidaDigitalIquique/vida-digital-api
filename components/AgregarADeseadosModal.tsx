@@ -159,25 +159,29 @@ export function AgregarADeseadosModal({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          {/* Toggle destino */}
-          <div className="flex rounded-lg border overflow-hidden">
-            <button
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                tipoDestino === 'deseados' ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-              }`}
-              onClick={() => setTipoDestino('deseados')}
-            >
-              ♡ Deseados
-            </button>
-            <button
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${
-                tipoDestino === 'china' ? 'bg-amber-500 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'
-              }`}
-              onClick={() => setTipoDestino('china')}
-            >
-              Pedir a China
-            </button>
-          </div>
+          {codigo !== '' && (
+            <>
+              {/* Toggle destino */}
+              <div className="flex rounded-lg border overflow-hidden">
+                <button
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                    tipoDestino === 'deseados' ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                  }`}
+                  onClick={() => setTipoDestino('deseados')}
+                >
+                  ♡ Deseados
+                </button>
+                <button
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${
+                    tipoDestino === 'china' ? 'bg-amber-500 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                  }`}
+                  onClick={() => setTipoDestino('china')}
+                >
+                  Pedir a China
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Producto */}
           {codigo !== '' && (
