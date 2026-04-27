@@ -841,7 +841,7 @@ export function DeseadosClient({ session }: { session: any }) {
                   className={`flex-1 py-2 text-sm font-medium transition-colors ${tipoCliente === 'winfac' ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
                   onClick={() => { setTipoCliente('winfac'); setClienteSeleccionado(null); }}
                 >
-                  Cliente WinFac
+                  Cliente en Sistema
                 </button>
                 <button
                   className={`flex-1 py-2 text-sm font-medium transition-colors ${tipoCliente === 'nuevo' ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
