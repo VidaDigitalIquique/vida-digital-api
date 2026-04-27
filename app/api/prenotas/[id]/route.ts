@@ -69,6 +69,9 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       titulo         = CASE WHEN ${nuevoTitulo !== undefined} THEN ${nuevoTitulo ?? null} ELSE titulo END,
       kcodclie       = CASE WHEN ${body?.kcodclie !== undefined} THEN ${body?.kcodclie ?? null} ELSE kcodclie END,
       nombre_cliente = CASE WHEN ${body?.nombre_cliente !== undefined} THEN ${body?.nombre_cliente ?? null} ELSE nombre_cliente END,
+      tipo_documento = CASE WHEN ${body?.tipo_documento !== undefined} THEN ${body?.tipo_documento ?? null} ELSE tipo_documento END,
+      kcodclie_factura = CASE WHEN ${body?.kcodclie_factura !== undefined} THEN ${body?.kcodclie_factura ?? null} ELSE kcodclie_factura END,
+      nombre_cliente_factura = CASE WHEN ${body?.nombre_cliente_factura !== undefined} THEN ${body?.nombre_cliente_factura ?? null} ELSE nombre_cliente_factura END,
       updated_at     = now()
     WHERE id = ${id} AND usuario_id = ${auth.usuarioId}
     RETURNING *

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { FileText, PlusCircle, Trash2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -11,6 +12,7 @@ type Prenota = {
   titulo: string;
   created_at: string;
   nombre_cliente: string | null;
+  tipo_documento: string | null;
 };
 
 export function PrenotasPage({ session }: { session: any }) {
@@ -121,6 +123,11 @@ export function PrenotasPage({ session }: { session: any }) {
                 <div className="flex items-center gap-2">
                   <FileText className="w-4 h-4 text-blue-500 flex-shrink-0" />
                   <p className="font-bold text-base truncate">{prenota.titulo}</p>
+                  {prenota.tipo_documento && (
+                    <Badge variant="secondary" className="text-[10px]">
+                      {prenota.tipo_documento}
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-xs text-zinc-400 mt-1">{formatFecha(prenota.created_at)}</p>
                 {prenota.nombre_cliente && (

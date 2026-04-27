@@ -29,7 +29,7 @@ export async function GET() {
   return NextResponse.json({ data: rows });
 }
 
-export async function POST() {
+export async function POST(request: Request = new Request('http://localhost/api/prenotas')) {
   const session = await getServerSession(authOptions);
   const rol = (session?.user as any)?.rol;
 
@@ -40,6 +40,17 @@ export async function POST() {
   if (rol === 'bodeguero') {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
+
+  let body: any = {};
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+
+  const tipo_documento = body?.tipo_documento;
+  const kcodclie_factura = body?.kcodclie_factura;
+  const nombre_cliente_factura = body?.nombre_cliente_factura;
 
   const usuarioId = getUsuarioId(session);
   const count = await sql`
@@ -53,8 +64,8 @@ export async function POST() {
   });
   const titulo = `Pre-nota #${n} — ${fecha}`;
   const rows = await sql`
-    INSERT INTO public.prenotas (titulo, titulo_base, usuario_id)
-    VALUES (${titulo}, ${titulo}, ${usuarioId})
+    INSERT INTO public.prenotas (titulo, titulo_base, usuario_id, tipo_documento, kcodclie_factura, nombre_cliente_factura)
+    VALUES (${titulo}, ${titulo}, ${usuarioId}, ${tipo_documento ?? null}, ${kcodclie_factura ?? null}, ${nombre_cliente_factura ?? null})
     RETURNING *
   `;
 

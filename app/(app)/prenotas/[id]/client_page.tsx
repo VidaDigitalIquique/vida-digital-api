@@ -175,6 +175,9 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
   const [searchCliente, setSearchCliente] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [clienteResults, setClienteResults] = useState<any[]>([]);
+  const [searchClienteFactura, setSearchClienteFactura] = useState('');
+  const [debouncedSearchFactura, setDebouncedSearchFactura] = useState('');
+  const [clienteFacturaResults, setClienteFacturaResults] = useState<any[]>([]);
 
   const fetchPrenota = async () => {
     setLoading(true);
@@ -204,6 +207,11 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
   }, [searchCliente]);
 
   useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchFactura(searchClienteFactura), 400);
+    return () => clearTimeout(timer);
+  }, [searchClienteFactura]);
+
+  useEffect(() => {
     async function buscarClientes() {
       if (debouncedSearch.trim().length < 2) {
         setClienteResults([]);
@@ -225,6 +233,29 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
 
     buscarClientes();
   }, [debouncedSearch]);
+
+  useEffect(() => {
+    async function buscarClientesFactura() {
+      if (debouncedSearchFactura.trim().length < 2) {
+        setClienteFacturaResults([]);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/ventas/clientes?q=${encodeURIComponent(debouncedSearchFactura)}&empresaSlug=vida`);
+        if (res.ok) {
+          const { data } = await res.json();
+          setClienteFacturaResults(data || []);
+        } else {
+          setClienteFacturaResults([]);
+        }
+      } catch {
+        setClienteFacturaResults([]);
+      }
+    }
+
+    buscarClientesFactura();
+  }, [debouncedSearchFactura]);
 
   const asignarCliente = async (c: any) => {
     try {
@@ -251,6 +282,50 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
       await fetchPrenota();
     } catch {
       toast.error('No se pudo quitar cliente');
+    }
+  };
+
+  const asignarClienteFactura = async (c: any) => {
+    try {
+      await fetch(`/api/prenotas/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          kcodclie_factura: Number(c.kcodclie),
+          nombre_cliente_factura: c.nombress,
+        }),
+      });
+      setSearchClienteFactura('');
+      setClienteFacturaResults([]);
+      await fetchPrenota();
+    } catch {
+      toast.error('No se pudo asignar cliente de factura');
+    }
+  };
+
+  const quitarClienteFactura = async () => {
+    try {
+      await fetch(`/api/prenotas/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kcodclie_factura: null, nombre_cliente_factura: null }),
+      });
+      await fetchPrenota();
+    } catch {
+      toast.error('No se pudo quitar cliente de factura');
+    }
+  };
+
+  const cambiarTipoDocumento = async (tipo: string) => {
+    try {
+      await fetch(`/api/prenotas/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo_documento: tipo || null }),
+      });
+      await fetchPrenota();
+    } catch {
+      toast.error('No se pudo actualizar tipo de documento');
     }
   };
 
@@ -451,6 +526,57 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
             )}
           </>
         )}
+
+        <div className="pt-2 border-t border-border flex flex-col gap-2">
+          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Tipo de documento</label>
+          <select
+            value={prenota?.tipo_documento ?? ''}
+            onChange={e => cambiarTipoDocumento(e.target.value)}
+            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">-</option>
+            <option value="Traspaso">Traspaso</option>
+            <option value="SRF">SRF</option>
+            <option value="Reexpedición">Reexpedición</option>
+            <option value="Cambio de Ubicación">Cambio de Ubicación</option>
+            <option value="Régimen General">Régimen General</option>
+          </select>
+        </div>
+
+        <div className="pt-2 border-t border-border flex flex-col gap-2">
+          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">A quién va el documento:</label>
+          {prenota?.nombre_cliente_factura ? (
+            <div className="flex items-center gap-3">
+              <div className="font-medium">{prenota.nombre_cliente_factura}</div>
+              <button onClick={quitarClienteFactura} className="text-sm text-red-500 hover:text-red-700">✕</button>
+            </div>
+          ) : (
+            <>
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                <Input
+                  placeholder="Buscar cliente para factura..."
+                  value={searchClienteFactura}
+                  onChange={e => setSearchClienteFactura(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              {clienteFacturaResults.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  {clienteFacturaResults.map(c => (
+                    <button
+                      key={c.kcodclie}
+                      onClick={() => asignarClienteFactura(c)}
+                      className="text-left p-3 rounded-lg border border-border hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                    >
+                      {c.nombress}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {loading ? (
