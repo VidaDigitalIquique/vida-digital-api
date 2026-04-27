@@ -291,9 +291,8 @@ export function DeseadosClient({ session }: { session: any }) {
 
   // --- Validación paso 1 ---
   const paso1Valido =
-    tipoCliente === 'winfac'
-      ? clienteSeleccionado !== null
-      : nuevoClienteForm.nombre.trim().length > 0;
+    clienteSeleccionado !== null ||
+    (tipoCliente === 'nuevo' && nuevoClienteForm.nombre.trim().length > 0);
 
   // --- Validación paso 2 ---
   const paso2Valido = productosLista.length > 0;
