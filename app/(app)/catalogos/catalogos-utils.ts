@@ -18,7 +18,7 @@ export function filtrarCatalogos<T extends CatalogoBusqueda>(catalogos: T[], bus
   const palabras = normalizar(q).split(/\s+/).filter(Boolean);
   if (palabras.length === 0) return catalogos;
 
-  const regexes = palabras.map(palabra => new RegExp('\\b' + palabra + '\\b', 'i'));
+  const regexes = palabras.map(palabra => new RegExp('\\b' + palabra, 'i'));
 
   return catalogos.filter(catalogo => {
     const titulo = normalizar(catalogo.titulo ?? '');

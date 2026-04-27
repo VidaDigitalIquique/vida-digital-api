@@ -32,9 +32,9 @@ describe('filtrarCatalogos', () => {
     expect(result.map(c => c.titulo)).toContain('Máquina para pelo');
   });
 
-  test('NO retorna catálogo cuando la búsqueda es substring de una palabra ("pelo" no matchea "pelotas")', () => {
-    const result = filtrarCatalogos(CATALOGOS, 'pelo');
-    expect(result.map(c => c.titulo)).not.toContain('Pelotas y accesorios');
+  test('"pel" encuentra catálogo con título "Pelotas y accesorios"', () => {
+    const result = filtrarCatalogos(CATALOGOS, 'pel');
+    expect(result.map(c => c.titulo)).toContain('Pelotas y accesorios');
   });
 
   test('búsqueda case-insensitive ("PELO" encuentra "pelo")', () => {
