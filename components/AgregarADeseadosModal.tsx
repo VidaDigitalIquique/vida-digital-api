@@ -88,15 +88,16 @@ export function AgregarADeseadosModal({
       ? clienteSeleccionado !== null
       : nuevoClienteForm.nombre.trim().length > 0;
 
-  const clienteWinfacIdPasoProducto =
-    tipoCliente === 'winfac'
-      ? (clientePreseleccionado?.id ?? clienteSeleccionado?.id)
-      : undefined;
-  const clienteDeseadoIdRaw = clientePreseleccionado?.id ?? clienteSeleccionado?.id;
-  const clienteDeseadoIdPasoProducto =
-    tipoCliente === 'nuevo' && clienteDeseadoIdRaw
-      ? Number(clienteDeseadoIdRaw)
-      : undefined;
+  const esClienteDeseadoPreseleccionado =
+    clientePreseleccionado != null && !isNaN(Number(clientePreseleccionado.id));
+
+  const clienteWinfacIdPasoProducto = esClienteDeseadoPreseleccionado
+    ? undefined
+    : (clientePreseleccionado?.id ?? (tipoCliente === 'winfac' ? clienteSeleccionado?.id : undefined));
+
+  const clienteDeseadoIdPasoProducto = esClienteDeseadoPreseleccionado
+    ? Number(clientePreseleccionado.id)
+    : (tipoCliente === 'nuevo' && clienteSeleccionado?.id ? Number(clienteSeleccionado.id) : undefined);
 
   const handleGuardar = async () => {
     setSaving(true);
