@@ -142,7 +142,7 @@ export async function POST(request: Request) {
       INSERT INTO public.alertas_stock_bajo (codigo, empresa_id, detalle, saldo, cantcaja)
       SELECT codigo, empresa_id, detalle, saldo_total, cantcaja
       FROM stock_grouped
-      WHERE saldo_total > 0
+      WHERE saldo_total >= 0
         AND saldo_total <= cantcaja
         AND no_reponer = false
       ON CONFLICT (codigo, empresa_id) DO UPDATE SET
@@ -185,7 +185,7 @@ export async function POST(request: Request) {
       INSERT INTO public.alertas_stock_bajo (codigo, empresa_id, detalle, saldo, cantcaja)
       SELECT codigo, empresa_id, detalle, saldo_total, cantcaja
       FROM stock_grouped
-      WHERE saldo_total > 0
+      WHERE saldo_total >= 0
         AND saldo_total <= cantcaja
         AND no_reponer = false
       ON CONFLICT (codigo, empresa_id) DO UPDATE SET
