@@ -81,7 +81,7 @@ export function DashboardClient({ stats, stockCompare, despachosHoyCount, ultimo
       </Dialog>
 
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="w-screen h-screen sm:w-[780px] sm:h-full max-w-full overflow-y-auto flex flex-col p-0">
+        <SheetContent side="right" className="w-screen h-screen sm:w-[1000px] sm:h-full max-w-full overflow-y-auto flex flex-col p-0">
           <div className="p-5 flex flex-col h-full overflow-y-auto">
             <SheetHeader>
               <SheetTitle>{drawerTitle}</SheetTitle>
