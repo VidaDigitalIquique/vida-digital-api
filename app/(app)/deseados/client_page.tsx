@@ -72,6 +72,7 @@ interface AlertaStock {
   detalle: string;
   saldo: number;
   cantcaja: number;
+  total_clientes: number;
   activa: boolean;
   created_at: string;
   updated_at: string;
@@ -87,6 +88,7 @@ export function DeseadosClient({ session }: { session: any }) {
 
   // --- Lista principal ---
   const [tab, setTab] = useState<Tab>('pendiente');
+  const [pestanaChina, setPestanaChina] = useState<'vida_digital' | 'clientes'>('vida_digital');
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [deseados, setDeseados] = useState<Deseado[]>([]);
@@ -526,24 +528,67 @@ export function DeseadosClient({ session }: { session: any }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-800">
-        {TABS.map(t => (
+      {modoChina ? (
+        <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-800">
           <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => setPestanaChina('vida_digital')}
             className={`pb-2 px-4 text-sm font-medium border-b-2 transition-colors ${
-              tab === t.key
+              pestanaChina === 'vida_digital'
                 ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
                 : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
             }`}
           >
-            {t.label}
+            Vida Digital
           </button>
-        ))}
-      </div>
+          <button
+            onClick={() => setPestanaChina('clientes')}
+            className={`pb-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+              pestanaChina === 'clientes'
+                ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+            }`}
+          >
+            Clientes
+          </button>
+        </div>
+      ) : (
+        <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-800">
+          {TABS.map(t => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`pb-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+                tab === t.key
+                  ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {modoChina && pestanaChina === 'clientes' && (
+        <div className="flex gap-2 border-b border-zinc-200 dark:border-zinc-800">
+          {TABS.map(t => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={`pb-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+                tab === t.key
+                  ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                  : 'border-transparent text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Alertas stock bajo — solo modo China */}
-      {modoChina && alertasStock.length > 0 && (
+      {modoChina && pestanaChina === 'vida_digital' && alertasStock.length > 0 && (
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
@@ -575,6 +620,11 @@ export function DeseadosClient({ session }: { session: any }) {
                   <p className="text-xs text-orange-600 dark:text-orange-400 font-semibold mt-1">
                     Stock: {alerta.saldo} u ({Math.floor(alerta.saldo / alerta.cantcaja * 10) / 10} cajas)
                   </p>
+                  {alerta.total_clientes > 0 && (
+                    <p className="text-xs text-zinc-500 mt-1">
+                      {alerta.total_clientes} clientes lo han comprado
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-1.5 mt-auto">
                   <Button
@@ -609,17 +659,19 @@ export function DeseadosClient({ session }: { session: any }) {
       )}
 
       {/* Buscador */}
-      <div className="relative">
-        <Input
-          placeholder="Buscar por descripción, código o cliente..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="h-10"
-        />
-      </div>
+      {(!modoChina || pestanaChina === 'clientes') && (
+        <div className="relative">
+          <Input
+            placeholder="Buscar por descripción, código o cliente..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="h-10"
+          />
+        </div>
+      )}
 
       {/* Lista */}
-      {loading ? (
+      {(!modoChina || pestanaChina === 'clientes') && (loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="h-40 bg-zinc-200 dark:bg-zinc-800 rounded-xl" />
@@ -790,7 +842,7 @@ export function DeseadosClient({ session }: { session: any }) {
             </div>
           ))}
         </div>
-      )}
+      ))}
 
       {/* Modal confirmación aviso */}
       <Dialog

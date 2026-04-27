@@ -12,10 +12,21 @@ export async function GET() {
 
   try {
     const rows = await sql`
-      SELECT *
-      FROM alertas_stock_bajo
-      WHERE activa = true
-      ORDER BY saldo ASC, updated_at DESC
+      SELECT
+        a.*,
+        COALESCE(c.total_clientes, 0) as total_clientes
+      FROM alertas_stock_bajo a
+      LEFT JOIN (
+        SELECT
+          i.codunico,
+          COUNT(DISTINCT m.kcodclie)::int as total_clientes
+        FROM vida.itemdcto i
+        INNER JOIN vida.movidcto m ON i.knumfoli = m.knumfoli
+        WHERE m.tipomovi = 'V'
+        GROUP BY i.codunico
+      ) c ON c.codunico = a.codigo
+      WHERE a.activa = true
+      ORDER BY c.total_clientes DESC NULLS LAST
     `;
     return NextResponse.json({ data: rows });
   } catch (error: any) {
