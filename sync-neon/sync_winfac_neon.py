@@ -302,10 +302,8 @@ def sync_tabla(conn, schema: str, tabla: str, config: dict, dbf_path: str):
 def sync_imagenes():
     """
     Sincroniza imágenes desde IMAGENES_PATH hacia Cloudinary (folder: productos/).
-    - Sube imágenes nuevas (no existen en Cloudinary)
-    - Re-sube imágenes modificadas (mtime local > created_at en Cloudinary)
-    - Salta imágenes sin cambios
-    - Actualiza imagen_url en public.productos en Neon
+    Estrategia eficiente: una sola llamada de listado a Cloudinary,
+    luego comparación local. Minimiza operaciones API.
     """
     log.info("\n" + "=" * 60)
     log.info("INICIO SINCRONIZACION DE IMAGENES")
@@ -325,19 +323,52 @@ def sync_imagenes():
         api_secret=CLOUDINARY_API_SECRET,
     )
 
-    # Conectar a Neon para actualizar imagen_url
+    # Conectar a Neon
     try:
         conn = psycopg2.connect(DATABASE_URL)
     except Exception as e:
         log.error(f"No se pudo conectar a Neon para sync de imágenes: {e}")
         return
 
+    # ── Paso 1: obtener TODAS las imágenes de Cloudinary en una sola llamada ──
+    log.info("Obteniendo listado de imágenes desde Cloudinary...")
+    cloudinary_map = {}  # { nombre_sin_ext: created_at_timestamp }
+    try:
+        next_cursor = None
+        paginas = 0
+        while True:
+            params = {
+                "type": "upload",
+                "prefix": "productos/",
+                "max_results": 500,
+            }
+            if next_cursor:
+                params["next_cursor"] = next_cursor
+            result = cloudinary.api.resources(**params)
+            for r in result.get("resources", []):
+                # public_id es "productos/AB-123"
+                nombre = r["public_id"].replace("productos/", "")
+                from datetime import timezone
+                ts = datetime.strptime(
+                    r["created_at"], "%Y-%m-%dT%H:%M:%SZ"
+                ).replace(tzinfo=timezone.utc).timestamp()
+                cloudinary_map[nombre] = ts
+            paginas += 1
+            next_cursor = result.get("next_cursor")
+            if not next_cursor:
+                break
+        log.info(f"  {len(cloudinary_map)} imágenes encontradas en Cloudinary ({paginas} página(s))")
+    except Exception as e:
+        log.error(f"Error obteniendo listado de Cloudinary: {e}")
+        conn.close()
+        return
+
+    # ── Paso 2: listar archivos locales ──
     archivos = [
         f for f in os.listdir(IMAGENES_PATH)
         if os.path.splitext(f)[1].lower() in EXTENSIONES_VALIDAS
     ]
-
-    log.info(f"Archivos encontrados: {len(archivos)}")
+    log.info(f"Archivos locales encontrados: {len(archivos)}")
 
     nuevas = 0
     actualizadas = 0
@@ -346,26 +377,19 @@ def sync_imagenes():
 
     for archivo in archivos:
         nombre_sin_ext = os.path.splitext(archivo)[0]
-        public_id = f"productos/{nombre_sin_ext}"
         ruta_local = os.path.join(IMAGENES_PATH, archivo)
         mtime_local = os.path.getmtime(ruta_local)
 
+        cloudinary_ts = cloudinary_map.get(nombre_sin_ext)
+
+        # Determinar acción
+        if cloudinary_ts is not None and mtime_local <= cloudinary_ts:
+            saltadas += 1
+            continue  # sin cambios, no loguear para no saturar el log
+
+        es_nueva = cloudinary_ts is None
+
         try:
-            # Verificar si existe en Cloudinary
-            info = cloudinary.api.resource(public_id)
-            created_at_str = info.get("created_at", "")
-            # Parsear fecha de Cloudinary
-            from datetime import timezone
-            created_at = datetime.strptime(
-                created_at_str, "%Y-%m-%dT%H:%M:%SZ"
-            ).replace(tzinfo=timezone.utc).timestamp()
-
-            if mtime_local <= created_at:
-                log.info(f"  [SKIP] {archivo} — sin cambios")
-                saltadas += 1
-                continue
-
-            # Modificada — re-subir
             with open(ruta_local, "rb") as f:
                 b64 = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode()
             result = cloudinary.uploader.upload(
@@ -374,28 +398,13 @@ def sync_imagenes():
                 public_id=nombre_sin_ext,
                 overwrite=True,
             )
-            log.info(f"  [UPDATE] {archivo} → {result['secure_url']}")
-            actualizadas += 1
-            _actualizar_neon(conn, nombre_sin_ext, result["secure_url"], result["public_id"])
-
-        except cloudinary.exceptions.NotFound:
-            # No existe — subir nueva
-            try:
-                with open(ruta_local, "rb") as f:
-                    b64 = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode()
-                result = cloudinary.uploader.upload(
-                    b64,
-                    folder="productos",
-                    public_id=nombre_sin_ext,
-                    overwrite=False,
-                )
+            if es_nueva:
                 log.info(f"  [NEW] {archivo} → {result['secure_url']}")
                 nuevas += 1
-                _actualizar_neon(conn, nombre_sin_ext, result["secure_url"], result["public_id"])
-            except Exception as e:
-                log.error(f"  [ERROR] {archivo}: {e}")
-                errores += 1
-
+            else:
+                log.info(f"  [UPDATE] {archivo} → {result['secure_url']}")
+                actualizadas += 1
+            _actualizar_neon(conn, nombre_sin_ext, result["secure_url"], result["public_id"])
         except Exception as e:
             log.error(f"  [ERROR] {archivo}: {e}")
             errores += 1
