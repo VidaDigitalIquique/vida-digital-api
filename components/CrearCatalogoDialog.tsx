@@ -163,6 +163,7 @@ export function CrearCatalogoDialog({
                   min="0"
                   max="500"
                   value={newMargen}
+                  onFocus={e => e.target.select()}
                   onChange={e => setNewMargen(parseFloat(e.target.value) || 0)}
                   placeholder="Ej: 30"
                 />
