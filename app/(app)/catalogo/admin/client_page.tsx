@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -8,6 +8,7 @@ import { PlusCircle, Search, Trash2, Link as LinkIcon, ExternalLink, FileDown, P
 import { toast } from 'sonner';
 import { useEmpresaId } from '@/hooks/useEmpresaId';
 import { CrearCatalogoDialog } from '@/components/CrearCatalogoDialog';
+import { filtrarCatalogos } from '../../catalogos/catalogos-utils';
 import dynamic from 'next/dynamic';
 const QRCodeSVG = dynamic(() => import('qrcode.react').then(mod => mod.QRCodeSVG), { ssr: false });
 
@@ -15,6 +16,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
   const { empresaId: activeEmpresaId, isLoaded } = useEmpresaId();
   const [catalogos, setCatalogos] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
   
   // --- Estado modal edición ---
   const [editingCatalog, setEditingCatalog] = useState<any | null>(null);
@@ -156,6 +158,11 @@ export function CatalogoAdminClient({ session }: { session: any }) {
     return `${window.location.origin}/catalogo/${slug}`;
   };
 
+  const catalogosFiltrados = useMemo(
+    () => filtrarCatalogos(catalogos, busqueda),
+    [catalogos, busqueda]
+  );
+
   return (
     <div className="flex flex-col gap-6 w-full fade-in zoom-in-95 duration-200">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -169,6 +176,16 @@ export function CatalogoAdminClient({ session }: { session: any }) {
         </Button>
       </div>
 
+      <div className="relative max-w-lg">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+        <Input
+          placeholder="Buscar por título, descripción o categoría..."
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value)}
+          className="pl-9"
+        />
+      </div>
+
       {loading ? (
         <div className="py-12 text-center text-zinc-500 animate-pulse">Cargando...</div>
       ) : catalogos.length === 0 ? (
@@ -177,9 +194,14 @@ export function CatalogoAdminClient({ session }: { session: any }) {
            <p className="text-zinc-500 mb-4">Crea tu primer catálogo para agrupar productos y compartirlos.</p>
            <Button onClick={() => setIsCreating(true)} variant="outline">Crear Nuevo</Button>
         </div>
+      ) : catalogosFiltrados.length === 0 ? (
+        <div className="border border-dashed rounded-xl p-12 text-center bg-zinc-50 dark:bg-zinc-900/50">
+          <h3 className="text-lg font-bold mb-2">Sin resultados</h3>
+          <p className="text-zinc-500">No se encontraron catálogos para la búsqueda.</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {catalogos.map(cat => (
+          {catalogosFiltrados.map(cat => (
             <div key={cat.id} className="bg-white dark:bg-zinc-900 border rounded-xl p-5 shadow-sm flex flex-col justify-between">
               <div>
                 {/* Header */}
