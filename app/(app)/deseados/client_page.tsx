@@ -327,7 +327,13 @@ export function DeseadosClient({ session }: { session: any }) {
       let cliente_deseado_id: number | undefined;
       let cliente_winfac_id: string | undefined;
 
-      if (tipoCliente === 'nuevo') {
+      if (tipoCliente === 'winfac') {
+        cliente_winfac_id = clienteSeleccionado?.id;
+      } else if (clienteSeleccionado !== null && clienteSeleccionado.tipo === 'nuevo') {
+        // Cliente deseado existente seleccionado desde búsqueda
+        cliente_deseado_id = Number(clienteSeleccionado.id);
+      } else {
+        // Cliente nuevo — crear con formulario
         const resCliente = await fetch('/api/clientes-deseados', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -344,8 +350,6 @@ export function DeseadosClient({ session }: { session: any }) {
         }
         const { data: clienteCreado } = await resCliente.json();
         cliente_deseado_id = clienteCreado.id;
-      } else {
-        cliente_winfac_id = clienteSeleccionado?.id;
       }
 
       const resultados = await Promise.all(
