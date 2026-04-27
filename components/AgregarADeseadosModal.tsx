@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasoProductoDeseado } from '@/components/PasoProductoDeseado';
 import {
   Dialog,
   DialogContent,
@@ -86,6 +87,16 @@ export function AgregarADeseadosModal({
     tipoCliente === 'winfac'
       ? clienteSeleccionado !== null
       : nuevoClienteForm.nombre.trim().length > 0;
+
+  const clienteWinfacIdPasoProducto =
+    tipoCliente === 'winfac'
+      ? (clientePreseleccionado?.id ?? clienteSeleccionado?.id)
+      : undefined;
+  const clienteDeseadoIdRaw = clientePreseleccionado?.id ?? clienteSeleccionado?.id;
+  const clienteDeseadoIdPasoProducto =
+    tipoCliente === 'nuevo' && clienteDeseadoIdRaw
+      ? Number(clienteDeseadoIdRaw)
+      : undefined;
 
   const handleGuardar = async () => {
     setSaving(true);
@@ -169,10 +180,12 @@ export function AgregarADeseadosModal({
           </div>
 
           {/* Producto */}
-          <div className="bg-zinc-50 dark:bg-zinc-900 rounded-lg px-3 py-2 flex flex-col gap-0.5">
-            <span className="font-mono text-xs text-zinc-500">{codigo}</span>
-            <span className="text-sm font-medium leading-snug">{descripcion}</span>
-          </div>
+          {codigo !== '' && (
+            <div className="bg-zinc-50 dark:bg-zinc-900 rounded-lg px-3 py-2 flex flex-col gap-0.5">
+              <span className="font-mono text-xs text-zinc-500">{codigo}</span>
+              <span className="text-sm font-medium leading-snug">{descripcion}</span>
+            </div>
+          )}
 
           {/* Selección de cliente */}
           {clientePreseleccionado ? (
@@ -285,26 +298,41 @@ export function AgregarADeseadosModal({
           </>
           )}
 
-          {/* Nota */}
-          <div>
-            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Nota (opcional)</label>
-            <Input
-              value={nota}
-              onChange={e => setNota(e.target.value)}
-              placeholder="Alguna observación..."
-              className="mt-1"
+          {codigo === '' && (
+            <PasoProductoDeseado
+              clienteWinfacId={clienteWinfacIdPasoProducto}
+              clienteDeseadoId={clienteDeseadoIdPasoProducto}
+              saving={saving}
+              setSaving={setSaving}
+              onGuardado={() => onOpenChange(false)}
+              onCancelar={() => onOpenChange(false)}
             />
-          </div>
+          )}
+
+          {/* Nota */}
+          {codigo !== '' && (
+            <div>
+              <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Nota (opcional)</label>
+              <Input
+                value={nota}
+                onChange={e => setNota(e.target.value)}
+                placeholder="Alguna observación..."
+                className="mt-1"
+              />
+            </div>
+          )}
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleGuardar} disabled={!paso1Valido || saving}>
-            {saving ? 'Agregando...' : 'Agregar'}
-          </Button>
-        </DialogFooter>
+        {codigo !== '' && (
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleGuardar} disabled={!paso1Valido || saving}>
+              {saving ? 'Agregando...' : 'Agregar'}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

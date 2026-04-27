@@ -17,6 +17,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { AgregarADeseadosModal } from '@/components/AgregarADeseadosModal';
+import { PasoProductoDeseado } from '@/components/PasoProductoDeseado';
 
 type Tab = 'pendiente' | 'avisado' | 'descartado';
 
@@ -48,12 +49,6 @@ interface ClienteWinfac {
   nombress: string;
   ciudad?: string | null;
   celular?: string | null;
-}
-
-interface ProductoResult {
-  id: number;
-  codigo: string;
-  detalle: string;
 }
 
 interface ClienteAgrupado {
@@ -129,7 +124,6 @@ export function DeseadosClient({ session }: { session: any }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [pasoModal, setPasoModal] = useState<'cliente' | 'producto'>('cliente');
   const [tipoCliente, setTipoCliente] = useState<'winfac' | 'nuevo'>('winfac');
-  const [tipoProducto, setTipoProducto] = useState<'codigo' | 'libre'>('codigo');
 
   const [clienteWinfacSearch, setClienteWinfacSearch] = useState('');
   const [clienteWinfacResultados, setClienteWinfacResultados] = useState<ClienteWinfac[]>([]);
@@ -150,17 +144,6 @@ export function DeseadosClient({ session }: { session: any }) {
     whatsapp: '',
   });
 
-  const [productoSearch, setProductoSearch] = useState('');
-  const [productoResultados, setProductoResultados] = useState<ProductoResult[]>([]);
-  const [productoLoading, setProductoLoading] = useState(false);
-  const [productoSeleccionado, setProductoSeleccionado] = useState<{
-    codigo: string;
-    descripcion: string;
-  } | null>(null);
-
-  const [descripcionLibre, setDescripcionLibre] = useState('');
-  const [notaItem, setNotaItem] = useState('');
-  const [productosLista, setProductosLista] = useState<Array<{ codigo: string | null; descripcion: string; nota: string; esChina: boolean }>>([]);
   const [saving, setSaving] = useState(false);
   const [uploadingId, setUploadingId] = useState<number | null>(null);
 
@@ -240,46 +223,14 @@ export function DeseadosClient({ session }: { session: any }) {
     return () => clearTimeout(t);
   }, [busquedaClienteNuevo]);
 
-  // --- Debounce búsqueda producto ---
-  useEffect(() => {
-    if (productoSearch.trim().length < 2) {
-      setProductoResultados([]);
-      return;
-    }
-    const t = setTimeout(async () => {
-      setProductoLoading(true);
-      try {
-        const res = await fetch(
-          `/api/productos?search=${encodeURIComponent(productoSearch.trim())}`
-        );
-        if (res.ok) {
-          const { data } = await res.json();
-          setProductoResultados(data || []);
-        }
-      } catch {
-        // silencioso
-      } finally {
-        setProductoLoading(false);
-      }
-    }, 400);
-    return () => clearTimeout(t);
-  }, [productoSearch]);
-
   // --- Reset modal ---
   const resetModal = () => {
     setPasoModal('cliente');
     setTipoCliente('winfac');
-    setTipoProducto(modoChina ? 'libre' : 'codigo');
     setClienteWinfacSearch('');
     setClienteWinfacResultados([]);
     setClienteSeleccionado(null);
     setNuevoClienteForm({ nombre: '', pais: '', ciudad: '', whatsapp: '' });
-    setProductoSearch('');
-    setProductoResultados([]);
-    setProductoSeleccionado(null);
-    setDescripcionLibre('');
-    setNotaItem('');
-    setProductosLista([]);
     setBusquedaClienteNuevo('');
     setResultadosClienteNuevo([]);
   };
@@ -294,103 +245,14 @@ export function DeseadosClient({ session }: { session: any }) {
     clienteSeleccionado !== null ||
     (tipoCliente === 'nuevo' && nuevoClienteForm.nombre.trim().length > 0);
 
-  // --- Validación paso 2 ---
-  const paso2Valido = productosLista.length > 0;
-
-  // --- Agregar ítem a la lista ---
-  const handleAgregarProducto = () => {
-    if (tipoProducto === 'codigo' && !productoSeleccionado) return;
-    if (tipoProducto === 'libre' && !descripcionLibre.trim()) return;
-
-    const nuevoItem = {
-      codigo: tipoProducto === 'codigo' ? productoSeleccionado!.codigo : null,
-      descripcion: tipoProducto === 'codigo'
-        ? productoSeleccionado!.descripcion
-        : descripcionLibre.trim(),
-      nota: notaItem.trim(),
-      esChina: tipoProducto === 'libre',
-    };
-
-    setProductosLista(prev => [...prev, nuevoItem]);
-    setProductoSeleccionado(null);
-    setProductoSearch('');
-    setProductoResultados([]);
-    setDescripcionLibre('');
-    setNotaItem('');
-  };
-
-  // --- Crear deseo ---
-  const handleCrearDeseo = async () => {
-    if (!paso2Valido) return;
-    setSaving(true);
-    try {
-      let cliente_deseado_id: number | undefined;
-      let cliente_winfac_id: string | undefined;
-
-      if (tipoCliente === 'winfac') {
-        cliente_winfac_id = clienteSeleccionado?.id;
-      } else if (clienteSeleccionado !== null && clienteSeleccionado.tipo === 'nuevo') {
-        // Cliente deseado existente seleccionado desde búsqueda
-        cliente_deseado_id = Number(clienteSeleccionado.id);
-      } else {
-        // Cliente nuevo — crear con formulario
-        const resCliente = await fetch('/api/clientes-deseados', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            nombre: nuevoClienteForm.nombre.trim(),
-            pais: nuevoClienteForm.pais.trim() || undefined,
-            ciudad: nuevoClienteForm.ciudad.trim() || undefined,
-            whatsapp: nuevoClienteForm.whatsapp.trim() || undefined,
-          }),
-        });
-        if (!resCliente.ok) {
-          const err = await resCliente.json();
-          throw new Error(err.error || 'Error creando cliente');
-        }
-        const { data: clienteCreado } = await resCliente.json();
-        cliente_deseado_id = clienteCreado.id;
-      }
-
-      const resultados = await Promise.all(
-        productosLista.map(item =>
-          fetch('/api/deseados', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              cliente_winfac_id,
-              cliente_deseado_id,
-              codigo: item.codigo ?? undefined,
-              descripcion: item.descripcion,
-              nota: item.nota || undefined,
-              es_china: item.esChina,
-            }),
-          })
-        )
-      );
-
-      const fallido = resultados.find(r => !r.ok);
-      if (fallido) {
-        const err = await fallido.json();
-        throw new Error(err.error || 'Error guardando deseo');
-      }
-
-      toast.success(productosLista.length > 1 ? `${productosLista.length} deseos registrados` : 'Deseo registrado');
-      setModalOpen(false);
-      resetModal();
-      // Refetch
-      const params = new URLSearchParams({ estado: tab });
-      if (debouncedSearch.trim().length >= 2) params.set('search', debouncedSearch.trim());
-      if (modoChina) params.set('sinCodigo', 'true');
-      const res = await fetch(`/api/deseados?${params.toString()}`);
-      if (res.ok) {
-        const { data } = await res.json();
-        setDeseados(data || []);
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Error guardando');
-    } finally {
-      setSaving(false);
+  const refetchDeseados = async () => {
+    const params = new URLSearchParams({ estado: tab });
+    if (debouncedSearch.trim().length >= 2) params.set('search', debouncedSearch.trim());
+    if (modoChina) params.set('sinCodigo', 'true');
+    const res = await fetch(`/api/deseados?${params.toString()}`);
+    if (res.ok) {
+      const { data } = await res.json();
+      setDeseados(data || []);
     }
   };
 
@@ -1058,160 +920,30 @@ export function DeseadosClient({ session }: { session: any }) {
               )}
             </div>
           ) : (
-            <div className="space-y-4 py-4">
-              {/* Toggle tipo producto */}
-              <div className="flex rounded-lg border overflow-hidden">
-                <button
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${tipoProducto === 'codigo' ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
-                  onClick={() => { setTipoProducto('codigo'); setProductoSeleccionado(null); }}
-                >
-                  Tiene código
-                </button>
-                <button
-                  className={`flex-1 py-2 text-sm font-medium transition-colors ${tipoProducto === 'libre' ? 'bg-blue-600 text-white' : 'text-zinc-600 hover:bg-zinc-50 dark:hover:bg-zinc-800'}`}
-                  onClick={() => { setTipoProducto('libre'); setProductoSeleccionado(null); }}
-                >
-                  Pedir a China
-                </button>
-              </div>
-
-              {tipoProducto === 'codigo' ? (
-                <div className="space-y-2">
-                  <Input
-                    placeholder="Buscar por código o descripción..."
-                    value={productoSearch}
-                    onChange={e => { setProductoSearch(e.target.value); setProductoSeleccionado(null); }}
-                  />
-                  {productoLoading && (
-                    <p className="text-xs text-zinc-400 animate-pulse">Buscando...</p>
-                  )}
-                  {productoResultados.length > 0 && !productoSeleccionado && (
-                    <ul className="border rounded-lg overflow-hidden divide-y max-h-48 overflow-y-auto">
-                      {productoResultados.map(p => (
-                        <li
-                          key={p.id}
-                          className="px-3 py-2 text-sm cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800"
-                          onClick={() => {
-                            setProductoSeleccionado({ codigo: p.codigo, descripcion: p.detalle });
-                            setProductoResultados([]);
-                          }}
-                        >
-                          <p className="font-mono text-xs text-zinc-500">{p.codigo}</p>
-                          <p className="font-medium leading-tight">{p.detalle}</p>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {productoSeleccionado && (
-                    <div className="flex items-start justify-between bg-blue-50 dark:bg-blue-900/20 rounded-lg px-3 py-2">
-                      <div>
-                        <p className="font-mono text-xs text-blue-500">{productoSeleccionado.codigo}</p>
-                        <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 leading-tight">{productoSeleccionado.descripcion}</p>
-                      </div>
-                      <button
-                        className="text-blue-400 hover:text-blue-600 flex-shrink-0 ml-2"
-                        onClick={() => { setProductoSeleccionado(null); setProductoSearch(''); }}
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div>
-                  <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Descripción *</label>
-                  <textarea
-                    value={descripcionLibre}
-                    onChange={e => setDescripcionLibre(e.target.value)}
-                    placeholder="Describir el producto que busca el cliente..."
-                    rows={3}
-                    className="mt-1 w-full rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900 resize-none"
-                  />
-                </div>
-              )}
-
-              {/* Nota del ítem */}
-              <div>
-                <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">Nota del ítem (opcional)</label>
-                <Input
-                  value={notaItem}
-                  onChange={e => setNotaItem(e.target.value)}
-                  placeholder="Alguna observación..."
-                  className="mt-1"
-                />
-              </div>
-
-              {/* Botón Agregar */}
-              {(() => {
-                const puedeAgregar =
-                  (tipoProducto === 'codigo' && productoSeleccionado !== null) ||
-                  (tipoProducto === 'libre' && descripcionLibre.trim().length > 0);
-                return (
-                  <Button
-                    variant={puedeAgregar ? 'default' : 'outline'}
-                    className={`w-full transition-all ${puedeAgregar ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md' : ''}`}
-                    onClick={handleAgregarProducto}
-                    disabled={!puedeAgregar}
-                  >
-                    Agregar +
-                  </Button>
-                );
-              })()}
-
-              {/* Lista de productos agregados */}
-              {productosLista.length > 0 && (
-                <div className="border rounded-lg divide-y mt-2">
-                  {productosLista.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between px-3 py-2 gap-2">
-                      <div className="flex-1 min-w-0">
-                        {item.codigo ? (
-                          <span className="font-mono text-[11px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded mr-1">
-                            {item.codigo}
-                          </span>
-                        ) : (
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 mr-1">
-                            China
-                          </span>
-                        )}
-                        <span className="text-sm truncate">{item.descripcion}</span>
-                        {item.nota && (
-                          <p className="text-xs text-zinc-400 italic mt-0.5">{item.nota}</p>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => setProductosLista(prev => prev.filter((_, i) => i !== idx))}
-                        className="text-zinc-300 hover:text-red-500 transition-colors flex-shrink-0"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <PasoProductoDeseado
+              clienteWinfacId={tipoCliente === 'winfac' ? clienteSeleccionado?.id : undefined}
+              clienteDeseadoId={tipoCliente !== 'winfac' ? Number(clienteSeleccionado?.id) : undefined}
+              saving={saving}
+              setSaving={setSaving}
+              onGuardado={async () => {
+                setModalOpen(false);
+                resetModal();
+                await refetchDeseados();
+              }}
+              onCancelar={() => setPasoModal('cliente')}
+            />
           )}
 
-          <DialogFooter className="gap-2">
-            {pasoModal === 'cliente' ? (
-              <>
-                <Button variant="outline" onClick={() => { setModalOpen(false); resetModal(); }}>
-                  Cancelar
-                </Button>
-                <Button onClick={() => setPasoModal('producto')} disabled={!paso1Valido}>
-                  Siguiente →
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="outline" onClick={() => setPasoModal('cliente')}>
-                  ← Volver
-                </Button>
-                <Button onClick={handleCrearDeseo} disabled={!paso2Valido || saving}>
-                  {saving ? 'Guardando...' : productosLista.length > 1 ? 'Guardar todo' : 'Guardar'}
-                </Button>
-              </>
-            )}
-          </DialogFooter>
+          {pasoModal === 'cliente' && (
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => { setModalOpen(false); resetModal(); }}>
+                Cancelar
+              </Button>
+              <Button onClick={() => setPasoModal('producto')} disabled={!paso1Valido}>
+                Siguiente →
+              </Button>
+            </DialogFooter>
+          )}
         </DialogContent>
       </Dialog>
 
