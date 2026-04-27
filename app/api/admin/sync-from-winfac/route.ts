@@ -86,30 +86,30 @@ export async function POST(request: Request) {
 
     // Sync saldo y cantcaja en ubicaciones_bodega desde public.productos (empresa 1 - sanjh)
     await sql`
-      UPDATE ubicaciones_bodega ub
-      SET
-        saldo = p.saldo,
-        cantcaja = p.cantcaja,
-        updated_at = NOW()
+      INSERT INTO ubicaciones_bodega (empresa_id, codigo, nroingreso, detalle, saldo, cantcaja)
+      SELECT p.empresa_id, p.codigo, p.nroingreso, p.detalle, p.saldo, p.cantcaja
       FROM public.productos p
-      WHERE ub.empresa_id = p.empresa_id
-        AND ub.codigo = p.codigo
-        AND ub.nroingreso = p.nroingreso
-        AND ub.empresa_id = 1
+      WHERE p.empresa_id = 1
+      ON CONFLICT ON CONSTRAINT ubicaciones_bodega_empresa_id_codigo_nroingreso_key
+      DO UPDATE SET
+        saldo = EXCLUDED.saldo,
+        cantcaja = EXCLUDED.cantcaja,
+        detalle = EXCLUDED.detalle,
+        updated_at = NOW()
     `;
 
     // Sync saldo y cantcaja en ubicaciones_bodega desde public.productos (empresa 2 - vida)
     await sql`
-      UPDATE ubicaciones_bodega ub
-      SET
-        saldo = p.saldo,
-        cantcaja = p.cantcaja,
-        updated_at = NOW()
+      INSERT INTO ubicaciones_bodega (empresa_id, codigo, nroingreso, detalle, saldo, cantcaja)
+      SELECT p.empresa_id, p.codigo, p.nroingreso, p.detalle, p.saldo, p.cantcaja
       FROM public.productos p
-      WHERE ub.empresa_id = p.empresa_id
-        AND ub.codigo = p.codigo
-        AND ub.nroingreso = p.nroingreso
-        AND ub.empresa_id = 2
+      WHERE p.empresa_id = 2
+      ON CONFLICT ON CONSTRAINT ubicaciones_bodega_empresa_id_codigo_nroingreso_key
+      DO UPDATE SET
+        saldo = EXCLUDED.saldo,
+        cantcaja = EXCLUDED.cantcaja,
+        detalle = EXCLUDED.detalle,
+        updated_at = NOW()
     `;
 
     const alertasResult = await sql`
