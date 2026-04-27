@@ -18,12 +18,28 @@ export async function GET() {
       FROM alertas_stock_bajo a
       LEFT JOIN (
         SELECT
-          i.codunico,
-          COUNT(DISTINCT m.kcodclie)::int as total_clientes
-        FROM vida.itemdcto i
-        INNER JOIN vida.movidcto m ON i.knumfoli = m.knumfoli
-        WHERE m.tipomovi = 'V'
-        GROUP BY i.codunico
+          codunico,
+          SUM(total_clientes)::int as total_clientes
+        FROM (
+          SELECT
+            i.codunico,
+            COUNT(DISTINCT m.kcodclie) as total_clientes
+          FROM vida.itemdcto i
+          INNER JOIN vida.movidcto m ON i.knumfoli = m.knumfoli
+          WHERE m.tipomovi = 'V'
+          GROUP BY i.codunico
+
+          UNION ALL
+
+          SELECT
+            i.codunico,
+            COUNT(DISTINCT m.kcodclie) as total_clientes
+          FROM sanjh.itemdcto i
+          INNER JOIN sanjh.movidcto m ON i.knumfoli = m.knumfoli
+          WHERE m.tipomovi = 'V'
+          GROUP BY i.codunico
+        ) t
+        GROUP BY codunico
       ) c ON c.codunico = a.codigo
       WHERE a.activa = true
       ORDER BY c.total_clientes DESC NULLS LAST
