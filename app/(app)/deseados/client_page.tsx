@@ -77,30 +77,6 @@ interface AlertaStock {
   updated_at: string;
 }
 
-type ChinaVidaDigital = {
-  id: number;
-  codigo: string;
-  descripcion: string;
-  nota: string | null;
-  imagen_url: string | null;
-  alerta_activa: boolean;
-  created_at: string;
-  cliente_nombre: string | null;
-  cliente_deseado_nombre: string | null;
-  ganancia_total: number;
-  unidades_vendidas: number;
-};
-
-type ChinaClientes = {
-  id: number;
-  descripcion: string;
-  nota: string | null;
-  imagen_url: string | null;
-  created_at: string;
-  total_solicitudes: number;
-  clientes_nombres: string | null;
-};
-
 export function DeseadosClient({ session }: { session: any }) {
   const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'dxkidwxjl';
   const isAdmin = session?.rol === 'admin';
@@ -138,9 +114,6 @@ export function DeseadosClient({ session }: { session: any }) {
   // --- Alertas stock bajo ---
   const [alertasStock, setAlertasStock] = useState<AlertaStock[]>([]);
   const [loadingAlertas, setLoadingAlertas] = useState(false);
-  const [chinaVidaDigital, setChinaVidaDigital] = useState<ChinaVidaDigital[]>([]);
-  const [chinaClientes, setChinaClientes] = useState<ChinaClientes[]>([]);
-  const [loadingChina, setLoadingChina] = useState(false);
   const [deseadoModalExterno, setDeseadoModalExterno] = useState<{
     codigo: string;
     descripcion: string;
@@ -506,19 +479,6 @@ export function DeseadosClient({ session }: { session: any }) {
     fetchAlertas();
   }, [modoChina]);
 
-  useEffect(() => {
-    if (!modoChina) return;
-    setLoadingChina(true);
-    fetch('/api/deseados/china')
-      .then(res => res.ok ? res.json() : { vida_digital: [], clientes: [] })
-      .then(({ vida_digital, clientes }) => {
-        setChinaVidaDigital(vida_digital || []);
-        setChinaClientes(clientes || []);
-      })
-      .catch(() => {})
-      .finally(() => setLoadingChina(false));
-  }, [modoChina]);
-
   const handleIgnorarAlerta = async (id: number) => {
     setAlertasStock(prev => prev.filter(a => a.id !== id));
     try {
@@ -659,239 +619,137 @@ export function DeseadosClient({ session }: { session: any }) {
       </div>
 
       {/* Lista */}
-      {modoChina ? (
-        loadingChina ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-40 bg-zinc-200 dark:bg-zinc-800 rounded-xl" />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-10 pb-12">
-
-            {/* Sección 1: China Vida Digital */}
-            <div className="flex flex-col gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-zinc-800 dark:text-zinc-100">
-                   China — Vida Digital
-                </h2>
-                <p className="text-sm text-zinc-500 mt-1">
-                  Productos que ya hemos comercializado y necesitan reposición,
-                  ordenados por ganancia histórica de mayor a menor.
-                </p>
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-40 bg-zinc-200 dark:bg-zinc-800 rounded-xl" />
+          ))}
+        </div>
+      ) : deseados.length === 0 ? (
+        <div className="text-center py-16 text-zinc-400">
+          No hay productos deseados en esta categoría.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
+          {clientesAgrupados.map(cliente => (
+            <div
+              key={cliente.clienteKey}
+              className="bg-white dark:bg-zinc-900 border border-border rounded-xl shadow-sm flex flex-col"
+            >
+              {/* Header del cliente */}
+              <div className="p-4 border-b border-border flex items-start justify-between gap-2">
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-bold text-base leading-tight">{cliente.clienteNombre}</p>
+                    {cliente.tieneAlerta && (
+                      <span className="flex items-center gap-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
+                        <Bell className="w-3 h-3" />
+                        ¡Llegó!
+                      </span>
+                    )}
+                  </div>
+                  {(cliente.ciudad || cliente.whatsapp) && (
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      {[cliente.ciudad, cliente.whatsapp].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
+                </div>
+                <span className="text-xs text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full flex-shrink-0">
+                  {cliente.items.length} {cliente.items.length === 1 ? 'producto' : 'productos'}
+                </span>
               </div>
-              {chinaVidaDigital.length === 0 ? (
-                <p className="text-zinc-400 text-sm">No hay productos pendientes.</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {chinaVidaDigital.map(item => (
-                    <div key={item.id} className="bg-white dark:bg-zinc-900 border border-border rounded-xl p-4 flex flex-col gap-2 shadow-sm">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-xs font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
-                          {item.codigo}
-                        </span>
-                        {item.ganancia_total > 0 && (
-                          <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-                            ${Number(item.ganancia_total).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} ganancia
+
+              {/* Lista de productos */}
+              <div className="flex flex-col divide-y divide-border">
+                {cliente.items.map(d => (
+                  <div key={d.id} className="p-3 flex flex-col gap-2">
+                    {/* Producto info */}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {d.alerta_activa && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+                            ¡Llegó!
+                          </span>
+                        )}
+                        {d.codigo && (
+                          <span className="font-mono text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded">
+                            {d.codigo}
+                          </span>
+                        )}
+                        {d.es_china && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                            Pedir a China
                           </span>
                         )}
                       </div>
-                      <p className="text-sm font-medium leading-snug">{item.descripcion}</p>
-                      {item.nota && <p className="text-xs text-zinc-400 italic">{item.nota}</p>}
-                      {item.cliente_nombre && (
-                        <p className="text-xs text-zinc-500">Cliente: {item.cliente_nombre}</p>
+                      <p className="text-sm font-medium leading-snug">{d.descripcion}</p>
+                      {d.nota && (
+                        <p className="text-xs text-zinc-400 italic">{d.nota}</p>
                       )}
-                      {item.cliente_deseado_nombre && (
-                        <p className="text-xs text-zinc-500">Cliente: {item.cliente_deseado_nombre}</p>
-                      )}
-                      {item.unidades_vendidas > 0 && (
-                        <p className="text-xs text-zinc-400">{Number(item.unidades_vendidas).toLocaleString('es-CL')} uds vendidas históricamente</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Sección 2: China Clientes */}
-            <div className="flex flex-col gap-4">
-              <div>
-                <h2 className="text-xl font-bold text-zinc-800 dark:text-zinc-100">
-                   China — Clientes
-                </h2>
-                <p className="text-sm text-zinc-500 mt-1">
-                  Productos solicitados por clientes que nunca hemos comercializado,
-                  ordenados por número de solicitudes de mayor a menor.
-                </p>
-              </div>
-              {chinaClientes.length === 0 ? (
-                <p className="text-zinc-400 text-sm">No hay solicitudes pendientes.</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {chinaClientes.map(item => (
-                    <div key={item.id} className="bg-white dark:bg-zinc-900 border border-border rounded-xl p-4 flex flex-col gap-2 shadow-sm">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">
-                          {item.total_solicitudes} {item.total_solicitudes === 1 ? 'solicitud' : 'solicitudes'}
-                        </span>
-                      </div>
-                      <p className="text-sm font-medium leading-snug">{item.descripcion}</p>
-                      {item.nota && <p className="text-xs text-zinc-400 italic">{item.nota}</p>}
-                      {item.clientes_nombres && (
-                        <p className="text-xs text-zinc-500 line-clamp-2">Clientes: {item.clientes_nombres}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-          </div>
-        )
-      ) : (
-        loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-40 bg-zinc-200 dark:bg-zinc-800 rounded-xl" />
-            ))}
-          </div>
-        ) : deseados.length === 0 ? (
-          <div className="text-center py-16 text-zinc-400">
-            No hay productos deseados en esta categoría.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
-            {clientesAgrupados.map(cliente => (
-              <div
-                key={cliente.clienteKey}
-                className="bg-white dark:bg-zinc-900 border border-border rounded-xl shadow-sm flex flex-col"
-              >
-                {/* Header del cliente */}
-                <div className="p-4 border-b border-border flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-bold text-base leading-tight">{cliente.clienteNombre}</p>
-                      {cliente.tieneAlerta && (
-                        <span className="flex items-center gap-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
-                          <Bell className="w-3 h-3" />
-                          ¡Llegó!
-                        </span>
-                      )}
-                    </div>
-                    {(cliente.ciudad || cliente.whatsapp) && (
-                      <p className="text-xs text-zinc-400 mt-0.5">
-                        {[cliente.ciudad, cliente.whatsapp].filter(Boolean).join(' · ')}
+                      {/* Imagen del producto */}
+                      {d.codigo && !d.es_china ? (
+                        <div className="w-full h-32 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border mt-1 relative">
+                          <img
+                            src={`https://res.cloudinary.com/${cloudName}/image/upload/productos/${d.codigo}.jpg`}
+                            alt={d.codigo}
+                            className="w-full h-full object-contain"
+                            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                        </div>
+                      ) : d.imagen_url ? (
+                        <img
+                          src={d.imagen_url}
+                          alt={d.descripcion}
+                          className="w-full max-h-40 object-contain rounded-md border border-border mt-1"
+                        />
+                      ) : d.es_china ? (
+                        <label className={`inline-flex items-center gap-1 cursor-pointer text-xs px-2 py-1 rounded border border-dashed border-zinc-300 dark:border-zinc-600 text-zinc-400 hover:text-blue-500 hover:border-blue-400 transition-colors mt-1 ${uploadingId === d.id ? 'opacity-50 pointer-events-none' : ''}`}>
+                          <Camera className="w-3.5 h-3.5" />
+                          {uploadingId === d.id ? 'Subiendo...' : 'Agregar foto'}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={e => { if (e.target.files?.[0]) handleSubirImagen(d.id, e.target.files[0]); }}
+                          />
+                        </label>
+                      ) : null}
+                      <p className="text-xs text-zinc-400">
+                        {format(new Date(d.created_at), 'dd MMM yyyy', { locale: es })}
                       </p>
-                    )}
-                  </div>
-                  <span className="text-xs text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full flex-shrink-0">
-                    {cliente.items.length} {cliente.items.length === 1 ? 'producto' : 'productos'}
-                  </span>
-                </div>
-
-                {/* Lista de productos */}
-                <div className="flex flex-col divide-y divide-border">
-                  {cliente.items.map(d => (
-                    <div key={d.id} className="p-3 flex flex-col gap-2">
-                      {/* Producto info */}
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {d.alerta_activa && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
-                              ¡Llegó!
-                            </span>
+                      {/* Info aviso solo en tab avisados */}
+                      {tab === 'avisado' && (d.avisado_por || d.avisado_at || d.comentario_aviso) && (
+                        <div className="flex flex-col gap-0.5 mt-1">
+                          {d.avisado_por && (
+                            <p className="text-xs text-zinc-400">Avisado por {d.avisado_por}</p>
                           )}
-                          {d.codigo && (
-                            <span className="font-mono text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 bg-zinc-100 dark:bg-zinc-800 rounded">
-                              {d.codigo}
-                            </span>
+                          {d.avisado_at && (
+                            <p className="text-xs text-zinc-400">
+                              el {format(new Date(d.avisado_at), 'dd MMM yyyy', { locale: es })}
+                            </p>
                           )}
-                          {d.es_china && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                              Pedir a China
-                            </span>
+                          {d.comentario_aviso && (
+                            <p className="text-xs text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 rounded p-2 mt-1">
+                              {d.comentario_aviso}
+                            </p>
                           )}
                         </div>
-                        <p className="text-sm font-medium leading-snug">{d.descripcion}</p>
-                        {d.nota && (
-                          <p className="text-xs text-zinc-400 italic">{d.nota}</p>
-                        )}
-                        {/* Imagen del producto */}
-                        {d.codigo && !d.es_china ? (
-                          <div className="w-full h-32 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border mt-1 relative">
-                            <img
-                              src={`https://res.cloudinary.com/${cloudName}/image/upload/productos/${d.codigo}.jpg`}
-                              alt={d.codigo}
-                              className="w-full h-full object-contain"
-                              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                            />
-                          </div>
-                        ) : d.imagen_url ? (
-                          <img
-                            src={d.imagen_url}
-                            alt={d.descripcion}
-                            className="w-full max-h-40 object-contain rounded-md border border-border mt-1"
-                          />
-                        ) : d.es_china ? (
-                          <label className={`inline-flex items-center gap-1 cursor-pointer text-xs px-2 py-1 rounded border border-dashed border-zinc-300 dark:border-zinc-600 text-zinc-400 hover:text-blue-500 hover:border-blue-400 transition-colors mt-1 ${uploadingId === d.id ? 'opacity-50 pointer-events-none' : ''}`}>
-                            <Camera className="w-3.5 h-3.5" />
-                            {uploadingId === d.id ? 'Subiendo...' : 'Agregar foto'}
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={e => { if (e.target.files?.[0]) handleSubirImagen(d.id, e.target.files[0]); }}
-                            />
-                          </label>
-                        ) : null}
-                        <p className="text-xs text-zinc-400">
-                          {format(new Date(d.created_at), 'dd MMM yyyy', { locale: es })}
-                        </p>
-                        {/* Info aviso solo en tab avisados */}
-                        {tab === 'avisado' && (d.avisado_por || d.avisado_at || d.comentario_aviso) && (
-                          <div className="flex flex-col gap-0.5 mt-1">
-                            {d.avisado_por && (
-                              <p className="text-xs text-zinc-400">Avisado por {d.avisado_por}</p>
-                            )}
-                            {d.avisado_at && (
-                              <p className="text-xs text-zinc-400">
-                                el {format(new Date(d.avisado_at), 'dd MMM yyyy', { locale: es })}
-                              </p>
-                            )}
-                            {d.comentario_aviso && (
-                              <p className="text-xs text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 rounded p-2 mt-1">
-                                {d.comentario_aviso}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      )}
+                    </div>
 
-                      {/* Acciones por ítem */}
-                      <div className="flex gap-2">
-                        {tab === 'pendiente' && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className={`flex-1 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20 ${d.alerta_activa ? 'ring-2 ring-emerald-400' : ''}`}
-                              onClick={() => { setAvisandoId(d.id); setComentarioAviso(''); }}
-                            >
-                              <CheckCircle className="w-3.5 h-3.5 mr-1" />
-                              Avisar
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="flex-1 text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
-                              onClick={() => handleDescartar(d.id)}
-                            >
-                              <X className="w-3.5 h-3.5 mr-1" />
-                              Descartar
-                            </Button>
-                          </>
-                        )}
-                        {tab === 'avisado' && (
+                    {/* Acciones por ítem */}
+                    <div className="flex gap-2">
+                      {tab === 'pendiente' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className={`flex-1 text-xs text-emerald-600 border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-900/20 ${d.alerta_activa ? 'ring-2 ring-emerald-400' : ''}`}
+                            onClick={() => { setAvisandoId(d.id); setComentarioAviso(''); }}
+                          >
+                            <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                            Avisar
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
@@ -901,26 +759,37 @@ export function DeseadosClient({ session }: { session: any }) {
                             <X className="w-3.5 h-3.5 mr-1" />
                             Descartar
                           </Button>
-                        )}
-                        {tab === 'descartado' && isAdmin && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            className="flex-1 text-xs"
-                            onClick={() => handleEliminar(d.id)}
-                          >
-                            <Trash2 className="w-3.5 h-3.5 mr-1" />
-                            Eliminar
-                          </Button>
-                        )}
-                      </div>
+                        </>
+                      )}
+                      {tab === 'avisado' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="flex-1 text-xs text-red-500 border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20"
+                          onClick={() => handleDescartar(d.id)}
+                        >
+                          <X className="w-3.5 h-3.5 mr-1" />
+                          Descartar
+                        </Button>
+                      )}
+                      {tab === 'descartado' && isAdmin && (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="flex-1 text-xs"
+                          onClick={() => handleEliminar(d.id)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5 mr-1" />
+                          Eliminar
+                        </Button>
+                      )}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Modal confirmación aviso */}
