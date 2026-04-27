@@ -453,8 +453,8 @@ export function PrenotaDetallePage({ session, params }: { session: any; params: 
     );
     const totalStr = total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-    const lineas = prenota.items.map((i: any) =>
-      `• ${i.codigo} — ${i.descripcion || ''} (${i.cajas} cajas / ${i.unidades} uds) $${Number(i.precio).toFixed(2)}`
+  const lineas = prenota.items.map((i: any) =>
+      `• [${i.empresa_id === 1 ? 'SANJH' : 'VD'}] ${i.codigo} — ${i.descripcion || ''} (${i.cajas} cajas / ${i.unidades} uds) $${Number(i.precio).toFixed(2)}`
     ).join('\n');
 
     const mensaje = [
