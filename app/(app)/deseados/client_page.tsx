@@ -6,7 +6,7 @@ import { useAlertas } from '@/contexts/AlertasContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { PlusCircle, CheckCircle, X, Trash2, Bell, Camera } from 'lucide-react';
+import { PlusCircle, CheckCircle, X, Trash2, Bell, Camera, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -524,16 +524,15 @@ export function DeseadosClient({ session }: { session: any }) {
       )}
 
       {/* Buscador */}
-      {(!modoChina || pestanaChina === 'clientes') && (
-        <div className="relative">
-          <Input
-            placeholder="Buscar por descripción, código o cliente..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="h-10"
-          />
-        </div>
-      )}
+      <div className="relative max-w-lg">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+        <Input
+          placeholder="Buscar por descripción, código o cliente..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="h-10 pl-9"
+        />
+      </div>
 
       {/* Lista */}
       {(!modoChina || pestanaChina === 'clientes') && (loading ? (
