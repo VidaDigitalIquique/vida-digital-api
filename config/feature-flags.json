@@ -7,5 +7,6 @@
   "dashboard_despachos_recientes": false,
   "dashboard_layout_v2": false,
   "cliente-stars-visible": true,
-  "clientes-nuevos-visible": true
+  "clientes-nuevos-visible": true,
+  "ingresos-por-producto": false
 }

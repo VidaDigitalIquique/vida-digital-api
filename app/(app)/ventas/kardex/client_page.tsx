@@ -744,9 +744,13 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
 
                         {/* COSTO */}
                         {!ocultarPrecios && producto.costo != null && (
-                          <div className="text-sm flex items-center justify-between">
-                            <div className="text-xs uppercase tracking-wide text-zinc-400 font-medium">Costo</div>
-                            <div className="text-base font-bold text-zinc-900 dark:text-zinc-100">{formatUSD(producto.costo)}</div>
+                          <div className="text-xs text-zinc-500">
+                            <span className="uppercase tracking-wider font-medium">Costo</span>
+                            {producto.costo != null
+                              ? <span className="ml-2 font-semibold text-zinc-700 dark:text-zinc-200">{formatUSD(Number(producto.costo))}</span>
+                              : <span className="ml-2 text-zinc-400">—</span>
+                            }
+                            <span className="ml-1 text-zinc-400 text-[10px]">(últ. ingreso)</span>
                           </div>
                         )}
 

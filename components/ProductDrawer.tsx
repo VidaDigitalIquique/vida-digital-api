@@ -53,6 +53,14 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
     clientes_excluidos: number;
   } | null>(null);
   const [kardexLoading, setKardexLoading] = useState(false);
+  const [ingresos, setIngresos] = useState<Array<{
+    nroingreso: string;
+    costo: number;
+    fecha_ingreso: string;
+    saldo: number;
+    empresa_id: number;
+  }>>([]);
+  const [ingresosLoading, setIngresosLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -102,10 +110,20 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
         .then(data => { if (data) setKardex(data); })
         .catch(() => setKardex(null))
         .finally(() => setKardexLoading(false));
+
+      setIngresosLoading(true);
+      setIngresos([]);
+      fetch(`/api/productos/ingresos?codigo=${encodeURIComponent(producto.codigo)}`)
+        .then(res => (res.ok ? res.json() : null))
+        .then(data => { if (data) setIngresos(data.data || []); })
+        .catch(() => setIngresos([]))
+        .finally(() => setIngresosLoading(false));
     }
     if (!open) {
       setKardex(null);
       setKardexLoading(false);
+      setIngresos([]);
+      setIngresosLoading(false);
     }
   }, [open, producto?.codigo]);
 
@@ -336,8 +354,37 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
               <Table>
                 <TableBody>
                   <TableRow>
-                    <TableCell className="font-medium text-zinc-500">Costo</TableCell>
-                    <TableCell className="text-right">{formatUSD(producto.costo)}</TableCell>
+                    <TableCell colSpan={2} className="p-0">
+                      <div className="px-3 py-2">
+                        <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-1.5">Ingresos (Costo USD)</p>
+                        {ingresosLoading && (
+                          <p className="text-xs text-zinc-400 animate-pulse">Cargando...</p>
+                        )}
+                        {!ingresosLoading && ingresos.length === 0 && (
+                          <p className="text-xs text-zinc-400">—</p>
+                        )}
+                        {!ingresosLoading && ingresos.length > 0 && (
+                          <div className="space-y-1">
+                            {ingresos.map((ing, idx) => (
+                              <div key={idx} className="flex justify-between items-center text-xs gap-2">
+                                <span className="text-zinc-400 truncate max-w-[120px]" title={ing.nroingreso}>
+                                  {ing.nroingreso ?? '—'}
+                                </span>
+                                <span className="text-zinc-400 shrink-0">
+                                  {ing.fecha_ingreso ? ing.fecha_ingreso.slice(0, 10) : '—'}
+                                </span>
+                                <span className="text-zinc-500 shrink-0">
+                                  {ing.saldo} uds
+                                </span>
+                                <span className="font-semibold text-zinc-700 dark:text-zinc-200 shrink-0">
+                                  {formatUSD(ing.costo)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell className="font-medium text-zinc-500">Mín. vendido</TableCell>
