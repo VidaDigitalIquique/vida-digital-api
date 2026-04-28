@@ -452,6 +452,17 @@ export function DeseadosClient({ session }: { session: any }) {
         </div>
       )}
 
+      {/* Buscador */}
+      <div className="relative max-w-lg">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+        <Input
+          placeholder="Buscar por descripción, código o cliente..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="h-10 pl-9"
+        />
+      </div>
+
       {/* Alertas stock bajo — solo modo China */}
       {modoChina && pestanaChina === 'vida_digital' && alertasStock.length > 0 && (
         <div className="flex flex-col gap-3">
@@ -522,17 +533,6 @@ export function DeseadosClient({ session }: { session: any }) {
           </div>
         </div>
       )}
-
-      {/* Buscador */}
-      <div className="relative max-w-lg">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-        <Input
-          placeholder="Buscar por descripción, código o cliente..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="h-10 pl-9"
-        />
-      </div>
 
       {/* Lista */}
       {(!modoChina || pestanaChina === 'clientes') && (loading ? (
