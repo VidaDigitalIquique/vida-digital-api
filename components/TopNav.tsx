@@ -90,9 +90,7 @@ export function TopNav() {
                   onMouseEnter={() => openOnly('ventas')}
                   className={dropdownTrigger(
                     pathname.startsWith('/precios') ||
-                    pathname.startsWith('/ventas') ||
-                    pathname.startsWith('/prenotas') ||
-                    pathname.startsWith('/clientes-nuevos')
+                    pathname.startsWith('/ventas')
                   )}
                 >
                   Ventas <ChevronDown className="w-4 h-4" />
@@ -108,20 +106,24 @@ export function TopNav() {
                       <Users className="w-4 h-4" /> Kardex Cliente
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="/prenotas" className="flex items-center gap-2 w-full">
-                      <FileText className="w-4 h-4" /> Pre-Notas
-                    </Link>
-                  </DropdownMenuItem>
-                  {(isAdmin || rol === 'vendedor' || rol === 'supervisor') && (
-                    <DropdownMenuItem>
-                      <Link href="/clientes-nuevos" className="flex items-center gap-2 w-full">
-                        <UserPlus className="w-4 h-4" /> Clientes Nuevos
-                      </Link>
-                    </DropdownMenuItem>
-                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
+            )}
+
+            {/* Pre-Notas — admin y vendedor */}
+            {(isAdmin || rol === 'vendedor') && (
+              <Link href="/prenotas" className={navLink(pathname.startsWith('/prenotas'))}>
+                <FileText className="w-4 h-4" />
+                Pre-Notas
+              </Link>
+            )}
+
+            {/* Clientes Nuevos — admin, vendedor y supervisor */}
+            {(isAdmin || rol === 'vendedor' || rol === 'supervisor') && (
+              <Link href="/clientes-nuevos" className={navLink(pathname.startsWith('/clientes-nuevos'))}>
+                <UserPlus className="w-4 h-4" />
+                Clientes Nuevos
+              </Link>
             )}
 
             {/* 3. Catálogo — admin y vendedor */}
