@@ -89,6 +89,15 @@ export function DeseadosClient({ session }: { session: any }) {
   const [deseados, setDeseados] = useState<Deseado[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const alertasFiltradas = useMemo(() => {
+    if (!debouncedSearch.trim() || debouncedSearch.trim().length < 2) return alertasStock;
+    const q = debouncedSearch.trim().toLowerCase();
+    return alertasStock.filter(a =>
+      a.codigo.toLowerCase().includes(q) ||
+      a.detalle.toLowerCase().includes(q)
+    );
+  }, [alertasStock, debouncedSearch]);
+
   const clientesAgrupados = useMemo(() => {
     const map = new Map<string, ClienteAgrupado>();
     for (const d of deseados) {
@@ -468,14 +477,14 @@ export function DeseadosClient({ session }: { session: any }) {
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-2">
             <span className="text-sm font-bold text-orange-600 dark:text-orange-400">
-              ⚠️ Stock Bajo ({alertasStock.length})
+              ⚠️ Stock Bajo ({alertasFiltradas.length})
             </span>
             <span className="text-xs text-zinc-400">
               Productos con menos de 1 caja disponible
             </span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {alertasStock.map(alerta => (
+            {alertasFiltradas.map(alerta => (
               <div
                 key={alerta.id}
                 className="bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded-xl p-3 flex flex-col gap-2"
