@@ -89,15 +89,6 @@ export function DeseadosClient({ session }: { session: any }) {
   const [deseados, setDeseados] = useState<Deseado[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const alertasFiltradas = useMemo(() => {
-    if (!debouncedSearch.trim() || debouncedSearch.trim().length < 2) return alertasStock;
-    const q = debouncedSearch.trim().toLowerCase();
-    return alertasStock.filter(a =>
-      a.codigo.toLowerCase().includes(q) ||
-      a.detalle.toLowerCase().includes(q)
-    );
-  }, [alertasStock, debouncedSearch]);
-
   const clientesAgrupados = useMemo(() => {
     const map = new Map<string, ClienteAgrupado>();
     for (const d of deseados) {
@@ -119,6 +110,14 @@ export function DeseadosClient({ session }: { session: any }) {
 
   // --- Alertas stock bajo ---
   const [alertasStock, setAlertasStock] = useState<AlertaStock[]>([]);
+  const alertasFiltradas = useMemo(() => {
+    if (!debouncedSearch.trim() || debouncedSearch.trim().length < 2) return alertasStock;
+    const q = debouncedSearch.trim().toLowerCase();
+    return alertasStock.filter(a =>
+      a.codigo.toLowerCase().includes(q) ||
+      a.detalle.toLowerCase().includes(q)
+    );
+  }, [alertasStock, debouncedSearch]);
   const [loadingAlertas, setLoadingAlertas] = useState(false);
   const [deseadoModalExterno, setDeseadoModalExterno] = useState<{
     codigo: string;
