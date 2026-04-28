@@ -535,17 +535,19 @@ export function DeseadosClient({ session }: { session: any }) {
       )}
 
       {/* Lista */}
-      {loading ? (
+      {loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="h-40 bg-zinc-200 dark:bg-zinc-800 rounded-xl" />
           ))}
         </div>
-      ) : deseados.length === 0 ? (
+      )}
+      {!loading && deseados.length === 0 && (
         <div className="text-center py-16 text-zinc-400">
           No hay productos deseados en esta categoría.
         </div>
-      ) : (
+      )}
+      {!loading && deseados.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-12">
           {clientesAgrupados.map(cliente => (
             <div
@@ -706,7 +708,7 @@ export function DeseadosClient({ session }: { session: any }) {
             </div>
           ))}
         </div>
-      ) : null}
+      )}
 
       {/* Modal confirmación aviso */}
       <Dialog
