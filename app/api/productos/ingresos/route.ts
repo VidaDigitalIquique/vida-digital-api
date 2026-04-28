@@ -17,14 +17,38 @@ export async function GET(request: Request) {
   }
 
   const rows = await sql`
-    SELECT
-      nroingreso,
-      costo::float as costo,
-      fecha_ingreso::text as fecha_ingreso,
-      saldo::float as saldo,
-      empresa_id
-    FROM public.productos
-    WHERE codigo = ${codigo}
+    SELECT nroingreso, costo, saldo, empresa_id, fecha_ingreso
+    FROM (
+      SELECT
+        p.nroingreso,
+        p.costo::float        AS costo,
+        p.saldo::float        AS saldo,
+        p.empresa_id,
+        MAX(inv.fechaing)::text AS fecha_ingreso
+      FROM public.productos p
+      LEFT JOIN sanjh.inventar inv
+        ON  inv.codunico = p.codigo
+        AND inv.knumdocu = split_part(p.nroingreso, '-', 3)
+      WHERE p.codigo = ${codigo}
+        AND p.empresa_id = 1
+      GROUP BY p.nroingreso, p.costo, p.saldo, p.empresa_id
+
+      UNION ALL
+
+      SELECT
+        p.nroingreso,
+        p.costo::float        AS costo,
+        p.saldo::float        AS saldo,
+        p.empresa_id,
+        MAX(inv.fechaing)::text AS fecha_ingreso
+      FROM public.productos p
+      LEFT JOIN vida.inventar inv
+        ON  inv.codunico = p.codigo
+        AND inv.knumdocu = split_part(p.nroingreso, '-', 3)
+      WHERE p.codigo = ${codigo}
+        AND p.empresa_id = 2
+      GROUP BY p.nroingreso, p.costo, p.saldo, p.empresa_id
+    ) combined
     ORDER BY fecha_ingreso DESC NULLS LAST
   `;
 
