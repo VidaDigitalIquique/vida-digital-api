@@ -28,7 +28,11 @@ export async function GET(request: Request) {
         WHERE estado = 'aceptada' AND caduca_at < NOW()
       `;
       const rows = usuarioId
-        ? await sql`SELECT * FROM deudas_solicitudes WHERE user_id = ${usuarioId} ORDER BY solicitado_at DESC`
+        ? await sql`
+            SELECT ds.*,
+              COALESCE((SELECT SUM(dp.monto) FROM deuda_pagos dp WHERE dp.deuda_id = ds.id), 0) AS pagos_total
+            FROM deudas_solicitudes ds
+            WHERE ds.user_id = ${usuarioId} ORDER BY ds.solicitado_at DESC`
         : estado
           ? await sql`SELECT * FROM deudas_solicitudes WHERE estado = ${estado} ORDER BY solicitado_at DESC`
           : await sql`SELECT * FROM deudas_solicitudes ORDER BY solicitado_at DESC`;
