@@ -273,6 +273,11 @@ export function TopNav() {
                       <Users className="w-4 h-4" /> Sueldos
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/admin/deudas" className="flex items-center gap-2 w-full">
+                      <Banknote className="w-4 h-4" /> Deudas
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
