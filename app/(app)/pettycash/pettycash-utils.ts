@@ -14,6 +14,11 @@ export function saldoColor(saldo: number): string {
   return "text-zinc-500";
 }
 
+export function formatFecha(fecha: string): string {
+  const [y, m, d] = fecha.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
 type MovimientoLike = { fecha: string; tipo: string; concepto: string; monto: string | number };
 
 export function buildWhatsAppText(

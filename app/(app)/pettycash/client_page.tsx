@@ -4,11 +4,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { formatMonto, saldoColor, buildWhatsAppText } from './pettycash-utils';
+import { formatMonto, saldoColor, buildWhatsAppText, formatFecha } from './pettycash-utils';
 
 type Movimiento = {
   id: number;
   fecha: string;
+  created_at: string;
   tipo: 'ingreso' | 'egreso';
   concepto: string;
   monto: number;
@@ -40,8 +41,14 @@ export function PettycashClient() {
 
   // Formulario
   const [formTipo, setFormTipo] = useState<'ingreso' | 'egreso'>('ingreso');
-  const [formConcepto, setFormConcepto] = useState('');
+  const [formConcepto, setFormConcepto] = useState('Pettycash');
   const [formMonto, setFormMonto] = useState('');
+
+  const handleTipoChange = (newTipo: 'ingreso' | 'egreso') => {
+    setFormTipo(newTipo);
+    if (newTipo === 'ingreso' && formConcepto === '') setFormConcepto('Pettycash');
+    if (newTipo === 'egreso' && formConcepto === 'Pettycash') setFormConcepto('');
+  };
   const [formFecha, setFormFecha] = useState(today());
 
   const fetchMovimientos = useCallback(async () => {
@@ -82,7 +89,7 @@ export function PettycashClient() {
       });
       if (res.ok) {
         toast.success('Movimiento registrado');
-        setFormConcepto('');
+        setFormConcepto(formTipo === 'ingreso' ? 'Pettycash' : '');
         setFormMonto('');
         setFormFecha(today());
         fetchMovimientos();
@@ -120,6 +127,7 @@ export function PettycashClient() {
           <thead>
             <tr className="border-b">
               <th className="text-left py-1 pr-3">Fecha</th>
+              <th className="text-left py-1 pr-3">Hora</th>
               <th className="text-left py-1 pr-3">Tipo</th>
               <th className="text-left py-1 pr-3">Concepto</th>
               <th className="text-right py-1">Monto</th>
@@ -128,7 +136,8 @@ export function PettycashClient() {
           <tbody>
             {movimientos.map(m => (
               <tr key={m.id} className="border-b border-zinc-100">
-                <td className="py-1 pr-3">{m.fecha}</td>
+                <td className="py-1 pr-3">{formatFecha(m.fecha)}</td>
+                <td className="py-1 pr-3">{m.created_at ? new Date(m.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
                 <td className="py-1 pr-3">{m.tipo === 'egreso' ? 'Gasto' : 'Ingreso'}</td>
                 <td className="py-1 pr-3">{m.concepto}</td>
                 <td className={`py-1 text-right ${m.tipo === 'ingreso' ? 'text-emerald-700' : 'text-red-700'}`}>
@@ -161,7 +170,7 @@ export function PettycashClient() {
         <div className="flex flex-wrap gap-3">
           <select
             value={formTipo}
-            onChange={e => setFormTipo(e.target.value as 'ingreso' | 'egreso')}
+            onChange={e => handleTipoChange(e.target.value as 'ingreso' | 'egreso')}
             className="border rounded-md px-3 py-2 text-sm bg-white dark:bg-zinc-800"
           >
             <option value="ingreso">Ingreso</option>
@@ -225,6 +234,7 @@ export function PettycashClient() {
             <thead className="bg-zinc-50 dark:bg-zinc-800 text-zinc-500 text-xs uppercase">
               <tr>
                 <th className="px-4 py-3 text-left">Fecha</th>
+                <th className="px-4 py-3 text-left">Hora</th>
                 <th className="px-4 py-3 text-left">Tipo</th>
                 <th className="px-4 py-3 text-left">Concepto</th>
                 <th className="px-4 py-3 text-right">Monto</th>
@@ -233,7 +243,8 @@ export function PettycashClient() {
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {movimientos.map(m => (
                 <tr key={m.id} className={`transition-colors ${m.tipo === 'ingreso' ? 'bg-emerald-50/60 hover:bg-emerald-100/60 dark:bg-emerald-900/10 dark:hover:bg-emerald-900/20' : 'bg-red-50/60 hover:bg-red-100/60 dark:bg-red-900/10 dark:hover:bg-red-900/20'}`}>
-                  <td className="px-4 py-3 text-zinc-500">{m.fecha}</td>
+                  <td className="px-4 py-3 text-zinc-500">{formatFecha(m.fecha)}</td>
+                  <td className="px-4 py-3 text-zinc-500">{m.created_at ? new Date(m.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                       m.tipo === 'ingreso'

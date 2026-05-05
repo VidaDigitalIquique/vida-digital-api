@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { buildWhatsAppText } from './pettycash-utils';
+import { buildWhatsAppText, formatFecha } from './pettycash-utils';
+
+describe('formatFecha', () => {
+  it('formatea fecha ISO a DD de MMMM de YYYY en español', () => {
+    expect(formatFecha('2026-05-03')).toBe('3 de mayo de 2026');
+    expect(formatFecha('2026-01-15')).toBe('15 de enero de 2026');
+    expect(formatFecha('2026-12-31')).toBe('31 de diciembre de 2026');
+  });
+});
 
 const movs = [
   { id: 1, fecha: '2026-05-03', tipo: 'ingreso', concepto: 'Venta', monto: 50000, creado_por: '' },
