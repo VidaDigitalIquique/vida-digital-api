@@ -10,8 +10,7 @@ CREATE TABLE IF NOT EXISTS public.deudas_solicitudes (
   solicitado_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   aceptado_at      TIMESTAMPTZ,
   confirmado_at    TIMESTAMPTZ,
-  caduca_at        TIMESTAMPTZ NOT NULL
-                   GENERATED ALWAYS AS (solicitado_at + INTERVAL '7 days') STORED,
+  caduca_at        TIMESTAMPTZ NOT NULL,
   rechazado_motivo TEXT,
   creado_por       TEXT NOT NULL
 );

@@ -63,8 +63,8 @@ export async function POST(request: Request) {
     const userNombre = (session!.user as any).nombre as string;
 
     const [deuda] = await sql`
-      INSERT INTO deudas_solicitudes (user_id, user_nombre, tipo, monto, descripcion, creado_por)
-      VALUES (${userId}, ${userNombre}, ${tipo}, ${monto}, ${descripcion ?? null}, ${userNombre})
+      INSERT INTO deudas_solicitudes (user_id, user_nombre, tipo, monto, descripcion, creado_por, caduca_at)
+      VALUES (${userId}, ${userNombre}, ${tipo}, ${monto}, ${descripcion ?? null}, ${userNombre}, NOW() + INTERVAL '7 days')
       RETURNING *
     `;
 
