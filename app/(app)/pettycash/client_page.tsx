@@ -255,6 +255,7 @@ export function PettycashClient() {
           </table>
         </div>
       )}
+      </div>
     </div>
   );
 }
