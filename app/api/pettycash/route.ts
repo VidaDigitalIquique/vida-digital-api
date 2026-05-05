@@ -34,9 +34,9 @@ export async function GET(request: Request) {
     const rows = await sql`
       SELECT * FROM pettycash_movimientos
       WHERE
-        (${tipo ?? null} IS NULL OR tipo = ${tipo ?? ""})
-        AND (${desde ?? null} IS NULL OR fecha >= ${desde ?? ""}::date)
-        AND (${hasta ?? null} IS NULL OR fecha <= ${hasta ?? ""}::date)
+        (${tipo ?? null}::text IS NULL OR tipo = ${tipo ?? null})
+        AND (${desde ?? null}::date IS NULL OR fecha >= ${desde ?? null}::date)
+        AND (${hasta ?? null}::date IS NULL OR fecha <= ${hasta ?? null}::date)
       ORDER BY fecha DESC, created_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
@@ -44,9 +44,9 @@ export async function GET(request: Request) {
     const [countRow] = await sql`
       SELECT COUNT(*)::int AS total FROM pettycash_movimientos
       WHERE
-        (${tipo ?? null} IS NULL OR tipo = ${tipo ?? ""})
-        AND (${desde ?? null} IS NULL OR fecha >= ${desde ?? ""}::date)
-        AND (${hasta ?? null} IS NULL OR fecha <= ${hasta ?? ""}::date)
+        (${tipo ?? null}::text IS NULL OR tipo = ${tipo ?? null})
+        AND (${desde ?? null}::date IS NULL OR fecha >= ${desde ?? null}::date)
+        AND (${hasta ?? null}::date IS NULL OR fecha <= ${hasta ?? null}::date)
     `;
 
     return NextResponse.json({

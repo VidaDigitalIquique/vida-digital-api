@@ -17,6 +17,16 @@ type Movimiento = {
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+function firstDayOfMonth(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+}
+
+function lastDayOfMonth(): string {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10);
+}
+
 export function PettycashClient() {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [saldo, setSaldo] = useState(0);
@@ -25,8 +35,8 @@ export function PettycashClient() {
 
   // Filtros
   const [filtroTipo, setFiltroTipo] = useState('');
-  const [filtroDesde, setFiltroDesde] = useState('');
-  const [filtroHasta, setFiltroHasta] = useState('');
+  const [filtroDesde, setFiltroDesde] = useState(firstDayOfMonth);
+  const [filtroHasta, setFiltroHasta] = useState(lastDayOfMonth);
 
   // Formulario
   const [formTipo, setFormTipo] = useState<'ingreso' | 'egreso'>('ingreso');
@@ -107,7 +117,7 @@ export function PettycashClient() {
             className="border rounded-md px-3 py-2 text-sm bg-white dark:bg-zinc-800"
           >
             <option value="ingreso">Ingreso</option>
-            <option value="egreso">Egreso</option>
+            <option value="egreso">Gasto</option>
           </select>
           <Input
             placeholder="Concepto"
@@ -145,11 +155,11 @@ export function PettycashClient() {
         >
           <option value="">Todos</option>
           <option value="ingreso">Ingresos</option>
-          <option value="egreso">Egresos</option>
+          <option value="egreso">Gastos</option>
         </select>
         <Input type="date" value={filtroDesde} onChange={e => setFiltroDesde(e.target.value)} className="w-40" placeholder="Desde" />
         <Input type="date" value={filtroHasta} onChange={e => setFiltroHasta(e.target.value)} className="w-40" placeholder="Hasta" />
-        <Button variant="outline" onClick={() => { setFiltroTipo(''); setFiltroDesde(''); setFiltroHasta(''); }}>
+        <Button variant="outline" onClick={() => { setFiltroTipo(''); setFiltroDesde(firstDayOfMonth()); setFiltroHasta(lastDayOfMonth()); }}>
           Limpiar
         </Button>
       </div>
@@ -174,7 +184,7 @@ export function PettycashClient() {
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {movimientos.map(m => (
-                <tr key={m.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                <tr key={m.id} className={`transition-colors ${m.tipo === 'ingreso' ? 'bg-emerald-50/60 hover:bg-emerald-100/60 dark:bg-emerald-900/10 dark:hover:bg-emerald-900/20' : 'bg-red-50/60 hover:bg-red-100/60 dark:bg-red-900/10 dark:hover:bg-red-900/20'}`}>
                   <td className="px-4 py-3 text-zinc-500">{m.fecha}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -182,7 +192,7 @@ export function PettycashClient() {
                         ? 'bg-emerald-100 text-emerald-700'
                         : 'bg-red-100 text-red-700'
                     }`}>
-                      {m.tipo}
+                      {m.tipo === 'egreso' ? 'gasto' : m.tipo}
                     </span>
                   </td>
                   <td className="px-4 py-3">{m.concepto}</td>
