@@ -95,18 +95,23 @@ export async function GET(request: Request, { params }: { params: { slug: string
       productos = productos.filter((p: any) => Number(p.saldo) > 0);
     }
     if (soloNuevo) {
-      const nroIngresoRows = cat.ambas_empresas
-        ? await sql`SELECT DISTINCT nroingreso FROM productos WHERE nroingreso IS NOT NULL`
-        : await sql`SELECT DISTINCT nroingreso FROM productos WHERE empresa_id = ${cat.empresa_id} AND nroingreso IS NOT NULL`;
+      // El ingreso más reciente siempre se determina desde cat.empresa_id (Vida Digital),
+      // aunque ambas_empresas=true. Sanjh tiene NROINGRESOs históricos con números más altos
+      // que distorsionan la selección si se mezclan.
+      const nroIngresoRows = await sql`
+        SELECT DISTINCT nroingreso FROM productos
+        WHERE empresa_id = ${cat.empresa_id} AND nroingreso IS NOT NULL
+      `;
 
       const nroIngresos = nroIngresoRows.map((r: any) => r.nroingreso as string);
       const [latestKey] = getTopShipmentKeys(nroIngresos, 1);
 
       let latestCodigos = new Set<string>();
       if (latestKey) {
-        const codigoRows = cat.ambas_empresas
-          ? await sql`SELECT DISTINCT UPPER(codigo) as codigo FROM productos WHERE nroingreso LIKE ${'%' + latestKey + '%'}`
-          : await sql`SELECT DISTINCT UPPER(codigo) as codigo FROM productos WHERE empresa_id = ${cat.empresa_id} AND nroingreso LIKE ${'%' + latestKey + '%'}`;
+        const codigoRows = await sql`
+          SELECT DISTINCT UPPER(codigo) as codigo FROM productos
+          WHERE empresa_id = ${cat.empresa_id} AND nroingreso LIKE ${'%' + latestKey + '%'}
+        `;
         latestCodigos = new Set(codigoRows.map((r: any) => r.codigo as string));
       }
 
