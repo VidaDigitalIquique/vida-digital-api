@@ -83,22 +83,9 @@ export function SpellCheckedInput({
     setInternalValue(newText)
     setMatches([])
     setTooltipMatch(null)
-    if (onChange) {
-      const nativeInput = inputRef.current
-      if (nativeInput) {
-        Object.defineProperty(nativeInput, 'value', {
-          writable: true,
-          configurable: true,
-          value: newText,
-        })
-        const syntheticEvent = new Event('input', { bubbles: true })
-        Object.defineProperty(syntheticEvent, 'target', {
-          writable: false,
-          value: nativeInput,
-        })
-        onChange(syntheticEvent as unknown as React.ChangeEvent<HTMLInputElement>)
-      }
-    }
+    onChange?.({ target: { value: newText } } as React.ChangeEvent<HTMLInputElement>)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => checkSpelling(newText), 800)
   }
 
   function renderHighlighted() {
