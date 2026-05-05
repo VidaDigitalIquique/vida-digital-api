@@ -59,6 +59,16 @@ export async function POST(request: Request) {
     const trabajador_nombre = usuarioRows[0].nombre as string;
     const concepto = buildConceptoPettycash(trabajador_nombre, mes, anio);
 
+    const existing = await sql`
+      SELECT id FROM sueldos WHERE usuario_id = ${usuario_id} AND mes = ${mes} AND anio = ${anio}
+    `;
+    if (existing.length > 0) {
+      return NextResponse.json(
+        { error: { message: `Ya existe un sueldo registrado para ${trabajador_nombre} en ${mes}/${anio}` } },
+        { status: 409 }
+      );
+    }
+
     const [sueldo] = await sql`
       INSERT INTO sueldos (usuario_id, trabajador_nombre, mes, anio, monto_base, monto_final, creado_por)
       VALUES (${usuario_id}, ${trabajador_nombre}, ${mes}, ${anio}, ${monto_base}, ${monto_final}, ${creadoPor})

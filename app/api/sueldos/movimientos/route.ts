@@ -33,7 +33,15 @@ export async function GET(request: Request) {
       0
     );
 
-    return NextResponse.json({ movimientos, total_descuentos });
+    const sueldoRows = await sql`
+      SELECT id, monto_base, monto_final, pagado_at, created_at
+      FROM sueldos
+      WHERE usuario_id = ${parseInt(usuario_id)} AND mes = ${mes} AND anio = ${anio}
+      LIMIT 1
+    `;
+    const sueldo = sueldoRows[0] ?? null;
+
+    return NextResponse.json({ movimientos, total_descuentos, sueldo });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

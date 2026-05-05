@@ -45,6 +45,7 @@ export function SueldosClient() {
   const [saving, setSaving] = useState(false);
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [totalDescuentos, setTotalDescuentos] = useState(0);
+  const [sueldoRegistrado, setSueldoRegistrado] = useState<{ monto_base: number; monto_final: number; pagado_at: string | null } | null>(null);
   const [loadingMovs, setLoadingMovs] = useState(false);
 
   const montoFinalCalc = Math.max(0, parseFloat(montoBase || '0') - totalDescuentos);
@@ -55,14 +56,16 @@ export function SueldosClient() {
       .then(d => setUsuarios(d.data ?? []));
   }, []);
 
-  useEffect(() => {
-    if (!usuarioId) { setMovimientos([]); setTotalDescuentos(0); return; }
+  const fetchMovimientos = useCallback(() => {
+    if (!usuarioId) { setMovimientos([]); setTotalDescuentos(0); setSueldoRegistrado(null); return; }
     setLoadingMovs(true);
     fetch(`/api/sueldos/movimientos?usuario_id=${usuarioId}&mes=${formMes}&anio=${formAnio}`)
       .then(r => r.json())
-      .then(d => { setMovimientos(d.movimientos ?? []); setTotalDescuentos(d.total_descuentos ?? 0); })
+      .then(d => { setMovimientos(d.movimientos ?? []); setTotalDescuentos(d.total_descuentos ?? 0); setSueldoRegistrado(d.sueldo ?? null); })
       .finally(() => setLoadingMovs(false));
   }, [usuarioId, formMes, formAnio]);
+
+  useEffect(() => { fetchMovimientos(); }, [fetchMovimientos]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -100,6 +103,7 @@ export function SueldosClient() {
         toast.success('Sueldo registrado');
         setMontoBase('');
         load();
+        fetchMovimientos();
       } else {
         const { error } = await res.json();
         toast.error(error?.message ?? JSON.stringify(error) ?? 'Error al registrar');
@@ -163,13 +167,11 @@ export function SueldosClient() {
       {usuarioId && (
         <div className="border rounded-lg overflow-hidden">
           <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 text-xs font-semibold text-zinc-500 uppercase flex justify-between">
-            <span>Descuentos del mes — {nombreMes(formMes)} {formAnio}</span>
+            <span>Detalle del mes — {nombreMes(formMes)} {formAnio}</span>
             {totalDescuentos > 0 && <span className="text-red-600">−{formatMonto(totalDescuentos)}</span>}
           </div>
           {loadingMovs ? (
             <p className="px-4 py-3 text-sm text-zinc-400 animate-pulse">Cargando...</p>
-          ) : movimientos.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-zinc-400">Sin adelantos ni quincenas este mes.</p>
           ) : (
             <table className="w-full text-sm">
               <thead className="text-xs uppercase text-zinc-400 border-b">
@@ -187,6 +189,16 @@ export function SueldosClient() {
                     <td className="px-4 py-2 text-right text-red-600">−{formatMonto(parseFloat(String(m.monto)))}</td>
                   </tr>
                 ))}
+                {sueldoRegistrado && (
+                  <tr className="bg-emerald-50/60 dark:bg-emerald-900/10 font-medium">
+                    <td className="px-4 py-2">Pago sueldo</td>
+                    <td className="px-4 py-2 text-zinc-500">Base: {formatMonto(sueldoRegistrado.monto_base)}</td>
+                    <td className="px-4 py-2 text-right text-emerald-700">{formatMonto(sueldoRegistrado.monto_final)}</td>
+                  </tr>
+                )}
+                {!sueldoRegistrado && movimientos.length === 0 && (
+                  <tr><td colSpan={3} className="px-4 py-3 text-zinc-400 text-center">Sin movimientos este mes.</td></tr>
+                )}
               </tbody>
             </table>
           )}
