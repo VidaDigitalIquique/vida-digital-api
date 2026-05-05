@@ -33,7 +33,7 @@ export function SpellCheckedInput({
   async function checkSpelling(text: string) {
     if (text.length < 4) { setMatches([]); return }
     try {
-      const res = await fetch('https://api.languagetool.org/v1/check', {
+      const res = await fetch('https://api.languagetool.org/v2/check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: new URLSearchParams({ language: 'es', text }),
