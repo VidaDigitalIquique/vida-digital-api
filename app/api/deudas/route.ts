@@ -40,8 +40,18 @@ export async function GET(request: Request) {
     }
 
     const rows = estado
-      ? await sql`SELECT * FROM deudas_solicitudes WHERE user_id = ${userId} AND estado = ${estado} ORDER BY solicitado_at DESC`
-      : await sql`SELECT * FROM deudas_solicitudes WHERE user_id = ${userId} ORDER BY solicitado_at DESC`;
+      ? await sql`
+          SELECT ds.*,
+            COALESCE((SELECT SUM(dp.monto) FROM deuda_pagos dp WHERE dp.deuda_id = ds.id), 0) AS pagos_total
+          FROM deudas_solicitudes ds
+          WHERE ds.user_id = ${userId} AND ds.tipo = 'prestamo' AND ds.estado = ${estado}
+          ORDER BY ds.solicitado_at DESC`
+      : await sql`
+          SELECT ds.*,
+            COALESCE((SELECT SUM(dp.monto) FROM deuda_pagos dp WHERE dp.deuda_id = ds.id), 0) AS pagos_total
+          FROM deudas_solicitudes ds
+          WHERE ds.user_id = ${userId} AND ds.tipo = 'prestamo'
+          ORDER BY ds.solicitado_at DESC`;
     return NextResponse.json({ deudas: rows });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
