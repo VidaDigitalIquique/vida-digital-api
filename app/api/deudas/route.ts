@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     const estado = tipo === "prestamo" ? "aceptada" : "confirmada";
     const caduca_at = tipo === "prestamo"
       ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      : null;
+      : new Date().toISOString();
 
     const [deuda] = await sql`
       INSERT INTO deudas_solicitudes
