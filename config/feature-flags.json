@@ -9,5 +9,6 @@
   "cliente-stars-visible": true,
   "clientes-nuevos-visible": true,
   "ingresos-por-producto": false,
-  "catalogo-margen-editable": false
+  "catalogo-margen-editable": false,
+  "pettycash": false
 }

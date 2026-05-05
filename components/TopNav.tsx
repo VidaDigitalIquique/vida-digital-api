@@ -28,7 +28,8 @@ import {
   Package,
   UserPlus,
   FileText,
-  ClipboardList
+  ClipboardList,
+  Wallet
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 
@@ -251,6 +252,11 @@ export function TopNav() {
                   <DropdownMenuItem>
                     <Link href="/admin/kardex-exclusiones" className="flex items-center gap-2 w-full">
                       <Filter className="w-4 h-4" /> Exclusiones Kardex
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/pettycash" className="flex items-center gap-2 w-full">
+                      <Wallet className="w-4 h-4" /> Pettycash
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
