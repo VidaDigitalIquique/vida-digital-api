@@ -26,20 +26,15 @@ export async function GET(request: Request) {
         SET estado = 'caduca'
         WHERE estado = 'aceptada' AND caduca_at < NOW()
       `;
-      const rows = await sql`
-        SELECT * FROM deudas_solicitudes
-        WHERE (${estado ?? null} IS NULL OR estado = ${estado ?? ""})
-        ORDER BY solicitado_at DESC
-      `;
+      const rows = estado
+        ? await sql`SELECT * FROM deudas_solicitudes WHERE estado = ${estado} ORDER BY solicitado_at DESC`
+        : await sql`SELECT * FROM deudas_solicitudes ORDER BY solicitado_at DESC`;
       return NextResponse.json({ deudas: rows });
     }
 
-    const rows = await sql`
-      SELECT * FROM deudas_solicitudes
-      WHERE user_id = ${userId}
-        AND (${estado ?? null} IS NULL OR estado = ${estado ?? ""})
-      ORDER BY solicitado_at DESC
-    `;
+    const rows = estado
+      ? await sql`SELECT * FROM deudas_solicitudes WHERE user_id = ${userId} AND estado = ${estado} ORDER BY solicitado_at DESC`
+      : await sql`SELECT * FROM deudas_solicitudes WHERE user_id = ${userId} ORDER BY solicitado_at DESC`;
     return NextResponse.json({ deudas: rows });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
