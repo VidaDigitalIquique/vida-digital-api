@@ -6,6 +6,7 @@ describe('formatFecha', () => {
     expect(formatFecha('2026-05-03')).toBe('3 de mayo de 2026');
     expect(formatFecha('2026-01-15')).toBe('15 de enero de 2026');
     expect(formatFecha('2026-12-31')).toBe('31 de diciembre de 2026');
+    expect(formatFecha('2026-05-03T00:00:00.000Z')).toBe('3 de mayo de 2026');
   });
 });
 

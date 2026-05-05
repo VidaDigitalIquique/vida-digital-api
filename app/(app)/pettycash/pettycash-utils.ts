@@ -15,7 +15,7 @@ export function saldoColor(saldo: number): string {
 }
 
 export function formatFecha(fecha: string): string {
-  const [y, m, d] = fecha.split('-').map(Number);
+  const [y, m, d] = fecha.slice(0, 10).split('-').map(Number);
   return new Date(y, m - 1, d).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
