@@ -5,12 +5,19 @@ import { formatMonto } from '../pettycash/pettycash-utils';
 
 interface Sueldo {
   id: number;
+  usuario_id: number;
   trabajador_nombre: string;
   mes: number;
   anio: number;
   monto_base: number;
   monto_final: number;
   pagado_at: string | null;
+}
+
+interface Usuario {
+  id: number;
+  nombre: string;
+  rol: string;
 }
 
 const ANIOS = [2024, 2025, 2026, 2027];
@@ -21,12 +28,19 @@ export function SueldosClient() {
   const [anioFiltro, setAnioFiltro] = useState(hoy.getFullYear());
   const [sueldos, setSueldos] = useState<Sueldo[]>([]);
   const [loading, setLoading] = useState(false);
-  const [nombre, setNombre] = useState('');
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [usuarioId, setUsuarioId] = useState<number | ''>('');
   const [formMes, setFormMes] = useState(hoy.getMonth() + 1);
   const [formAnio, setFormAnio] = useState(hoy.getFullYear());
   const [montoBase, setMontoBase] = useState('');
   const [montoFinal, setMontoFinal] = useState('');
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/usuarios')
+      .then(r => r.json())
+      .then(d => setUsuarios(d.data ?? []));
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -45,12 +59,13 @@ export function SueldosClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!usuarioId) return;
     setSaving(true);
     await fetch('/api/sueldos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        trabajador_nombre: nombre,
+        usuario_id: usuarioId,
         mes: formMes,
         anio: formAnio,
         monto_base: parseFloat(montoBase),
@@ -58,7 +73,7 @@ export function SueldosClient() {
       }),
     });
     setSaving(false);
-    setNombre('');
+    setUsuarioId('');
     setMontoBase('');
     setMontoFinal('');
     load();
@@ -69,13 +84,17 @@ export function SueldosClient() {
       <h1 className="text-3xl font-extrabold tracking-tight">Sueldos</h1>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-2 md:grid-cols-6 gap-3 p-4 border rounded-lg bg-white dark:bg-zinc-900">
-        <input
+        <select
           className="border rounded px-3 py-2 text-sm col-span-2"
-          placeholder="Nombre trabajador"
-          value={nombre}
-          onChange={e => setNombre(e.target.value)}
+          value={usuarioId}
+          onChange={e => setUsuarioId(e.target.value ? Number(e.target.value) : '')}
           required
-        />
+        >
+          <option value="">Seleccionar trabajador...</option>
+          {usuarios.map(u => (
+            <option key={u.id} value={u.id}>{u.nombre}</option>
+          ))}
+        </select>
         <select className="border rounded px-3 py-2 text-sm" value={formMes} onChange={e => setFormMes(Number(e.target.value))}>
           {Array.from({ length: 12 }, (_, i) => (
             <option key={i + 1} value={i + 1}>{nombreMes(i + 1)}</option>

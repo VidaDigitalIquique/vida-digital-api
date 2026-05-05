@@ -21,13 +21,17 @@ export async function GET(request: Request) {
 
   try {
     const rows = await sql`
-      SELECT * FROM sueldos
+      SELECT s.id, s.usuario_id, s.trabajador_nombre, s.mes, s.anio,
+             s.monto_base, s.monto_final, s.pagado_at, s.creado_por, s.created_at,
+             u.rut AS trabajador_rut
+      FROM sueldos s
+      LEFT JOIN usuarios u ON u.id = s.usuario_id
       WHERE
-        (${mes ?? null} IS NULL OR mes = ${mes ? parseInt(mes) : 0})
-        AND (${anio ?? null} IS NULL OR anio = ${anio ? parseInt(anio) : 0})
-      ORDER BY anio DESC, mes DESC, created_at DESC
+        (${mes ?? null} IS NULL OR s.mes = ${mes ? parseInt(mes) : 0})
+        AND (${anio ?? null} IS NULL OR s.anio = ${anio ? parseInt(anio) : 0})
+      ORDER BY s.anio DESC, s.mes DESC, s.created_at DESC
     `;
-    return NextResponse.json({ data: rows });
+    return NextResponse.json({ sueldos: rows });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -45,13 +49,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { trabajador_nombre, mes, anio, monto_base, monto_final } = parsed.data;
+    const { usuario_id, mes, anio, monto_base, monto_final } = parsed.data;
     const creadoPor = (session!.user as any).nombre ?? (session!.user as any).id;
+
+    const usuarioRows = await sql`SELECT nombre FROM usuarios WHERE id = ${usuario_id}`;
+    if (usuarioRows.length === 0) {
+      return NextResponse.json({ error: "Usuario no encontrado" }, { status: 400 });
+    }
+    const trabajador_nombre = usuarioRows[0].nombre as string;
     const concepto = buildConceptoPettycash(trabajador_nombre, mes, anio);
 
     const [sueldo] = await sql`
-      INSERT INTO sueldos (trabajador_nombre, mes, anio, monto_base, monto_final, creado_por)
-      VALUES (${trabajador_nombre}, ${mes}, ${anio}, ${monto_base}, ${monto_final}, ${creadoPor})
+      INSERT INTO sueldos (usuario_id, trabajador_nombre, mes, anio, monto_base, monto_final, creado_por)
+      VALUES (${usuario_id}, ${trabajador_nombre}, ${mes}, ${anio}, ${monto_base}, ${monto_final}, ${creadoPor})
       RETURNING *
     `;
 
