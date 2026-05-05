@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { formatMonto, saldoColor } from './pettycash-utils';
+import { formatMonto, saldoColor, buildWhatsAppText } from './pettycash-utils';
 
 type Movimiento = {
   id: number;
@@ -97,9 +97,57 @@ export function PettycashClient() {
     }
   };
 
+  const handlePrint = () => window.print();
+
+  const handleWhatsApp = async () => {
+    const text = buildWhatsAppText(movimientos, saldo, filtroDesde, filtroHasta);
+    if (navigator.share) {
+      try { await navigator.share({ text }); return; } catch {}
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   return (
     <div className="flex flex-col gap-6 w-full fade-in">
-      <h1 className="text-3xl font-extrabold tracking-tight">Pettycash</h1>
+      {/* Layout solo impresión */}
+      <div className="hidden print:block text-sm">
+        <h1 className="text-xl font-bold mb-1">Pettycash</h1>
+        {filtroDesde && filtroHasta && (
+          <p className="text-zinc-500 mb-1">Período: {filtroDesde} – {filtroHasta}</p>
+        )}
+        <p className="font-semibold mb-4">Saldo: {formatMonto(saldo)}</p>
+        <table className="w-full border-collapse text-xs">
+          <thead>
+            <tr className="border-b">
+              <th className="text-left py-1 pr-3">Fecha</th>
+              <th className="text-left py-1 pr-3">Tipo</th>
+              <th className="text-left py-1 pr-3">Concepto</th>
+              <th className="text-right py-1">Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            {movimientos.map(m => (
+              <tr key={m.id} className="border-b border-zinc-100">
+                <td className="py-1 pr-3">{m.fecha}</td>
+                <td className="py-1 pr-3">{m.tipo === 'egreso' ? 'Gasto' : 'Ingreso'}</td>
+                <td className="py-1 pr-3">{m.concepto}</td>
+                <td className={`py-1 text-right ${m.tipo === 'ingreso' ? 'text-emerald-700' : 'text-red-700'}`}>
+                  {m.tipo === 'egreso' ? '-' : ''}{formatMonto(parseFloat(String(m.monto)))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="print:hidden flex flex-col gap-6 w-full">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="text-3xl font-extrabold tracking-tight">Pettycash</h1>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handlePrint}>🖨️ Imprimir</Button>
+          <Button variant="outline" size="sm" onClick={handleWhatsApp}>📲 WhatsApp</Button>
+        </div>
+      </div>
 
       {/* Saldo */}
       <div className="bg-white dark:bg-zinc-900 border rounded-xl p-6 shadow-sm flex flex-col gap-1">

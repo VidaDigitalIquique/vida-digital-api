@@ -13,3 +13,24 @@ export function saldoColor(saldo: number): string {
   if (saldo < 0) return "text-red-600";
   return "text-zinc-500";
 }
+
+type MovimientoLike = { fecha: string; tipo: string; concepto: string; monto: string | number };
+
+export function buildWhatsAppText(
+  movimientos: MovimientoLike[],
+  saldo: number,
+  desde: string,
+  hasta: string
+): string {
+  const lines: string[] = [
+    '*PETTYCASH*',
+    `Período: ${desde} – ${hasta}`,
+    `Saldo: ${formatMonto(saldo)}`,
+    '',
+  ];
+  movimientos.forEach(m => {
+    const tipo = m.tipo === 'egreso' ? 'Gasto' : 'Ingreso';
+    lines.push(`• ${m.fecha} — ${tipo}: ${m.concepto} ${formatMonto(parseFloat(String(m.monto)))}`);
+  });
+  return lines.join('\n');
+}
