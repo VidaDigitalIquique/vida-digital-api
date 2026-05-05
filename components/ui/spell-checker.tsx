@@ -24,6 +24,7 @@ export function SpellCheckedInput({
   const inputRef = useRef<HTMLInputElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const hideTooltipRef = useRef<ReturnType<typeof setTimeout>>()
 
   useEffect(() => {
     setInternalValue(String(value ?? ''))
@@ -179,7 +180,9 @@ export function SpellCheckedInput({
           const found = matches.find(m => charIndex >= m.offset && charIndex < m.offset + m.length)
           setTooltipMatch(found ?? null)
         }}
-        onMouseLeave={() => setTooltipMatch(null)}
+        onMouseLeave={() => {
+          hideTooltipRef.current = setTimeout(() => setTooltipMatch(null), 150)
+        }}
         className={className}
         tabIndex={0}
         style={{ position: 'relative', zIndex: 1, background: 'transparent' }}
@@ -189,6 +192,8 @@ export function SpellCheckedInput({
       {/* TOOLTIP */}
       {tooltipMatch && tooltipMatch.replacements.length > 0 && (
         <div
+          onMouseEnter={() => clearTimeout(hideTooltipRef.current)}
+          onMouseLeave={() => setTooltipMatch(null)}
           style={{
             position: 'absolute',
             top: '100%',
