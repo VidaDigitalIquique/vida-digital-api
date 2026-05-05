@@ -151,7 +151,7 @@ export function SpellCheckedInput({
           fontFamily: 'inherit',
           lineHeight: 'inherit',
           color: 'transparent',
-          zIndex: 1,
+          zIndex: 10,
         }}
       >
         {renderHighlighted()}
@@ -164,7 +164,8 @@ export function SpellCheckedInput({
         onChange={handleChange}
         onScroll={handleScroll}
         className={className}
-        style={{ position: 'relative', zIndex: 2, background: 'transparent' }}
+        tabIndex={0}
+        style={{ position: 'relative', zIndex: 1, background: 'transparent' }}
         {...rest}
       />
 
