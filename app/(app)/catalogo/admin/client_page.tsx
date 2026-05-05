@@ -22,6 +22,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
   // --- Estado modal edición ---
   const [editingCatalog, setEditingCatalog] = useState<any | null>(null);
   const [editItems, setEditItems] = useState<any[]>([]);
+  const [editMargen, setEditMargen] = useState<number>(0);
   const [editLoading, setEditLoading] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const editItemsOriginalRef = useRef<any[]>([]);
@@ -89,6 +90,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
   const handleOpenEdit = async (cat: any) => {
     setEditingCatalog(cat);
     setEditItems([]);
+    setEditMargen(parseFloat(cat.margen_precio) || 0);
     setEditLoading(true);
     try {
       const res = await fetch(`/api/catalogos/public/${cat.slug}`);
@@ -136,12 +138,13 @@ export function CatalogoAdminClient({ session }: { session: any }) {
       const res = await fetch(`/api/catalogos/${editingCatalog.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ palabras_excluir: nuevasExclusiones }),
+        body: JSON.stringify({ palabras_excluir: nuevasExclusiones, margen_precio: editMargen }),
       });
       if (res.ok) {
         toast.success('Catálogo actualizado');
         setEditingCatalog(null);
         setEditItems([]);
+        setEditMargen(0);
         editItemsOriginalRef.current = [];
         fetchCatalogos();
       } else {
@@ -288,13 +291,28 @@ export function CatalogoAdminClient({ session }: { session: any }) {
       />
 
       {/* Modal edición de productos */}
-      <Dialog open={!!editingCatalog} onOpenChange={(open) => { if (!open) { setEditingCatalog(null); setEditItems([]); } }}>
+      <Dialog open={!!editingCatalog} onOpenChange={(open) => { if (!open) { setEditingCatalog(null); setEditItems([]); setEditMargen(0); } }}>
         <DialogContent className="w-full h-full sm:h-auto sm:max-w-lg sm:max-h-[90vh] sm:mx-4 overflow-y-auto p-5 rounded-none sm:rounded-xl">
           <DialogHeader>
             <DialogTitle>Editar catálogo: {editingCatalog?.titulo}</DialogTitle>
           </DialogHeader>
 
-          <div className="py-4">
+          <div className="py-2">
+            <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+              Porcentaje sobre costo (%)
+            </label>
+            <Input
+              type="number"
+              min={0}
+              max={999.99}
+              step={0.01}
+              value={editMargen}
+              onChange={e => setEditMargen(parseFloat(e.target.value) || 0)}
+              className="mt-1 w-40"
+            />
+          </div>
+
+          <div className="py-2">
             {editLoading ? (
               <div className="py-8 text-center text-zinc-500 animate-pulse">Cargando productos...</div>
             ) : editItems.length === 0 ? (

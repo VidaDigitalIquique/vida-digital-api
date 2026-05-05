@@ -8,5 +8,6 @@
   "dashboard_layout_v2": false,
   "cliente-stars-visible": true,
   "clientes-nuevos-visible": true,
-  "ingresos-por-producto": false
+  "ingresos-por-producto": false,
+  "catalogo-margen-editable": false
 }
