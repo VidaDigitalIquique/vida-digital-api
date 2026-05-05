@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { PublicCatalogoClient } from "./client_page";
 import { sql } from "@/lib/db";
-import { filterProducts, type CatalogoProducto } from "@/app/api/catalogos/public/[slug]/filter-products";
+import { filterProducts, filterBySoloNuevo, type CatalogoProducto } from "@/app/api/catalogos/public/[slug]/filter-products";
+import { getTopShipmentKeys } from "@/utils/shipment-logic";
 
 export const dynamic = 'force-dynamic';
 
@@ -91,7 +92,22 @@ async function getCatalogData(slug: string) {
       productos = productos.filter((p: any) => Number(p.saldo) > 0);
     }
     if (soloNuevo) {
-      productos = productos.filter((p: any) => p.es_nuevo === true);
+      const nroIngresoRows = await sql`
+        SELECT DISTINCT nroingreso FROM productos
+        WHERE empresa_id = ${cat.empresa_id} AND nroingreso IS NOT NULL
+      `;
+      const nroIngresos = nroIngresoRows.map((r: any) => r.nroingreso as string);
+      const [latestKey] = getTopShipmentKeys(nroIngresos, 1);
+
+      let latestCodigos = new Set<string>();
+      if (latestKey) {
+        const codigoRows = await sql`
+          SELECT DISTINCT UPPER(codigo) as codigo FROM productos
+          WHERE empresa_id = ${cat.empresa_id} AND nroingreso LIKE ${'%' + latestKey + '%'}
+        `;
+        latestCodigos = new Set(codigoRows.map((r: any) => r.codigo as string));
+      }
+      productos = filterBySoloNuevo(productos, latestCodigos);
     }
 
     productos = productos.map((p: any) => ({
