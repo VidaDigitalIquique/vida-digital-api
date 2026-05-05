@@ -97,8 +97,6 @@ export function DeudasAdminClient() {
     } catch { toast.error('Error al registrar pago'); }
   };
 
-  const prestamos = deudas.filter(d => d.tipo === 'prestamo');
-
   return (
     <div className="flex flex-col gap-6 w-full fade-in">
       <h1 className="text-3xl font-extrabold tracking-tight">Deudas</h1>
@@ -141,28 +139,29 @@ export function DeudasAdminClient() {
         </div>
       </form>
 
-      {/* Préstamos del trabajador */}
+      {/* Movimientos del trabajador */}
       {usuarioId && (
         <div className="flex flex-col gap-3">
           <h2 className="font-semibold text-lg">
-            Préstamos — {usuarios.find(u => u.id === usuarioId)?.nombre}
+            Movimientos — {usuarios.find(u => u.id === usuarioId)?.nombre}
           </h2>
           {loading ? (
             <div className="py-8 text-center text-zinc-400 animate-pulse text-sm">Cargando...</div>
-          ) : prestamos.length === 0 ? (
+          ) : deudas.length === 0 ? (
             <div className="border border-dashed rounded-xl p-8 text-center text-zinc-400 text-sm">
-              Sin préstamos registrados.
+              Sin movimientos registrados.
             </div>
           ) : (
-            prestamos.map(d => {
+            deudas.map(d => {
               const total = parseFloat(String(d.monto));
               const pagado = parseFloat(String(d.pagos_total));
               const saldo = total - pagado;
+              const esPrestamo = d.tipo === 'prestamo';
               return (
                 <div key={d.id} className="bg-white dark:bg-zinc-900 border rounded-xl p-4 shadow-sm flex flex-col gap-3">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div>
-                      <p className="font-semibold">{formatMonto(total)}</p>
+                      <p className="font-semibold">{tipoLabel(d.tipo)} — {formatMonto(total)}</p>
                       {d.descripcion && <p className="text-sm text-zinc-500">{d.descripcion}</p>}
                       <p className="text-xs text-zinc-400">{d.mes}/{d.anio}</p>
                     </div>
@@ -170,15 +169,15 @@ export function DeudasAdminClient() {
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${estadoBadge(d.estado)}`}>
                         {d.estado === 'aceptada' ? 'Pendiente confirmación' : d.estado}
                       </span>
-                      {pagado > 0 && (
+                      {esPrestamo && pagado > 0 && (
                         <p className="text-xs text-zinc-400">Pagado: {formatMonto(pagado)}</p>
                       )}
-                      {saldo > 0 && d.estado === 'confirmada' && (
+                      {esPrestamo && saldo > 0 && d.estado === 'confirmada' && (
                         <p className="text-sm font-semibold text-red-600">Saldo: {formatMonto(saldo)}</p>
                       )}
                     </div>
                   </div>
-                  {d.estado === 'confirmada' && saldo > 0 && (
+                  {esPrestamo && d.estado === 'confirmada' && saldo > 0 && (
                     pagandoId === d.id ? (
                       <div className="flex gap-2">
                         <Input
