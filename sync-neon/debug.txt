@@ -1,0 +1,2649 @@
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-03-24 15:00:13,595 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-03-24 15:00:13,646 [INFO] Hora: 2026-03-24 15:00:13
+2026-03-24 15:00:13,646 [INFO] BASE_DIR: C:\sync_neon
+2026-03-24 15:00:13,646 [INFO] .env path: C:\sync_neon\.env
+2026-03-24 15:00:13,646 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 31: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 237, in main
+    log.info("\u2705 Conectado a Neon PostgreSQL")
+Message: '\u2705 Conectado a Neon PostgreSQL'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-03-24 15:00:15,889 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-03-24 15:00:15,889 [INFO] Sincronizando sanjh.itemdcto...
+2026-03-24 15:00:17,639 [INFO]   Leídas 19004 filas de itemdcto.dbf
+2026-03-24 15:00:17,679 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-03-24 15:00:17,686 [INFO]   Deduplicadas 713 filas en memoria
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 33: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 261, in main
+    total_sync += sync_tabla(conn, schema, tabla, config, dbf_path)
+  File "C:\sync_neon\sync_winfac_neon.py", line 212, in sync_tabla
+    log.info(f"  \u2705 {len(rows)} registros sincronizados en {schema}.{tabla}")
+Message: '  \u2705 18254 registros sincronizados en sanjh.itemdcto'
+Arguments: ()
+2026-03-24 15:00:25,458 [INFO] Sincronizando sanjh.movidcto...
+2026-03-24 15:00:26,024 [INFO]   Leídas 3663 filas de movidcto.dbf
+2026-03-24 15:00:26,030 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-03-24 15:00:26,032 [INFO]   Deduplicadas 9 filas en memoria
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 33: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 261, in main
+    total_sync += sync_tabla(conn, schema, tabla, config, dbf_path)
+  File "C:\sync_neon\sync_winfac_neon.py", line 212, in sync_tabla
+    log.info(f"  \u2705 {len(rows)} registros sincronizados en {schema}.{tabla}")
+Message: '  \u2705 3616 registros sincronizados en sanjh.movidcto'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-03-24 15:00:28,307 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-03-24 15:00:28,307 [INFO] Sincronizando vida.itemdcto...
+2026-03-24 15:00:28,953 [INFO]   Leídas 6530 filas de itemdcto.dbf
+2026-03-24 15:00:28,961 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-03-24 15:00:28,969 [INFO]   Deduplicadas 5 filas en memoria
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 33: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 261, in main
+    total_sync += sync_tabla(conn, schema, tabla, config, dbf_path)
+  File "C:\sync_neon\sync_winfac_neon.py", line 212, in sync_tabla
+    log.info(f"  \u2705 {len(rows)} registros sincronizados en {schema}.{tabla}")
+Message: '  \u2705 6521 registros sincronizados en vida.itemdcto'
+Arguments: ()
+2026-03-24 15:00:31,552 [INFO] Sincronizando vida.movidcto...
+2026-03-24 15:00:31,785 [INFO]   Leídas 1623 filas de movidcto.dbf
+2026-03-24 15:00:31,785 [INFO]   Omitidas 7 filas con PK nula/vacía
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 33: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 261, in main
+    total_sync += sync_tabla(conn, schema, tabla, config, dbf_path)
+  File "C:\sync_neon\sync_winfac_neon.py", line 212, in sync_tabla
+    log.info(f"  \u2705 {len(rows)} registros sincronizados en {schema}.{tabla}")
+Message: '  \u2705 1616 registros sincronizados en vida.movidcto'
+Arguments: ()
+2026-03-24 15:00:32,894 [INFO] 
+============================================================
+2026-03-24 15:00:32,894 [INFO] SINCRONIZACIÓN COMPLETADA — 30007 registros procesados
+2026-03-24 15:00:32,894 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260324_150013.log
+2026-03-24 15:00:32,894 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-03-24 15:04:32,239 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-03-24 15:04:32,253 [INFO] Hora: 2026-03-24 15:04:32
+2026-03-24 15:04:32,253 [INFO] BASE_DIR: C:\sync_neon
+2026-03-24 15:04:32,253 [INFO] .env path: C:\sync_neon\.env
+2026-03-24 15:04:32,253 [INFO] ============================================================
+2026-03-24 15:04:32,835 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-03-24 15:04:32,835 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-03-24 15:04:32,835 [INFO] Sincronizando sanjh.itemdcto...
+2026-03-24 15:04:34,816 [INFO]   Leídas 19004 filas de itemdcto.dbf
+2026-03-24 15:04:34,832 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-03-24 15:04:34,850 [INFO]   Deduplicadas 713 filas en memoria
+2026-03-24 15:04:39,510 [INFO]   18254 registros sincronizados en sanjh.itemdcto
+2026-03-24 15:04:39,541 [INFO] Sincronizando sanjh.movidcto...
+2026-03-24 15:04:40,269 [INFO]   Leídas 3663 filas de movidcto.dbf
+2026-03-24 15:04:40,279 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-03-24 15:04:40,283 [INFO]   Deduplicadas 9 filas en memoria
+2026-03-24 15:04:41,535 [INFO]   3616 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-03-24 15:04:41,562 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-03-24 15:04:41,562 [INFO] Sincronizando vida.itemdcto...
+2026-03-24 15:04:42,308 [INFO]   Leídas 6530 filas de itemdcto.dbf
+2026-03-24 15:04:42,318 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-03-24 15:04:42,329 [INFO]   Deduplicadas 5 filas en memoria
+2026-03-24 15:04:44,088 [INFO]   6521 registros sincronizados en vida.itemdcto
+2026-03-24 15:04:44,099 [INFO] Sincronizando vida.movidcto...
+2026-03-24 15:04:44,322 [INFO]   Leídas 1624 filas de movidcto.dbf
+2026-03-24 15:04:44,322 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-03-24 15:04:45,008 [INFO]   1617 registros sincronizados en vida.movidcto
+2026-03-24 15:04:45,026 [INFO] 
+============================================================
+2026-03-24 15:04:45,026 [INFO] SINCRONIZACIÓN COMPLETADA — 30008 registros procesados
+2026-03-24 15:04:45,026 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260324_150432.log
+2026-03-24 15:04:45,026 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-03-24 15:08:24,663 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-03-24 15:08:24,679 [INFO] Hora: 2026-03-24 15:08:24
+2026-03-24 15:08:24,679 [INFO] BASE_DIR: C:\sync_neon
+2026-03-24 15:08:24,679 [INFO] .env path: C:\sync_neon\.env
+2026-03-24 15:08:24,679 [INFO] ============================================================
+2026-03-24 15:08:25,313 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-03-24 15:08:25,315 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-03-24 15:08:25,315 [INFO] Sincronizando sanjh.itemdcto...
+2026-03-24 15:08:27,452 [INFO]   Leídas 19004 filas de itemdcto.dbf
+2026-03-24 15:08:27,560 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-03-24 15:08:27,575 [INFO]   Deduplicadas 713 filas en memoria
+2026-03-24 15:08:34,972 [INFO]   18254 registros sincronizados en sanjh.itemdcto
+2026-03-24 15:08:35,133 [INFO] Sincronizando sanjh.movidcto...
+2026-03-24 15:08:35,804 [INFO]   Leídas 3663 filas de movidcto.dbf
+2026-03-24 15:08:35,806 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-03-24 15:08:35,810 [INFO]   Deduplicadas 9 filas en memoria
+2026-03-24 15:08:38,146 [INFO]   3616 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-03-24 15:08:38,195 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-03-24 15:08:38,195 [INFO] Sincronizando vida.itemdcto...
+2026-03-24 15:08:38,822 [INFO]   Leídas 6532 filas de itemdcto.dbf
+2026-03-24 15:08:38,828 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-03-24 15:08:38,832 [INFO]   Deduplicadas 5 filas en memoria
+2026-03-24 15:08:41,649 [INFO]   6523 registros sincronizados en vida.itemdcto
+2026-03-24 15:08:41,679 [INFO] Sincronizando vida.movidcto...
+2026-03-24 15:08:41,920 [INFO]   Leídas 1624 filas de movidcto.dbf
+2026-03-24 15:08:41,920 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-03-24 15:08:43,048 [INFO]   1617 registros sincronizados en vida.movidcto
+2026-03-24 15:08:43,064 [INFO] 
+============================================================
+2026-03-24 15:08:43,064 [INFO] SINCRONIZACIÓN COMPLETADA — 30010 registros procesados
+2026-03-24 15:08:43,064 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260324_150824.log
+2026-03-24 15:08:43,064 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-03-25 10:00:02,453 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-03-25 10:00:02,469 [INFO] Hora: 2026-03-25 10:00:02
+2026-03-25 10:00:02,469 [INFO] BASE_DIR: C:\sync_neon
+2026-03-25 10:00:02,469 [INFO] .env path: C:\sync_neon\.env
+2026-03-25 10:00:02,469 [INFO] ============================================================
+2026-03-25 10:00:06,622 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-03-25 10:00:06,638 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-03-25 10:00:06,638 [INFO] Sincronizando sanjh.itemdcto...
+2026-03-25 10:00:08,774 [INFO]   Leídas 19006 filas de itemdcto.dbf
+2026-03-25 10:00:08,790 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-03-25 10:00:08,806 [INFO]   Deduplicadas 713 filas en memoria
+2026-03-25 10:00:17,689 [INFO]   18256 registros sincronizados en sanjh.itemdcto
+2026-03-25 10:00:17,720 [INFO] Sincronizando sanjh.movidcto...
+2026-03-25 10:00:18,116 [INFO]   Leídas 3664 filas de movidcto.dbf
+2026-03-25 10:00:18,116 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-03-25 10:00:18,132 [INFO]   Deduplicadas 9 filas en memoria
+2026-03-25 10:00:20,382 [INFO]   3617 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-03-25 10:00:20,398 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-03-25 10:00:20,398 [INFO] Sincronizando vida.itemdcto...
+2026-03-25 10:00:20,780 [INFO]   Leídas 6535 filas de itemdcto.dbf
+2026-03-25 10:00:20,780 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-03-25 10:00:20,780 [INFO]   Deduplicadas 5 filas en memoria
+2026-03-25 10:00:23,864 [INFO]   6526 registros sincronizados en vida.itemdcto
+2026-03-25 10:00:23,864 [INFO] Sincronizando vida.movidcto...
+2026-03-25 10:00:24,023 [INFO]   Leídas 1625 filas de movidcto.dbf
+2026-03-25 10:00:24,023 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-03-25 10:00:25,144 [INFO]   1618 registros sincronizados en vida.movidcto
+2026-03-25 10:00:25,153 [INFO] 
+============================================================
+2026-03-25 10:00:25,153 [INFO] SINCRONIZACIÓN COMPLETADA — 30017 registros procesados
+2026-03-25 10:00:25,153 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260325_100002.log
+2026-03-25 10:00:25,153 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-03-26 10:00:01,926 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-03-26 10:00:01,941 [INFO] Hora: 2026-03-26 10:00:01
+2026-03-26 10:00:01,941 [INFO] BASE_DIR: C:\sync_neon
+2026-03-26 10:00:01,941 [INFO] .env path: C:\sync_neon\.env
+2026-03-26 10:00:01,941 [INFO] ============================================================
+2026-03-26 10:00:04,366 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-03-26 10:00:04,371 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-03-26 10:00:04,371 [INFO] Sincronizando sanjh.itemdcto...
+2026-03-26 10:00:05,708 [INFO]   Leídas 19012 filas de itemdcto.dbf
+2026-03-26 10:00:05,719 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-03-26 10:00:05,733 [INFO]   Deduplicadas 713 filas en memoria
+2026-03-26 10:00:13,452 [INFO]   18262 registros sincronizados en sanjh.itemdcto
+2026-03-26 10:00:13,513 [INFO] Sincronizando sanjh.movidcto...
+2026-03-26 10:00:13,862 [INFO]   Leídas 3667 filas de movidcto.dbf
+2026-03-26 10:00:13,864 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-03-26 10:00:13,867 [INFO]   Deduplicadas 9 filas en memoria
+2026-03-26 10:00:15,842 [INFO]   3620 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-03-26 10:00:15,856 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-03-26 10:00:15,856 [INFO] Sincronizando vida.itemdcto...
+2026-03-26 10:00:16,380 [INFO]   Leídas 6577 filas de itemdcto.dbf
+2026-03-26 10:00:16,385 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-03-26 10:00:16,392 [INFO]   Deduplicadas 5 filas en memoria
+2026-03-26 10:00:19,120 [INFO]   6568 registros sincronizados en vida.itemdcto
+2026-03-26 10:00:19,129 [INFO] Sincronizando vida.movidcto...
+2026-03-26 10:00:19,286 [INFO]   Leídas 1636 filas de movidcto.dbf
+2026-03-26 10:00:19,287 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-03-26 10:00:20,294 [INFO]   1629 registros sincronizados en vida.movidcto
+2026-03-26 10:00:20,304 [INFO] 
+============================================================
+2026-03-26 10:00:20,304 [INFO] SINCRONIZACIÓN COMPLETADA — 30079 registros procesados
+2026-03-26 10:00:20,304 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260326_100001.log
+2026-03-26 10:00:20,304 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-03-27 10:00:01,739 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-03-27 10:00:01,752 [INFO] Hora: 2026-03-27 10:00:01
+2026-03-27 10:00:01,752 [INFO] BASE_DIR: C:\sync_neon
+2026-03-27 10:00:01,752 [INFO] .env path: C:\sync_neon\.env
+2026-03-27 10:00:01,752 [INFO] ============================================================
+2026-03-27 10:00:09,304 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-03-27 10:00:09,308 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-03-27 10:00:09,309 [INFO] Sincronizando sanjh.itemdcto...
+2026-03-27 10:00:10,510 [INFO]   Leídas 19013 filas de itemdcto.dbf
+2026-03-27 10:00:10,518 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-03-27 10:00:10,529 [INFO]   Deduplicadas 713 filas en memoria
+2026-03-27 10:00:19,046 [INFO]   18263 registros sincronizados en sanjh.itemdcto
+2026-03-27 10:00:19,063 [INFO] Sincronizando sanjh.movidcto...
+2026-03-27 10:00:19,462 [INFO]   Leídas 3670 filas de movidcto.dbf
+2026-03-27 10:00:19,462 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-03-27 10:00:19,462 [INFO]   Deduplicadas 9 filas en memoria
+2026-03-27 10:00:21,654 [INFO]   3623 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-03-27 10:00:21,666 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-03-27 10:00:21,666 [INFO] Sincronizando vida.itemdcto...
+2026-03-27 10:00:22,039 [INFO]   Leídas 6610 filas de itemdcto.dbf
+2026-03-27 10:00:22,047 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-03-27 10:00:22,047 [INFO]   Deduplicadas 5 filas en memoria
+2026-03-27 10:00:25,174 [INFO]   6601 registros sincronizados en vida.itemdcto
+2026-03-27 10:00:25,182 [INFO] Sincronizando vida.movidcto...
+2026-03-27 10:00:25,341 [INFO]   Leídas 1641 filas de movidcto.dbf
+2026-03-27 10:00:25,341 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-03-27 10:00:26,464 [INFO]   1634 registros sincronizados en vida.movidcto
+2026-03-27 10:00:26,470 [INFO] 
+============================================================
+2026-03-27 10:00:26,470 [INFO] SINCRONIZACIÓN COMPLETADA — 30121 registros procesados
+2026-03-27 10:00:26,470 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260327_100001.log
+2026-03-27 10:00:26,470 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-03-28 19:37:04,151 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-03-28 19:37:04,740 [INFO] Hora: 2026-03-28 19:37:04
+2026-03-28 19:37:04,768 [INFO] BASE_DIR: C:\sync_neon
+2026-03-28 19:37:04,832 [INFO] .env path: C:\sync_neon\.env
+2026-03-28 19:37:04,879 [INFO] ============================================================
+2026-03-28 19:37:08,311 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-03-28 19:37:08,691 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-03-28 19:37:08,691 [INFO] Sincronizando sanjh.itemdcto...
+2026-03-28 19:37:16,459 [INFO]   Leídas 19015 filas de itemdcto.dbf
+2026-03-28 19:37:16,474 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-03-28 19:37:16,474 [INFO]   Deduplicadas 713 filas en memoria
+2026-03-28 19:37:24,252 [INFO]   18265 registros sincronizados en sanjh.itemdcto
+2026-03-28 19:37:24,284 [INFO] Sincronizando sanjh.movidcto...
+2026-03-28 19:37:24,647 [INFO]   Leídas 3671 filas de movidcto.dbf
+2026-03-28 19:37:24,647 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-03-28 19:37:24,647 [INFO]   Deduplicadas 9 filas en memoria
+2026-03-28 19:37:26,822 [INFO]   3624 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-03-28 19:37:26,838 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-03-28 19:37:26,838 [INFO] Sincronizando vida.itemdcto...
+2026-03-28 19:37:27,211 [INFO]   Leídas 6621 filas de itemdcto.dbf
+2026-03-28 19:37:27,212 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-03-28 19:37:27,220 [INFO]   Deduplicadas 5 filas en memoria
+2026-03-28 19:37:30,998 [INFO]   6612 registros sincronizados en vida.itemdcto
+2026-03-28 19:37:31,014 [INFO] Sincronizando vida.movidcto...
+2026-03-28 19:37:31,157 [INFO]   Leídas 1643 filas de movidcto.dbf
+2026-03-28 19:37:31,157 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-03-28 19:37:32,130 [INFO]   1636 registros sincronizados en vida.movidcto
+2026-03-28 19:37:32,136 [INFO] 
+============================================================
+2026-03-28 19:37:32,136 [INFO] SINCRONIZACIÓN COMPLETADA — 30137 registros procesados
+2026-03-28 19:37:32,136 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260328_193704.log
+2026-03-28 19:37:32,136 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-03-30 09:03:30,473 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-03-30 09:03:30,546 [INFO] Hora: 2026-03-30 09:03:30
+2026-03-30 09:03:30,546 [INFO] BASE_DIR: C:\sync_neon
+2026-03-30 09:03:30,546 [INFO] .env path: C:\sync_neon\.env
+2026-03-30 09:03:30,546 [INFO] ============================================================
+2026-03-30 09:03:33,573 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-03-30 09:03:33,575 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-03-30 09:03:33,575 [INFO] Sincronizando sanjh.itemdcto...
+2026-03-30 09:03:38,444 [INFO]   Leídas 19015 filas de itemdcto.dbf
+2026-03-30 09:03:38,455 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-03-30 09:03:38,469 [INFO]   Deduplicadas 713 filas en memoria
+2026-03-30 09:03:47,490 [INFO]   18265 registros sincronizados en sanjh.itemdcto
+2026-03-30 09:03:47,525 [INFO] Sincronizando sanjh.movidcto...
+2026-03-30 09:03:47,954 [INFO]   Leídas 3671 filas de movidcto.dbf
+2026-03-30 09:03:47,957 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-03-30 09:03:47,959 [INFO]   Deduplicadas 9 filas en memoria
+2026-03-30 09:03:50,254 [INFO]   3624 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-03-30 09:03:50,267 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-03-30 09:03:50,267 [INFO] Sincronizando vida.itemdcto...
+2026-03-30 09:03:50,722 [INFO]   Leídas 6620 filas de itemdcto.dbf
+2026-03-30 09:03:50,729 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-03-30 09:03:50,736 [INFO]   Deduplicadas 5 filas en memoria
+2026-03-30 09:03:53,889 [INFO]   6611 registros sincronizados en vida.itemdcto
+2026-03-30 09:03:53,903 [INFO] Sincronizando vida.movidcto...
+2026-03-30 09:03:54,085 [INFO]   Leídas 1643 filas de movidcto.dbf
+2026-03-30 09:03:54,087 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-03-30 09:03:55,264 [INFO]   1636 registros sincronizados en vida.movidcto
+2026-03-30 09:03:55,271 [INFO] 
+============================================================
+2026-03-30 09:03:55,271 [INFO] SINCRONIZACIÓN COMPLETADA — 30136 registros procesados
+2026-03-30 09:03:55,271 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260330_090330.log
+2026-03-30 09:03:55,271 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-03-30 10:00:02,168 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-03-30 10:00:02,181 [INFO] Hora: 2026-03-30 10:00:02
+2026-03-30 10:00:02,181 [INFO] BASE_DIR: C:\sync_neon
+2026-03-30 10:00:02,181 [INFO] .env path: C:\sync_neon\.env
+2026-03-30 10:00:02,181 [INFO] ============================================================
+2026-03-30 10:00:14,409 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-03-30 10:00:14,423 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-03-30 10:00:14,425 [INFO] Sincronizando sanjh.itemdcto...
+2026-03-30 10:00:15,642 [INFO]   Leídas 19015 filas de itemdcto.dbf
+2026-03-30 10:00:15,653 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-03-30 10:00:15,665 [INFO]   Deduplicadas 713 filas en memoria
+2026-03-30 10:00:24,820 [INFO]   18265 registros sincronizados en sanjh.itemdcto
+2026-03-30 10:00:24,832 [INFO] Sincronizando sanjh.movidcto...
+2026-03-30 10:00:25,212 [INFO]   Leídas 3671 filas de movidcto.dbf
+2026-03-30 10:00:25,224 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-03-30 10:00:25,226 [INFO]   Deduplicadas 9 filas en memoria
+2026-03-30 10:00:27,895 [INFO]   3624 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-03-30 10:00:27,895 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-03-30 10:00:27,895 [INFO] Sincronizando vida.itemdcto...
+2026-03-30 10:00:28,277 [INFO]   Leídas 6625 filas de itemdcto.dbf
+2026-03-30 10:00:28,281 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-03-30 10:00:28,285 [INFO]   Deduplicadas 5 filas en memoria
+2026-03-30 10:00:31,535 [INFO]   6616 registros sincronizados en vida.itemdcto
+2026-03-30 10:00:31,546 [INFO] Sincronizando vida.movidcto...
+2026-03-30 10:00:31,694 [INFO]   Leídas 1644 filas de movidcto.dbf
+2026-03-30 10:00:31,694 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-03-30 10:00:32,921 [INFO]   1637 registros sincronizados en vida.movidcto
+2026-03-30 10:00:32,928 [INFO] 
+============================================================
+2026-03-30 10:00:32,928 [INFO] SINCRONIZACIÓN COMPLETADA — 30142 registros procesados
+2026-03-30 10:00:32,928 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260330_100002.log
+2026-03-30 10:00:32,928 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-03-31 10:00:02,565 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-03-31 10:00:02,581 [INFO] Hora: 2026-03-31 10:00:02
+2026-03-31 10:00:02,581 [INFO] BASE_DIR: C:\sync_neon
+2026-03-31 10:00:02,581 [INFO] .env path: C:\sync_neon\.env
+2026-03-31 10:00:02,581 [INFO] ============================================================
+2026-03-31 10:00:10,945 [ERROR] No se pudo conectar a Neon: connection to server at "ep-lucky-butterfly-acdie4l8-pooler.sa-east-1.aws.neon.tech" (2600:1f1e:2f:6511:53ca:e80a:6f85:6ec3), port 5432 failed: ERROR:  Control plane request failed
+
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-04-01 10:00:02,191 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-04-01 10:00:02,209 [INFO] Hora: 2026-04-01 10:00:02
+2026-04-01 10:00:02,209 [INFO] BASE_DIR: C:\sync_neon
+2026-04-01 10:00:02,209 [INFO] .env path: C:\sync_neon\.env
+2026-04-01 10:00:02,209 [INFO] ============================================================
+2026-04-01 10:00:02,891 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-04-01 10:00:02,897 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-04-01 10:00:02,897 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-01 10:00:04,141 [INFO]   Leídas 19017 filas de itemdcto.dbf
+2026-04-01 10:00:04,141 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-04-01 10:00:04,155 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-01 10:00:11,822 [INFO]   18267 registros sincronizados en sanjh.itemdcto
+2026-04-01 10:00:11,854 [INFO] Sincronizando sanjh.movidcto...
+2026-04-01 10:00:12,281 [INFO]   Leídas 3673 filas de movidcto.dbf
+2026-04-01 10:00:12,284 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-04-01 10:00:12,286 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-01 10:00:14,244 [INFO]   3626 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-04-01 10:00:14,260 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-01 10:00:14,260 [INFO] Sincronizando vida.itemdcto...
+2026-04-01 10:00:14,640 [INFO]   Leídas 6637 filas de itemdcto.dbf
+2026-04-01 10:00:14,640 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-04-01 10:00:14,640 [INFO]   Deduplicadas 5 filas en memoria
+2026-04-01 10:00:17,408 [INFO]   6628 registros sincronizados en vida.itemdcto
+2026-04-01 10:00:17,424 [INFO] Sincronizando vida.movidcto...
+2026-04-01 10:00:17,566 [INFO]   Leídas 1648 filas de movidcto.dbf
+2026-04-01 10:00:17,566 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-04-01 10:00:18,608 [INFO]   1641 registros sincronizados en vida.movidcto
+2026-04-01 10:00:18,614 [INFO] 
+============================================================
+2026-04-01 10:00:18,614 [INFO] SINCRONIZACIÓN COMPLETADA — 30162 registros procesados
+2026-04-01 10:00:18,614 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260401_100002.log
+2026-04-01 10:00:18,614 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-04-02 10:00:02,489 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-04-02 10:00:02,502 [INFO] Hora: 2026-04-02 10:00:02
+2026-04-02 10:00:02,502 [INFO] BASE_DIR: C:\sync_neon
+2026-04-02 10:00:02,502 [INFO] .env path: C:\sync_neon\.env
+2026-04-02 10:00:02,502 [INFO] ============================================================
+2026-04-02 10:00:03,115 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-04-02 10:00:03,117 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-04-02 10:00:03,117 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-02 10:00:04,652 [INFO]   Leídas 19017 filas de itemdcto.dbf
+2026-04-02 10:00:04,662 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-04-02 10:00:04,668 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-02 10:00:13,258 [INFO]   18267 registros sincronizados en sanjh.itemdcto
+2026-04-02 10:00:13,274 [INFO] Sincronizando sanjh.movidcto...
+2026-04-02 10:00:27,963 [INFO]   Leídas 3673 filas de movidcto.dbf
+2026-04-02 10:00:27,979 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-04-02 10:00:27,979 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-02 10:00:30,285 [INFO]   3626 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-04-02 10:00:30,301 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-02 10:00:30,301 [INFO] Sincronizando vida.itemdcto...
+2026-04-02 10:00:30,768 [INFO]   Leídas 6653 filas de itemdcto.dbf
+2026-04-02 10:00:30,772 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-04-02 10:00:30,772 [INFO]   Deduplicadas 5 filas en memoria
+2026-04-02 10:00:33,867 [INFO]   6644 registros sincronizados en vida.itemdcto
+2026-04-02 10:00:33,883 [INFO] Sincronizando vida.movidcto...
+2026-04-02 10:00:34,042 [INFO]   Leídas 1652 filas de movidcto.dbf
+2026-04-02 10:00:34,042 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-04-02 10:00:35,196 [INFO]   1645 registros sincronizados en vida.movidcto
+2026-04-02 10:00:35,209 [INFO] 
+============================================================
+2026-04-02 10:00:35,209 [INFO] SINCRONIZACIÓN COMPLETADA — 30182 registros procesados
+2026-04-02 10:00:35,209 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260402_100002.log
+2026-04-02 10:00:35,209 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-04-06 08:51:57,461 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-04-06 08:51:57,532 [INFO] Hora: 2026-04-06 08:51:57
+2026-04-06 08:51:57,533 [INFO] BASE_DIR: C:\sync_neon
+2026-04-06 08:51:57,533 [INFO] .env path: C:\sync_neon\.env
+2026-04-06 08:51:57,533 [INFO] ============================================================
+2026-04-06 08:52:09,898 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-04-06 08:52:09,901 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-04-06 08:52:09,903 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-06 08:52:13,309 [INFO]   Leídas 19029 filas de itemdcto.dbf
+2026-04-06 08:52:13,323 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-04-06 08:52:13,337 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-06 08:52:22,598 [INFO]   18279 registros sincronizados en sanjh.itemdcto
+2026-04-06 08:52:22,632 [INFO] Sincronizando sanjh.movidcto...
+2026-04-06 08:52:41,491 [INFO]   Leídas 3675 filas de movidcto.dbf
+2026-04-06 08:52:41,494 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-04-06 08:52:41,496 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-06 08:52:43,741 [INFO]   3628 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-04-06 08:52:43,752 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-06 08:52:43,753 [INFO] Sincronizando vida.itemdcto...
+2026-04-06 08:52:44,280 [INFO]   Leídas 6674 filas de itemdcto.dbf
+2026-04-06 08:52:44,284 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-04-06 08:52:44,290 [INFO]   Deduplicadas 5 filas en memoria
+2026-04-06 08:52:47,404 [INFO]   6665 registros sincronizados en vida.itemdcto
+2026-04-06 08:52:47,412 [INFO] Sincronizando vida.movidcto...
+2026-04-06 08:52:47,605 [INFO]   Leídas 1658 filas de movidcto.dbf
+2026-04-06 08:52:47,606 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-04-06 08:52:48,756 [INFO]   1651 registros sincronizados en vida.movidcto
+2026-04-06 08:52:48,761 [INFO] 
+============================================================
+2026-04-06 08:52:48,762 [INFO] SINCRONIZACIÓN COMPLETADA — 30223 registros procesados
+2026-04-06 08:52:48,762 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260406_085157.log
+2026-04-06 08:52:48,762 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-04-06 09:00:02,235 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-04-06 09:00:02,237 [INFO] Hora: 2026-04-06 09:00:02
+2026-04-06 09:00:02,237 [INFO] BASE_DIR: C:\sync_neon
+2026-04-06 09:00:02,237 [INFO] .env path: C:\sync_neon\.env
+2026-04-06 09:00:02,237 [INFO] ============================================================
+2026-04-06 09:00:08,766 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-04-06 09:00:08,769 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-04-06 09:00:08,769 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-06 09:00:09,848 [INFO]   Leídas 19029 filas de itemdcto.dbf
+2026-04-06 09:00:09,857 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-04-06 09:00:09,868 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-06 09:00:22,577 [INFO]   18279 registros sincronizados en sanjh.itemdcto
+2026-04-06 09:00:22,609 [INFO] Sincronizando sanjh.movidcto...
+2026-04-06 09:00:23,000 [INFO]   Leídas 3675 filas de movidcto.dbf
+2026-04-06 09:00:23,003 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-04-06 09:00:23,006 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-06 09:00:26,253 [INFO]   3628 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-04-06 09:00:26,266 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-06 09:00:26,266 [INFO] Sincronizando vida.itemdcto...
+2026-04-06 09:00:26,644 [INFO]   Leídas 6674 filas de itemdcto.dbf
+2026-04-06 09:00:26,648 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-04-06 09:00:26,652 [INFO]   Deduplicadas 5 filas en memoria
+2026-04-06 09:00:30,455 [INFO]   6665 registros sincronizados en vida.itemdcto
+2026-04-06 09:00:30,463 [INFO] Sincronizando vida.movidcto...
+2026-04-06 09:00:30,642 [INFO]   Leídas 1658 filas de movidcto.dbf
+2026-04-06 09:00:30,643 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-04-06 09:00:32,181 [INFO]   1651 registros sincronizados en vida.movidcto
+2026-04-06 09:00:32,189 [INFO] 
+============================================================
+2026-04-06 09:00:32,189 [INFO] SINCRONIZACIÓN COMPLETADA — 30223 registros procesados
+2026-04-06 09:00:32,189 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260406_090002.log
+2026-04-06 09:00:32,190 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-04-07 09:00:01,896 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-04-07 09:00:01,911 [INFO] Hora: 2026-04-07 09:00:01
+2026-04-07 09:00:01,911 [INFO] BASE_DIR: C:\sync_neon
+2026-04-07 09:00:01,911 [INFO] .env path: C:\sync_neon\.env
+2026-04-07 09:00:01,911 [INFO] ============================================================
+2026-04-07 09:00:02,523 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-04-07 09:00:02,527 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-04-07 09:00:02,529 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-07 09:00:03,783 [INFO]   Leídas 19041 filas de itemdcto.dbf
+2026-04-07 09:00:03,793 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-04-07 09:00:03,804 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-07 09:00:11,861 [INFO]   18291 registros sincronizados en sanjh.itemdcto
+2026-04-07 09:00:11,894 [INFO] Sincronizando sanjh.movidcto...
+2026-04-07 09:00:12,290 [INFO]   Leídas 3678 filas de movidcto.dbf
+2026-04-07 09:00:12,292 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-04-07 09:00:12,294 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-07 09:00:14,424 [INFO]   3631 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-04-07 09:00:14,436 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-07 09:00:14,436 [INFO] Sincronizando vida.itemdcto...
+2026-04-07 09:00:14,818 [INFO]   Leídas 6694 filas de itemdcto.dbf
+2026-04-07 09:00:14,822 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-04-07 09:00:14,826 [INFO]   Deduplicadas 5 filas en memoria
+2026-04-07 09:00:17,779 [INFO]   6685 registros sincronizados en vida.itemdcto
+2026-04-07 09:00:17,789 [INFO] Sincronizando vida.movidcto...
+2026-04-07 09:00:17,969 [INFO]   Leídas 1664 filas de movidcto.dbf
+2026-04-07 09:00:17,970 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-04-07 09:00:19,358 [INFO]   1657 registros sincronizados en vida.movidcto
+2026-04-07 09:00:19,366 [INFO] 
+============================================================
+2026-04-07 09:00:19,366 [INFO] SINCRONIZACIÓN COMPLETADA — 30264 registros procesados
+2026-04-07 09:00:19,366 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260407_090001.log
+2026-04-07 09:00:19,366 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-04-08 09:00:02,794 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-04-08 09:00:02,809 [INFO] Hora: 2026-04-08 09:00:02
+2026-04-08 09:00:02,810 [INFO] BASE_DIR: C:\sync_neon
+2026-04-08 09:00:02,810 [INFO] .env path: C:\sync_neon\.env
+2026-04-08 09:00:02,810 [INFO] ============================================================
+2026-04-08 09:01:04,505 [ERROR] No se pudo conectar a Neon: connection to server at "ep-lucky-butterfly-acdie4l8-pooler.sa-east-1.aws.neon.tech" (2600:1f1e:2f:652d:21b7:8d2c:78a1:afcf), port 5432 failed: ERROR:  Control plane request failed
+
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-04-09 09:00:01,782 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 225, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-04-09 09:00:01,796 [INFO] Hora: 2026-04-09 09:00:01
+2026-04-09 09:00:01,796 [INFO] BASE_DIR: C:\sync_neon
+2026-04-09 09:00:01,796 [INFO] .env path: C:\sync_neon\.env
+2026-04-09 09:00:01,796 [INFO] ============================================================
+2026-04-09 09:00:04,638 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-04-09 09:00:04,640 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-04-09 09:00:04,640 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-09 09:00:06,065 [INFO]   Leídas 19050 filas de itemdcto.dbf
+2026-04-09 09:00:06,076 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-04-09 09:00:06,089 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-09 09:00:13,666 [INFO]   18300 registros sincronizados en sanjh.itemdcto
+2026-04-09 09:00:13,695 [INFO] Sincronizando sanjh.movidcto...
+2026-04-09 09:00:14,116 [INFO]   Leídas 3682 filas de movidcto.dbf
+2026-04-09 09:00:14,118 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-04-09 09:00:14,121 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-09 09:00:16,351 [INFO]   3635 registros sincronizados en sanjh.movidcto
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 248, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-04-09 09:00:16,364 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-09 09:00:16,364 [INFO] Sincronizando vida.itemdcto...
+2026-04-09 09:00:16,762 [INFO]   Leídas 6723 filas de itemdcto.dbf
+2026-04-09 09:00:16,766 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-04-09 09:00:16,770 [INFO]   Deduplicadas 5 filas en memoria
+2026-04-09 09:00:19,553 [INFO]   6714 registros sincronizados en vida.itemdcto
+2026-04-09 09:00:19,565 [INFO] Sincronizando vida.movidcto...
+2026-04-09 09:00:19,721 [INFO]   Leídas 1678 filas de movidcto.dbf
+2026-04-09 09:00:19,722 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-04-09 09:00:20,759 [INFO]   1671 registros sincronizados en vida.movidcto
+2026-04-09 09:00:20,764 [INFO] 
+============================================================
+2026-04-09 09:00:20,764 [INFO] SINCRONIZACIÓN COMPLETADA — 30320 registros procesados
+2026-04-09 09:00:20,764 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260409_090001.log
+2026-04-09 09:00:20,764 [INFO] ============================================================
+C:\sync_neon\sync_winfac_neon.py:16: SyntaxWarning: invalid escape sequence '\s'
+  - Argumentos: C:\ruta\sync_winfac_neon.py
+2026-04-10 09:00:01,873 [INFO] ============================================================
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 60: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 297, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 249, in main
+    log.info("INICIO SINCRONIZACIÓN WinFac \u2192 Neon")
+Message: 'INICIO SINCRONIZACIÓN WinFac \u2192 Neon'
+Arguments: ()
+2026-04-10 09:00:01,886 [INFO] Hora: 2026-04-10 09:00:01
+2026-04-10 09:00:01,886 [INFO] BASE_DIR: C:\sync_neon
+2026-04-10 09:00:01,886 [INFO] .env path: C:\sync_neon\.env
+2026-04-10 09:00:01,886 [INFO] ============================================================
+2026-04-10 09:00:05,934 [INFO] Conectado a Neon PostgreSQL
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 297, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 272, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 46: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 297, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: SANJH \u2192 schema: sanjh'
+Arguments: ()
+2026-04-10 09:00:05,938 [INFO] Ruta: C:\red\newdesar\winfac_nna\Base
+2026-04-10 09:00:05,938 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-10 09:00:07,185 [INFO]   Leídas 19056 filas de itemdcto.dbf
+2026-04-10 09:00:07,194 [INFO]   Omitidas 37 filas con PK nula/vacía
+2026-04-10 09:00:07,205 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-10 09:00:16,117 [INFO]   18306 registros sincronizados en sanjh.itemdcto
+2026-04-10 09:00:16,149 [INFO] Sincronizando sanjh.movidcto...
+2026-04-10 09:00:16,560 [INFO]   Leídas 3683 filas de movidcto.dbf
+2026-04-10 09:00:16,563 [INFO]   Omitidas 38 filas con PK nula/vacía
+2026-04-10 09:00:16,566 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-10 09:00:18,999 [INFO]   3636 registros sincronizados en sanjh.movidcto
+2026-04-10 09:00:19,008 [WARNING]   Archivo no encontrado: C:\red\newdesar\winfac_nna\Base\inb.dbf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 33-72: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 297, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 272, in main
+    log.info(f"\n{'\u2500' * 40}")
+Message: '\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500'
+Arguments: ()
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Users\Usuario\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 45: character maps to <undefined>
+Call stack:
+  File "C:\sync_neon\sync_winfac_neon.py", line 297, in <module>
+    main()
+  File "C:\sync_neon\sync_winfac_neon.py", line 273, in main
+    log.info(f"Empresa: {empresa_key.upper()} \u2192 schema: {schema}")
+Message: 'Empresa: VIDA \u2192 schema: vida'
+Arguments: ()
+2026-04-10 09:00:19,009 [INFO] Ruta: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-10 09:00:19,009 [INFO] Sincronizando vida.itemdcto...
+2026-04-10 09:00:19,395 [INFO]   Leídas 6737 filas de itemdcto.dbf
+2026-04-10 09:00:19,399 [INFO]   Omitidas 4 filas con PK nula/vacía
+2026-04-10 09:00:19,404 [INFO]   Deduplicadas 5 filas en memoria
+2026-04-10 09:00:22,582 [INFO]   6728 registros sincronizados en vida.itemdcto
+2026-04-10 09:00:22,596 [INFO] Sincronizando vida.movidcto...
+2026-04-10 09:00:22,753 [INFO]   Leídas 1685 filas de movidcto.dbf
+2026-04-10 09:00:22,754 [INFO]   Omitidas 7 filas con PK nula/vacía
+2026-04-10 09:00:23,968 [INFO]   1678 registros sincronizados en vida.movidcto
+2026-04-10 09:00:23,977 [WARNING]   Archivo no encontrado: C:\red\newdesar\winfac_nna\VIDAD\inb.dbf
+2026-04-10 09:00:23,978 [INFO] 
+============================================================
+2026-04-10 09:00:23,978 [INFO] SINCRONIZACIÓN COMPLETADA — 30348 registros procesados
+2026-04-10 09:00:23,978 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260410_090001.log
+2026-04-10 09:00:23,978 [INFO] ============================================================
+2026-04-11 11:13:44,857 [INFO] ============================================================
+2026-04-11 11:13:44,921 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-11 11:13:44,921 [INFO] Hora: 2026-04-11 11:13:44
+2026-04-11 11:13:44,952 [INFO] BASE_DIR: C:\sync_neon
+2026-04-11 11:13:44,999 [INFO] .env path: C:\sync_neon\.env
+2026-04-11 11:13:45,031 [INFO] ============================================================
+^C2026-04-13 08:04:58,352 [INFO] ============================================================
+2026-04-13 08:04:58,416 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-13 08:04:58,416 [INFO] Hora: 2026-04-13 08:04:58
+2026-04-13 08:04:58,432 [INFO] BASE_DIR: C:\sync_neon
+2026-04-13 08:04:58,479 [INFO] .env path: C:\sync_neon\.env
+2026-04-13 08:04:58,511 [INFO] ============================================================
+2026-04-13 08:05:00,116 [INFO] Conectado a Neon PostgreSQL
+2026-04-13 08:05:00,124 [INFO] 
+----------------------------------------
+2026-04-13 08:05:00,140 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-13 08:05:00,156 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-13 08:05:00,156 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-13 08:05:00,206 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-13 08:05:05,131 [INFO]   Leidas 19070 filas de itemdcto.dbf
+2026-04-13 08:05:05,158 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-13 08:05:05,163 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-13 08:05:13,931 [INFO]   18320 registros sincronizados en sanjh.itemdcto
+2026-04-13 08:05:15,567 [INFO] Sincronizando sanjh.movidcto...
+2026-04-13 08:05:19,237 [INFO]   Leidas 3691 filas de movidcto.dbf
+2026-04-13 08:05:19,237 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-13 08:05:19,314 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-13 08:05:21,706 [INFO]   3644 registros sincronizados en sanjh.movidcto
+2026-04-13 08:05:21,751 [INFO] Sincronizando sanjh.inb...
+2026-04-13 08:05:22,213 [INFO]   Leidas 2833 filas de inb.dbf
+2026-04-13 08:05:22,220 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-13 08:05:23,930 [INFO]   2832 registros sincronizados en sanjh.inb
+2026-04-13 08:05:23,936 [INFO] Sincronizando sanjh.inventar...
+2026-04-13 08:05:24,218 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-13 08:05:24,218 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-13 08:05:25,789 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-13 08:05:25,798 [INFO] 
+----------------------------------------
+2026-04-13 08:05:25,798 [INFO] Empresa: VIDA - schema: vida
+2026-04-13 08:05:25,798 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-13 08:05:25,798 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-13 08:05:25,798 [INFO] Sincronizando vida.itemdcto...
+2026-04-13 08:05:26,326 [INFO]   Leidas 6796 filas de itemdcto.dbf
+2026-04-13 08:05:26,334 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-13 08:05:26,340 [INFO]   Deduplicadas 5 filas en memoria
+2026-04-13 08:05:29,575 [INFO]   6787 registros sincronizados en vida.itemdcto
+2026-04-13 08:05:29,702 [INFO] Sincronizando vida.movidcto...
+2026-04-13 08:05:30,097 [INFO]   Leidas 1695 filas de movidcto.dbf
+2026-04-13 08:05:30,097 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-13 08:05:31,319 [INFO]   1688 registros sincronizados en vida.movidcto
+2026-04-13 08:05:31,325 [INFO] Sincronizando vida.inb...
+2026-04-13 08:05:31,608 [INFO]   Leidas 2833 filas de inb.dbf
+2026-04-13 08:05:31,612 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-13 08:05:33,336 [INFO]   2832 registros sincronizados en vida.inb
+2026-04-13 08:05:33,368 [INFO] Sincronizando vida.inventar...
+2026-04-13 08:05:33,552 [INFO]   Leidas 1345 filas de inventar.dbf
+2026-04-13 08:05:34,429 [INFO]   1345 registros sincronizados en vida.inventar
+2026-04-13 08:05:34,443 [INFO] 
+============================================================
+2026-04-13 08:05:34,443 [INFO] SINCRONIZACION COMPLETADA - 40291 registros procesados
+2026-04-13 08:05:34,443 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260413_080458.log
+2026-04-13 08:05:34,443 [INFO] ============================================================
+2026-04-13 09:00:01,924 [INFO] ============================================================
+2026-04-13 09:00:01,924 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-13 09:00:01,924 [INFO] Hora: 2026-04-13 09:00:01
+2026-04-13 09:00:01,925 [INFO] BASE_DIR: C:\sync_neon
+2026-04-13 09:00:01,925 [INFO] .env path: C:\sync_neon\.env
+2026-04-13 09:00:01,925 [INFO] ============================================================
+2026-04-13 09:00:07,372 [INFO] Conectado a Neon PostgreSQL
+2026-04-13 09:00:07,373 [INFO] 
+----------------------------------------
+2026-04-13 09:00:07,373 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-13 09:00:07,374 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-13 09:00:07,374 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-13 09:00:07,382 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-13 09:00:08,785 [INFO]   Leidas 19070 filas de itemdcto.dbf
+2026-04-13 09:00:08,802 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-13 09:00:08,814 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-13 09:00:17,517 [INFO]   18320 registros sincronizados en sanjh.itemdcto
+2026-04-13 09:00:17,545 [INFO] Sincronizando sanjh.movidcto...
+2026-04-13 09:00:17,986 [INFO]   Leidas 3691 filas de movidcto.dbf
+2026-04-13 09:00:17,989 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-13 09:00:17,991 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-13 09:00:20,290 [INFO]   3644 registros sincronizados en sanjh.movidcto
+2026-04-13 09:00:20,303 [INFO] Sincronizando sanjh.inb...
+2026-04-13 09:00:20,591 [INFO]   Leidas 2833 filas de inb.dbf
+2026-04-13 09:00:20,596 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-13 09:00:22,267 [INFO]   2832 registros sincronizados en sanjh.inb
+2026-04-13 09:00:22,276 [INFO] Sincronizando sanjh.inventar...
+2026-04-13 09:00:22,563 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-13 09:00:22,566 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-13 09:00:24,373 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-13 09:00:24,379 [INFO] 
+----------------------------------------
+2026-04-13 09:00:24,380 [INFO] Empresa: VIDA - schema: vida
+2026-04-13 09:00:24,380 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-13 09:00:24,380 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-13 09:00:24,380 [INFO] Sincronizando vida.itemdcto...
+2026-04-13 09:00:24,780 [INFO]   Leidas 6796 filas de itemdcto.dbf
+2026-04-13 09:00:24,784 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-13 09:00:24,788 [INFO]   Deduplicadas 5 filas en memoria
+2026-04-13 09:00:27,903 [INFO]   6787 registros sincronizados en vida.itemdcto
+2026-04-13 09:00:27,917 [INFO] Sincronizando vida.movidcto...
+2026-04-13 09:00:28,078 [INFO]   Leidas 1695 filas de movidcto.dbf
+2026-04-13 09:00:28,079 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-13 09:00:29,262 [INFO]   1688 registros sincronizados en vida.movidcto
+2026-04-13 09:00:29,271 [INFO] Sincronizando vida.inb...
+2026-04-13 09:00:29,523 [INFO]   Leidas 2833 filas de inb.dbf
+2026-04-13 09:00:29,526 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-13 09:00:31,178 [INFO]   2832 registros sincronizados en vida.inb
+2026-04-13 09:00:31,187 [INFO] Sincronizando vida.inventar...
+2026-04-13 09:00:31,310 [INFO]   Leidas 1345 filas de inventar.dbf
+2026-04-13 09:00:32,318 [INFO]   1345 registros sincronizados en vida.inventar
+2026-04-13 09:00:32,325 [INFO] 
+============================================================
+2026-04-13 09:00:32,325 [INFO] SINCRONIZACION COMPLETADA - 40291 registros procesados
+2026-04-13 09:00:32,325 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260413_090001.log
+2026-04-13 09:00:32,326 [INFO] ============================================================
+2026-04-15 09:00:02,095 [INFO] ============================================================
+2026-04-15 09:00:02,095 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-15 09:00:02,095 [INFO] Hora: 2026-04-15 09:00:02
+2026-04-15 09:00:02,095 [INFO] BASE_DIR: C:\sync_neon
+2026-04-15 09:00:02,095 [INFO] .env path: C:\sync_neon\.env
+2026-04-15 09:00:02,095 [INFO] ============================================================
+2026-04-15 09:00:02,607 [INFO] Conectado a Neon PostgreSQL
+2026-04-15 09:00:02,608 [INFO] 
+----------------------------------------
+2026-04-15 09:00:02,608 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-15 09:00:02,608 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-15 09:00:02,609 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-15 09:00:02,609 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-15 09:00:03,997 [INFO]   Leidas 19080 filas de itemdcto.dbf
+2026-04-15 09:00:04,010 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-15 09:00:04,027 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-15 09:00:12,825 [INFO]   18330 registros sincronizados en sanjh.itemdcto
+2026-04-15 09:00:12,852 [INFO] Sincronizando sanjh.movidcto...
+2026-04-15 09:00:13,294 [INFO]   Leidas 3696 filas de movidcto.dbf
+2026-04-15 09:00:13,296 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-15 09:00:13,298 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-15 09:00:15,561 [INFO]   3649 registros sincronizados en sanjh.movidcto
+2026-04-15 09:00:15,572 [INFO] Sincronizando sanjh.inb...
+2026-04-15 09:00:15,875 [INFO]   Leidas 2833 filas de inb.dbf
+2026-04-15 09:00:15,879 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-15 09:00:17,655 [INFO]   2832 registros sincronizados en sanjh.inb
+2026-04-15 09:00:17,664 [INFO] Sincronizando sanjh.inventar...
+2026-04-15 09:00:17,976 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-15 09:00:17,978 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-15 09:00:19,888 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-15 09:00:19,896 [INFO] Sincronizando sanjh.clientes...
+2026-04-15 09:00:19,930 [INFO]   Leidas 855 filas de clientes.dbf
+2026-04-15 09:00:20,416 [INFO]   855 registros sincronizados en sanjh.clientes
+2026-04-15 09:00:20,417 [INFO] 
+----------------------------------------
+2026-04-15 09:00:20,417 [INFO] Empresa: VIDA - schema: vida
+2026-04-15 09:00:20,417 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-15 09:00:20,417 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-15 09:00:20,417 [INFO] Sincronizando vida.itemdcto...
+2026-04-15 09:00:20,838 [INFO]   Leidas 6908 filas de itemdcto.dbf
+2026-04-15 09:00:20,844 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-15 09:00:20,850 [INFO]   Deduplicadas 50 filas en memoria
+2026-04-15 09:00:24,119 [INFO]   6854 registros sincronizados en vida.itemdcto
+2026-04-15 09:00:24,133 [INFO] Sincronizando vida.movidcto...
+2026-04-15 09:00:24,298 [INFO]   Leidas 1717 filas de movidcto.dbf
+2026-04-15 09:00:24,299 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-15 09:00:25,471 [INFO]   1710 registros sincronizados en vida.movidcto
+2026-04-15 09:00:25,480 [INFO] Sincronizando vida.inb...
+2026-04-15 09:00:25,731 [INFO]   Leidas 2833 filas de inb.dbf
+2026-04-15 09:00:25,734 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-15 09:00:27,611 [INFO]   2832 registros sincronizados en vida.inb
+2026-04-15 09:00:27,621 [INFO] Sincronizando vida.inventar...
+2026-04-15 09:00:27,748 [INFO]   Leidas 1390 filas de inventar.dbf
+2026-04-15 09:00:28,840 [INFO]   1390 registros sincronizados en vida.inventar
+2026-04-15 09:00:28,844 [INFO] Sincronizando vida.clientes...
+2026-04-15 09:00:28,877 [INFO]   Leidas 925 filas de clientes.dbf
+2026-04-15 09:00:29,380 [INFO]   925 registros sincronizados en vida.clientes
+2026-04-15 09:00:29,381 [INFO] 
+============================================================
+2026-04-15 09:00:29,381 [INFO] SINCRONIZACION COMPLETADA - 42220 registros procesados
+2026-04-15 09:00:29,381 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260415_090002.log
+2026-04-15 09:00:29,381 [INFO] ============================================================
+2026-04-16 09:00:01,932 [INFO] ============================================================
+2026-04-16 09:00:01,932 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-16 09:00:01,932 [INFO] Hora: 2026-04-16 09:00:01
+2026-04-16 09:00:01,932 [INFO] BASE_DIR: C:\sync_neon
+2026-04-16 09:00:01,933 [INFO] .env path: C:\sync_neon\.env
+2026-04-16 09:00:01,933 [INFO] ============================================================
+2026-04-16 09:00:02,514 [INFO] Conectado a Neon PostgreSQL
+2026-04-16 09:00:02,515 [INFO] 
+----------------------------------------
+2026-04-16 09:00:02,515 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-16 09:00:02,516 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-16 09:00:02,516 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-16 09:00:02,516 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-16 09:00:03,802 [INFO]   Leidas 19091 filas de itemdcto.dbf
+2026-04-16 09:00:03,812 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-16 09:00:03,823 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-16 09:00:13,095 [INFO]   18341 registros sincronizados en sanjh.itemdcto
+2026-04-16 09:00:13,128 [INFO] Sincronizando sanjh.movidcto...
+2026-04-16 09:00:13,521 [INFO]   Leidas 3699 filas de movidcto.dbf
+2026-04-16 09:00:13,522 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-16 09:00:13,524 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-16 09:00:15,945 [INFO]   3652 registros sincronizados en sanjh.movidcto
+2026-04-16 09:00:15,957 [INFO] Sincronizando sanjh.inb...
+2026-04-16 09:00:16,103 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-16 09:00:16,970 [INFO]   1409 registros sincronizados en sanjh.inb
+2026-04-16 09:00:16,978 [INFO] Sincronizando sanjh.inventar...
+2026-04-16 09:00:17,273 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-16 09:00:17,276 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-16 09:00:19,315 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-16 09:00:19,321 [INFO] Sincronizando sanjh.clientes...
+2026-04-16 09:00:19,356 [INFO]   Leidas 857 filas de clientes.dbf
+2026-04-16 09:00:19,870 [INFO]   857 registros sincronizados en sanjh.clientes
+2026-04-16 09:00:19,871 [INFO] 
+----------------------------------------
+2026-04-16 09:00:19,871 [INFO] Empresa: VIDA - schema: vida
+2026-04-16 09:00:19,871 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-16 09:00:19,871 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-16 09:00:19,872 [INFO] Sincronizando vida.itemdcto...
+2026-04-16 09:00:20,329 [INFO]   Leidas 6986 filas de itemdcto.dbf
+2026-04-16 09:00:20,334 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-16 09:00:20,340 [INFO]   Deduplicadas 69 filas en memoria
+2026-04-16 09:00:23,827 [INFO]   6913 registros sincronizados en vida.itemdcto
+2026-04-16 09:00:23,839 [INFO] Sincronizando vida.movidcto...
+2026-04-16 09:00:24,005 [INFO]   Leidas 1733 filas de movidcto.dbf
+2026-04-16 09:00:24,006 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-16 09:00:25,277 [INFO]   1726 registros sincronizados en vida.movidcto
+2026-04-16 09:00:25,285 [INFO] Sincronizando vida.inb...
+2026-04-16 09:00:25,412 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-16 09:00:26,279 [INFO]   1409 registros sincronizados en vida.inb
+2026-04-16 09:00:26,283 [INFO] Sincronizando vida.inventar...
+2026-04-16 09:00:26,427 [INFO]   Leidas 1410 filas de inventar.dbf
+2026-04-16 09:00:27,618 [INFO]   1410 registros sincronizados en vida.inventar
+2026-04-16 09:00:27,621 [INFO] Sincronizando vida.clientes...
+2026-04-16 09:00:27,653 [INFO]   Leidas 927 filas de clientes.dbf
+2026-04-16 09:00:28,224 [INFO]   927 registros sincronizados en vida.clientes
+2026-04-16 09:00:28,227 [INFO] 
+============================================================
+2026-04-16 09:00:28,227 [INFO] SINCRONIZACION COMPLETADA - 39487 registros procesados
+2026-04-16 09:00:28,227 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260416_090001.log
+2026-04-16 09:00:28,227 [INFO] ============================================================
+2026-04-17 09:00:02,075 [INFO] ============================================================
+2026-04-17 09:00:02,075 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-17 09:00:02,075 [INFO] Hora: 2026-04-17 09:00:02
+2026-04-17 09:00:02,075 [INFO] BASE_DIR: C:\sync_neon
+2026-04-17 09:00:02,075 [INFO] .env path: C:\sync_neon\.env
+2026-04-17 09:00:02,075 [INFO] ============================================================
+2026-04-17 09:00:02,608 [INFO] Conectado a Neon PostgreSQL
+2026-04-17 09:00:02,609 [INFO] 
+----------------------------------------
+2026-04-17 09:00:02,609 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-17 09:00:02,609 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-17 09:00:02,609 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-17 09:00:02,610 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-17 09:00:03,987 [INFO]   Leidas 19093 filas de itemdcto.dbf
+2026-04-17 09:00:03,997 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-17 09:00:04,008 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-17 09:00:09,488 [INFO]   18343 registros sincronizados en sanjh.itemdcto
+2026-04-17 09:00:09,519 [INFO] Sincronizando sanjh.movidcto...
+2026-04-17 09:00:09,967 [INFO]   Leidas 3700 filas de movidcto.dbf
+2026-04-17 09:00:09,969 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-17 09:00:09,971 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-17 09:00:11,382 [INFO]   3653 registros sincronizados en sanjh.movidcto
+2026-04-17 09:00:11,395 [INFO] Sincronizando sanjh.inb...
+2026-04-17 09:00:11,522 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-17 09:00:12,132 [INFO]   1409 registros sincronizados en sanjh.inb
+2026-04-17 09:00:12,140 [INFO] Sincronizando sanjh.inventar...
+2026-04-17 09:00:12,433 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-17 09:00:12,435 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-17 09:00:13,609 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-17 09:00:13,621 [INFO] Sincronizando sanjh.clientes...
+2026-04-17 09:00:13,656 [INFO]   Leidas 858 filas de clientes.dbf
+2026-04-17 09:00:14,032 [INFO]   858 registros sincronizados en sanjh.clientes
+2026-04-17 09:00:14,034 [INFO] 
+----------------------------------------
+2026-04-17 09:00:14,035 [INFO] Empresa: VIDA - schema: vida
+2026-04-17 09:00:14,035 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-17 09:00:14,035 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-17 09:00:14,035 [INFO] Sincronizando vida.itemdcto...
+2026-04-17 09:00:14,537 [INFO]   Leidas 7093 filas de itemdcto.dbf
+2026-04-17 09:00:14,540 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-17 09:00:14,544 [INFO]   Deduplicadas 116 filas en memoria
+2026-04-17 09:00:16,744 [INFO]   6973 registros sincronizados en vida.itemdcto
+2026-04-17 09:00:16,754 [INFO] Sincronizando vida.movidcto...
+2026-04-17 09:00:16,937 [INFO]   Leidas 1748 filas de movidcto.dbf
+2026-04-17 09:00:16,938 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-17 09:00:17,804 [INFO]   1741 registros sincronizados en vida.movidcto
+2026-04-17 09:00:17,808 [INFO] Sincronizando vida.inb...
+2026-04-17 09:00:17,946 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-17 09:00:18,546 [INFO]   1409 registros sincronizados en vida.inb
+2026-04-17 09:00:18,549 [INFO] Sincronizando vida.inventar...
+2026-04-17 09:00:18,711 [INFO]   Leidas 1457 filas de inventar.dbf
+2026-04-17 09:00:19,378 [INFO]   1457 registros sincronizados en vida.inventar
+2026-04-17 09:00:19,381 [INFO] Sincronizando vida.clientes...
+2026-04-17 09:00:19,426 [INFO]   Leidas 929 filas de clientes.dbf
+2026-04-17 09:00:19,802 [INFO]   929 registros sincronizados en vida.clientes
+2026-04-17 09:00:19,806 [INFO] 
+============================================================
+2026-04-17 09:00:19,806 [INFO] SINCRONIZACION COMPLETADA - 39615 registros procesados
+2026-04-17 09:00:19,806 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260417_090002.log
+2026-04-17 09:00:19,806 [INFO] ============================================================
+2026-04-20 08:52:36,076 [INFO] ============================================================
+2026-04-20 08:52:36,076 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-20 08:52:36,076 [INFO] Hora: 2026-04-20 08:52:36
+2026-04-20 08:52:36,076 [INFO] BASE_DIR: C:\sync_neon
+2026-04-20 08:52:36,076 [INFO] .env path: C:\sync_neon\.env
+2026-04-20 08:52:36,076 [INFO] ============================================================
+2026-04-20 08:52:37,258 [INFO] Conectado a Neon PostgreSQL
+2026-04-20 08:52:37,258 [INFO] 
+----------------------------------------
+2026-04-20 08:52:37,258 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-20 08:52:37,358 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-20 08:52:37,358 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-20 08:52:37,363 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-20 08:52:48,101 [INFO]   Leidas 19096 filas de itemdcto.dbf
+2026-04-20 08:52:48,111 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-20 08:52:48,125 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-20 08:52:53,780 [INFO]   18346 registros sincronizados en sanjh.itemdcto
+2026-04-20 08:52:53,814 [INFO] Sincronizando sanjh.movidcto...
+2026-04-20 08:52:54,439 [INFO]   Leidas 3701 filas de movidcto.dbf
+2026-04-20 08:52:54,441 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-20 08:52:54,444 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-20 08:52:55,888 [INFO]   3654 registros sincronizados en sanjh.movidcto
+2026-04-20 08:52:55,899 [INFO] Sincronizando sanjh.inb...
+2026-04-20 08:52:56,333 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-20 08:52:56,956 [INFO]   1409 registros sincronizados en sanjh.inb
+2026-04-20 08:52:56,960 [INFO] Sincronizando sanjh.inventar...
+2026-04-20 08:52:57,547 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-20 08:52:57,551 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-20 08:52:58,712 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-20 08:52:58,719 [INFO] Sincronizando sanjh.clientes...
+2026-04-20 08:52:58,780 [INFO]   Leidas 859 filas de clientes.dbf
+2026-04-20 08:52:59,162 [INFO]   859 registros sincronizados en sanjh.clientes
+2026-04-20 08:52:59,163 [INFO] 
+----------------------------------------
+2026-04-20 08:52:59,163 [INFO] Empresa: VIDA - schema: vida
+2026-04-20 08:52:59,163 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-20 08:52:59,163 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-20 08:52:59,163 [INFO] Sincronizando vida.itemdcto...
+2026-04-20 08:52:59,643 [INFO]   Leidas 7104 filas de itemdcto.dbf
+2026-04-20 08:52:59,647 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-20 08:52:59,652 [INFO]   Deduplicadas 116 filas en memoria
+2026-04-20 08:53:01,774 [INFO]   6984 registros sincronizados en vida.itemdcto
+2026-04-20 08:53:01,786 [INFO] Sincronizando vida.movidcto...
+2026-04-20 08:53:01,992 [INFO]   Leidas 1750 filas de movidcto.dbf
+2026-04-20 08:53:01,993 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-20 08:53:02,776 [INFO]   1743 registros sincronizados en vida.movidcto
+2026-04-20 08:53:02,781 [INFO] Sincronizando vida.inb...
+2026-04-20 08:53:02,922 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-20 08:53:03,546 [INFO]   1409 registros sincronizados en vida.inb
+2026-04-20 08:53:03,550 [INFO] Sincronizando vida.inventar...
+2026-04-20 08:53:03,699 [INFO]   Leidas 1457 filas de inventar.dbf
+2026-04-20 08:53:04,388 [INFO]   1457 registros sincronizados en vida.inventar
+2026-04-20 08:53:04,392 [INFO] Sincronizando vida.clientes...
+2026-04-20 08:53:04,424 [INFO]   Leidas 929 filas de clientes.dbf
+2026-04-20 08:53:04,819 [INFO]   929 registros sincronizados en vida.clientes
+2026-04-20 08:53:04,821 [INFO] 
+============================================================
+2026-04-20 08:53:04,821 [INFO] SINCRONIZACION COMPLETADA - 39633 registros procesados
+2026-04-20 08:53:04,821 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260420_085236.log
+2026-04-20 08:53:04,821 [INFO] ============================================================
+2026-04-20 09:00:02,154 [INFO] ============================================================
+2026-04-20 09:00:02,155 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-20 09:00:02,155 [INFO] Hora: 2026-04-20 09:00:02
+2026-04-20 09:00:02,155 [INFO] BASE_DIR: C:\sync_neon
+2026-04-20 09:00:02,155 [INFO] .env path: C:\sync_neon\.env
+2026-04-20 09:00:02,155 [INFO] ============================================================
+2026-04-20 09:00:03,516 [INFO] Conectado a Neon PostgreSQL
+2026-04-20 09:00:03,516 [INFO] 
+----------------------------------------
+2026-04-20 09:00:03,516 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-20 09:00:03,517 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-20 09:00:03,517 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-20 09:00:03,517 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-20 09:00:04,966 [INFO]   Leidas 19096 filas de itemdcto.dbf
+2026-04-20 09:00:04,976 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-20 09:00:04,988 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-20 09:00:10,619 [INFO]   18346 registros sincronizados en sanjh.itemdcto
+2026-04-20 09:00:10,650 [INFO] Sincronizando sanjh.movidcto...
+2026-04-20 09:00:11,042 [INFO]   Leidas 3701 filas de movidcto.dbf
+2026-04-20 09:00:11,044 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-20 09:00:11,046 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-20 09:00:12,493 [INFO]   3654 registros sincronizados en sanjh.movidcto
+2026-04-20 09:00:12,504 [INFO] Sincronizando sanjh.inb...
+2026-04-20 09:00:12,669 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-20 09:00:13,284 [INFO]   1409 registros sincronizados en sanjh.inb
+2026-04-20 09:00:13,288 [INFO] Sincronizando sanjh.inventar...
+2026-04-20 09:00:13,621 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-20 09:00:13,623 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-20 09:00:14,876 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-20 09:00:14,886 [INFO] Sincronizando sanjh.clientes...
+2026-04-20 09:00:14,920 [INFO]   Leidas 859 filas de clientes.dbf
+2026-04-20 09:00:15,300 [INFO]   859 registros sincronizados en sanjh.clientes
+2026-04-20 09:00:15,302 [INFO] 
+----------------------------------------
+2026-04-20 09:00:15,302 [INFO] Empresa: VIDA - schema: vida
+2026-04-20 09:00:15,302 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-20 09:00:15,302 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-20 09:00:15,303 [INFO] Sincronizando vida.itemdcto...
+2026-04-20 09:00:15,715 [INFO]   Leidas 7104 filas de itemdcto.dbf
+2026-04-20 09:00:15,719 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-20 09:00:15,723 [INFO]   Deduplicadas 116 filas en memoria
+2026-04-20 09:00:18,024 [INFO]   6984 registros sincronizados en vida.itemdcto
+2026-04-20 09:00:18,037 [INFO] Sincronizando vida.movidcto...
+2026-04-20 09:00:18,204 [INFO]   Leidas 1750 filas de movidcto.dbf
+2026-04-20 09:00:18,205 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-20 09:00:19,004 [INFO]   1743 registros sincronizados en vida.movidcto
+2026-04-20 09:00:19,013 [INFO] Sincronizando vida.inb...
+2026-04-20 09:00:19,139 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-20 09:00:19,764 [INFO]   1409 registros sincronizados en vida.inb
+2026-04-20 09:00:19,771 [INFO] Sincronizando vida.inventar...
+2026-04-20 09:00:19,903 [INFO]   Leidas 1457 filas de inventar.dbf
+2026-04-20 09:00:20,581 [INFO]   1457 registros sincronizados en vida.inventar
+2026-04-20 09:00:20,584 [INFO] Sincronizando vida.clientes...
+2026-04-20 09:00:20,613 [INFO]   Leidas 929 filas de clientes.dbf
+2026-04-20 09:00:20,989 [INFO]   929 registros sincronizados en vida.clientes
+2026-04-20 09:00:20,990 [INFO] 
+============================================================
+2026-04-20 09:00:20,990 [INFO] SINCRONIZACION COMPLETADA - 39633 registros procesados
+2026-04-20 09:00:20,990 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260420_090002.log
+2026-04-20 09:00:20,990 [INFO] ============================================================
+2026-04-21 09:00:01,909 [INFO] ============================================================
+2026-04-21 09:00:01,909 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-21 09:00:01,909 [INFO] Hora: 2026-04-21 09:00:01
+2026-04-21 09:00:01,909 [INFO] BASE_DIR: C:\sync_neon
+2026-04-21 09:00:01,910 [INFO] .env path: C:\sync_neon\.env
+2026-04-21 09:00:01,910 [INFO] ============================================================
+2026-04-21 09:00:02,416 [INFO] Conectado a Neon PostgreSQL
+2026-04-21 09:00:02,416 [INFO] 
+----------------------------------------
+2026-04-21 09:00:02,416 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-21 09:00:02,416 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-21 09:00:02,416 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-21 09:00:02,417 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-21 09:00:03,738 [INFO]   Leidas 19098 filas de itemdcto.dbf
+2026-04-21 09:00:03,747 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-21 09:00:03,758 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-21 09:00:11,864 [INFO]   18348 registros sincronizados en sanjh.itemdcto
+2026-04-21 09:00:11,898 [INFO] Sincronizando sanjh.movidcto...
+2026-04-21 09:00:12,298 [INFO]   Leidas 3704 filas de movidcto.dbf
+2026-04-21 09:00:12,301 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-21 09:00:12,303 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-21 09:00:14,443 [INFO]   3657 registros sincronizados en sanjh.movidcto
+2026-04-21 09:00:14,456 [INFO] Sincronizando sanjh.inb...
+2026-04-21 09:00:14,609 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-21 09:00:15,581 [INFO]   1409 registros sincronizados en sanjh.inb
+2026-04-21 09:00:15,587 [INFO] Sincronizando sanjh.inventar...
+2026-04-21 09:00:15,881 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-21 09:00:15,884 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-21 09:00:17,681 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-21 09:00:17,688 [INFO] Sincronizando sanjh.clientes...
+2026-04-21 09:00:17,726 [INFO]   Leidas 861 filas de clientes.dbf
+2026-04-21 09:00:18,187 [INFO]   861 registros sincronizados en sanjh.clientes
+2026-04-21 09:00:18,188 [INFO] 
+----------------------------------------
+2026-04-21 09:00:18,188 [INFO] Empresa: VIDA - schema: vida
+2026-04-21 09:00:18,188 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-21 09:00:18,188 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-21 09:00:18,188 [INFO] Sincronizando vida.itemdcto...
+2026-04-21 09:00:18,671 [INFO]   Leidas 7128 filas de itemdcto.dbf
+2026-04-21 09:00:18,676 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-21 09:00:18,683 [INFO]   Deduplicadas 116 filas en memoria
+2026-04-21 09:00:21,944 [INFO]   7008 registros sincronizados en vida.itemdcto
+2026-04-21 09:00:21,958 [INFO] Sincronizando vida.movidcto...
+2026-04-21 09:00:22,129 [INFO]   Leidas 1757 filas de movidcto.dbf
+2026-04-21 09:00:22,129 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-21 09:00:23,270 [INFO]   1750 registros sincronizados en vida.movidcto
+2026-04-21 09:00:23,276 [INFO] Sincronizando vida.inb...
+2026-04-21 09:00:23,403 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-21 09:00:24,368 [INFO]   1409 registros sincronizados en vida.inb
+2026-04-21 09:00:24,377 [INFO] Sincronizando vida.inventar...
+2026-04-21 09:00:24,513 [INFO]   Leidas 1458 filas de inventar.dbf
+2026-04-21 09:00:25,533 [INFO]   1458 registros sincronizados en vida.inventar
+2026-04-21 09:00:25,539 [INFO] Sincronizando vida.clientes...
+2026-04-21 09:00:25,570 [INFO]   Leidas 932 filas de clientes.dbf
+2026-04-21 09:00:26,060 [INFO]   932 registros sincronizados en vida.clientes
+2026-04-21 09:00:26,061 [INFO] 
+============================================================
+2026-04-21 09:00:26,061 [INFO] SINCRONIZACION COMPLETADA - 39675 registros procesados
+2026-04-21 09:00:26,061 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260421_090001.log
+2026-04-21 09:00:26,061 [INFO] ============================================================
+2026-04-22 09:00:02,352 [INFO] ============================================================
+2026-04-22 09:00:02,353 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-22 09:00:02,353 [INFO] Hora: 2026-04-22 09:00:02
+2026-04-22 09:00:02,353 [INFO] BASE_DIR: C:\sync_neon
+2026-04-22 09:00:02,353 [INFO] .env path: C:\sync_neon\.env
+2026-04-22 09:00:02,353 [INFO] ============================================================
+2026-04-22 09:00:02,841 [INFO] Conectado a Neon PostgreSQL
+2026-04-22 09:00:02,842 [INFO] 
+----------------------------------------
+2026-04-22 09:00:02,842 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-22 09:00:02,843 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-22 09:00:02,843 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-22 09:00:02,843 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-22 09:00:04,207 [INFO]   Leidas 19099 filas de itemdcto.dbf
+2026-04-22 09:00:04,217 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-22 09:00:04,232 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-22 09:00:13,874 [INFO]   18349 registros sincronizados en sanjh.itemdcto
+2026-04-22 09:00:13,904 [INFO] Sincronizando sanjh.movidcto...
+2026-04-22 09:00:14,291 [INFO]   Leidas 3705 filas de movidcto.dbf
+2026-04-22 09:00:14,291 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-22 09:00:14,291 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-22 09:00:16,859 [INFO]   3658 registros sincronizados en sanjh.movidcto
+2026-04-22 09:00:16,872 [INFO] Sincronizando sanjh.inb...
+2026-04-22 09:00:17,003 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-22 09:00:18,198 [INFO]   1409 registros sincronizados en sanjh.inb
+2026-04-22 09:00:18,207 [INFO] Sincronizando sanjh.inventar...
+2026-04-22 09:00:18,484 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-22 09:00:18,492 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-22 09:00:20,603 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-22 09:00:20,610 [INFO] Sincronizando sanjh.clientes...
+2026-04-22 09:00:20,665 [INFO]   Leidas 861 filas de clientes.dbf
+2026-04-22 09:00:21,173 [INFO]   861 registros sincronizados en sanjh.clientes
+2026-04-22 09:00:21,175 [INFO] 
+----------------------------------------
+2026-04-22 09:00:21,175 [INFO] Empresa: VIDA - schema: vida
+2026-04-22 09:00:21,175 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-22 09:00:21,175 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-22 09:00:21,175 [INFO] Sincronizando vida.itemdcto...
+2026-04-22 09:00:21,647 [INFO]   Leidas 7143 filas de itemdcto.dbf
+2026-04-22 09:00:21,652 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-22 09:00:21,657 [INFO]   Deduplicadas 116 filas en memoria
+2026-04-22 09:00:25,397 [INFO]   7023 registros sincronizados en vida.itemdcto
+2026-04-22 09:00:25,409 [INFO] Sincronizando vida.movidcto...
+2026-04-22 09:00:25,576 [INFO]   Leidas 1762 filas de movidcto.dbf
+2026-04-22 09:00:25,577 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-22 09:00:26,971 [INFO]   1755 registros sincronizados en vida.movidcto
+2026-04-22 09:00:26,981 [INFO] Sincronizando vida.inb...
+2026-04-22 09:00:27,107 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-22 09:00:28,295 [INFO]   1409 registros sincronizados en vida.inb
+2026-04-22 09:00:28,299 [INFO] Sincronizando vida.inventar...
+2026-04-22 09:00:28,433 [INFO]   Leidas 1458 filas de inventar.dbf
+2026-04-22 09:00:29,657 [INFO]   1458 registros sincronizados en vida.inventar
+2026-04-22 09:00:29,661 [INFO] Sincronizando vida.clientes...
+2026-04-22 09:00:29,697 [INFO]   Leidas 933 filas de clientes.dbf
+2026-04-22 09:00:30,238 [INFO]   933 registros sincronizados en vida.clientes
+2026-04-22 09:00:30,239 [INFO] 
+============================================================
+2026-04-22 09:00:30,239 [INFO] SINCRONIZACION COMPLETADA - 39698 registros procesados
+2026-04-22 09:00:30,239 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260422_090002.log
+2026-04-22 09:00:30,239 [INFO] ============================================================
+2026-04-23 09:00:02,643 [INFO] ============================================================
+2026-04-23 09:00:02,644 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-23 09:00:02,644 [INFO] Hora: 2026-04-23 09:00:02
+2026-04-23 09:00:02,644 [INFO] BASE_DIR: C:\sync_neon
+2026-04-23 09:00:02,644 [INFO] .env path: C:\sync_neon\.env
+2026-04-23 09:00:02,644 [INFO] ============================================================
+2026-04-23 09:00:03,170 [INFO] Conectado a Neon PostgreSQL
+2026-04-23 09:00:03,171 [INFO] 
+----------------------------------------
+2026-04-23 09:00:03,171 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-23 09:00:03,172 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-23 09:00:03,172 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-23 09:00:03,173 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-23 09:00:04,462 [INFO]   Leidas 19101 filas de itemdcto.dbf
+2026-04-23 09:00:04,471 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-23 09:00:04,482 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-23 09:00:13,407 [INFO]   18351 registros sincronizados en sanjh.itemdcto
+2026-04-23 09:00:13,437 [INFO] Sincronizando sanjh.movidcto...
+2026-04-23 09:00:13,831 [INFO]   Leidas 3707 filas de movidcto.dbf
+2026-04-23 09:00:13,833 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-23 09:00:13,835 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-23 09:00:16,150 [INFO]   3660 registros sincronizados en sanjh.movidcto
+2026-04-23 09:00:16,163 [INFO] Sincronizando sanjh.inb...
+2026-04-23 09:00:16,310 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-23 09:00:17,384 [INFO]   1409 registros sincronizados en sanjh.inb
+2026-04-23 09:00:17,389 [INFO] Sincronizando sanjh.inventar...
+2026-04-23 09:00:17,740 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-23 09:00:17,743 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-23 09:00:19,707 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-23 09:00:19,718 [INFO] Sincronizando sanjh.clientes...
+2026-04-23 09:00:19,753 [INFO]   Leidas 861 filas de clientes.dbf
+2026-04-23 09:00:20,239 [INFO]   861 registros sincronizados en sanjh.clientes
+2026-04-23 09:00:20,241 [INFO] 
+----------------------------------------
+2026-04-23 09:00:20,242 [INFO] Empresa: VIDA - schema: vida
+2026-04-23 09:00:20,242 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-23 09:00:20,242 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-23 09:00:20,242 [INFO] Sincronizando vida.itemdcto...
+2026-04-23 09:00:20,245 [ERROR]   Error leyendo C:\red\newdesar\winfac_nna\VIDAD\itemdcto.dbf: [Errno 13] Permission denied: 'C:\\red\\newdesar\\winfac_nna\\VIDAD\\itemdcto.dbf'
+2026-04-23 09:00:20,245 [WARNING]   Sin datos para vida.itemdcto
+2026-04-23 09:00:20,245 [INFO] Sincronizando vida.movidcto...
+2026-04-23 09:00:20,247 [ERROR]   Error leyendo C:\red\newdesar\winfac_nna\VIDAD\movidcto.dbf: [Errno 13] Permission denied: 'C:\\red\\newdesar\\winfac_nna\\VIDAD\\movidcto.dbf'
+2026-04-23 09:00:20,247 [WARNING]   Sin datos para vida.movidcto
+2026-04-23 09:00:20,247 [INFO] Sincronizando vida.inb...
+2026-04-23 09:00:20,375 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-23 09:00:21,429 [INFO]   1409 registros sincronizados en vida.inb
+2026-04-23 09:00:21,439 [INFO] Sincronizando vida.inventar...
+2026-04-23 09:00:21,442 [ERROR]   Error leyendo C:\red\newdesar\winfac_nna\VIDAD\inventar.dbf: [Errno 13] Permission denied: 'C:\\red\\newdesar\\winfac_nna\\VIDAD\\inventar.dbf'
+2026-04-23 09:00:21,442 [WARNING]   Sin datos para vida.inventar
+2026-04-23 09:00:21,442 [INFO] Sincronizando vida.clientes...
+2026-04-23 09:00:21,475 [INFO]   Leidas 934 filas de clientes.dbf
+2026-04-23 09:00:21,977 [INFO]   934 registros sincronizados en vida.clientes
+2026-04-23 09:00:21,981 [INFO] 
+============================================================
+2026-04-23 09:00:21,981 [INFO] SINCRONIZACION COMPLETADA - 29467 registros procesados
+2026-04-23 09:00:21,981 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260423_090002.log
+2026-04-23 09:00:21,981 [INFO] ============================================================
+2026-04-24 09:00:01,976 [INFO] ============================================================
+2026-04-24 09:00:01,976 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-24 09:00:01,976 [INFO] Hora: 2026-04-24 09:00:01
+2026-04-24 09:00:01,976 [INFO] BASE_DIR: C:\sync_neon
+2026-04-24 09:00:01,976 [INFO] .env path: C:\sync_neon\.env
+2026-04-24 09:00:01,976 [INFO] ============================================================
+2026-04-24 09:00:02,505 [INFO] Conectado a Neon PostgreSQL
+2026-04-24 09:00:02,505 [INFO] 
+----------------------------------------
+2026-04-24 09:00:02,506 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-24 09:00:02,506 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-24 09:00:02,506 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-24 09:00:02,507 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-24 09:00:03,844 [INFO]   Leidas 19106 filas de itemdcto.dbf
+2026-04-24 09:00:03,855 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-24 09:00:03,871 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-24 09:00:13,428 [INFO]   18356 registros sincronizados en sanjh.itemdcto
+2026-04-24 09:00:13,456 [INFO] Sincronizando sanjh.movidcto...
+2026-04-24 09:00:13,869 [INFO]   Leidas 3710 filas de movidcto.dbf
+2026-04-24 09:00:13,871 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-24 09:00:13,873 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-24 09:00:16,359 [INFO]   3663 registros sincronizados en sanjh.movidcto
+2026-04-24 09:00:16,374 [INFO] Sincronizando sanjh.inb...
+2026-04-24 09:00:16,518 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-24 09:00:17,679 [INFO]   1409 registros sincronizados en sanjh.inb
+2026-04-24 09:00:17,689 [INFO] Sincronizando sanjh.inventar...
+2026-04-24 09:00:17,984 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-24 09:00:17,987 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-24 09:00:20,092 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-24 09:00:20,105 [INFO] Sincronizando sanjh.clientes...
+2026-04-24 09:00:20,144 [INFO]   Leidas 861 filas de clientes.dbf
+2026-04-24 09:00:20,676 [INFO]   861 registros sincronizados en sanjh.clientes
+2026-04-24 09:00:20,679 [INFO] 
+----------------------------------------
+2026-04-24 09:00:20,679 [INFO] Empresa: VIDA - schema: vida
+2026-04-24 09:00:20,680 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-24 09:00:20,680 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-24 09:00:20,681 [INFO] Sincronizando vida.itemdcto...
+2026-04-24 09:00:21,120 [INFO]   Leidas 7186 filas de itemdcto.dbf
+2026-04-24 09:00:21,125 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-24 09:00:21,134 [INFO]   Deduplicadas 116 filas en memoria
+2026-04-24 09:00:24,734 [INFO]   7066 registros sincronizados en vida.itemdcto
+2026-04-24 09:00:24,744 [INFO] Sincronizando vida.movidcto...
+2026-04-24 09:00:24,912 [INFO]   Leidas 1775 filas de movidcto.dbf
+2026-04-24 09:00:24,913 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-24 09:00:26,234 [INFO]   1768 registros sincronizados en vida.movidcto
+2026-04-24 09:00:26,243 [INFO] Sincronizando vida.inb...
+2026-04-24 09:00:26,370 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-24 09:00:27,532 [INFO]   1409 registros sincronizados en vida.inb
+2026-04-24 09:00:27,539 [INFO] Sincronizando vida.inventar...
+2026-04-24 09:00:27,671 [INFO]   Leidas 1458 filas de inventar.dbf
+2026-04-24 09:00:28,864 [INFO]   1458 registros sincronizados en vida.inventar
+2026-04-24 09:00:28,872 [INFO] Sincronizando vida.clientes...
+2026-04-24 09:00:28,911 [INFO]   Leidas 936 filas de clientes.dbf
+2026-04-24 09:00:29,460 [INFO]   936 registros sincronizados en vida.clientes
+2026-04-24 09:00:29,461 [INFO] 
+============================================================
+2026-04-24 09:00:29,461 [INFO] SINCRONIZACION COMPLETADA - 39769 registros procesados
+2026-04-24 09:00:29,461 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260424_090001.log
+2026-04-24 09:00:29,461 [INFO] ============================================================
+2026-04-27 08:22:29,255 [INFO] ============================================================
+2026-04-27 08:22:29,256 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-27 08:22:29,256 [INFO] Hora: 2026-04-27 08:22:29
+2026-04-27 08:22:29,256 [INFO] BASE_DIR: C:\sync_neon
+2026-04-27 08:22:29,257 [INFO] .env path: C:\sync_neon\.env
+2026-04-27 08:22:29,257 [INFO] ============================================================
+2026-04-27 08:22:31,191 [INFO] Conectado a Neon PostgreSQL
+2026-04-27 08:22:31,192 [INFO] 
+----------------------------------------
+2026-04-27 08:22:31,192 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-27 08:22:31,271 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-27 08:22:31,271 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-27 08:22:31,271 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-27 08:22:37,402 [INFO]   Leidas 19107 filas de itemdcto.dbf
+2026-04-27 08:22:37,413 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-27 08:22:37,429 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-27 08:22:45,647 [INFO]   18357 registros sincronizados en sanjh.itemdcto
+2026-04-27 08:22:45,675 [INFO] Sincronizando sanjh.movidcto...
+2026-04-27 08:22:46,626 [INFO]   Leidas 3711 filas de movidcto.dbf
+2026-04-27 08:22:46,629 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-27 08:22:46,633 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-27 08:22:48,781 [INFO]   3664 registros sincronizados en sanjh.movidcto
+2026-04-27 08:22:48,790 [INFO] Sincronizando sanjh.inb...
+2026-04-27 08:22:48,997 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-27 08:22:49,998 [INFO]   1409 registros sincronizados en sanjh.inb
+2026-04-27 08:22:50,184 [INFO] Sincronizando sanjh.inventar...
+2026-04-27 08:22:50,988 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-27 08:22:50,990 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-27 08:22:52,849 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-27 08:22:52,856 [INFO] Sincronizando sanjh.clientes...
+2026-04-27 08:22:52,893 [INFO]   Leidas 861 filas de clientes.dbf
+2026-04-27 08:22:53,365 [INFO]   861 registros sincronizados en sanjh.clientes
+2026-04-27 08:22:53,366 [INFO] 
+----------------------------------------
+2026-04-27 08:22:53,366 [INFO] Empresa: VIDA - schema: vida
+2026-04-27 08:22:53,366 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-27 08:22:53,366 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-27 08:22:53,366 [INFO] Sincronizando vida.itemdcto...
+2026-04-27 08:22:57,815 [INFO]   Leidas 7201 filas de itemdcto.dbf
+2026-04-27 08:22:57,820 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-27 08:22:57,827 [INFO]   Deduplicadas 116 filas en memoria
+2026-04-27 08:23:01,041 [INFO]   7081 registros sincronizados en vida.itemdcto
+2026-04-27 08:23:01,052 [INFO] Sincronizando vida.movidcto...
+2026-04-27 08:23:01,465 [INFO]   Leidas 1780 filas de movidcto.dbf
+2026-04-27 08:23:01,466 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-27 08:23:02,673 [INFO]   1773 registros sincronizados en vida.movidcto
+2026-04-27 08:23:02,679 [INFO] Sincronizando vida.inb...
+2026-04-27 08:23:03,838 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-27 08:23:04,901 [INFO]   1409 registros sincronizados en vida.inb
+2026-04-27 08:23:04,907 [INFO] Sincronizando vida.inventar...
+2026-04-27 08:23:14,322 [INFO]   Leidas 1458 filas de inventar.dbf
+2026-04-27 08:23:15,358 [INFO]   1458 registros sincronizados en vida.inventar
+2026-04-27 08:23:15,361 [INFO] Sincronizando vida.clientes...
+2026-04-27 08:23:15,580 [INFO]   Leidas 938 filas de clientes.dbf
+2026-04-27 08:23:16,066 [INFO]   938 registros sincronizados en vida.clientes
+2026-04-27 08:23:16,068 [INFO] 
+============================================================
+2026-04-27 08:23:16,068 [INFO] SINCRONIZACION COMPLETADA - 39793 registros procesados
+2026-04-27 08:23:16,068 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260427_082229.log
+2026-04-27 08:23:16,068 [INFO] ============================================================
+2026-04-27 09:00:01,865 [INFO] ============================================================
+2026-04-27 09:00:01,865 [INFO] INICIO SINCRONIZACION WinFac - Neon
+2026-04-27 09:00:01,865 [INFO] Hora: 2026-04-27 09:00:01
+2026-04-27 09:00:01,865 [INFO] BASE_DIR: C:\sync_neon
+2026-04-27 09:00:01,865 [INFO] .env path: C:\sync_neon\.env
+2026-04-27 09:00:01,865 [INFO] ============================================================
+2026-04-27 09:00:02,388 [INFO] Conectado a Neon PostgreSQL
+2026-04-27 09:00:02,389 [INFO] 
+----------------------------------------
+2026-04-27 09:00:02,389 [INFO] Empresa: SANJH - schema: sanjh
+2026-04-27 09:00:02,390 [INFO] base_path: C:\red\newdesar\winfac_nna\Base
+2026-04-27 09:00:02,391 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-27 09:00:02,391 [INFO] Sincronizando sanjh.itemdcto...
+2026-04-27 09:00:03,785 [INFO]   Leidas 19107 filas de itemdcto.dbf
+2026-04-27 09:00:03,795 [INFO]   Omitidas 37 filas con PK nula/vacia
+2026-04-27 09:00:03,807 [INFO]   Deduplicadas 713 filas en memoria
+2026-04-27 09:00:09,381 [INFO]   18357 registros sincronizados en sanjh.itemdcto
+2026-04-27 09:00:09,412 [INFO] Sincronizando sanjh.movidcto...
+2026-04-27 09:00:09,850 [INFO]   Leidas 3711 filas de movidcto.dbf
+2026-04-27 09:00:09,852 [INFO]   Omitidas 38 filas con PK nula/vacia
+2026-04-27 09:00:09,857 [INFO]   Deduplicadas 9 filas en memoria
+2026-04-27 09:00:11,698 [INFO]   3664 registros sincronizados en sanjh.movidcto
+2026-04-27 09:00:11,712 [INFO] Sincronizando sanjh.inb...
+2026-04-27 09:00:11,883 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-27 09:00:12,502 [INFO]   1409 registros sincronizados en sanjh.inb
+2026-04-27 09:00:12,510 [INFO] Sincronizando sanjh.inventar...
+2026-04-27 09:00:12,805 [INFO]   Leidas 2844 filas de inventar.dbf
+2026-04-27 09:00:12,808 [INFO]   Deduplicadas 1 filas en memoria
+2026-04-27 09:00:14,007 [INFO]   2843 registros sincronizados en sanjh.inventar
+2026-04-27 09:00:14,018 [INFO] Sincronizando sanjh.clientes...
+2026-04-27 09:00:14,050 [INFO]   Leidas 861 filas de clientes.dbf
+2026-04-27 09:00:14,425 [INFO]   861 registros sincronizados en sanjh.clientes
+2026-04-27 09:00:14,426 [INFO] 
+----------------------------------------
+2026-04-27 09:00:14,427 [INFO] Empresa: VIDA - schema: vida
+2026-04-27 09:00:14,427 [INFO] base_path: C:\red\newdesar\winfac_nna\VIDAD
+2026-04-27 09:00:14,427 [INFO] winfac_path: C:\sisvfp\WinFac_nna
+2026-04-27 09:00:14,427 [INFO] Sincronizando vida.itemdcto...
+2026-04-27 09:00:14,840 [INFO]   Leidas 7201 filas de itemdcto.dbf
+2026-04-27 09:00:14,844 [INFO]   Omitidas 4 filas con PK nula/vacia
+2026-04-27 09:00:14,848 [INFO]   Deduplicadas 116 filas en memoria
+2026-04-27 09:00:17,083 [INFO]   7081 registros sincronizados en vida.itemdcto
+2026-04-27 09:00:17,096 [INFO] Sincronizando vida.movidcto...
+2026-04-27 09:00:17,265 [INFO]   Leidas 1780 filas de movidcto.dbf
+2026-04-27 09:00:17,266 [INFO]   Omitidas 7 filas con PK nula/vacia
+2026-04-27 09:00:18,059 [INFO]   1773 registros sincronizados en vida.movidcto
+2026-04-27 09:00:18,069 [INFO] Sincronizando vida.inb...
+2026-04-27 09:00:18,209 [INFO]   Leidas 1409 filas de inb.dbf
+2026-04-27 09:00:18,824 [INFO]   1409 registros sincronizados en vida.inb
+2026-04-27 09:00:18,832 [INFO] Sincronizando vida.inventar...
+2026-04-27 09:00:18,966 [INFO]   Leidas 1458 filas de inventar.dbf
+2026-04-27 09:00:19,632 [INFO]   1458 registros sincronizados en vida.inventar
+2026-04-27 09:00:19,636 [INFO] Sincronizando vida.clientes...
+2026-04-27 09:00:19,671 [INFO]   Leidas 938 filas de clientes.dbf
+2026-04-27 09:00:20,051 [INFO]   938 registros sincronizados en vida.clientes
+2026-04-27 09:00:20,055 [INFO] 
+============================================================
+2026-04-27 09:00:20,055 [INFO] SINCRONIZACION COMPLETADA - 39793 registros procesados
+2026-04-27 09:00:20,055 [INFO] Log guardado en: C:\sync_neon\logs\sync_20260427_090001.log
+2026-04-27 09:00:20,055 [INFO] ============================================================
