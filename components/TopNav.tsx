@@ -29,7 +29,8 @@ import {
   UserPlus,
   FileText,
   ClipboardList,
-  Wallet
+  Wallet,
+  Banknote
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 
@@ -219,6 +220,14 @@ export function TopNav() {
                     </span>
                   )}
                 </span>
+              </Link>
+            )}
+
+            {/* Deudas — vendedor y bodeguero */}
+            {(!isAdmin && (rol === 'vendedor' || rol === 'bodeguero')) && (
+              <Link href="/deudas" className={navLink(pathname.startsWith('/deudas'))}>
+                <Banknote className="w-4 h-4" />
+                Deudas
               </Link>
             )}
 

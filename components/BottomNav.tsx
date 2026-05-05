@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   ShoppingCart, Users, LayoutList, Tag, Box, Camera,
   Heart, Package, Settings, RefreshCw, ImageIcon,
-  Filter, UserPlus, FileText, ChevronRight, ClipboardList
+  Filter, UserPlus, FileText, ChevronRight, ClipboardList, Banknote
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -102,6 +102,7 @@ export function BottomNav() {
                   {(isAdmin || isVendedor) && sheetLink('/ventas/kardex', <Users className="w-5 h-5" />, 'Kardex Cliente', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor) && sheetLink('/prenotas', <FileText className="w-5 h-5" />, 'Pre-Notas', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor || isSupervisor) && sheetLink('/clientes-nuevos', <UserPlus className="w-5 h-5" />, 'Clientes Nuevos', () => setVentasOpen(false))}
+                  {isVendedor && sheetLink('/deudas', <Banknote className="w-5 h-5" />, 'Mis Deudas', () => setVentasOpen(false))}
                 </div>
               </SheetContent>
             </Sheet>
@@ -177,6 +178,7 @@ export function BottomNav() {
                   {sheetLink('/bodega', <Box className="w-5 h-5" />, 'Ubicaciones en Bodega', () => setBodegaOpen(false))}
                   {sheetLink('/bodega/despachos', <Camera className="w-5 h-5" />, 'Despachos', () => setBodegaOpen(false))}
                   {sheetLink('/bodega/registro-notas', <ClipboardList className="w-5 h-5" />, 'Registro de Notas', () => setBodegaOpen(false))}
+                  {isBodeguero && sheetLink('/deudas', <Banknote className="w-5 h-5" />, 'Mis Deudas', () => setBodegaOpen(false))}
                 </div>
               </SheetContent>
             </Sheet>
