@@ -98,7 +98,6 @@ export function SueldosClient() {
       });
       if (res.ok) {
         toast.success('Sueldo registrado');
-        setUsuarioId('');
         setMontoBase('');
         load();
       } else {
@@ -156,7 +155,7 @@ export function SueldosClient() {
             disabled={saving}
             className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
           >
-            {saving ? '...' : 'Agregar'}
+            {saving ? 'Registrando...' : 'Pagar Sueldo'}
           </button>
         </div>
       </form>
