@@ -3,6 +3,13 @@ export type CatalogoProducto = {
   detalle?: string | null;
 };
 
+export function filterBySoloNuevo(
+  productos: CatalogoProducto[],
+  latestCodigos: Set<string>
+): CatalogoProducto[] {
+  return productos.filter((p) => latestCodigos.has(p.codigo.toUpperCase()));
+}
+
 export function filterProducts(
   productos: CatalogoProducto[],
   codigosIncluir: string[],
