@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { formatMesAnio, nombreMes } from './sueldos-utils';
 import { formatMonto } from '../pettycash/pettycash-utils';
+import { toast } from 'sonner';
 
 interface Movimiento {
   id: number;
@@ -80,23 +81,35 @@ export function SueldosClient() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!usuarioId) return;
+    if (!usuarioId || !montoBase) return;
+    if (montoFinalCalc <= 0) { toast.error('El monto a pagar debe ser mayor a 0'); return; }
     setSaving(true);
-    await fetch('/api/sueldos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        usuario_id: usuarioId,
-        mes: formMes,
-        anio: formAnio,
-        monto_base: parseFloat(montoBase),
-        monto_final: montoFinalCalc,
-      }),
-    });
-    setSaving(false);
-    setUsuarioId('');
-    setMontoBase('');
-    load();
+    try {
+      const res = await fetch('/api/sueldos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario_id: usuarioId,
+          mes: formMes,
+          anio: formAnio,
+          monto_base: parseFloat(montoBase),
+          monto_final: montoFinalCalc,
+        }),
+      });
+      if (res.ok) {
+        toast.success('Sueldo registrado');
+        setUsuarioId('');
+        setMontoBase('');
+        load();
+      } else {
+        const { error } = await res.json();
+        toast.error(error?.message ?? JSON.stringify(error) ?? 'Error al registrar');
+      }
+    } catch {
+      toast.error('Error al registrar');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
