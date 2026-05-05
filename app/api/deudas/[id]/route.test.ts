@@ -80,4 +80,29 @@ describe('PATCH /api/deudas/[id]', () => {
     const res = await PATCH(req as any, { params });
     expect(res.status).toBe(403);
   });
+
+  it('admin registra pago en préstamo confirmado', async () => {
+    mockSession.mockResolvedValue(adminSession as any);
+    const confirmada = { ...pendiente, estado: 'confirmada' };
+    mockSql
+      .mockResolvedValueOnce([confirmada] as any)
+      .mockResolvedValueOnce([{ id: 1, deuda_id: 3, monto: 30000 }] as any);
+    const req = new Request('http://localhost/api/deudas/3', {
+      method: 'PATCH',
+      body: JSON.stringify({ accion: 'pagar', monto: 30000 }),
+    });
+    const res = await PATCH(req as any, { params });
+    expect(res.status).toBe(200);
+  });
+
+  it('no-admin no puede registrar pago', async () => {
+    mockSession.mockResolvedValue(userSession as any);
+    mockSql.mockResolvedValueOnce([{ ...pendiente, estado: 'confirmada' }] as any);
+    const req = new Request('http://localhost/api/deudas/3', {
+      method: 'PATCH',
+      body: JSON.stringify({ accion: 'pagar', monto: 30000 }),
+    });
+    const res = await PATCH(req as any, { params });
+    expect(res.status).toBe(403);
+  });
 });

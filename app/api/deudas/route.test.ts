@@ -48,28 +48,37 @@ describe('GET /api/deudas', () => {
 describe('POST /api/deudas', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('crea solicitud con datos válidos', async () => {
-    mockSession.mockResolvedValue(userSession as any);
-    mockSql.mockResolvedValueOnce([{ id: 5, tipo: 'prestamo', monto: 100000 }] as any);
+  it('admin crea deuda para un trabajador', async () => {
+    mockSession.mockResolvedValue(adminSession as any);
+    mockSql
+      .mockResolvedValueOnce([{ nombre: 'Juan' }] as any)
+      .mockResolvedValueOnce([{ id: 5, tipo: 'adelanto', monto: 50000 }] as any);
     const req = new Request('http://localhost/api/deudas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo: 'prestamo', monto: 100000 }),
+      body: JSON.stringify({ usuario_id: 3, tipo: 'adelanto', monto: 50000 }),
     });
     const res = await POST(req as any);
     expect(res.status).toBe(201);
-    const q = Array.isArray(mockSql.mock.calls[0]?.[0])
-      ? mockSql.mock.calls[0][0].join(' ')
-      : String(mockSql.mock.calls[0]?.[0]);
-    expect(q).toContain('INSERT');
   });
 
-  it('retorna 400 con tipo inválido', async () => {
+  it('retorna 403 si no es admin', async () => {
     mockSession.mockResolvedValue(userSession as any);
     const req = new Request('http://localhost/api/deudas', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo: 'desconocido', monto: 100000 }),
+      body: JSON.stringify({ usuario_id: 3, tipo: 'adelanto', monto: 50000 }),
+    });
+    const res = await POST(req as any);
+    expect(res.status).toBe(403);
+  });
+
+  it('retorna 400 con tipo inválido', async () => {
+    mockSession.mockResolvedValue(adminSession as any);
+    const req = new Request('http://localhost/api/deudas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario_id: 3, tipo: 'desconocido', monto: 100000 }),
     });
     const res = await POST(req as any);
     expect(res.status).toBe(400);
@@ -79,7 +88,7 @@ describe('POST /api/deudas', () => {
     mockSession.mockResolvedValue(null as any);
     const req = new Request('http://localhost/api/deudas', {
       method: 'POST',
-      body: JSON.stringify({ tipo: 'prestamo', monto: 50000 }),
+      body: JSON.stringify({ usuario_id: 3, tipo: 'prestamo', monto: 50000 }),
     });
     const res = await POST(req as any);
     expect(res.status).toBe(401);

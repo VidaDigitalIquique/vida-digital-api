@@ -66,6 +66,17 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ data: updated });
     }
 
+    if (data.accion === "pagar") {
+      if (!isAdmin) return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
+      const creadoPor = (session!.user as any).nombre as string;
+      const [pago] = await sql`
+        INSERT INTO deuda_pagos (deuda_id, monto, registrado_por)
+        VALUES (${id}, ${data.monto}, ${creadoPor})
+        RETURNING *
+      `;
+      return NextResponse.json({ data: pago });
+    }
+
     return NextResponse.json({ error: "Acción inválida" }, { status: 400 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
