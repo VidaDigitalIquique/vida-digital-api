@@ -124,19 +124,7 @@ export function SpellCheckedInput({
           style={{
             color: 'transparent',
             borderBottom: '2px solid red',
-            pointerEvents: 'all',
-            cursor: 'pointer',
           }}
-          onMouseEnter={(e) => {
-            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-            const inputRect = inputRef.current?.getBoundingClientRect()
-            setTooltipMatch(match)
-            setTooltipPos({
-              x: rect.left,
-              y: (inputRect?.bottom ?? rect.bottom) + 4,
-            })
-          }}
-          onMouseLeave={() => setTooltipMatch(null)}
         >
           {fragment}
         </span>
@@ -181,6 +169,25 @@ export function SpellCheckedInput({
         value={internalValue}
         onChange={handleChange}
         onScroll={handleScroll}
+        onMouseMove={(e) => {
+          if (matches.length === 0) return
+          const inputRect = inputRef.current!.getBoundingClientRect()
+          const computed = getComputedStyle(inputRef.current!)
+          const paddingLeft = parseFloat(computed.paddingLeft)
+          const fontSize = parseFloat(computed.fontSize)
+          const charWidth = fontSize * 0.55
+          const relativeX = e.clientX - inputRect.left - paddingLeft
+          const scrollLeft = inputRef.current!.scrollLeft
+          const charIndex = Math.floor((relativeX + scrollLeft) / charWidth)
+          const found = matches.find(m => charIndex >= m.offset && charIndex < m.offset + m.length)
+          if (found) {
+            setTooltipMatch(found)
+            setTooltipPos({ x: inputRect.left, y: inputRect.bottom + 4 })
+          } else {
+            setTooltipMatch(null)
+          }
+        }}
+        onMouseLeave={() => setTooltipMatch(null)}
         className={className}
         tabIndex={0}
         style={{ position: 'relative', zIndex: 1, background: 'transparent' }}
@@ -192,7 +199,7 @@ export function SpellCheckedInput({
         <div
           style={{
             position: 'fixed',
-            top: tooltipPos.y + 20,
+            top: tooltipPos.y,
             left: tooltipPos.x,
             zIndex: 9999,
             background: 'white',
