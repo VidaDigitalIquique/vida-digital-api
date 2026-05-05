@@ -19,7 +19,6 @@ export function SpellCheckedInput({
 }: SpellCheckedInputProps) {
   const [matches, setMatches] = useState<LTMatch[]>([])
   const [tooltipMatch, setTooltipMatch] = useState<LTMatch | null>(null)
-  const [tooltipPos, setTooltipPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
   const [internalValue, setInternalValue] = useState<string>(String(value ?? ''))
 
   const inputRef = useRef<HTMLInputElement>(null)
@@ -171,21 +170,14 @@ export function SpellCheckedInput({
         onScroll={handleScroll}
         onMouseMove={(e) => {
           if (matches.length === 0) return
-          const inputRect = inputRef.current!.getBoundingClientRect()
-          const computed = getComputedStyle(inputRef.current!)
+          const inputEl = inputRef.current!
+          const inputRect = inputEl.getBoundingClientRect()
+          const computed = getComputedStyle(inputEl)
           const paddingLeft = parseFloat(computed.paddingLeft)
-          const fontSize = parseFloat(computed.fontSize)
-          const charWidth = fontSize * 0.55
-          const relativeX = e.clientX - inputRect.left - paddingLeft
-          const scrollLeft = inputRef.current!.scrollLeft
-          const charIndex = Math.floor((relativeX + scrollLeft) / charWidth)
+          const charWidth = parseFloat(computed.fontSize) * 0.55
+          const charIndex = Math.floor((e.clientX - inputRect.left - paddingLeft + inputEl.scrollLeft) / charWidth)
           const found = matches.find(m => charIndex >= m.offset && charIndex < m.offset + m.length)
-          if (found) {
-            setTooltipMatch(found)
-            setTooltipPos({ x: inputRect.left, y: inputRect.bottom + 4 })
-          } else {
-            setTooltipMatch(null)
-          }
+          setTooltipMatch(found ?? null)
         }}
         onMouseLeave={() => setTooltipMatch(null)}
         className={className}
@@ -198,9 +190,10 @@ export function SpellCheckedInput({
       {tooltipMatch && tooltipMatch.replacements.length > 0 && (
         <div
           style={{
-            position: 'fixed',
-            top: tooltipPos.y,
-            left: tooltipPos.x,
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            marginTop: '4px',
             zIndex: 9999,
             background: 'white',
             border: '1px solid #e2e8f0',
