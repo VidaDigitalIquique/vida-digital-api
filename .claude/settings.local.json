@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx jest *)"
+      "Bash(npx jest *)",
+      "Bash(npx vitest *)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\Usuario\\\\Documents\\\\vida-digital-api\\\\app\\\\api\\\\deudas\\\\[id]\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Host \"ok\")",
+      "PowerShell(New-Item *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
