@@ -30,6 +30,22 @@ export function SpellCheckedInput({
     setInternalValue(String(value ?? ''))
   }, [value])
 
+  useEffect(() => {
+    if (!inputRef.current || !overlayRef.current) return
+    const computed = getComputedStyle(inputRef.current)
+    const overlay = overlayRef.current
+    overlay.style.paddingTop = computed.paddingTop
+    overlay.style.paddingBottom = computed.paddingBottom
+    overlay.style.paddingLeft = computed.paddingLeft
+    overlay.style.paddingRight = computed.paddingRight
+    overlay.style.fontSize = computed.fontSize
+    overlay.style.fontFamily = computed.fontFamily
+    overlay.style.fontWeight = computed.fontWeight
+    overlay.style.lineHeight = computed.lineHeight
+    overlay.style.letterSpacing = computed.letterSpacing
+    overlay.style.height = computed.height
+  }, [])
+
   async function checkSpelling(text: string) {
     if (text.length < 4) { setMatches([]); return }
     try {
@@ -112,8 +128,13 @@ export function SpellCheckedInput({
             cursor: 'pointer',
           }}
           onMouseEnter={(e) => {
+            const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+            const inputRect = inputRef.current?.getBoundingClientRect()
             setTooltipMatch(match)
-            setTooltipPos({ x: e.clientX, y: e.clientY })
+            setTooltipPos({
+              x: rect.left,
+              y: (inputRect?.bottom ?? rect.bottom) + 4,
+            })
           }}
           onMouseLeave={() => setTooltipMatch(null)}
         >
@@ -146,12 +167,9 @@ export function SpellCheckedInput({
           pointerEvents: 'none',
           overflow: 'hidden',
           whiteSpace: 'pre',
-          padding: '4px 10px',
-          fontSize: 'inherit',
-          fontFamily: 'inherit',
-          lineHeight: 'inherit',
           color: 'transparent',
           zIndex: 10,
+          boxSizing: 'border-box',
         }}
       >
         {renderHighlighted()}
