@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 
 const RUTAS_POR_ROL: Record<string, string[]> = {
   admin: ['/dashboard', '/precios', '/ventas', '/bodega', '/catalogo', '/admin', '/inventario', '/despachos', '/deseados', '/alertas-stock', '/clientes-nuevos', '/prenotas', '/pettycash', '/sueldos', '/deudas'],
-  vendedor: ['/precios', '/ventas', '/catalogo', '/deseados', '/alertas-stock', '/clientes-nuevos', '/prenotas'],
-  bodeguero: ['/bodega'],
+  vendedor: ['/precios', '/ventas', '/catalogo', '/deseados', '/alertas-stock', '/clientes-nuevos', '/prenotas', '/deudas'],
+  bodeguero: ['/bodega', '/deudas'],
 };
 
 export default withAuth(

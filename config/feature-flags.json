@@ -11,5 +11,6 @@
   "ingresos-por-producto": false,
   "catalogo-margen-editable": false,
   "pettycash": false,
-  "sueldos": false
+  "sueldos": false,
+  "deudas": false
 }
