@@ -3,6 +3,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { formatMesAnio, nombreMes } from './sueldos-utils';
 import { formatMonto } from '../pettycash/pettycash-utils';
 
+interface Movimiento {
+  id: number;
+  tipo: string;
+  monto: string | number;
+  descripcion: string | null;
+  confirmado_at: string | null;
+}
+
 interface Sueldo {
   id: number;
   usuario_id: number;
@@ -33,14 +41,27 @@ export function SueldosClient() {
   const [formMes, setFormMes] = useState(hoy.getMonth() + 1);
   const [formAnio, setFormAnio] = useState(hoy.getFullYear());
   const [montoBase, setMontoBase] = useState('');
-  const [montoFinal, setMontoFinal] = useState('');
   const [saving, setSaving] = useState(false);
+  const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
+  const [totalDescuentos, setTotalDescuentos] = useState(0);
+  const [loadingMovs, setLoadingMovs] = useState(false);
+
+  const montoFinalCalc = Math.max(0, parseFloat(montoBase || '0') - totalDescuentos);
 
   useEffect(() => {
     fetch('/api/admin/usuarios')
       .then(r => r.json())
       .then(d => setUsuarios(d.data ?? []));
   }, []);
+
+  useEffect(() => {
+    if (!usuarioId) { setMovimientos([]); setTotalDescuentos(0); return; }
+    setLoadingMovs(true);
+    fetch(`/api/sueldos/movimientos?usuario_id=${usuarioId}&mes=${formMes}&anio=${formAnio}`)
+      .then(r => r.json())
+      .then(d => { setMovimientos(d.movimientos ?? []); setTotalDescuentos(d.total_descuentos ?? 0); })
+      .finally(() => setLoadingMovs(false));
+  }, [usuarioId, formMes, formAnio]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -69,13 +90,12 @@ export function SueldosClient() {
         mes: formMes,
         anio: formAnio,
         monto_base: parseFloat(montoBase),
-        monto_final: parseFloat(montoFinal),
+        monto_final: montoFinalCalc,
       }),
     });
     setSaving(false);
     setUsuarioId('');
     setMontoBase('');
-    setMontoFinal('');
     load();
   };
 
@@ -112,14 +132,12 @@ export function SueldosClient() {
           required
         />
         <div className="flex gap-2">
-          <input
-            className="border rounded px-3 py-2 text-sm flex-1"
-            placeholder="Monto final"
-            type="number" min="0" step="1"
-            value={montoFinal}
-            onChange={e => setMontoFinal(e.target.value)}
-            required
-          />
+          <div className="border rounded px-3 py-2 text-sm flex-1 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-between">
+            <span className="text-zinc-400 text-xs mr-2">A pagar</span>
+            <span className={`font-semibold ${montoFinalCalc < parseFloat(montoBase || '0') ? 'text-amber-600' : 'text-zinc-700 dark:text-zinc-200'}`}>
+              {formatMonto(montoFinalCalc)}
+            </span>
+          </div>
           <button
             type="submit"
             disabled={saving}
@@ -129,6 +147,39 @@ export function SueldosClient() {
           </button>
         </div>
       </form>
+
+      {usuarioId && (
+        <div className="border rounded-lg overflow-hidden">
+          <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 text-xs font-semibold text-zinc-500 uppercase flex justify-between">
+            <span>Descuentos del mes — {nombreMes(formMes)} {formAnio}</span>
+            {totalDescuentos > 0 && <span className="text-red-600">−{formatMonto(totalDescuentos)}</span>}
+          </div>
+          {loadingMovs ? (
+            <p className="px-4 py-3 text-sm text-zinc-400 animate-pulse">Cargando...</p>
+          ) : movimientos.length === 0 ? (
+            <p className="px-4 py-3 text-sm text-zinc-400">Sin adelantos ni quincenas este mes.</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="text-xs uppercase text-zinc-400 border-b">
+                <tr>
+                  <th className="px-4 py-2 text-left">Tipo</th>
+                  <th className="px-4 py-2 text-left">Descripción</th>
+                  <th className="px-4 py-2 text-right">Monto</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {movimientos.map(m => (
+                  <tr key={m.id}>
+                    <td className="px-4 py-2 capitalize">{m.tipo}</td>
+                    <td className="px-4 py-2 text-zinc-500">{m.descripcion ?? '—'}</td>
+                    <td className="px-4 py-2 text-right text-red-600">−{formatMonto(parseFloat(String(m.monto)))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
 
       <div className="flex gap-3 items-center">
         <span className="text-sm text-zinc-500">Filtrar:</span>
