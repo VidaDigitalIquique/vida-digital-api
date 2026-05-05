@@ -259,6 +259,11 @@ export function TopNav() {
                       <Wallet className="w-4 h-4" /> Pettycash
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/sueldos" className="flex items-center gap-2 w-full">
+                      <Users className="w-4 h-4" /> Sueldos
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
