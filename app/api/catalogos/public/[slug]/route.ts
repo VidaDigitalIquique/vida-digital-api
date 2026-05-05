@@ -1,7 +1,6 @@
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { filterProducts, filterBySoloNuevo, type CatalogoProducto } from "./filter-products";
-import { getTopShipmentKeys } from "@/utils/shipment-logic";
 
 export const dynamic = 'force-dynamic';
 
@@ -95,23 +94,28 @@ export async function GET(request: Request, { params }: { params: { slug: string
       productos = productos.filter((p: any) => Number(p.saldo) > 0);
     }
     if (soloNuevo) {
-      // El ingreso más reciente siempre se determina desde cat.empresa_id (Vida Digital),
-      // aunque ambas_empresas=true. Sanjh tiene NROINGRESOs históricos con números más altos
-      // que distorsionan la selección si se mezclan.
-      const nroIngresoRows = await sql`
-        SELECT DISTINCT nroingreso FROM productos
-        WHERE empresa_id = ${cat.empresa_id} AND nroingreso IS NOT NULL
-      `;
+      // Ordenar por MAX(fecha_ingreso), no por número de NROINGRESO.
+      // La numeración de aduana no es secuencial por fecha de llegada real.
+      const keyRows = cat.ambas_empresas
+        ? await sql`
+            SELECT SPLIT_PART(nroingreso,'-',2)||'-'||SPLIT_PART(nroingreso,'-',3) AS raw_key
+            FROM productos
+            WHERE nroingreso IS NOT NULL AND nroingreso NOT LIKE 'INICIAL%'
+            GROUP BY raw_key ORDER BY MAX(fecha_ingreso) DESC LIMIT 1
+          `
+        : await sql`
+            SELECT SPLIT_PART(nroingreso,'-',2)||'-'||SPLIT_PART(nroingreso,'-',3) AS raw_key
+            FROM productos
+            WHERE empresa_id = ${cat.empresa_id} AND nroingreso IS NOT NULL AND nroingreso NOT LIKE 'INICIAL%'
+            GROUP BY raw_key ORDER BY MAX(fecha_ingreso) DESC LIMIT 1
+          `;
 
-      const nroIngresos = nroIngresoRows.map((r: any) => r.nroingreso as string);
-      const [latestKey] = getTopShipmentKeys(nroIngresos, 1);
-
+      const latestKey = keyRows[0]?.raw_key as string | undefined;
       let latestCodigos = new Set<string>();
       if (latestKey) {
-        const codigoRows = await sql`
-          SELECT DISTINCT UPPER(codigo) as codigo FROM productos
-          WHERE empresa_id = ${cat.empresa_id} AND nroingreso LIKE ${'%' + latestKey + '%'}
-        `;
+        const codigoRows = cat.ambas_empresas
+          ? await sql`SELECT DISTINCT UPPER(codigo) as codigo FROM productos WHERE nroingreso LIKE ${'%' + latestKey + '%'}`
+          : await sql`SELECT DISTINCT UPPER(codigo) as codigo FROM productos WHERE empresa_id = ${cat.empresa_id} AND nroingreso LIKE ${'%' + latestKey + '%'}`;
         latestCodigos = new Set(codigoRows.map((r: any) => r.codigo as string));
       }
 
