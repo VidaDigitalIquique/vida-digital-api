@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { formatMesAnio, nombreMes } from './sueldos-utils';
 import { formatMonto } from '../pettycash/pettycash-utils';
 import { toast } from 'sonner';
+import { useNumericInput } from '@/hooks/useNumericInput';
 
 interface Movimiento {
   id: number;
@@ -48,6 +49,7 @@ export function SueldosClient() {
   const [sueldoRegistrado, setSueldoRegistrado] = useState<{ monto_base: number; monto_final: number; pagado_at: string | null } | null>(null);
   const [loadingMovs, setLoadingMovs] = useState(false);
 
+  const montoBaseProps = useNumericInput(montoBase, setMontoBase);
   const montoFinalCalc = Math.max(0, parseFloat(montoBase || '0') - totalDescuentos);
 
   useEffect(() => {
@@ -143,9 +145,8 @@ export function SueldosClient() {
           className="border rounded px-3 py-2 text-sm"
           placeholder="Monto base"
           type="number" min="0" step="1"
-          value={montoBase}
-          onChange={e => setMontoBase(e.target.value)}
           required
+          {...montoBaseProps}
         />
         <div className="flex gap-2">
           <div className="border rounded px-3 py-2 text-sm flex-1 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-between">

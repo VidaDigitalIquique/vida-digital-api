@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { formatMonto, tipoLabel, estadoBadge } from './deudas-utils';
+import { useNumericInput } from '@/hooks/useNumericInput';
 
 interface Usuario { id: number; nombre: string; }
 
@@ -42,6 +43,9 @@ export function DeudasAdminClient() {
 
   const [pagandoId, setPagandoId] = useState<number | null>(null);
   const [montoPago, setMontoPago] = useState('');
+
+  const montoProps = useNumericInput(monto, setMonto);
+  const montoPagoProps = useNumericInput(montoPago, setMontoPago);
   const [historial, setHistorial] = useState<{ prestamos: HistorialItem[]; adelantos: HistorialItem[] }>({ prestamos: [], adelantos: [] });
 
   useEffect(() => {
@@ -172,8 +176,8 @@ export function DeudasAdminClient() {
           </select>
           <Input
             type="number" placeholder="Monto" min={0.01} step={0.01}
-            value={monto} onChange={e => setMonto(e.target.value)}
             className="w-36" required
+            {...montoProps}
           />
           <Input
             placeholder="Descripción (opcional)"
@@ -207,7 +211,7 @@ export function DeudasAdminClient() {
               <h2 className="font-semibold text-lg">Préstamos</h2>
               {prestamoConSaldo && (pagandoId === prestamoConSaldo.id ? (
                 <div className="flex gap-2">
-                  <Input type="number" placeholder="Monto pago" min={0.01} step={0.01} value={montoPago} onChange={e => setMontoPago(e.target.value)} className="w-36" />
+                  <Input type="number" placeholder="Monto pago" min={0.01} step={0.01} className="w-36" {...montoPagoProps} />
                   <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handlePago(prestamoConSaldo.id)}>Confirmar</Button>
                   <Button size="sm" variant="outline" onClick={() => { setPagandoId(null); setMontoPago(''); }}>Cancelar</Button>
                 </div>

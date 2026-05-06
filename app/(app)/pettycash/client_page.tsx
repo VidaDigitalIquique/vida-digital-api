@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { formatMonto, saldoColor, buildWhatsAppText, formatFecha } from './pettycash-utils';
+import { useNumericInput } from '@/hooks/useNumericInput';
 
 type Movimiento = {
   id: number;
@@ -53,6 +54,9 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
 
   const [editTarget, setEditTarget] = useState<Movimiento | null>(null);
   const [editForm, setEditForm] = useState({ tipo: 'ingreso' as 'ingreso' | 'egreso', concepto: '', monto: '', fecha: '' });
+
+  const formMontoProps = useNumericInput(formMonto, setFormMonto);
+  const editMontoProps = useNumericInput(editForm.monto, v => setEditForm(f => ({ ...f, monto: v })));
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const fetchMovimientos = useCallback(async () => {
@@ -224,9 +228,8 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
             placeholder="Monto"
             min={0.01}
             step={0.01}
-            value={formMonto}
-            onChange={e => setFormMonto(e.target.value)}
             className="w-36"
+            {...formMontoProps}
           />
           <Input
             type="date"
@@ -332,7 +335,7 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
                 <option value="egreso">Gasto</option>
               </select>
               <Input placeholder="Concepto" value={editForm.concepto} onChange={e => setEditForm(f => ({ ...f, concepto: e.target.value }))} />
-              <Input type="number" placeholder="Monto" min={0.01} step={0.01} value={editForm.monto} onChange={e => setEditForm(f => ({ ...f, monto: e.target.value }))} />
+              <Input type="number" placeholder="Monto" min={0.01} step={0.01} {...editMontoProps} />
               <Input type="date" value={editForm.fecha} onChange={e => setEditForm(f => ({ ...f, fecha: e.target.value }))} />
             </div>
             <div className="flex justify-between gap-2 mt-2">
