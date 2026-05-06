@@ -11,6 +11,7 @@
   "ingresos-por-producto": false,
   "catalogo-margen-editable": true,
   "pettycash": true,
+  "pettycash-edit-delete": false,
   "sueldos": true,
   "deudas": true,
   "fix-catalogo-solo-nuevo": true

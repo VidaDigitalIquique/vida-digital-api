@@ -8,5 +8,5 @@ export default async function PettycashPage() {
   if (!session || (session.user as any).rol !== "admin") {
     redirect("/dashboard");
   }
-  return <PettycashClient />;
+  return <PettycashClient isAdmin={(session.user as any).rol === 'admin'} />;
 }

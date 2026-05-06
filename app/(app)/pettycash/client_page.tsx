@@ -28,7 +28,7 @@ function lastDayOfMonth(): string {
   return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10);
 }
 
-export function PettycashClient() {
+export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [saldo, setSaldo] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -50,6 +50,10 @@ export function PettycashClient() {
     if (newTipo === 'egreso' && formConcepto === 'Pettycash') setFormConcepto('');
   };
   const [formFecha, setFormFecha] = useState(today());
+
+  const [editTarget, setEditTarget] = useState<Movimiento | null>(null);
+  const [editForm, setEditForm] = useState({ tipo: 'ingreso' as 'ingreso' | 'egreso', concepto: '', monto: '', fecha: '' });
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const fetchMovimientos = useCallback(async () => {
     setLoading(true);
@@ -102,6 +106,39 @@ export function PettycashClient() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const openEdit = (m: Movimiento) => {
+    setEditTarget(m);
+    setEditForm({ tipo: m.tipo, concepto: m.concepto, monto: String(m.monto), fecha: m.fecha });
+  };
+
+  const handleSave = async () => {
+    if (!editTarget) return;
+    const monto = parseFloat(editForm.monto);
+    if (!editForm.concepto.trim() || !monto || monto <= 0) { toast.error('Completá todos los campos'); return; }
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/pettycash/${editTarget.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: editForm.tipo, concepto: editForm.concepto.trim(), monto, fecha: editForm.fecha }),
+      });
+      if (res.ok) { toast.success('Movimiento actualizado'); setEditTarget(null); fetchMovimientos(); }
+      else { const { error } = await res.json(); toast.error(error?.message ?? error ?? 'Error al guardar'); }
+    } catch { toast.error('Error al guardar'); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async () => {
+    if (!editTarget) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/pettycash/${editTarget.id}`, { method: 'DELETE' });
+      if (res.ok) { toast.success('Movimiento eliminado'); setConfirmDelete(false); setEditTarget(null); fetchMovimientos(); }
+      else { toast.error('Error al eliminar'); }
+    } catch { toast.error('Error al eliminar'); }
+    finally { setSaving(false); }
   };
 
   const handlePrint = () => window.print();
@@ -238,6 +275,7 @@ export function PettycashClient() {
                 <th className="px-4 py-3 text-left">Tipo</th>
                 <th className="px-4 py-3 text-left">Concepto</th>
                 <th className="px-4 py-3 text-right">Monto</th>
+                {isAdmin && <th className="px-4 py-3" />}
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -260,6 +298,17 @@ export function PettycashClient() {
                   }`}>
                     {m.tipo === 'egreso' ? '-' : ''}{formatMonto(parseFloat(String(m.monto)))}
                   </td>
+                  {isAdmin && (
+                    <td className="px-4 py-3">
+                      <button
+                        aria-label="Editar registro"
+                        onClick={() => openEdit(m)}
+                        className="text-zinc-400 hover:text-blue-600 transition-colors"
+                      >
+                        ✏️
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -267,6 +316,53 @@ export function PettycashClient() {
         </div>
       )}
       </div>
+
+      {/* Modal editar */}
+      {editTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl w-full max-w-md mx-4 p-6 flex flex-col gap-4">
+            <h2 className="text-lg font-semibold">Editar movimiento</h2>
+            <div className="flex flex-col gap-3">
+              <select
+                value={editForm.tipo}
+                onChange={e => setEditForm(f => ({ ...f, tipo: e.target.value as 'ingreso' | 'egreso' }))}
+                className="border rounded-md px-3 py-2 text-sm bg-white dark:bg-zinc-800"
+              >
+                <option value="ingreso">Ingreso</option>
+                <option value="egreso">Gasto</option>
+              </select>
+              <Input placeholder="Concepto" value={editForm.concepto} onChange={e => setEditForm(f => ({ ...f, concepto: e.target.value }))} />
+              <Input type="number" placeholder="Monto" min={0.01} step={0.01} value={editForm.monto} onChange={e => setEditForm(f => ({ ...f, monto: e.target.value }))} />
+              <Input type="date" value={editForm.fecha} onChange={e => setEditForm(f => ({ ...f, fecha: e.target.value }))} />
+            </div>
+            <div className="flex justify-between gap-2 mt-2">
+              <Button variant="destructive" onClick={() => setConfirmDelete(true)}>Eliminar</Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setEditTarget(null)}>Cancelar</Button>
+                <Button disabled={saving} onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white">
+                  {saving ? 'Guardando...' : 'Guardar'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm eliminar */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-xl p-6 flex flex-col gap-4 max-w-sm w-full mx-4">
+            <p className="font-medium">¿Eliminar este movimiento?</p>
+            <p className="text-sm text-zinc-500">Esta acción no se puede deshacer.</p>
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+              <Button variant="destructive" disabled={saving} onClick={handleDelete}>
+                {saving ? 'Eliminando...' : 'Confirmar'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
