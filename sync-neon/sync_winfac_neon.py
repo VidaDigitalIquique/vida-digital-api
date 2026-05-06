@@ -44,6 +44,8 @@ CLOUDINARY_API_KEY    = os.getenv("CLOUDINARY_API_KEY")
 CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET")
 IMAGENES_PATH         = os.getenv("IMAGENES_PATH", r"Z:\Imagenes")
 EXTENSIONES_VALIDAS   = {".jpg", ".jpeg", ".png", ".webp"}
+BATCH_SIZE            = 400   # imágenes por batch (margen bajo límite 500/hora)
+SLEEP_SECONDS         = 3700  # espera entre batches (ligeramente más de 1 hora)
 
 # Rutas a las carpetas DBF
 # base_path    -> modulo permanente (itemdcto, movidcto, inventar, etc.)
@@ -363,56 +365,60 @@ def sync_imagenes():
         conn.close()
         return
 
-    # ── Paso 2: listar archivos locales ──
-    archivos = [
+    # ── Paso 2: listar archivos locales y filtrar pendientes ──
+    import time
+    archivos_locales = [
         f for f in os.listdir(IMAGENES_PATH)
         if os.path.splitext(f)[1].lower() in EXTENSIONES_VALIDAS
     ]
-    log.info(f"Archivos locales encontrados: {len(archivos)}")
+    log.info(f"Archivos locales encontrados: {len(archivos_locales)}")
 
+    pendientes = _build_pendientes(archivos_locales, cloudinary_map, IMAGENES_PATH)
+    saltadas = len(archivos_locales) - len(pendientes)
+    log.info(f"  {saltadas} ya en Cloudinary (saltadas), {len(pendientes)} pendientes de subir")
+
+    if not pendientes:
+        conn.close()
+        log.info("IMAGENES: 0 nuevas, 0 errores — todo al día")
+        log.info("=" * 60)
+        return
+
+    # ── Paso 3: subir en batches ──
     nuevas = 0
-    actualizadas = 0
-    saltadas = 0
     errores = 0
+    total_batches = (len(pendientes) + BATCH_SIZE - 1) // BATCH_SIZE
 
-    for archivo in archivos:
-        nombre_sin_ext = os.path.splitext(archivo)[0]
-        ruta_local = os.path.join(IMAGENES_PATH, archivo)
-        mtime_local = os.path.getmtime(ruta_local)
+    for batch_num, inicio in enumerate(range(0, len(pendientes), BATCH_SIZE), start=1):
+        batch = pendientes[inicio:inicio + BATCH_SIZE]
+        log.info(f"\nBatch {batch_num}/{total_batches} — {len(batch)} imágenes")
 
-        cloudinary_ts = cloudinary_map.get(nombre_sin_ext)
-
-        # Determinar acción
-        if cloudinary_ts is not None and mtime_local <= cloudinary_ts:
-            saltadas += 1
-            continue  # sin cambios, no loguear para no saturar el log
-
-        es_nueva = cloudinary_ts is None
-
-        try:
-            with open(ruta_local, "rb") as f:
-                b64 = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode()
-            result = cloudinary.uploader.upload(
-                b64,
-                folder="productos",
-                public_id=nombre_sin_ext,
-                overwrite=True,
-            )
-            if es_nueva:
+        for archivo in batch:
+            nombre_sin_ext = os.path.splitext(archivo)[0]
+            ruta_local = os.path.join(IMAGENES_PATH, archivo)
+            try:
+                with open(ruta_local, "rb") as f:
+                    b64 = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode()
+                result = cloudinary.uploader.upload(
+                    b64,
+                    folder="productos",
+                    public_id=nombre_sin_ext,
+                    overwrite=True,
+                )
                 log.info(f"  [NEW] {archivo} → {result['secure_url']}")
                 nuevas += 1
-            else:
-                log.info(f"  [UPDATE] {archivo} → {result['secure_url']}")
-                actualizadas += 1
-            _actualizar_neon(conn, nombre_sin_ext, result["secure_url"], result["public_id"])
-        except Exception as e:
-            log.error(f"  [ERROR] {archivo}: {e}")
-            errores += 1
+                _actualizar_neon(conn, nombre_sin_ext, result["secure_url"], result["public_id"])
+            except Exception as e:
+                log.error(f"  [ERROR] {archivo}: {e}")
+                errores += 1
+
+        if batch_num < total_batches:
+            log.info(f"Batch {batch_num} completo. Esperando {SLEEP_SECONDS}s antes del siguiente...")
+            time.sleep(SLEEP_SECONDS)
 
     conn.close()
 
-    log.info(f"\nIMAGENES: {nuevas} nuevas, {actualizadas} actualizadas, "
-             f"{saltadas} sin cambios, {errores} errores")
+    log.info(f"\nIMAGENES: {nuevas} nuevas, {saltadas} saltadas, {errores} errores "
+             f"({total_batches} batch(es))")
     log.info("=" * 60)
 
 
@@ -490,6 +496,19 @@ def main():
     log.info(f"SINCRONIZACION COMPLETADA - {total_sync} registros procesados")
     log.info(f"Log guardado en: {log_file}")
     log.info("=" * 60)
+
+
+def _build_pendientes(archivos: list, cloudinary_map: dict, imagenes_path: str) -> list:
+    """Retorna archivos pendientes de subir, ordenados por ctime DESC."""
+    pendientes = [
+        f for f in archivos
+        if os.path.splitext(f)[0] not in cloudinary_map
+    ]
+    pendientes.sort(
+        key=lambda f: os.path.getctime(os.path.join(imagenes_path, f)),
+        reverse=True,
+    )
+    return pendientes
 
 
 if __name__ == "__main__":
