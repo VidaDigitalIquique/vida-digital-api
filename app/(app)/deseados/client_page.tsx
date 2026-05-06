@@ -60,6 +60,16 @@ interface ClienteAgrupado {
   tieneAlerta: boolean;
 }
 
+interface FichaCliente {
+  nombre: string;
+  telefono: string | null;
+  whatsapp: string | null;
+  ciudad: string | null;
+  pais: string | null;
+  notas: string | null;
+  fuente: 'nuevo' | 'winfac';
+}
+
 interface AlertaStock {
   id: number;
   codigo: string;
@@ -123,6 +133,11 @@ export function DeseadosClient({ session }: { session: any }) {
     codigo: string;
     descripcion: string;
   } | null>(null);
+
+  // --- Modal ficha cliente ---
+  const [fichaClienteKey, setFichaClienteKey] = useState<string | null>(null);
+  const [ficha, setFicha] = useState<FichaCliente | 'no_encontrado' | null>(null);
+  const [fichaLoading, setFichaLoading] = useState(false);
 
   // --- Modal aviso ---
   const [avisandoId, setAvisandoId] = useState<number | null>(null);
@@ -383,6 +398,21 @@ export function DeseadosClient({ session }: { session: any }) {
     }
   };
 
+  const handleVerFicha = async (clienteKey: string) => {
+    setFichaClienteKey(clienteKey);
+    setFicha(null);
+    setFichaLoading(true);
+    const params = clienteKey.startsWith('winfac-')
+      ? `kcodclie=${encodeURIComponent(clienteKey.slice(7))}`
+      : `cliente_deseado_id=${clienteKey.slice(8)}`;
+    try {
+      const res = await fetch(`/api/deseados/cliente-ficha?${params}`);
+      const data = await res.json();
+      setFicha(res.ok ? data : 'no_encontrado');
+    } catch { setFicha('no_encontrado'); }
+    finally { setFichaLoading(false); }
+  };
+
   const TABS: { key: Tab; label: string }[] = [
     { key: 'pendiente', label: 'Pendientes' },
     { key: 'avisado', label: 'Avisados' },
@@ -566,7 +596,7 @@ export function DeseadosClient({ session }: { session: any }) {
               <div className="p-4 border-b border-border flex items-start justify-between gap-2">
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-base leading-tight">{cliente.clienteNombre}</p>
+                    <button onClick={() => handleVerFicha(cliente.clienteKey)} className="font-bold text-base leading-tight text-left hover:underline">{cliente.clienteNombre}</button>
                     {cliente.tieneAlerta && (
                       <span className="flex items-center gap-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">
                         <Bell className="w-3 h-3" />
@@ -971,6 +1001,31 @@ export function DeseadosClient({ session }: { session: any }) {
           esChina={true}
         />
       )}
+
+      {/* Modal ficha cliente */}
+      <Dialog open={fichaClienteKey !== null} onOpenChange={open => { if (!open) { setFichaClienteKey(null); setFicha(null); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Ficha del cliente</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            {fichaLoading && <p className="text-sm text-zinc-400 animate-pulse">Cargando...</p>}
+            {!fichaLoading && ficha === 'no_encontrado' && (
+              <p className="text-sm text-zinc-500">Cliente sin ficha registrada.</p>
+            )}
+            {!fichaLoading && ficha && ficha !== 'no_encontrado' && (
+              <dl className="text-sm flex flex-col gap-3">
+                <div><dt className="text-[11px] text-zinc-400 uppercase tracking-wide">Nombre</dt><dd className="font-semibold">{ficha.nombre}</dd></div>
+                {ficha.whatsapp && <div><dt className="text-[11px] text-zinc-400 uppercase tracking-wide">WhatsApp</dt><dd>{ficha.whatsapp}</dd></div>}
+                {ficha.telefono && <div><dt className="text-[11px] text-zinc-400 uppercase tracking-wide">Teléfono</dt><dd>{ficha.telefono}</dd></div>}
+                {ficha.ciudad && <div><dt className="text-[11px] text-zinc-400 uppercase tracking-wide">Ciudad</dt><dd>{ficha.ciudad}</dd></div>}
+                {ficha.pais && <div><dt className="text-[11px] text-zinc-400 uppercase tracking-wide">País</dt><dd>{ficha.pais}</dd></div>}
+                {ficha.notas && <div><dt className="text-[11px] text-zinc-400 uppercase tracking-wide">Notas</dt><dd>{ficha.notas}</dd></div>}
+              </dl>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
