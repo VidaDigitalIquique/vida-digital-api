@@ -3,6 +3,8 @@ import threading
 from typing import Optional
 from app.rembg_service import remove_background
 from app.gemini_service import generate_catalog_image
+from app.compose import overlay_text
+from app.cloudinary_service import upload_image
 
 
 class Job:
@@ -44,6 +46,12 @@ def _execute(job: Job, images_bytes: list[bytes], product_code: str, packing_tex
 
         job.step = "generating_image"
         job.generated_image = generate_catalog_image(pngs)
+
+        job.step = "composing"
+        composed = overlay_text(job.generated_image, product_code, packing_text)
+
+        job.step = "uploading"
+        job.result_url = upload_image(composed, product_code)
 
         job.status = "done"
         job.step = None

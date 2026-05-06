@@ -60,22 +60,43 @@ def test_post_jobs_returns_job_id():
     assert uuid.UUID(body["job_id"])
 
 
-def test_get_job_done():
-    with patch("app.jobs.remove_background", return_value=_png_rgba()), \
-         patch("app.jobs.generate_catalog_image", return_value=b"fake-jpeg"):
-        post_res = client.post(
+def _mock_all_services(**overrides):
+    defaults = {
+        "app.jobs.remove_background": _png_rgba(),
+        "app.jobs.generate_catalog_image": b"fake-jpeg",
+        "app.jobs.overlay_text": b"fake-composed",
+        "app.jobs.upload_image": "https://res.cloudinary.com/test/productos/TEST-01.jpg",
+    }
+    defaults.update(overrides)
+    return defaults
+
+
+def _post_job(mocks: dict):
+    patches = [patch(k, return_value=v) for k, v in mocks.items()]
+    ctx = __import__("contextlib").ExitStack()
+    for p in patches:
+        ctx.enter_context(p)
+    with ctx:
+        return client.post(
             "/jobs",
             files=[("images", ("p.jpg", _jpeg(), "image/jpeg"))],
             data={"product_code": "TEST-01", "packing_text": "4 Sets / Caja"},
         )
-    job_id = post_res.json()["job_id"]
 
+
+def _wait_done(job_id: str):
     for _ in range(20):
         time.sleep(0.1)
         res = client.get(f"/jobs/{job_id}")
         if res.json().get("status") in ("done", "error"):
-            break
+            return res
+    return res
 
+
+def test_get_job_done():
+    post_res = _post_job(_mock_all_services())
+    job_id = post_res.json()["job_id"]
+    res = _wait_done(job_id)
     assert res.status_code == 200
     data = res.json()
     assert data["status"] == "done"
@@ -85,24 +106,23 @@ def test_get_job_done():
 
 def test_job_stores_generated_image():
     fake_jpeg = b"fake-jpeg-bytes"
-    with patch("app.jobs.remove_background", return_value=_png_rgba()), \
-         patch("app.jobs.generate_catalog_image", return_value=fake_jpeg):
-        post_res = client.post(
-            "/jobs",
-            files=[("images", ("p.jpg", _jpeg(), "image/jpeg"))],
-            data={"product_code": "TEST-01", "packing_text": "4 Sets / Caja"},
-        )
+    post_res = _post_job(_mock_all_services(**{"app.jobs.generate_catalog_image": fake_jpeg}))
     job_id = post_res.json()["job_id"]
-
-    for _ in range(20):
-        time.sleep(0.1)
-        res = client.get(f"/jobs/{job_id}")
-        if res.json().get("status") in ("done", "error"):
-            break
-
+    _wait_done(job_id)
     from app import jobs as job_manager
     job = job_manager.get_job(job_id)
     assert job.generated_image == fake_jpeg
+
+
+def test_job_result_url():
+    fake_url = "https://res.cloudinary.com/test/productos/TEST-01.jpg"
+    post_res = _post_job(_mock_all_services(**{"app.jobs.upload_image": fake_url}))
+    job_id = post_res.json()["job_id"]
+    res = _wait_done(job_id)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "done"
+    assert data["result_url"] == fake_url
 
 
 def test_get_job_not_found():
