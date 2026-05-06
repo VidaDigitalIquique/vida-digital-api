@@ -84,7 +84,7 @@ export function CatalogImageClient() {
         if (cancelled) return;
         setConnectAttempt(i + 1);
         try {
-          const res = await fetch('/api/catalog-image/health', { signal: AbortSignal.timeout(10_000) });
+          const res = await fetch('/api/catalog-image/health', { signal: AbortSignal.timeout(55_000) });
           if (res.ok) { if (!cancelled) setState('ready'); return; }
         } catch { /* servicio aún despertando */ }
         if (cancelled) return;
