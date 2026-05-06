@@ -76,13 +76,20 @@ export function CatalogImageClient() {
 
   const tryConnect = useCallback(() => {
     setState('connecting');
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 90_000);
-    fetch('/api/catalog-image/health', { signal: controller.signal })
-      .then(res => setState(res.ok ? 'ready' : 'offline'))
-      .catch(() => setState('offline'))
-      .finally(() => clearTimeout(timeout));
-    return () => { controller.abort(); clearTimeout(timeout); };
+    let cancelled = false;
+    (async () => {
+      for (let i = 0; i < 20; i++) {
+        if (cancelled) return;
+        try {
+          const res = await fetch('/api/catalog-image/health', { signal: AbortSignal.timeout(10_000) });
+          if (res.ok) { if (!cancelled) setState('ready'); return; }
+        } catch { /* servicio aún despertando */ }
+        if (cancelled) return;
+        await new Promise(r => setTimeout(r, 5_000));
+      }
+      if (!cancelled) setState('offline');
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
