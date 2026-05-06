@@ -78,13 +78,14 @@ export function CatalogImageClient() {
   const tryConnect = useCallback(() => {
     setState('connecting');
     setConnectAttempt(0);
+    const base = process.env.NEXT_PUBLIC_CATALOG_SERVICE_URL;
     let cancelled = false;
     (async () => {
       for (let i = 0; i < 12; i++) {
         if (cancelled) return;
         setConnectAttempt(i + 1);
         try {
-          const res = await fetch('/api/catalog-image/health', { signal: AbortSignal.timeout(55_000) });
+          const res = await fetch(`${base}/health`, { signal: AbortSignal.timeout(55_000) });
           if (res.ok) { if (!cancelled) setState('ready'); return; }
         } catch { /* servicio aún despertando */ }
         if (cancelled) return;

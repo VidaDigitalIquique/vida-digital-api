@@ -1,5 +1,6 @@
 from typing import List
 from fastapi import FastAPI, File, UploadFile, Form
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 import pillow_heif
 from app.rembg_service import remove_background
@@ -13,6 +14,17 @@ MIME_VALIDOS = {
 }
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://vidadigital-inventario-v2.vercel.app",
+        "https://vida-digital-api.onrender.com",
+        "http://localhost:3000",
+    ],
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/health")
