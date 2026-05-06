@@ -27,8 +27,10 @@ describe('GET /api/deudas/historial', () => {
   it('200 — devuelve prestamos y adelantos para admin', async () => {
     mockSession.mockResolvedValue(admin as any);
     mockSql
-      .mockResolvedValueOnce([prestamoItem] as any)
-      .mockResolvedValueOnce([] as any);
+      .mockResolvedValueOnce([prestamoItem] as any)  // prestamoDeudas
+      .mockResolvedValueOnce([] as any)              // adelantoDeudas
+      .mockResolvedValueOnce([] as any)              // prestamoPagos (Promise.all)
+      .mockResolvedValueOnce([] as any);             // adelantoPagos (Promise.all)
 
     const res = await GET(makeReq({ usuario_id: '3' }));
     expect(res.status).toBe(200);

@@ -122,6 +122,10 @@ export function DeudasAdminClient() {
     } catch { toast.error('Error al registrar pago'); }
   };
 
+  const totalDeuda = deudas
+    .filter(d => !['rechazada', 'caduca'].includes(d.estado))
+    .reduce((acc, d) => acc + parseFloat(String(d.monto)) - parseFloat(String(d.pagos_total)), 0);
+
   const prestamoConSaldo = usuarioId ? deudas.find(d => {
     const t = parseFloat(String(d.monto));
     const p = parseFloat(String(d.pagos_total));
@@ -169,6 +173,18 @@ export function DeudasAdminClient() {
           </Button>
         </div>
       </form>
+
+      {/* Saldo total del trabajador */}
+      {usuarioId && (
+        <div className="bg-white dark:bg-zinc-900 border rounded-xl p-6 shadow-sm">
+          <p className="text-sm text-zinc-500 mb-1">
+            Deuda total — {usuarios.find(u => u.id === usuarioId)?.nombre}
+          </p>
+          <p className={`text-5xl font-extrabold tracking-tight ${totalDeuda > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+            {formatMonto(totalDeuda)}
+          </p>
+        </div>
+      )}
 
       {/* Historial unificado */}
       {usuarioId && (
