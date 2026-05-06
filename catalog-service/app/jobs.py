@@ -2,6 +2,7 @@ import uuid
 import threading
 from typing import Optional
 from app.rembg_service import remove_background
+from app.gemini_service import generate_catalog_image
 
 
 class Job:
@@ -10,6 +11,7 @@ class Job:
         self.step: Optional[str] = None
         self.result_url: Optional[str] = None
         self.error: Optional[str] = None
+        self.generated_image: Optional[bytes] = None
 
 
 _jobs: dict[str, Job] = {}
@@ -35,9 +37,14 @@ def get_job(job_id: str) -> Optional[Job]:
 def _execute(job: Job, images_bytes: list[bytes], product_code: str, packing_text: str):
     try:
         job.status = "processing"
+        pngs = []
         for img_bytes in images_bytes:
             job.step = "removing_bg"
-            remove_background(img_bytes)
+            pngs.append(remove_background(img_bytes))
+
+        job.step = "generating_image"
+        job.generated_image = generate_catalog_image(pngs)
+
         job.status = "done"
         job.step = None
     except Exception as e:

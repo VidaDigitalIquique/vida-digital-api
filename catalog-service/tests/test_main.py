@@ -61,7 +61,8 @@ def test_post_jobs_returns_job_id():
 
 
 def test_get_job_done():
-    with patch("app.jobs.remove_background", return_value=_png_rgba()):
+    with patch("app.jobs.remove_background", return_value=_png_rgba()), \
+         patch("app.jobs.generate_catalog_image", return_value=b"fake-jpeg"):
         post_res = client.post(
             "/jobs",
             files=[("images", ("p.jpg", _jpeg(), "image/jpeg"))],
@@ -72,7 +73,7 @@ def test_get_job_done():
     for _ in range(20):
         time.sleep(0.1)
         res = client.get(f"/jobs/{job_id}")
-        if res.json().get("status") == "done":
+        if res.json().get("status") in ("done", "error"):
             break
 
     assert res.status_code == 200
@@ -80,6 +81,28 @@ def test_get_job_done():
     assert data["status"] == "done"
     assert data["step"] is None
     assert data["error"] is None
+
+
+def test_job_stores_generated_image():
+    fake_jpeg = b"fake-jpeg-bytes"
+    with patch("app.jobs.remove_background", return_value=_png_rgba()), \
+         patch("app.jobs.generate_catalog_image", return_value=fake_jpeg):
+        post_res = client.post(
+            "/jobs",
+            files=[("images", ("p.jpg", _jpeg(), "image/jpeg"))],
+            data={"product_code": "TEST-01", "packing_text": "4 Sets / Caja"},
+        )
+    job_id = post_res.json()["job_id"]
+
+    for _ in range(20):
+        time.sleep(0.1)
+        res = client.get(f"/jobs/{job_id}")
+        if res.json().get("status") in ("done", "error"):
+            break
+
+    from app import jobs as job_manager
+    job = job_manager.get_job(job_id)
+    assert job.generated_image == fake_jpeg
 
 
 def test_get_job_not_found():
