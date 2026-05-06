@@ -82,3 +82,15 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).rol !== 'admin')
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  const { id } = params;
+  await sql`DELETE FROM deuda_pagos WHERE deuda_id = ${id}`;
+  const result = await sql`DELETE FROM deudas_solicitudes WHERE id = ${id} RETURNING id`;
+  if (result.length === 0)
+    return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
+  return NextResponse.json({ ok: true });
+}

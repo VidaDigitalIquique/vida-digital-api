@@ -122,6 +122,18 @@ export function DeudasAdminClient() {
     } catch { toast.error('Error al registrar pago'); }
   };
 
+  const handleDeleteItem = async (item: HistorialItem) => {
+    if (!confirm('¿Eliminar este registro?')) return;
+    const url = item.item_tipo === 'pago'
+      ? `/api/deudas/pagos/${item.pago_id}`
+      : `/api/deudas/${item.deuda_id}`;
+    try {
+      const res = await fetch(url, { method: 'DELETE' });
+      if (res.ok) { toast.success('Eliminado'); fetchDeudas(); fetchHistorial(); }
+      else { const { error } = await res.json(); toast.error(error ?? 'Error al eliminar'); }
+    } catch { toast.error('Error al eliminar'); }
+  };
+
   const totalDeuda = deudas
     .filter(d => !['rechazada', 'caduca'].includes(d.estado))
     .reduce((acc, d) => acc + parseFloat(String(d.monto)) - parseFloat(String(d.pagos_total)), 0);
@@ -200,7 +212,7 @@ export function DeudasAdminClient() {
                   <Button size="sm" variant="outline" onClick={() => { setPagandoId(null); setMontoPago(''); }}>Cancelar</Button>
                 </div>
               ) : (
-                <Button size="sm" variant="outline" onClick={() => setPagandoId(prestamoConSaldo.id)}>Registrar pago</Button>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setPagandoId(prestamoConSaldo.id)}>Registrar pago</Button>
               ))}
             </div>
             {loading ? (
@@ -215,6 +227,7 @@ export function DeudasAdminClient() {
                     <th className="px-4 py-3 text-left">Tipo</th>
                     <th className="px-4 py-3 text-right">Monto</th>
                     <th className="px-4 py-3 text-left">Descripción</th>
+                    <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -224,6 +237,7 @@ export function DeudasAdminClient() {
                       <td className="px-4 py-3">{item.tipo === 'pago' ? 'Pago' : tipoLabel(item.tipo)}</td>
                       <td className="px-4 py-3 text-right font-medium">{formatMonto(parseFloat(String(item.monto)))}</td>
                       <td className="px-4 py-3 text-zinc-500">{item.descripcion || '—'}</td>
+                      <td className="px-4 py-3 text-right"><button onClick={() => handleDeleteItem(item)} className="text-xs text-red-500 hover:text-red-700">Eliminar</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -248,6 +262,7 @@ export function DeudasAdminClient() {
                     <th className="px-4 py-3 text-left">Tipo</th>
                     <th className="px-4 py-3 text-right">Monto</th>
                     <th className="px-4 py-3 text-left">Descripción</th>
+                    <th className="px-4 py-3"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -257,6 +272,7 @@ export function DeudasAdminClient() {
                       <td className="px-4 py-3">{item.tipo === 'pago' ? 'Pago' : tipoLabel(item.tipo)}</td>
                       <td className="px-4 py-3 text-right font-medium">{formatMonto(parseFloat(String(item.monto)))}</td>
                       <td className="px-4 py-3 text-zinc-500">{item.descripcion || '—'}</td>
+                      <td className="px-4 py-3 text-right"><button onClick={() => handleDeleteItem(item)} className="text-xs text-red-500 hover:text-red-700">Eliminar</button></td>
                     </tr>
                   ))}
                 </tbody>
