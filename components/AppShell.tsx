@@ -3,16 +3,20 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { TopNav } from './TopNav';
+import { Toolbar } from './Toolbar';
 import { BottomNav } from './BottomNav';
 import { SessionProvider } from 'next-auth/react';
 import { AlertasProvider } from '@/contexts/AlertasContext';
 
 export function AppShell({ children, session }: { children: React.ReactNode, session: any }) {
+  const rol = (session?.user as any)?.rol as string;
+  const isAdmin = rol === 'admin';
   return (
     <SessionProvider session={session}>
       <AlertasProvider>
         <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col pt-16 md:pt-16 pb-16 md:pb-0">
           <TopNav />
+          {rol !== 'bodeguero' && <Toolbar isAdmin={isAdmin} />}
           <header className="md:hidden fixed top-0 left-0 right-0 z-50 h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl flex items-center px-4">
             <Link href={
               (session?.user as any)?.rol === 'bodeguero' ? '/bodega' : '/dashboard'

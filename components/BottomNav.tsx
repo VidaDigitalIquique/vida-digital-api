@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   ShoppingCart, Users, LayoutList, Tag, Box, Camera,
   Heart, Package, Settings, RefreshCw, ImageIcon,
-  Filter, UserPlus, FileText, ChevronRight, ClipboardList, Banknote
+  Filter, UserPlus, FileText, ChevronRight, ClipboardList, Banknote, Wallet
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -233,6 +233,14 @@ export function BottomNav() {
                     <Link href="/admin/kardex-exclusiones" onClick={() => setAdminOpen(false)}
                       className="flex items-center gap-3 py-3 font-medium border-b border-zinc-100 dark:border-zinc-800">
                       <Filter className="w-4 h-4 text-zinc-400" /> Exclusiones Kardex
+                    </Link>
+                    <Link href="/pettycash" onClick={() => setAdminOpen(false)}
+                      className="flex items-center gap-3 py-3 font-medium border-b border-zinc-100 dark:border-zinc-800">
+                      <Wallet className="w-4 h-4 text-zinc-400" /> Pettycash
+                    </Link>
+                    <Link href="/sueldos" onClick={() => setAdminOpen(false)}
+                      className="flex items-center gap-3 py-3 font-medium border-b border-zinc-100 dark:border-zinc-800">
+                      <Users className="w-4 h-4 text-zinc-400" /> Sueldos
                     </Link>
                     <Link href="/deudas" onClick={() => setAdminOpen(false)}
                       className="flex items-center gap-3 py-3 font-medium border-b border-zinc-100 dark:border-zinc-800">

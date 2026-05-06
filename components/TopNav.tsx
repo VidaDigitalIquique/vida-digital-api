@@ -24,12 +24,7 @@ import {
   Filter,
   Camera,
   Tag,
-  Heart,
-  Package,
-  UserPlus,
-  FileText,
   ClipboardList,
-  Wallet,
   Banknote
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
@@ -112,22 +107,6 @@ export function TopNav() {
               </DropdownMenu>
             )}
 
-            {/* Pre-Notas — admin y vendedor */}
-            {(isAdmin || rol === 'vendedor') && (
-              <Link href="/prenotas" className={navLink(pathname.startsWith('/prenotas'))}>
-                <FileText className="w-4 h-4" />
-                Pre-Notas
-              </Link>
-            )}
-
-            {/* Clientes Nuevos — admin, vendedor y supervisor */}
-            {(isAdmin || rol === 'vendedor' || rol === 'supervisor') && (
-              <Link href="/clientes-nuevos" className={navLink(pathname.startsWith('/clientes-nuevos'))}>
-                <UserPlus className="w-4 h-4" />
-                Clientes Nuevos
-              </Link>
-            )}
-
             {/* 3. Catálogo — admin y vendedor */}
             {(isAdmin || rol === 'vendedor') && (
               <DropdownMenu open={catalogoOpen} onOpenChange={setCatalogoOpen}>
@@ -190,39 +169,6 @@ export function TopNav() {
               </DropdownMenu>
             )}
 
-            {/* 5. Deseados — admin y vendedor */}
-            {(isAdmin || rol === 'vendedor') && (
-              <Link href="/deseados" className={navLink(pathname.startsWith('/deseados') && !modoChina)}>
-                <span className="relative flex items-center gap-2">
-                  <Heart className="w-4 h-4" />
-                  Deseados
-                  {alertasCount > 0 && (
-                    <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[15px] h-3.5 flex items-center justify-center px-0.5 leading-none">
-                      {alertasCount > 99 ? '99+' : alertasCount}
-                    </span>
-                  )}
-                </span>
-              </Link>
-            )}
-
-            {/* Pedir a China — admin y vendedor */}
-            {(isAdmin || rol === 'vendedor') && (
-              <Link
-                href="/deseados?modo=china"
-                className={navLink(pathname.startsWith('/deseados') && modoChina)}
-              >
-                <span className="relative flex items-center gap-2">
-                  <Package className="w-4 h-4" />
-                  China
-                  {stockBajoCount > 0 && (
-                    <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[15px] h-3.5 flex items-center justify-center px-0.5 leading-none">
-                      {stockBajoCount > 99 ? '99+' : stockBajoCount}
-                    </span>
-                  )}
-                </span>
-              </Link>
-            )}
-
             {/* Deudas — vendedor y bodeguero */}
             {(!isAdmin && (rol === 'vendedor' || rol === 'bodeguero')) && (
               <Link href="/deudas" className={navLink(pathname.startsWith('/deudas'))}>
@@ -261,16 +207,6 @@ export function TopNav() {
                   <DropdownMenuItem>
                     <Link href="/admin/kardex-exclusiones" className="flex items-center gap-2 w-full">
                       <Filter className="w-4 h-4" /> Exclusiones Kardex
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="/pettycash" className="flex items-center gap-2 w-full">
-                      <Wallet className="w-4 h-4" /> Pettycash
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="/sueldos" className="flex items-center gap-2 w-full">
-                      <Users className="w-4 h-4" /> Sueldos
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
