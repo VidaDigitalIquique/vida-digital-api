@@ -5,6 +5,6 @@ uvicorn[standard]==0.34.0
 python-multipart==0.0.20
 rembg==2.0.75
 pillow==12.1.0
-pillow-heif==0.21.0
+pillow-heif==0.16.0
 httpx==0.28.1
 pytest==8.3.5
