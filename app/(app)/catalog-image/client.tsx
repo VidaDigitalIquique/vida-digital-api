@@ -72,20 +72,23 @@ export function CatalogImageClient() {
   const [step, setStep] = useState<Step>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [connectAttempt, setConnectAttempt] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const tryConnect = useCallback(() => {
     setState('connecting');
+    setConnectAttempt(0);
     let cancelled = false;
     (async () => {
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 12; i++) {
         if (cancelled) return;
+        setConnectAttempt(i + 1);
         try {
           const res = await fetch('/api/catalog-image/health', { signal: AbortSignal.timeout(10_000) });
           if (res.ok) { if (!cancelled) setState('ready'); return; }
         } catch { /* servicio aún despertando */ }
         if (cancelled) return;
-        await new Promise(r => setTimeout(r, 5_000));
+        await new Promise(r => setTimeout(r, 15_000));
       }
       if (!cancelled) setState('offline');
     })();
@@ -161,11 +164,16 @@ export function CatalogImageClient() {
 
   return (
     <div style={{ maxWidth: 520, margin: '0 auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <style>{`@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
+      <style>{`@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
       {/* Banner de estado */}
       {state === 'connecting' && (
-        <p style={{ color: '#6b7280', fontSize: 14 }}>Conectando con el servicio…</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: '#fafafa', border: '1px solid #e5e7eb', borderRadius: 8 }}>
+          <div style={{ width: 16, height: 16, border: '2px solid #e5e7eb', borderTopColor: '#3b82f6', borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
+          <span style={{ color: '#6b7280', fontSize: 14 }}>
+            Despertando servicio… intento {connectAttempt}/12
+          </span>
+        </div>
       )}
       {state === 'offline' && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#fafafa', border: '1px solid #e5e7eb', borderRadius: 8 }}>
