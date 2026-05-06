@@ -10,43 +10,63 @@ export async function POST(request: Request) {
 
   try {
     const sanjhResult = await sql`
-      WITH updated AS (
-        UPDATE public.productos AS prod SET
-          saldo      = inv.stocdisp,
-          cif        = inv.cifunita,
-          costo      = inv.cosunita,
-          cantcaja   = inv.cantcaja,
-          pesocaja   = inv.pesocaja,
-          cubicaja   = inv.cubicaja,
-          umed       = inv.desunida,
-          updated_at = NOW()
+      WITH upserted AS (
+        INSERT INTO public.productos (
+          empresa_id, codigo, nroingreso,
+          saldo, cif, costo, cantcaja, pesocaja, cubicaja, umed, detalle,
+          prcventa, prcminimo, imagen_url, public_id, categoria, es_nuevo,
+          fecha_ingreso, updated_at
+        )
+        SELECT
+          1, inv.codunico, inv.knumezet,
+          inv.stocdisp, inv.cifunita, inv.cosunita, inv.cantcaja, inv.pesocaja, inv.cubicaja, inv.desunida, inv.descript,
+          NULL, NULL, NULL, NULL,
+          (SELECT categoria FROM public.productos WHERE codigo = inv.codunico AND empresa_id = 1 AND categoria IS NOT NULL LIMIT 1),
+          false, NOW(), NOW()
         FROM sanjh.inventar inv
-        WHERE prod.codigo = inv.codunico
-          AND prod.nroingreso = inv.knumezet
-          AND prod.empresa_id = 1
-        RETURNING prod.id
+        ON CONFLICT ON CONSTRAINT productos_empresa_id_codigo_nroingreso_key
+        DO UPDATE SET
+          saldo      = EXCLUDED.saldo,
+          cif        = EXCLUDED.cif,
+          costo      = EXCLUDED.costo,
+          cantcaja   = EXCLUDED.cantcaja,
+          pesocaja   = EXCLUDED.pesocaja,
+          cubicaja   = EXCLUDED.cubicaja,
+          umed       = EXCLUDED.umed,
+          updated_at = NOW()
+        RETURNING id
       )
-      SELECT COUNT(*)::int as count FROM updated
+      SELECT COUNT(*)::int as count FROM upserted
     `;
 
     const vidaResult = await sql`
-      WITH updated AS (
-        UPDATE public.productos AS prod SET
-          saldo      = inv.stocdisp,
-          cif        = inv.cifunita,
-          costo      = inv.cosunita,
-          cantcaja   = inv.cantcaja,
-          pesocaja   = inv.pesocaja,
-          cubicaja   = inv.cubicaja,
-          umed       = inv.desunida,
-          updated_at = NOW()
+      WITH upserted AS (
+        INSERT INTO public.productos (
+          empresa_id, codigo, nroingreso,
+          saldo, cif, costo, cantcaja, pesocaja, cubicaja, umed, detalle,
+          prcventa, prcminimo, imagen_url, public_id, categoria, es_nuevo,
+          fecha_ingreso, updated_at
+        )
+        SELECT
+          2, inv.codunico, inv.knumezet,
+          inv.stocdisp, inv.cifunita, inv.cosunita, inv.cantcaja, inv.pesocaja, inv.cubicaja, inv.desunida, inv.descript,
+          NULL, NULL, NULL, NULL,
+          (SELECT categoria FROM public.productos WHERE codigo = inv.codunico AND empresa_id = 2 AND categoria IS NOT NULL LIMIT 1),
+          false, NOW(), NOW()
         FROM vida.inventar inv
-        WHERE prod.codigo = inv.codunico
-          AND prod.nroingreso = inv.knumezet
-          AND prod.empresa_id = 2
-        RETURNING prod.id
+        ON CONFLICT ON CONSTRAINT productos_empresa_id_codigo_nroingreso_key
+        DO UPDATE SET
+          saldo      = EXCLUDED.saldo,
+          cif        = EXCLUDED.cif,
+          costo      = EXCLUDED.costo,
+          cantcaja   = EXCLUDED.cantcaja,
+          pesocaja   = EXCLUDED.pesocaja,
+          cubicaja   = EXCLUDED.cubicaja,
+          umed       = EXCLUDED.umed,
+          updated_at = NOW()
+        RETURNING id
       )
-      SELECT COUNT(*)::int as count FROM updated
+      SELECT COUNT(*)::int as count FROM upserted
     `;
 
     const sanjh_count = Number(sanjhResult?.[0]?.count ?? 0);
