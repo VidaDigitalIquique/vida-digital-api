@@ -110,7 +110,7 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
 
   const openEdit = (m: Movimiento) => {
     setEditTarget(m);
-    setEditForm({ tipo: m.tipo, concepto: m.concepto, monto: String(m.monto), fecha: m.fecha });
+    setEditForm({ tipo: m.tipo, concepto: m.concepto, monto: String(m.monto), fecha: String(m.fecha).slice(0, 10) });
   };
 
   const handleSave = async () => {
@@ -125,7 +125,7 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
         body: JSON.stringify({ tipo: editForm.tipo, concepto: editForm.concepto.trim(), monto, fecha: editForm.fecha }),
       });
       if (res.ok) { toast.success('Movimiento actualizado'); setEditTarget(null); fetchMovimientos(); }
-      else { const { error } = await res.json(); toast.error(error?.message ?? error ?? 'Error al guardar'); }
+      else { const { error } = await res.json(); toast.error(typeof error === 'string' ? error : 'Error al guardar'); }
     } catch { toast.error('Error al guardar'); }
     finally { setSaving(false); }
   };
