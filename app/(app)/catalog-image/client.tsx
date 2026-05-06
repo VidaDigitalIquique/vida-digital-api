@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-type AppState = 'connecting' | 'ready' | 'generating' | 'done' | 'error';
+type AppState = 'connecting' | 'offline' | 'ready' | 'generating' | 'done' | 'error';
 type Step = 'removing_bg' | 'generating_image' | 'composing' | 'uploading' | null;
 
 const STEP_LABELS: Record<string, string> = {
@@ -12,51 +12,86 @@ const STEP_LABELS: Record<string, string> = {
   uploading: 'Subiendo a Cloudinary…',
 };
 
+const STEP_PCT: Record<string, number> = {
+  removing_bg: 25,
+  generating_image: 50,
+  composing: 75,
+  uploading: 100,
+};
+
 export function stepLabel(step: string | null): string {
   if (!step) return '';
   return STEP_LABELS[step] ?? '';
+}
+
+export function stepProgress(step: string | null): number {
+  if (!step) return 0;
+  return STEP_PCT[step] ?? 0;
 }
 
 export function ImagePreview({ result_url }: { result_url: string }) {
   return <img src={result_url} alt="Resultado generado" style={{ maxWidth: '100%' }} />;
 }
 
+export function ProgressBar({ step }: { step: Step }) {
+  const pct = stepProgress(step);
+  return (
+    <div style={{ background: '#e5e7eb', borderRadius: 4, height: 8, overflow: 'hidden', margin: '8px 0' }}>
+      <div style={{ background: '#3b82f6', width: `${pct}%`, height: '100%', transition: 'width 0.5s ease' }} />
+    </div>
+  );
+}
+
+function ImagePlaceholder() {
+  return (
+    <div style={{
+      width: '100%', aspectRatio: '4/3', background: '#f3f4f6',
+      borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#9ca3af', fontSize: 14, border: '2px dashed #e5e7eb',
+    }}>
+      La imagen generada aparecerá aquí
+    </div>
+  );
+}
+
+function ImageSkeleton() {
+  return (
+    <div style={{
+      width: '100%', aspectRatio: '4/3', background: 'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)',
+      backgroundSize: '200% 100%', borderRadius: 8, animation: 'shimmer 1.5s infinite',
+    }} />
+  );
+}
+
 export function CatalogImageClient() {
   const [state, setState] = useState<AppState>('connecting');
   const [productCode, setProductCode] = useState('');
   const [packingText, setPackingText] = useState('');
+  const [colors, setColors] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [step, setStep] = useState<Step>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
+  const tryConnect = useCallback(() => {
+    setState('connecting');
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 90_000);
-
     fetch('/api/catalog-image/health', { signal: controller.signal })
-      .then(res => {
-        if (!cancelled) setState(res.ok ? 'ready' : 'error');
-      })
-      .catch(() => {
-        if (!cancelled) setState('error');
-      })
+      .then(res => setState(res.ok ? 'ready' : 'offline'))
+      .catch(() => setState('offline'))
       .finally(() => clearTimeout(timeout));
-
-    return () => {
-      cancelled = true;
-      controller.abort();
-      clearTimeout(timeout);
-    };
+    return () => { controller.abort(); clearTimeout(timeout); };
   }, []);
 
+  useEffect(() => {
+    const cleanup = tryConnect();
+    return cleanup;
+  }, [tryConnect]);
+
   const stopPolling = useCallback(() => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
   }, []);
 
   useEffect(() => () => stopPolling(), [stopPolling]);
@@ -78,7 +113,7 @@ export function CatalogImageClient() {
         }
       } catch {
         stopPolling();
-        setErrorMsg('Error de conexión');
+        setErrorMsg('Error de conexión con el servicio');
         setState('error');
       }
     }, 3_000);
@@ -100,6 +135,7 @@ export function CatalogImageClient() {
     files.forEach(f => form.append('images', f));
     form.append('product_code', productCode);
     form.append('packing_text', packingText);
+    if (colors.trim()) form.append('colors', colors.trim());
     try {
       const res = await fetch('/api/catalog-image/job', { method: 'POST', body: form });
       const data = await res.json();
@@ -117,30 +153,73 @@ export function CatalogImageClient() {
     files.length > 0;
 
   return (
-    <div>
-      {state === 'connecting' && <p>Conectando con el servicio…</p>}
-      {state === 'ready' && <p>Servicio listo ✓</p>}
-      {state === 'generating' && step && <p>{stepLabel(step)}</p>}
+    <div style={{ maxWidth: 520, margin: '0 auto', padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <style>{`@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
+
+      {/* Banner de estado */}
+      {state === 'connecting' && (
+        <p style={{ color: '#6b7280', fontSize: 14 }}>Conectando con el servicio…</p>
+      )}
+      {state === 'offline' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#fafafa', border: '1px solid #e5e7eb', borderRadius: 8 }}>
+          <span style={{ color: '#6b7280', fontSize: 14 }}>Servicio inactivo</span>
+          <button onClick={tryConnect} style={{ marginLeft: 'auto', fontSize: 13, padding: '4px 12px', borderRadius: 6, background: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer' }}>
+            Despertar servicio
+          </button>
+        </div>
+      )}
+      {state === 'ready' && (
+        <p style={{ color: '#16a34a', fontSize: 14 }}>Servicio listo ✓</p>
+      )}
       {state === 'error' && (
+        <div style={{ padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ color: '#dc2626', fontSize: 14 }}>{errorMsg ?? 'Ocurrió un error'}</span>
+          <button onClick={reset} style={{ marginLeft: 'auto', fontSize: 13, padding: '4px 12px', borderRadius: 6, background: '#dc2626', color: '#fff', border: 'none', cursor: 'pointer' }}>
+            Reintentar
+          </button>
+        </div>
+      )}
+
+      {/* Área de imagen */}
+      {state === 'done' && resultUrl ? (
+        <ImagePreview result_url={resultUrl} />
+      ) : state === 'generating' ? (
+        <ImageSkeleton />
+      ) : (
+        <ImagePlaceholder />
+      )}
+
+      {/* Barra de progreso */}
+      {state === 'generating' && (
         <>
-          <p>{errorMsg ?? 'Error al conectar con el servicio'}</p>
-          <button onClick={reset}>Reintentar</button>
+          <ProgressBar step={step} />
+          <p style={{ color: '#6b7280', fontSize: 13, margin: 0 }}>{stepLabel(step)}</p>
         </>
       )}
 
+      {/* Formulario */}
       {state !== 'done' && (
-        <>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <input
-            placeholder="Código de producto"
+            placeholder="Código de producto *"
             value={productCode}
             onChange={e => setProductCode(e.target.value)}
             disabled={state !== 'ready'}
+            style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 14 }}
           />
           <input
-            placeholder="Texto de packing"
+            placeholder="Texto de packing *"
             value={packingText}
             onChange={e => setPackingText(e.target.value)}
             disabled={state !== 'ready'}
+            style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 14 }}
+          />
+          <input
+            placeholder="Colores del producto (opcional)"
+            value={colors}
+            onChange={e => setColors(e.target.value)}
+            disabled={state !== 'ready'}
+            style={{ padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 14 }}
           />
           <input
             type="file"
@@ -148,19 +227,31 @@ export function CatalogImageClient() {
             accept="image/jpeg,image/png,image/webp,image/heic"
             onChange={e => setFiles(Array.from(e.target.files ?? []))}
             disabled={state !== 'ready'}
+            style={{ fontSize: 13 }}
           />
-          <button onClick={handleGenerate} disabled={!canGenerate}>
+          <button
+            onClick={handleGenerate}
+            disabled={!canGenerate}
+            style={{ padding: '10px 16px', borderRadius: 6, background: canGenerate ? '#3b82f6' : '#e5e7eb', color: canGenerate ? '#fff' : '#9ca3af', border: 'none', cursor: canGenerate ? 'pointer' : 'not-allowed', fontSize: 14, fontWeight: 600 }}
+          >
             Generar
           </button>
-        </>
+        </div>
       )}
 
+      {/* Acciones post-generación */}
       {state === 'done' && resultUrl && (
-        <>
-          <ImagePreview result_url={resultUrl} />
-          <button onClick={reset}>Aprobar</button>
-          <button onClick={reset}>Regenerar</button>
-        </>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={reset} style={{ flex: 1, padding: '10px 16px', borderRadius: 6, background: '#16a34a', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+            Aprobar
+          </button>
+          <a href={resultUrl} target="_blank" rel="noreferrer" style={{ flex: 1, padding: '10px 16px', borderRadius: 6, background: '#6b7280', color: '#fff', textDecoration: 'none', textAlign: 'center', fontSize: 14, fontWeight: 600 }}>
+            Descargar
+          </a>
+          <button onClick={reset} style={{ flex: 1, padding: '10px 16px', borderRadius: 6, background: '#f3f4f6', color: '#374151', border: 'none', cursor: 'pointer', fontSize: 14, fontWeight: 600 }}>
+            Regenerar
+          </button>
+        </div>
       )}
     </div>
   );

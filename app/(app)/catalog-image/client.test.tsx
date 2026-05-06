@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { CatalogImageClient, ImagePreview, stepLabel } from './client';
+import { CatalogImageClient, ImagePreview, stepLabel, stepProgress } from './client';
 
 beforeEach(() => {
   (global as any).fetch = jest.fn(() => new Promise(() => {}));
@@ -29,4 +29,18 @@ test('stepLabel retorna la etiqueta correcta para cada step', () => {
 test('ImagePreview muestra img con el src correcto', () => {
   render(<ImagePreview result_url="https://example.com/img.jpg" />);
   expect(screen.getByRole('img')).toHaveAttribute('src', 'https://example.com/img.jpg');
+});
+
+test('stepProgress retorna 25 para removing_bg', () => {
+  expect(stepProgress('removing_bg')).toBe(25);
+});
+
+test('stepProgress retorna 100 para uploading', () => {
+  expect(stepProgress('uploading')).toBe(100);
+});
+
+test('muestra botón Despertar servicio cuando health check falla', async () => {
+  (global as any).fetch = jest.fn(() => Promise.reject(new Error('ECONNREFUSED')));
+  render(<CatalogImageClient />);
+  expect(await screen.findByRole('button', { name: /despertar/i })).toBeInTheDocument();
 });
