@@ -160,8 +160,8 @@ export function BottomNav() {
           </>
         )}
 
-        {/* Bodega — admin, bodeguero */}
-        {(isAdmin || isBodeguero) && (
+        {/* Bodega — admin, bodeguero, vendedor */}
+        {(isAdmin || isBodeguero || isVendedor) && (
           <>
             <button
               onClick={() => setBodegaOpen(true)}

@@ -147,8 +147,8 @@ export function TopNav() {
               </DropdownMenu>
             )}
 
-            {/* 4. Bodega — admin y bodeguero */}
-            {(isAdmin || rol === 'bodeguero') && (
+            {/* 4. Bodega — admin, bodeguero y vendedor */}
+            {(isAdmin || rol === 'bodeguero' || rol === 'vendedor') && (
               <DropdownMenu open={bodegaOpen} onOpenChange={setBodegaOpen}>
                 <DropdownMenuTrigger
                   onMouseEnter={() => openOnly('bodega')}
