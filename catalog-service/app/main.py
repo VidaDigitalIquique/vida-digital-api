@@ -1,8 +1,9 @@
-import io
-from fastapi import FastAPI, File, UploadFile
+from typing import List
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import JSONResponse, Response
-from PIL import Image
 import pillow_heif
+from app.rembg_service import remove_background
+from app import jobs as job_manager
 
 pillow_heif.register_heif_opener()
 
@@ -12,15 +13,6 @@ MIME_VALIDOS = {
 }
 
 app = FastAPI()
-
-
-def remove_background(image_bytes: bytes) -> bytes:
-    from rembg import remove
-    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    result = remove(img)
-    buf = io.BytesIO()
-    result.save(buf, format="PNG")
-    return buf.getvalue()
 
 
 @app.get("/health")
@@ -35,3 +27,27 @@ async def remove_bg(file: UploadFile = File(...)):
     data = await file.read()
     png_bytes = remove_background(data)
     return Response(content=png_bytes, media_type="image/png")
+
+
+@app.post("/jobs")
+async def create_job(
+    images: List[UploadFile] = File(...),
+    product_code: str = Form(...),
+    packing_text: str = Form(...),
+):
+    images_bytes = [await img.read() for img in images]
+    job_id = job_manager.create_job(images_bytes, product_code, packing_text)
+    return {"job_id": job_id}
+
+
+@app.get("/jobs/{job_id}")
+def get_job(job_id: str):
+    job = job_manager.get_job(job_id)
+    if job is None:
+        return JSONResponse(status_code=404, content={"error": "job not found"})
+    return {
+        "status": job.status,
+        "step": job.step,
+        "result_url": job.result_url,
+        "error": job.error,
+    }
