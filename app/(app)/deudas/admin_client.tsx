@@ -19,6 +19,16 @@ interface Deuda {
   pagos_total: string | number;
 }
 
+interface HistorialItem {
+  deuda_id: number;
+  pago_id: number | null;
+  tipo: string;
+  monto: string | number;
+  descripcion: string | null;
+  fecha_hora: string;
+  item_tipo: 'deuda' | 'pago';
+}
+
 export function DeudasAdminClient() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [usuarioId, setUsuarioId] = useState<number | ''>('');
@@ -32,6 +42,7 @@ export function DeudasAdminClient() {
 
   const [pagandoId, setPagandoId] = useState<number | null>(null);
   const [montoPago, setMontoPago] = useState('');
+  const [historial, setHistorial] = useState<{ prestamos: HistorialItem[]; adelantos: HistorialItem[] }>({ prestamos: [], adelantos: [] });
 
   useEffect(() => {
     fetch('/api/admin/usuarios').then(r => r.json()).then(d => setUsuarios(d.data ?? []));
@@ -47,6 +58,18 @@ export function DeudasAdminClient() {
   }, [usuarioId]);
 
   useEffect(() => { fetchDeudas(); }, [fetchDeudas]);
+
+  const fmtFechaHora = (iso: string) =>
+    new Date(iso).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+  const fetchHistorial = useCallback(async () => {
+    if (!usuarioId) { setHistorial({ prestamos: [], adelantos: [] }); return; }
+    fetch(`/api/deudas/historial?usuario_id=${usuarioId}`)
+      .then(r => r.json())
+      .then(d => setHistorial({ prestamos: d.prestamos ?? [], adelantos: d.adelantos ?? [] }));
+  }, [usuarioId]);
+
+  useEffect(() => { fetchHistorial(); }, [fetchHistorial]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +91,7 @@ export function DeudasAdminClient() {
         setMonto('');
         setDescripcion('');
         fetchDeudas();
+        fetchHistorial();
       } else {
         const { error } = await res.json();
         toast.error(error?.message ?? 'Error al registrar');
@@ -90,12 +114,19 @@ export function DeudasAdminClient() {
         setMontoPago('');
         setPagandoId(null);
         fetchDeudas();
+        fetchHistorial();
       } else {
         const { error } = await res.json();
         toast.error(error ?? 'Error al registrar pago');
       }
     } catch { toast.error('Error al registrar pago'); }
   };
+
+  const prestamoConSaldo = usuarioId ? deudas.find(d => {
+    const t = parseFloat(String(d.monto));
+    const p = parseFloat(String(d.pagos_total));
+    return d.tipo === 'prestamo' && d.estado === 'confirmada' && (t - p) > 0;
+  }) : undefined;
 
   return (
     <div className="flex flex-col gap-6 w-full fade-in">
@@ -139,69 +170,83 @@ export function DeudasAdminClient() {
         </div>
       </form>
 
-      {/* Movimientos del trabajador */}
+      {/* Historial unificado */}
       {usuarioId && (
-        <div className="flex flex-col gap-3">
-          <h2 className="font-semibold text-lg">
-            Movimientos — {usuarios.find(u => u.id === usuarioId)?.nombre}
-          </h2>
-          {loading ? (
-            <div className="py-8 text-center text-zinc-400 animate-pulse text-sm">Cargando...</div>
-          ) : deudas.length === 0 ? (
-            <div className="border border-dashed rounded-xl p-8 text-center text-zinc-400 text-sm">
-              Sin movimientos registrados.
-            </div>
-          ) : (
-            deudas.map(d => {
-              const total = parseFloat(String(d.monto));
-              const pagado = parseFloat(String(d.pagos_total));
-              const saldo = total - pagado;
-              const esPrestamo = d.tipo === 'prestamo';
-              return (
-                <div key={d.id} className="bg-white dark:bg-zinc-900 border rounded-xl p-4 shadow-sm flex flex-col gap-3">
-                  <div className="flex items-start justify-between gap-2 flex-wrap">
-                    <div>
-                      <p className="font-semibold">{tipoLabel(d.tipo)} — {formatMonto(total)}</p>
-                      {d.descripcion && <p className="text-sm text-zinc-500">{d.descripcion}</p>}
-                      <p className="text-xs text-zinc-400">{d.mes}/{d.anio}</p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${estadoBadge(d.estado)}`}>
-                        {d.estado === 'aceptada' ? 'Pendiente confirmación' : d.estado}
-                      </span>
-                      {esPrestamo && pagado > 0 && (
-                        <p className="text-xs text-zinc-400">Pagado: {formatMonto(pagado)}</p>
-                      )}
-                      {esPrestamo && saldo > 0 && d.estado === 'confirmada' && (
-                        <p className="text-sm font-semibold text-red-600">Saldo: {formatMonto(saldo)}</p>
-                      )}
-                    </div>
-                  </div>
-                  {esPrestamo && d.estado === 'confirmada' && saldo > 0 && (
-                    pagandoId === d.id ? (
-                      <div className="flex gap-2">
-                        <Input
-                          type="number" placeholder="Monto pago" min={0.01} step={0.01}
-                          value={montoPago} onChange={e => setMontoPago(e.target.value)}
-                          className="w-40"
-                        />
-                        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handlePago(d.id)}>
-                          Confirmar pago
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => { setPagandoId(null); setMontoPago(''); }}>
-                          Cancelar
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button size="sm" variant="outline" className="self-start" onClick={() => setPagandoId(d.id)}>
-                        Registrar pago
-                      </Button>
-                    )
-                  )}
+        <div className="flex flex-col gap-4">
+          {/* Tarjeta Préstamos */}
+          <div className="bg-white dark:bg-zinc-900 border rounded-xl shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b flex items-center justify-between flex-wrap gap-3">
+              <h2 className="font-semibold text-lg">Préstamos</h2>
+              {prestamoConSaldo && (pagandoId === prestamoConSaldo.id ? (
+                <div className="flex gap-2">
+                  <Input type="number" placeholder="Monto pago" min={0.01} step={0.01} value={montoPago} onChange={e => setMontoPago(e.target.value)} className="w-36" />
+                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => handlePago(prestamoConSaldo.id)}>Confirmar</Button>
+                  <Button size="sm" variant="outline" onClick={() => { setPagandoId(null); setMontoPago(''); }}>Cancelar</Button>
                 </div>
-              );
-            })
-          )}
+              ) : (
+                <Button size="sm" variant="outline" onClick={() => setPagandoId(prestamoConSaldo.id)}>Registrar pago</Button>
+              ))}
+            </div>
+            {loading ? (
+              <p className="p-5 text-sm text-zinc-400 animate-pulse">Cargando...</p>
+            ) : historial.prestamos.length === 0 ? (
+              <p className="p-5 text-sm text-zinc-400">Sin préstamos registrados.</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="bg-zinc-50 dark:bg-zinc-800 text-zinc-500 text-xs uppercase">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Fecha/Hora</th>
+                    <th className="px-4 py-3 text-left">Tipo</th>
+                    <th className="px-4 py-3 text-right">Monto</th>
+                    <th className="px-4 py-3 text-left">Descripción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {historial.prestamos.map((item, i) => (
+                    <tr key={i} className={item.item_tipo === 'pago' ? 'bg-emerald-50/60 dark:bg-emerald-900/10' : ''}>
+                      <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">{fmtFechaHora(item.fecha_hora)}</td>
+                      <td className="px-4 py-3">{item.tipo === 'pago' ? 'Pago' : tipoLabel(item.tipo)}</td>
+                      <td className="px-4 py-3 text-right font-medium">{formatMonto(parseFloat(String(item.monto)))}</td>
+                      <td className="px-4 py-3 text-zinc-500">{item.descripcion || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* Tarjeta Adelantos y Quincenas */}
+          <div className="bg-white dark:bg-zinc-900 border rounded-xl shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b">
+              <h2 className="font-semibold text-lg">Adelantos y Quincenas</h2>
+            </div>
+            {loading ? (
+              <p className="p-5 text-sm text-zinc-400 animate-pulse">Cargando...</p>
+            ) : historial.adelantos.length === 0 ? (
+              <p className="p-5 text-sm text-zinc-400">Sin adelantos ni quincenas registrados.</p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="bg-zinc-50 dark:bg-zinc-800 text-zinc-500 text-xs uppercase">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Fecha/Hora</th>
+                    <th className="px-4 py-3 text-left">Tipo</th>
+                    <th className="px-4 py-3 text-right">Monto</th>
+                    <th className="px-4 py-3 text-left">Descripción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {historial.adelantos.map((item, i) => (
+                    <tr key={i}>
+                      <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">{fmtFechaHora(item.fecha_hora)}</td>
+                      <td className="px-4 py-3">{item.tipo === 'pago' ? 'Pago' : tipoLabel(item.tipo)}</td>
+                      <td className="px-4 py-3 text-right font-medium">{formatMonto(parseFloat(String(item.monto)))}</td>
+                      <td className="px-4 py-3 text-zinc-500">{item.descripcion || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       )}
     </div>
