@@ -25,7 +25,7 @@ def generate_catalog_image(images: list[tuple[bytes, str]], prompt: str = "") ->
         parts.append(types.Part.from_bytes(data=img_bytes, mime_type=mime_type))
 
     response = client.models.generate_content(
-        model="gemini-2.0-flash-preview-image-generation",
+        model="gemini-2.5-flash-image",
         contents=types.Content(role="user", parts=parts),
         config=types.GenerateContentConfig(
             response_modalities=["IMAGE", "TEXT"],
