@@ -213,8 +213,8 @@ export function BottomNav() {
             <Sheet open={adminOpen} onOpenChange={setAdminOpen}>
               <SheetTrigger className="hidden" />
               <SheetContent side="right" className="w-[80vw] sm:w-[300px] p-6">
-                <div className="flex flex-col justify-between h-full pt-8">
-                  <div className="space-y-2">
+                <div className="flex flex-col h-full pt-8 gap-4">
+                  <div className="space-y-2 flex-1 overflow-y-auto">
                     <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-4">
                       Administración
                     </h3>
