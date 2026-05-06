@@ -3,7 +3,7 @@ google-genai==1.14.0
 cloudinary==1.41.0
 uvicorn[standard]==0.34.0
 python-multipart==0.0.20
-rembg[cpu]==2.0.61
+rembg==2.0.75
 pillow==11.2.1
 pillow-heif==0.21.0
 httpx==0.28.1
