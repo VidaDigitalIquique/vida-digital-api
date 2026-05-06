@@ -1,7 +1,6 @@
 import uuid
 import threading
 from typing import Optional
-from app.rembg_service import remove_background
 from app.gemini_service import generate_catalog_image
 from app.compose import overlay_text
 from app.cloudinary_service import upload_image
@@ -19,13 +18,13 @@ class Job:
 _jobs: dict[str, Job] = {}
 
 
-def create_job(images_bytes: list[bytes], product_code: str, packing_text: str) -> str:
+def create_job(images_data: list[tuple[bytes, str]], product_code: str, packing_text: str) -> str:
     job_id = str(uuid.uuid4())
     job = Job()
     _jobs[job_id] = job
     thread = threading.Thread(
         target=_execute,
-        args=(job, images_bytes, product_code, packing_text),
+        args=(job, images_data, product_code, packing_text),
         daemon=True,
     )
     thread.start()
@@ -36,16 +35,12 @@ def get_job(job_id: str) -> Optional[Job]:
     return _jobs.get(job_id)
 
 
-def _execute(job: Job, images_bytes: list[bytes], product_code: str, packing_text: str):
+def _execute(job: Job, images_data: list[tuple[bytes, str]], product_code: str, packing_text: str):
     try:
         job.status = "processing"
-        pngs = []
-        for img_bytes in images_bytes:
-            job.step = "removing_bg"
-            pngs.append(remove_background(img_bytes))
 
         job.step = "generating_image"
-        job.generated_image = generate_catalog_image(pngs)
+        job.generated_image = generate_catalog_image(images_data)
 
         job.step = "composing"
         composed = overlay_text(job.generated_image, product_code, packing_text)

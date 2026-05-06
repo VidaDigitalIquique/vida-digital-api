@@ -2,15 +2,10 @@ from typing import List
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
-import pillow_heif
-from app.rembg_service import remove_background
 from app import jobs as job_manager
 
-pillow_heif.register_heif_opener()
-
 MIME_VALIDOS = {
-    "image/jpeg", "image/png", "image/webp",
-    "image/heic", "image/heif", "image/tiff", "image/bmp",
+    "image/jpeg", "image/png", "image/webp", "image/tiff", "image/bmp",
 }
 
 app = FastAPI()
@@ -47,8 +42,8 @@ async def create_job(
     product_code: str = Form(...),
     packing_text: str = Form(...),
 ):
-    images_bytes = [await img.read() for img in images]
-    job_id = job_manager.create_job(images_bytes, product_code, packing_text)
+    images_data = [(await img.read(), img.content_type or "image/jpeg") for img in images]
+    job_id = job_manager.create_job(images_data, product_code, packing_text)
     return {"job_id": job_id}
 
 

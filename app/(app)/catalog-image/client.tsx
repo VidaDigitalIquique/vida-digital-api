@@ -6,16 +6,14 @@ type AppState = 'connecting' | 'offline' | 'ready' | 'generating' | 'done' | 'er
 type Step = 'removing_bg' | 'generating_image' | 'composing' | 'uploading' | null;
 
 const STEP_LABELS: Record<string, string> = {
-  removing_bg: 'Removiendo fondo…',
   generating_image: 'Generando imagen con IA…',
   composing: 'Componiendo imagen…',
   uploading: 'Subiendo a Cloudinary…',
 };
 
 const STEP_PCT: Record<string, number> = {
-  removing_bg: 25,
-  generating_image: 50,
-  composing: 75,
+  generating_image: 33,
+  composing: 66,
   uploading: 100,
 };
 
@@ -240,7 +238,7 @@ export function CatalogImageClient() {
           <input
             type="file"
             multiple
-            accept="image/jpeg,image/png,image/webp,image/heic"
+            accept="image/jpeg,image/png,image/webp"
             onChange={e => setFiles(Array.from(e.target.files ?? []))}
             disabled={state !== 'ready'}
             style={{ fontSize: 13 }}
