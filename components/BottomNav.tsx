@@ -202,6 +202,14 @@ export function BottomNav() {
           </Link>
         )}
 
+        {/* Deudas — admin */}
+        {isAdmin && (
+          <Link href="/deudas" className={btnClass(pathname.startsWith('/deudas'))}>
+            <Banknote className="w-6 h-6" />
+            <span className="text-[10px] font-medium">Deudas</span>
+          </Link>
+        )}
+
         {/* Admin — solo admin */}
         {isAdmin && (
           <>
@@ -243,10 +251,6 @@ export function BottomNav() {
                     <Link href="/sueldos" onClick={() => setAdminOpen(false)}
                       className="flex items-center gap-3 py-3 font-medium border-b border-zinc-100 dark:border-zinc-800">
                       <Users className="w-4 h-4 text-zinc-400" /> Sueldos
-                    </Link>
-                    <Link href="/deudas" onClick={() => setAdminOpen(false)}
-                      className="flex items-center gap-3 py-3 font-medium border-b border-zinc-100 dark:border-zinc-800">
-                      <Banknote className="w-4 h-4 text-zinc-400" /> Deudas
                     </Link>
                   </div>
                   <Button variant="destructive" onClick={() => signOut()} className="w-full">
