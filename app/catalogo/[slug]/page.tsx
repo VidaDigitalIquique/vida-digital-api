@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import { PublicCatalogoClient } from "./client_page";
 import { sql } from "@/lib/db";
-import { filterProducts, filterBySoloNuevo, type CatalogoProducto } from "@/app/api/catalogos/public/[slug]/filter-products";
+import { filterProducts, type CatalogoProducto } from "@/app/api/catalogos/public/[slug]/filter-products";
+import { getLatestIngresoRealCodigos } from "@/utils/catalogo-ingreso";
 
 export const dynamic = 'force-dynamic';
 
@@ -91,41 +92,8 @@ async function getCatalogData(slug: string) {
       productos = productos.filter((p: any) => Number(p.saldo) > 0);
     }
     if (soloNuevo) {
-      // Último ingreso real: prefijo 101, folio más alto del año más alto.
-      // No usa fecha_ingreso (que es fecha de sync, no de ingreso real a Zofri).
-      const latestIngreso = cat.ambas_empresas
-        ? await sql`
-            SELECT SPLIT_PART(nroingreso,'-',2) as anio, SPLIT_PART(nroingreso,'-',3) as folio
-            FROM productos
-            WHERE nroingreso IS NOT NULL
-              AND nroingreso NOT LIKE 'INICIAL%'
-              AND SPLIT_PART(nroingreso,'-',1) = '101'
-            ORDER BY SPLIT_PART(nroingreso,'-',2) DESC, SPLIT_PART(nroingreso,'-',3)::integer DESC
-            LIMIT 1
-          `
-        : await sql`
-            SELECT SPLIT_PART(nroingreso,'-',2) as anio, SPLIT_PART(nroingreso,'-',3) as folio
-            FROM productos
-            WHERE empresa_id = ${cat.empresa_id}
-              AND nroingreso IS NOT NULL
-              AND nroingreso NOT LIKE 'INICIAL%'
-              AND SPLIT_PART(nroingreso,'-',1) = '101'
-            ORDER BY SPLIT_PART(nroingreso,'-',2) DESC, SPLIT_PART(nroingreso,'-',3)::integer DESC
-            LIMIT 1
-          `;
-
-      const latestAnio = latestIngreso[0]?.anio as string | undefined;
-      const latestFolio = latestIngreso[0]?.folio as string | undefined;
-      let latestCodigos = new Set<string>();
-
-      if (latestAnio && latestFolio) {
-        const pattern = `101-${latestAnio}-${latestFolio}-%`;
-        const codigoRows = cat.ambas_empresas
-          ? await sql`SELECT DISTINCT UPPER(codigo) as codigo FROM productos WHERE nroingreso LIKE ${pattern}`
-          : await sql`SELECT DISTINCT UPPER(codigo) as codigo FROM productos WHERE empresa_id = ${cat.empresa_id} AND nroingreso LIKE ${pattern}`;
-        latestCodigos = new Set(codigoRows.map((r: any) => r.codigo as string));
-      }
-      productos = filterBySoloNuevo(productos, latestCodigos);
+      const latestCodigos = await getLatestIngresoRealCodigos(sql, cat.ambas_empresas, cat.empresa_id);
+      productos = productos.filter((p: any) => latestCodigos.has(p.codigo.toUpperCase()));
     }
 
     productos = productos.map((p: any) => ({
