@@ -7,8 +7,9 @@ function getApiKeys(): string[] {
 }
 
 const TEXT_MODELS = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro'];
-const IMAGE_MODELS = ['gemini-2.5-flash-image', 'gemini-3.1-flash-image-preview'];
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+const OPENROUTER_BASE = 'https://openrouter.ai/api/v1/chat/completions';
+const IMAGE_MODELS_OR = ['google/gemini-2.5-flash-image', 'bytedance-seed/seedream-4.5'];
 
 async function callGemini<T>(
   models: string[],
@@ -89,30 +90,60 @@ export async function callGeminiImage(
   mimeTypes: string[],
   prompt: string,
 ): Promise<Buffer | null> {
-  const parts: any[] = [{ text: prompt }];
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    console.error('[callGeminiImage] OPENROUTER_API_KEY no está configurada');
+    return null;
+  }
+
+  const content: any[] = [{ type: 'text', text: prompt }];
   for (let i = 0; i < imagesBase64.length; i++) {
-    parts.push({
-      inline_data: {
-        mime_type: mimeTypes[i] || 'image/jpeg',
-        data: imagesBase64[i],
+    content.push({
+      type: 'image_url',
+      image_url: {
+        url: `data:${mimeTypes[i] || 'image/jpeg'};base64,${imagesBase64[i]}`,
       },
     });
   }
 
-  return callGemini(
-    IMAGE_MODELS,
-    {
-      contents: [{ parts }],
-      generationConfig: { responseModalities: ['IMAGE', 'TEXT'] },
-    },
-    (data) => {
-      for (const part of data?.candidates?.[0]?.content?.parts ?? []) {
-        if (part.inlineData?.data) {
-          return Buffer.from(part.inlineData.data, 'base64');
+  for (const model of IMAGE_MODELS_OR) {
+    try {
+      const res = await fetch(OPENROUTER_BASE, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://vidadigital-inventario-v2.vercel.app',
+          'X-Title': 'VidaDigital',
+        },
+        body: JSON.stringify({
+          model,
+          messages: [{ role: 'user', content }],
+          modalities: ['image', 'text'],
+        }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.text();
+        console.error(`[callGeminiImage] ${model} → ${res.status}: ${errBody.substring(0, 300)}`);
+        continue;
+      }
+
+      const data = await res.json();
+      const parts = data?.choices?.[0]?.message?.content;
+      if (!parts || !Array.isArray(parts)) continue;
+
+      for (const part of parts) {
+        if (part.type === 'image_url' && part.image_url?.url) {
+          const base64 = part.image_url.url.replace(/^data:image\/\w+;base64,/, '');
+          return Buffer.from(base64, 'base64');
         }
       }
-      return null;
-    },
-    'callGeminiImage',
-  );
+    } catch (e: any) {
+      console.error(`[callGeminiImage] ${model} → EXCEPTION: ${e?.message}`);
+      continue;
+    }
+  }
+
+  return null;
 }
