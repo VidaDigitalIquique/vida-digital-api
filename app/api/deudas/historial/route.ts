@@ -18,14 +18,14 @@ export async function GET(request: Request) {
   // Deudas: siempre disponibles
   const prestamoDeudas = await sql`
     SELECT NULL::int AS pago_id, d.id AS deuda_id, d.tipo, d.monto, d.descripcion,
-           d.solicitado_at AS fecha_hora, 'deuda' AS item_tipo
+           d.solicitado_at AS fecha_hora, d.estado, 'deuda' AS item_tipo
     FROM deudas_solicitudes d
     WHERE d.user_id = ${usuarioId} AND d.tipo = 'prestamo'
   `;
 
   const adelantoDeudas = await sql`
     SELECT NULL::int AS pago_id, d.id AS deuda_id, d.tipo, d.monto, d.descripcion,
-           d.solicitado_at AS fecha_hora, 'deuda' AS item_tipo
+           d.solicitado_at AS fecha_hora, d.estado, 'deuda' AS item_tipo
     FROM deudas_solicitudes d
     WHERE d.user_id = ${usuarioId} AND d.tipo IN ('adelanto', 'quincena')
   `;

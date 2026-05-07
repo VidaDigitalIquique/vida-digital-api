@@ -26,6 +26,7 @@ interface HistorialItem {
   tipo: string;
   monto: string | number;
   descripcion: string | null;
+  estado?: string;
   fecha_hora: string;
   item_tipo: 'deuda' | 'pago';
 }
@@ -229,6 +230,7 @@ export function DeudasAdminClient() {
                   <tr>
                     <th className="px-4 py-3 text-left">Fecha/Hora</th>
                     <th className="px-4 py-3 text-left">Tipo</th>
+                    <th className="px-4 py-3 text-left">Estado</th>
                     <th className="px-4 py-3 text-right">Monto</th>
                     <th className="px-4 py-3 text-left">Descripción</th>
                     <th className="px-4 py-3"></th>
@@ -239,6 +241,7 @@ export function DeudasAdminClient() {
                     <tr key={i} className={item.item_tipo === 'pago' ? 'bg-emerald-50/60 dark:bg-emerald-900/10' : ''}>
                       <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">{fmtFechaHora(item.fecha_hora)}</td>
                       <td className="px-4 py-3">{item.tipo === 'pago' ? 'Pago' : tipoLabel(item.tipo)}</td>
+                      <td className="px-4 py-3">{item.estado ? <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${estadoBadge(item.estado)}`}>{item.estado}</span> : '—'}</td>
                       <td className="px-4 py-3 text-right font-medium">{formatMonto(parseFloat(String(item.monto)))}</td>
                       <td className="px-4 py-3 text-zinc-500">{item.descripcion || '—'}</td>
                       <td className="px-4 py-3 text-right"><button onClick={() => handleDeleteItem(item)} className="text-xs text-red-500 hover:text-red-700">Eliminar</button></td>
