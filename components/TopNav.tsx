@@ -216,11 +216,6 @@ export function TopNav() {
                       <Filter className="w-4 h-4" /> Exclusiones Kardex
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="/deudas" className="flex items-center gap-2 w-full">
-                      <Banknote className="w-4 h-4" /> Deudas
-                    </Link>
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
