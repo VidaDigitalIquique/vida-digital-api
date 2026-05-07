@@ -10,6 +10,14 @@ export const SueldoCreateSchema = z.object({
 
 export type SueldoCreate = z.infer<typeof SueldoCreateSchema>;
 
+export const UltimoMontoBaseSchema = z.object({
+  ultimo_monto_base: z.number().nullable(),
+  usuario_id: z.number(),
+  nombre: z.string(),
+});
+
+export type UltimoMontoBase = z.infer<typeof UltimoMontoBaseSchema>;
+
 export function buildConceptoPettycash(nombre: string, mes: number, anio: number): string {
   return `Sueldo ${nombre} ${mes}/${anio}`;
 }

@@ -69,6 +69,13 @@ export function SueldosClient() {
 
   useEffect(() => { fetchMovimientos(); }, [fetchMovimientos]);
 
+  useEffect(() => {
+    if (!usuarioId) { setMontoBase(''); return; }
+    fetch(`/api/sueldos?ultimo_para_usuario=${usuarioId}`)
+      .then(r => r.json())
+      .then(d => { if (d.ultimo_monto_base != null) setMontoBase(String(d.ultimo_monto_base)); });
+  }, [usuarioId]);
+
   const load = useCallback(async () => {
     setLoading(true);
     const res = await fetch(`/api/sueldos?mes=${mesFiltro}&anio=${anioFiltro}`);
@@ -142,7 +149,7 @@ export function SueldosClient() {
           {ANIOS.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
         <input
-          className="border rounded px-3 py-2 text-sm"
+          className="border rounded px-3 py-2 text-sm text-green-600 font-semibold"
           placeholder="Monto base"
           type="number" min="0" step="1"
           required
@@ -151,7 +158,7 @@ export function SueldosClient() {
         <div className="flex gap-2">
           <div className="border rounded px-3 py-2 text-sm flex-1 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-between">
             <span className="text-zinc-400 text-xs mr-2">A pagar</span>
-            <span className={`font-semibold ${montoFinalCalc < parseFloat(montoBase || '0') ? 'text-amber-600' : 'text-zinc-700 dark:text-zinc-200'}`}>
+            <span className="font-semibold text-red-600">
               {formatMonto(montoFinalCalc)}
             </span>
           </div>

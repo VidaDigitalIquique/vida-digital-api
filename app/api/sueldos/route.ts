@@ -18,8 +18,22 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const mes = searchParams.get("mes");
   const anio = searchParams.get("anio");
+  const ultimoParaUsuario = searchParams.get("ultimo_para_usuario");
 
   try {
+    if (ultimoParaUsuario) {
+      const uid = parseInt(ultimoParaUsuario);
+      const [ultimo] = await sql`
+        SELECT monto_base FROM sueldos WHERE usuario_id = ${uid} ORDER BY created_at DESC LIMIT 1
+      `;
+      const [usuario] = await sql`SELECT nombre FROM usuarios WHERE id = ${uid}`;
+      return NextResponse.json({
+        ultimo_monto_base: ultimo ? (ultimo.monto_base as number) : null,
+        usuario_id: uid,
+        nombre: usuario?.nombre ?? "",
+      });
+    }
+
     const rows = await sql`
       SELECT s.id, s.usuario_id, s.trabajador_nombre, s.mes, s.anio,
              s.monto_base, s.monto_final, s.pagado_at, s.creado_por, s.created_at,
