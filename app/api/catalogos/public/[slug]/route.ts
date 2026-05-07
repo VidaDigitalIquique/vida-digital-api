@@ -119,6 +119,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
 
       const latestAnio = latestIngreso[0]?.anio as string | undefined;
       const latestFolio = latestIngreso[0]?.folio as string | undefined;
+      console.log('[solo_nuevo] latestAnio:', latestAnio, 'latestFolio:', latestFolio);
       let latestCodigos = new Set<string>();
 
       if (latestAnio && latestFolio) {
@@ -128,6 +129,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
           : await sql`SELECT DISTINCT UPPER(codigo) as codigo FROM productos WHERE empresa_id = ${cat.empresa_id} AND nroingreso LIKE ${pattern}`;
         latestCodigos = new Set(codigoRows.map((r: any) => r.codigo as string));
       }
+      console.log('[solo_nuevo] latestCodigos count:', latestCodigos.size);
 
       productos = filterBySoloNuevo(productos, latestCodigos);
     }
