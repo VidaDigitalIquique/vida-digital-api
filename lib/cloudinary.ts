@@ -16,7 +16,7 @@ export async function uploadImage(base64Data: string, folder: string, publicId?:
   return new Promise((resolve, reject) => {
     cld.uploader.upload(
       base64Data,
-      { folder, public_id: publicId, overwrite: true },
+      { folder, public_id: publicId, overwrite: true, transformation: [{ quality: "auto", width: 1200, crop: "limit" }] },
       (error, result) => {
         if (error) reject(error);
         else resolve(result as UploadApiResponse);

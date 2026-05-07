@@ -403,6 +403,7 @@ def sync_imagenes():
                     folder="productos",
                     public_id=nombre_sin_ext,
                     overwrite=True,
+                    transformation=[{"quality": "auto", "width": 1200, "crop": "limit"}],
                 )
                 log.info(f"  [NEW] {archivo} → {result['secure_url']}")
                 nuevas += 1
