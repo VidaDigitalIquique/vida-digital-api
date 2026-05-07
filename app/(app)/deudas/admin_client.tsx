@@ -64,7 +64,7 @@ export function DeudasAdminClient() {
   useEffect(() => { fetchDeudas(); }, [fetchDeudas]);
 
   const fmtFechaHora = (iso: string) =>
-    new Date(iso).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    new Date(iso).toLocaleString('es-CL', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   const fetchHistorial = useCallback(async () => {
     if (!usuarioId) { setHistorial({ prestamos: [], adelantos: [] }); return; }
