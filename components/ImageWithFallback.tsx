@@ -3,6 +3,11 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
+function addCloudinaryTransform(url: string | null | undefined): string {
+  if (!url || !url.includes('res.cloudinary.com')) return url || '';
+  return url.replace('/image/upload/', '/image/upload/q_auto,w_1200,c_limit/');
+}
+
 interface ImageWithFallbackProps {
   src?: string | null;
   codigo: string;
@@ -27,12 +32,12 @@ export function ImageWithFallback({
   const [error, setError] = useState(false);
 
   // If no DB URL is provided and we haven't errored yet, try the predictable Cloudinary path
-  const cloudinaryFallbackUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/${empresaSlug}/${codigo}.jpeg`;
-  const [imgSrc, setImgSrc] = useState(src || cloudinaryFallbackUrl);
+  const cloudinaryFallbackUrl = `https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/q_auto,w_1200,c_limit/${empresaSlug}/${codigo}.jpeg`;
+  const [imgSrc, setImgSrc] = useState(addCloudinaryTransform(src) || cloudinaryFallbackUrl);
 
   useEffect(() => {
     if (src) {
-      setImgSrc(src);
+      setImgSrc(addCloudinaryTransform(src));
       setError(false);
     }
   }, [src]);
