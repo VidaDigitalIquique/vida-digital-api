@@ -129,7 +129,6 @@ export function BottomNav() {
                   {sheetLink('/catalogo/admin', <LayoutList className="w-5 h-5" />, 'Crear Catálogo', () => setCatalogoOpen(false))}
                   {sheetLink('/catalogo/clientes', <Users className="w-5 h-5" />, 'Catálogos por Cliente', () => setCatalogoOpen(false))}
                   {sheetLink('/admin/categorias', <Tag className="w-5 h-5" />, 'Categorías', () => setCatalogoOpen(false))}
-                  {sheetLink('/catalog-image', <Camera className="w-5 h-5" />, 'Fotos de Catálogo', () => setCatalogoOpen(false))}
                   <Link
                     href="/deseados?modo=china"
                     onClick={() => setCatalogoOpen(false)}

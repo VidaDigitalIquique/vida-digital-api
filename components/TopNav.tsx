@@ -136,11 +136,6 @@ export function TopNav() {
                       <Tag className="w-4 h-4" /> Categorías
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="/catalog-image" className="flex items-center gap-2 w-full">
-                      <Camera className="w-4 h-4" /> Fotos de Catálogo
-                    </Link>
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
