@@ -30,16 +30,21 @@ async function callGemini<T>(
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        if (res.status === 429 || res.status === 403) continue;
+        if (res.status === 429 || res.status === 403) {
+          const errBody = await res.text();
+          console.error(`[${tag}] ${model} KEY_${apiIdx + 1} → ${res.status}: ${errBody.substring(0, 200)}`);
+          continue;
+        }
         if (!res.ok) {
           const errBody = await res.text();
-          console.error(`[${tag}] ${model} key${apiIdx} → ${res.status}: ${errBody}`);
+          console.error(`[${tag}] ${model} KEY_${apiIdx + 1} → ${res.status}: ${errBody.substring(0, 200)}`);
           continue;
         }
         const data = await res.json();
         const result = extract(data);
         if (result !== null) return result;
-      } catch {
+      } catch (e: any) {
+        console.error(`[${tag}] ${model} KEY_${apiIdx + 1} → EXCEPTION: ${e?.message}`);
         continue;
       }
     }
