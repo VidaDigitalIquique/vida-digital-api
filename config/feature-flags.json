@@ -4,7 +4,7 @@
   "fix-company-switcher-mobile": false,
   "kardex-movimiento": true,
   "company-switcher-visible": false,
-  "dashboard_despachos_recientes": false,
+  "dashboard_despachos_recientes": true,
   "dashboard_layout_v2": false,
   "cliente-stars-visible": true,
   "clientes-nuevos-visible": true,

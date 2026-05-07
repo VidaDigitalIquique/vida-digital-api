@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { DashboardClient } from "./client_page";
+import { generateColumnas } from "./dashboard-utils";
 
 export const dynamic = 'force-dynamic';
 
@@ -27,40 +28,18 @@ export default async function DashboardPage() {
   const groupedStats: Record<number, any> = {};
   const empresasInfo = await sql`SELECT id, nombre, slug FROM empresas`;
 
-  // Despachos de HOY
-  const despachosHoyCount = userEmpresas.length > 0
-    ? Number((await sql`
-        SELECT COUNT(*)::int as count
-        FROM public.despachos_bodega
-        WHERE empresa_id = ANY(${userEmpresas})
-          AND DATE(created_at) = CURRENT_DATE
-      `)[0]?.count ?? 0)
-    : 0;
-
-  const despachosHoyList = userEmpresas.length > 0
+  // Despachos — 6 días (hoy + 5 anteriores) agrupados por fecha local Chile
+  const despachosRows = userEmpresas.length > 0
     ? await sql`
         SELECT id, folio, imagen_url, created_at
         FROM public.despachos_bodega
         WHERE empresa_id = ANY(${userEmpresas})
-          AND DATE(created_at) = CURRENT_DATE
+          AND created_at >= (CURRENT_DATE AT TIME ZONE 'America/Santiago') - INTERVAL '5 days'
         ORDER BY created_at DESC
       `
     : [];
 
-  // Último día con despachos y su conteo
-  const ultimoDiaRows = userEmpresas.length > 0
-    ? await sql`
-        SELECT DATE(created_at) as fecha, COUNT(*)::int as count
-        FROM public.despachos_bodega
-        WHERE empresa_id = ANY(${userEmpresas})
-        GROUP BY DATE(created_at)
-        ORDER BY DATE(created_at) DESC
-        LIMIT 2
-      `
-    : [];
-
-  const ultimoDia = ultimoDiaRows[0] ?? null;
-  const penultimoDia = ultimoDiaRows[1] ?? null;
+  const columnas = generateColumnas(despachosRows);
 
   for (const empId of userEmpresas) {
     const [{ count: totalProds }] = await sql`SELECT COUNT(*)::int FROM productos WHERE empresa_id = ${empId}`;
@@ -142,10 +121,7 @@ export default async function DashboardPage() {
     <DashboardClient
       stats={groupedStats}
       stockCompare={stockCompare}
-      despachosHoyCount={despachosHoyCount}
-      ultimoDia={ultimoDia}
-      penultimoDia={penultimoDia}
-      despachosHoy={despachosHoyList as any}
+      columnas={columnas}
     />
   );
 }

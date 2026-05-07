@@ -8,11 +8,17 @@ import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
+type ColumnaDespachos = {
+  fecha: string;
+  label: string;
+  despachos: { id: number; folio: string; imagen_url: string | null; hora: string }[];
+};
+
 type DespachoHoy = {
   id: number;
   folio: string;
-  imagen_url: string;
-  created_at: string;
+  imagen_url: string | null;
+  hora: string;
 };
 
 type StockCompareRow = {
@@ -34,13 +40,10 @@ type StockDetailRow = {
   diferencia: number;
 };
 
-export function DashboardClient({ stats, stockCompare, despachosHoyCount, ultimoDia, penultimoDia, despachosHoy }: {
+export function DashboardClient({ stats, stockCompare, columnas }: {
   stats: Record<number, any>;
   stockCompare: StockCompareRow[];
-  despachosHoyCount: number;
-  ultimoDia: { fecha: string; count: number } | null;
-  penultimoDia: { fecha: string; count: number } | null;
-  despachosHoy?: DespachoHoy[];
+  columnas: ColumnaDespachos[];
 }) {
   const [open, setOpen] = useState(false);
   const [despachoModal, setDespachoModal] = useState<DespachoHoy | null>(null);
@@ -63,9 +66,7 @@ export function DashboardClient({ stats, stockCompare, despachosHoyCount, ultimo
           </DialogHeader>
           <div className="space-y-3">
             <div className="text-sm text-zinc-500">
-              {despachoModal?.created_at
-                ? format(new Date(despachoModal.created_at), "dd MMM yyyy, HH:mm", { locale: es })
-                : ''}
+              {despachoModal?.hora ?? ''}
             </div>
             {despachoModal?.imagen_url && (
               <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden border bg-zinc-100">
@@ -202,60 +203,41 @@ export function DashboardClient({ stats, stockCompare, despachosHoyCount, ultimo
         );
       })}
 
-      {/* ── DESPACHOS HOY ── */}
+      {/* ── DESPACHOS POR DÍA ── */}
       <div className="border rounded-xl p-5 bg-white dark:bg-zinc-900 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <Truck className="w-5 h-5 text-zinc-500" />
           <h2 className="text-lg font-bold">Despachos de Bodega</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className={`rounded-xl p-4 border ${despachosHoyCount > 0
-            ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900'
-            : 'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900'}`}>
-            <p className="text-xs uppercase tracking-wide font-medium text-zinc-500 mb-1">Hoy</p>
-            <p className={`text-4xl font-black ${despachosHoyCount > 0
-              ? 'text-emerald-600 dark:text-emerald-400'
-              : 'text-amber-500 dark:text-amber-400'}`}>
-              {despachosHoyCount}
-            </p>
-            <p className="text-sm text-zinc-400 mt-1">
-              {despachosHoyCount > 0
-                ? `despacho${despachosHoyCount > 1 ? 's' : ''} registrado${despachosHoyCount > 1 ? 's' : ''}`
-                : 'sin despachos aún'}
-            </p>
-          </div>
-
-          <div className="rounded-xl p-4 border bg-zinc-50 border-zinc-200 dark:bg-zinc-800/50 dark:border-zinc-700">
-            <p className="text-xs uppercase tracking-wide font-medium text-zinc-500 mb-1">
-              Último día activo
-            </p>
-            {ultimoDia ? (
-              <>
-                <p className="text-4xl font-black text-zinc-700 dark:text-zinc-200">
-                  {ultimoDia.count}
-                </p>
-                <p className="text-sm text-zinc-400 mt-1">
-                  {format(new Date(ultimoDia.fecha), "dd MMM yyyy", { locale: es })}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-zinc-400 mt-2">Sin datos</p>
-            )}
-          </div>
-          {despachosHoy && despachosHoy.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {despachosHoy.map(d => (
-                <button
-                  key={d.id}
-                  onClick={() => setDespachoModal(d)}
-                  className="text-xs font-mono font-semibold px-2 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-colors border border-zinc-200 dark:border-zinc-700"
-                >
-                  #{d.folio}
-                </button>
-              ))}
+        <div className="flex gap-4 overflow-x-auto pb-2">
+          {columnas.map(col => (
+            <div key={col.fecha} className="min-w-[180px] max-w-[220px] flex-shrink-0">
+              <div className={`text-sm font-bold mb-2 px-2 py-1 rounded-md ${
+                col.fecha === columnas[0].fecha
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                  : 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400'
+              }`}>
+                {col.label}
+              </div>
+              {col.despachos.length > 0 ? (
+                <div className="flex flex-col gap-1">
+                  {col.despachos.map(d => (
+                    <button
+                      key={d.id}
+                      onClick={() => setDespachoModal(d)}
+                      className="text-left text-xs px-2 py-1.5 rounded-md bg-zinc-50 dark:bg-zinc-800/50 hover:bg-blue-50 dark:hover:bg-blue-900/20 border border-zinc-100 dark:border-zinc-800 transition-colors"
+                    >
+                      <span className="font-mono font-semibold block">#{d.folio}</span>
+                      <span className="text-zinc-400">{d.hora}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-zinc-400 px-2">Sin despachos</p>
+              )}
             </div>
-          )}
+          ))}
         </div>
       </div>
 

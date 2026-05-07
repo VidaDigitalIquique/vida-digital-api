@@ -13,35 +13,48 @@ jest.mock('next/image', () => ({
 const baseProps = {
   stats: {},
   stockCompare: [],
-  despachosHoyCount: 2,
-  ultimoDia: null,
-  penultimoDia: null,
+  columnas: [
+    { fecha: '2026-05-07', label: 'Hoy — 07 may', despachos: [
+      { id: 1, folio: '12345', imagen_url: 'https://example.com/img1.jpg', hora: '10:30' },
+      { id: 2, folio: '67890', imagen_url: 'https://example.com/img2.jpg', hora: '11:00' },
+    ]},
+    { fecha: '2026-05-06', label: '06 may', despachos: [] },
+    { fecha: '2026-05-05', label: '05 may', despachos: [
+      { id: 3, folio: '11111', imagen_url: null, hora: '09:15' },
+    ]},
+    { fecha: '2026-05-04', label: '04 may', despachos: [] },
+    { fecha: '2026-05-03', label: '03 may', despachos: [] },
+    { fecha: '2026-05-02', label: '02 may', despachos: [] },
+  ],
 };
 
-const despachosHoy = [
-  { id: 1, folio: '12345', imagen_url: 'https://example.com/img1.jpg', created_at: '2026-04-21T10:30:00Z' },
-  { id: 2, folio: '67890', imagen_url: 'https://example.com/img2.jpg', created_at: '2026-04-21T11:00:00Z' },
-];
-
 describe('DashboardClient — sección Despachos de Bodega', () => {
-  test('muestra los folios de los despachos de hoy', () => {
-    render(<DashboardClient {...baseProps} despachosHoy={despachosHoy} />);
+  test('muestra los folios de los despachos en las columnas', () => {
+    render(<DashboardClient {...baseProps} />);
 
     expect(screen.getByText('#12345')).toBeInTheDocument();
     expect(screen.getByText('#67890')).toBeInTheDocument();
+    expect(screen.getByText('#11111')).toBeInTheDocument();
   });
 
   test('al hacer clic en un folio se abre el modal con la info del despacho', () => {
-    render(<DashboardClient {...baseProps} despachosHoy={despachosHoy} />);
+    render(<DashboardClient {...baseProps} />);
 
     fireEvent.click(screen.getByText('#12345'));
 
     expect(screen.getByText(/nota de venta/i)).toBeVisible();
   });
 
-  test('si no hay despachos hoy muestra mensaje vacío', () => {
-    render(<DashboardClient {...baseProps} despachosHoy={[]} despachosHoyCount={0} />);
+  test('columnas sin despachos muestran "Sin despachos"', () => {
+    render(<DashboardClient {...baseProps} />);
 
-    expect(screen.getByText(/sin despachos/i)).toBeInTheDocument();
+    const sinDespachos = screen.getAllByText('Sin despachos');
+    expect(sinDespachos.length).toBe(4); // columnas[1], [3], [4], [5] = 4
+  });
+
+  test('la columna de hoy tiene el label destacado', () => {
+    render(<DashboardClient {...baseProps} />);
+
+    expect(screen.getByText('Hoy — 07 may')).toBeInTheDocument();
   });
 });
