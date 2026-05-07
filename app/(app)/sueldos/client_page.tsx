@@ -71,9 +71,9 @@ export function SueldosClient() {
 
   useEffect(() => {
     if (!usuarioId) { setMontoBase(''); return; }
-    fetch(`/api/sueldos?ultimo_para_usuario=${usuarioId}`)
+    fetch(`/api/trabajadores/${usuarioId}/config`)
       .then(r => r.json())
-      .then(d => { setMontoBase(d.ultimo_monto_base != null ? String(d.ultimo_monto_base) : ''); });
+      .then(d => { setMontoBase(d.monto_base ? String(Math.round(d.monto_base)) : ''); });
   }, [usuarioId]);
 
   const load = useCallback(async () => {
@@ -157,10 +157,10 @@ export function SueldosClient() {
           onBlur={(e) => {
             montoBaseProps.onBlur(e);
             if (usuarioId && montoBase) {
-              fetch('/api/sueldos/monto-base', {
-                method: 'POST',
+              fetch(`/api/trabajadores/${usuarioId}/config`, {
+                method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ usuario_id: usuarioId, monto_base: parseFloat(montoBase) }),
+                body: JSON.stringify({ monto_base: Math.round(parseFloat(montoBase)) }),
               });
             }
           }}
