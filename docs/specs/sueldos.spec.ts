@@ -18,6 +18,13 @@ export const UltimoMontoBaseSchema = z.object({
 
 export type UltimoMontoBase = z.infer<typeof UltimoMontoBaseSchema>;
 
+export const MontoBaseSaveSchema = z.object({
+  usuario_id: z.number().int().positive(),
+  monto_base: z.number().min(0),
+});
+
+export type MontoBaseSave = z.infer<typeof MontoBaseSaveSchema>;
+
 export function buildConceptoPettycash(nombre: string, mes: number, anio: number): string {
   return `Sueldo ${nombre} ${mes}/${anio}`;
 }

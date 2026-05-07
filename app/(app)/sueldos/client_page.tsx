@@ -154,6 +154,16 @@ export function SueldosClient() {
           type="number" min="0" step="1"
           required
           {...montoBaseProps}
+          onBlur={(e) => {
+            montoBaseProps.onBlur(e);
+            if (usuarioId && montoBase) {
+              fetch('/api/sueldos/monto-base', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ usuario_id: usuarioId, monto_base: parseFloat(montoBase) }),
+              });
+            }
+          }}
         />
         <div className="flex gap-2">
           <div className="border rounded px-3 py-2 text-sm flex-1 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-between">
