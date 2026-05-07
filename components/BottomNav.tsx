@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   ShoppingCart, Users, LayoutList, Tag, Box, Camera,
   Heart, Package, Settings, RefreshCw, ImageIcon,
-  Filter, UserPlus, FileText, ChevronRight, ClipboardList, Banknote, Wallet, Wand2
+  Filter, UserPlus, FileText, ChevronRight, ClipboardList, Banknote, Wallet
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -67,7 +67,6 @@ export function BottomNav() {
   const catalogoActive =
     pathname.startsWith('/catalogo') ||
     pathname.startsWith('/admin/categorias') ||
-    pathname.startsWith('/catalog-image') ||
     (pathname.startsWith('/deseados') && modoChina);
 
   const bodegaActive =
@@ -130,7 +129,6 @@ export function BottomNav() {
                   {sheetLink('/catalogo/admin', <LayoutList className="w-5 h-5" />, 'Crear Catálogo', () => setCatalogoOpen(false))}
                   {sheetLink('/catalogo/clientes', <Users className="w-5 h-5" />, 'Catálogos por Cliente', () => setCatalogoOpen(false))}
                   {sheetLink('/admin/categorias', <Tag className="w-5 h-5" />, 'Categorías', () => setCatalogoOpen(false))}
-                  {sheetLink('/catalog-image', <Wand2 className="w-5 h-5" />, 'Generar Imágenes', () => setCatalogoOpen(false))}
                   <Link
                     href="/deseados?modo=china"
                     onClick={() => setCatalogoOpen(false)}

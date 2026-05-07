@@ -15,6 +15,5 @@
   "deudas-historial-unificado": false,
   "sueldos": true,
   "deudas": true,
-  "fix-catalogo-solo-nuevo": true,
-  "catalog-image": true
+  "fix-catalogo-solo-nuevo": true
 }

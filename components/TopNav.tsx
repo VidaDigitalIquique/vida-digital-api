@@ -25,8 +25,7 @@ import {
   Camera,
   Tag,
   ClipboardList,
-  Banknote,
-  Wand2
+  Banknote
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 
@@ -116,7 +115,6 @@ export function TopNav() {
                   className={dropdownTrigger(
                     pathname.startsWith('/catalogo') ||
                     pathname.startsWith('/admin/categorias') ||
-                    pathname.startsWith('/catalog-image') ||
                     (pathname.startsWith('/deseados') && modoChina)
                   )}
                 >
@@ -136,11 +134,6 @@ export function TopNav() {
                   <DropdownMenuItem>
                     <Link href="/admin/categorias" className="flex items-center gap-2 w-full">
                       <Tag className="w-4 h-4" /> Categorías
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="/catalog-image" className="flex items-center gap-2 w-full">
-                      <Wand2 className="w-4 h-4" /> Generar Imágenes
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
