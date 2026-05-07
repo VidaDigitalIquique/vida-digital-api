@@ -18,6 +18,7 @@ async function callGemini<T>(
 ): Promise<T | null> {
   const tag = label || 'gemini';
   const keys = getApiKeys();
+  console.log(`[${tag}] keys loaded:`, keys.map((k, i) => `KEY_${i + 1}: ${k ? k.substring(0, 8) + '...' : 'UNDEFINED'}`));
   for (const model of models) {
     for (let apiIdx = 0; apiIdx < keys.length; apiIdx++) {
       const apiKey = keys[apiIdx];
