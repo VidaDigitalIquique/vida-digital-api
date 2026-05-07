@@ -11,16 +11,20 @@ export const maxDuration = 30;
 const VALID_POSITIONS = ['top-center', 'bottom-center', 'top-left', 'top-right', 'bottom-left', 'bottom-right'];
 const VALID_COLORS = ['white', 'black'];
 
-const PROMPT = `You are a professional product photographer.
-Transform these warehouse/inspection photos into a professional catalog image.
-Requirements:
-- Elegant studio or lifestyle background (kitchen, home setting, or neutral gradient)
-- Arrange all color variants side by side or in an aesthetically pleasing composition
-- Professional lighting with soft shadows
-- Clean, high-quality e-commerce style
-- Do NOT add any text, watermarks, labels or numbers to the image
-- Preserve the actual colors and details of the products shown
-Output: a single high-quality catalog image showing all variants.`;
+const PROMPT = `You are a professional product catalog photographer.
+Your task is to create a clean, professional catalog image from these warehouse photos.
+
+CRITICAL RULES — follow exactly:
+- Preserve the EXACT appearance of every product: shape, color, texture, handles, lids, proportions
+- Do NOT redraw, stylize, or alter the products in any way
+- Do NOT distort or change the product dimensions
+- Remove the warehouse background (boxes, floor, walls)
+- Replace background with a clean neutral gradient (light gray or white studio)
+- Keep soft, even studio lighting
+- Arrange the products side by side in a clean, symmetrical composition
+- No text, no watermarks, no props
+
+The products must look IDENTICAL to the input photos — only the background changes.`;
 
 const GRAVITY_MAP: Record<string, string> = {
   'top-center': 'north',
