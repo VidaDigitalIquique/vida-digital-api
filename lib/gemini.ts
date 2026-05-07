@@ -130,6 +130,7 @@ export async function callGeminiImage(
       }
 
       const data = await res.json();
+      console.log('[callGeminiImage] OpenRouter response:', JSON.stringify(data).substring(0, 1000));
       const parts = data?.choices?.[0]?.message?.content;
       if (!parts || !Array.isArray(parts)) continue;
 
