@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { FileText, UserPlus, Heart, Package, Wallet, Users } from 'lucide-react';
+import { FileText, UserPlus, Heart, Package, Wallet, Banknote, Users } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 import { cn } from '@/lib/utils';
 
@@ -46,6 +46,9 @@ export function Toolbar({ isAdmin }: { isAdmin: boolean }) {
           <>
             <Link href="/pettycash" className={btn(pathname.startsWith('/pettycash'))}>
               <Wallet className="w-4 h-4" /><span>Pettycash</span>
+            </Link>
+            <Link href="/deudas" className={btn(pathname.startsWith('/deudas'))}>
+              <Banknote className="w-4 h-4" /><span>Deudas</span>
             </Link>
             <Link href="/sueldos" className={btn(pathname.startsWith('/sueldos'))}>
               <Users className="w-4 h-4" /><span>Sueldos</span>
