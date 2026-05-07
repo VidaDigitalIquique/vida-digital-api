@@ -23,9 +23,9 @@ export function CrearCatalogoDialog({
 }: CrearCatalogoDialogProps) {
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
-  const [newAmbasEmpresas, setNewAmbasEmpresas] = useState(true);
   const [newSoloStock, setNewSoloStock] = useState(false);
   const [newSoloNuevo, setNewSoloNuevo] = useState(false);
+  const [newMostrarStock, setNewMostrarStock] = useState(false);
   const [newMostrarPrecio, setNewMostrarPrecio] = useState(true);
   const [newMargen, setNewMargen] = useState(0);
   const [newPalabrasIncluir, setNewPalabrasIncluir] = useState('');
@@ -53,9 +53,9 @@ export function CrearCatalogoDialog({
   const resetForm = () => {
     setNewTitle('');
     setNewDesc('');
-    setNewAmbasEmpresas(true);
     setNewSoloStock(false);
     setNewSoloNuevo(false);
+    setNewMostrarStock(false);
     setNewMostrarPrecio(true);
     setNewMargen(0);
     setNewPalabrasIncluir('');
@@ -75,7 +75,8 @@ export function CrearCatalogoDialog({
           mostrar_precio: newMostrarPrecio,
           margen_precio: newMargen,
           solo_stock: newSoloStock,
-          ambas_empresas: newAmbasEmpresas,
+          ambas_empresas: true,
+          mostrar_stock: newMostrarStock,
           solo_nuevo: newSoloNuevo,
           palabras_incluir: newPalabrasIncluir,
           palabras_excluir: newPalabrasExcluir,
@@ -128,12 +129,12 @@ export function CrearCatalogoDialog({
           <div className="border-t pt-4 space-y-3">
             <p className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Filtros de productos</p>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" checked={newAmbasEmpresas} onChange={e => setNewAmbasEmpresas(e.target.checked)} className="w-4 h-4 rounded" />
-              Incluir productos de ambas empresas
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={newSoloStock} onChange={e => setNewSoloStock(e.target.checked)} className="w-4 h-4 rounded" />
               Solo productos con stock
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={newMostrarStock} onChange={e => setNewMostrarStock(e.target.checked)} className="w-4 h-4 rounded" />
+              Mostrar stock disponible
             </label>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={newSoloNuevo} onChange={e => setNewSoloNuevo(e.target.checked)} className="w-4 h-4 rounded" />

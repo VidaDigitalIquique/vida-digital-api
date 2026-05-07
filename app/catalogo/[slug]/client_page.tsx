@@ -57,7 +57,7 @@ export function PublicCatalogoClient({ data }: { data: any }) {
                   {p.cantcaja > 1 && (
                     <div className="text-xs text-zinc-400">Packing: {p.cantcaja} {p.umed}/Caja</div>
                   )}
-                  {p.cantcaja > 0 && p.saldo > 0 && (
+                  {data.mostrar_stock && p.cantcaja > 0 && p.saldo > 0 && (
                     <div className="text-xs text-zinc-400">Stock disponible: {Math.floor(p.saldo / p.cantcaja)} cajas</div>
                   )}
                   {data.mostrar_precio && p.precio_catalogo !== null && (

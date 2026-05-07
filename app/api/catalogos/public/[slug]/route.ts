@@ -150,6 +150,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
         titulo: cat.titulo,
         descripcion: cat.descripcion,
         mostrar_precio: cat.mostrar_precio,
+        mostrar_stock: cat.mostrar_stock,
         empresa_slug: cat.empresa_slug,
         productos,
       }
