@@ -65,14 +65,17 @@ describe('GET /api/catalogos/public/[slug] — filtros solo_stock / solo_nuevo',
     expect(body.data.productos.every((p: any) => p.saldo > 0)).toBe(true);
   });
 
-  test('3 — solo_nuevo=true retorna solo productos con es_nuevo=true (1)', async () => {
+  test('3 — solo_nuevo=true retorna solo productos del último ingreso prefijo 101', async () => {
     sql
       .mockResolvedValueOnce([{ ...CATALOGO_BASE, solo_nuevo: true }])
-      .mockResolvedValueOnce(PRODUCTOS);
+      .mockResolvedValueOnce(PRODUCTOS)
+      .mockResolvedValueOnce([{ anio: '26', folio: '000001' }])
+      .mockResolvedValueOnce([{ codigo: 'A3' }]);
 
     const res = await GET(makeReq('test'), { params: { slug: 'test' } });
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.data.productos.length).toBe(1);
+    expect(body.data.productos[0].codigo).toBe('A3');
   });
 });

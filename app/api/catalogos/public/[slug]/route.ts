@@ -94,28 +94,38 @@ export async function GET(request: Request, { params }: { params: { slug: string
       productos = productos.filter((p: any) => Number(p.saldo) > 0);
     }
     if (soloNuevo) {
-      // Ordenar por MAX(fecha_ingreso), no por número de NROINGRESO.
-      // La numeración de aduana no es secuencial por fecha de llegada real.
-      const keyRows = cat.ambas_empresas
+      // Último ingreso real: prefijo 101, folio más alto del año más alto.
+      // No usa fecha_ingreso (que es fecha de sync, no de ingreso real a Zofri).
+      const latestIngreso = cat.ambas_empresas
         ? await sql`
-            SELECT SPLIT_PART(nroingreso,'-',2)||'-'||SPLIT_PART(nroingreso,'-',3) AS raw_key
+            SELECT SPLIT_PART(nroingreso,'-',2) as anio, SPLIT_PART(nroingreso,'-',3) as folio
             FROM productos
-            WHERE nroingreso IS NOT NULL AND nroingreso NOT LIKE 'INICIAL%'
-            GROUP BY raw_key ORDER BY MAX(fecha_ingreso) DESC LIMIT 1
+            WHERE nroingreso IS NOT NULL
+              AND nroingreso NOT LIKE 'INICIAL%'
+              AND SPLIT_PART(nroingreso,'-',1) = '101'
+            ORDER BY SPLIT_PART(nroingreso,'-',2) DESC, SPLIT_PART(nroingreso,'-',3)::integer DESC
+            LIMIT 1
           `
         : await sql`
-            SELECT SPLIT_PART(nroingreso,'-',2)||'-'||SPLIT_PART(nroingreso,'-',3) AS raw_key
+            SELECT SPLIT_PART(nroingreso,'-',2) as anio, SPLIT_PART(nroingreso,'-',3) as folio
             FROM productos
-            WHERE empresa_id = ${cat.empresa_id} AND nroingreso IS NOT NULL AND nroingreso NOT LIKE 'INICIAL%'
-            GROUP BY raw_key ORDER BY MAX(fecha_ingreso) DESC LIMIT 1
+            WHERE empresa_id = ${cat.empresa_id}
+              AND nroingreso IS NOT NULL
+              AND nroingreso NOT LIKE 'INICIAL%'
+              AND SPLIT_PART(nroingreso,'-',1) = '101'
+            ORDER BY SPLIT_PART(nroingreso,'-',2) DESC, SPLIT_PART(nroingreso,'-',3)::integer DESC
+            LIMIT 1
           `;
 
-      const latestKey = keyRows[0]?.raw_key as string | undefined;
+      const latestAnio = latestIngreso[0]?.anio as string | undefined;
+      const latestFolio = latestIngreso[0]?.folio as string | undefined;
       let latestCodigos = new Set<string>();
-      if (latestKey) {
+
+      if (latestAnio && latestFolio) {
+        const pattern = `101-${latestAnio}-${latestFolio}-%`;
         const codigoRows = cat.ambas_empresas
-          ? await sql`SELECT DISTINCT UPPER(codigo) as codigo FROM productos WHERE nroingreso LIKE ${'%' + latestKey + '%'}`
-          : await sql`SELECT DISTINCT UPPER(codigo) as codigo FROM productos WHERE empresa_id = ${cat.empresa_id} AND nroingreso LIKE ${'%' + latestKey + '%'}`;
+          ? await sql`SELECT DISTINCT UPPER(codigo) as codigo FROM productos WHERE nroingreso LIKE ${pattern}`
+          : await sql`SELECT DISTINCT UPPER(codigo) as codigo FROM productos WHERE empresa_id = ${cat.empresa_id} AND nroingreso LIKE ${pattern}`;
         latestCodigos = new Set(codigoRows.map((r: any) => r.codigo as string));
       }
 
