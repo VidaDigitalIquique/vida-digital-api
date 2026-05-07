@@ -73,7 +73,7 @@ export function SueldosClient() {
     if (!usuarioId) { setMontoBase(''); return; }
     fetch(`/api/sueldos?ultimo_para_usuario=${usuarioId}`)
       .then(r => r.json())
-      .then(d => { if (d.ultimo_monto_base != null) setMontoBase(String(d.ultimo_monto_base)); });
+      .then(d => { setMontoBase(d.ultimo_monto_base != null ? String(d.ultimo_monto_base) : ''); });
   }, [usuarioId]);
 
   const load = useCallback(async () => {
