@@ -14,9 +14,13 @@ async function callGemini<T>(
   models: string[],
   payload: object,
   extract: (data: any) => T | null,
+  label?: string,
 ): Promise<T | null> {
+  const tag = label || 'gemini';
+  const keys = getApiKeys();
   for (const model of models) {
-    for (const apiKey of getApiKeys()) {
+    for (let apiIdx = 0; apiIdx < keys.length; apiIdx++) {
+      const apiKey = keys[apiIdx];
       if (!apiKey) continue;
       const url = `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`;
       try {
@@ -26,7 +30,11 @@ async function callGemini<T>(
           body: JSON.stringify(payload),
         });
         if (res.status === 429 || res.status === 403) continue;
-        if (!res.ok) continue;
+        if (!res.ok) {
+          const errBody = await res.text();
+          console.error(`[${tag}] ${model} key${apiIdx} → ${res.status}: ${errBody}`);
+          continue;
+        }
         const data = await res.json();
         const result = extract(data);
         if (result !== null) return result;
@@ -99,5 +107,6 @@ export async function callGeminiImage(
       }
       return null;
     },
+    'callGeminiImage',
   );
 }
