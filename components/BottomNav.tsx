@@ -202,14 +202,6 @@ export function BottomNav() {
           </Link>
         )}
 
-        {/* Deudas — admin */}
-        {isAdmin && (
-          <Link href="/deudas" className={btnClass(pathname.startsWith('/deudas'))}>
-            <Banknote className="w-6 h-6" />
-            <span className="text-[10px] font-medium">Deudas</span>
-          </Link>
-        )}
-
         {/* Admin — solo admin */}
         {isAdmin && (
           <>
