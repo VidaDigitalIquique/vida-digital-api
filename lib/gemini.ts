@@ -130,15 +130,10 @@ export async function callGeminiImage(
       }
 
       const data = await res.json();
-      console.log('[callGeminiImage] OpenRouter response:', JSON.stringify(data).substring(0, 1000));
-      const parts = data?.choices?.[0]?.message?.content;
-      if (!parts || !Array.isArray(parts)) continue;
-
-      for (const part of parts) {
-        if (part.type === 'image_url' && part.image_url?.url) {
-          const base64 = part.image_url.url.replace(/^data:image\/\w+;base64,/, '');
-          return Buffer.from(base64, 'base64');
-        }
+      const images = data?.choices?.[0]?.message?.images;
+      if (images?.[0]?.image_url?.url) {
+        const base64 = images[0].image_url.url.replace(/^data:image\/\w+;base64,/, '');
+        return Buffer.from(base64, 'base64');
       }
     } catch (e: any) {
       console.error(`[callGeminiImage] ${model} → EXCEPTION: ${e?.message}`);
