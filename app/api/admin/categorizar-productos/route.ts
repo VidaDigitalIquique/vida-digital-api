@@ -2,22 +2,10 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { callGeminiText } from '@/lib/gemini';
 
 const CATEGORIAS_VALIDAS = ['Ortopedia', 'Electrodomésticos', 'Deporte', 'Belleza', 'Médico', 'Vidrio', 'Juguetes'];
 
-const GEMINI_API_KEYS = [
-  process.env.GEMINI_API_KEY_1!,
-  process.env.GEMINI_API_KEY_2!,
-  process.env.GEMINI_API_KEY_3!,
-];
-
-const GEMINI_MODELS = [
-  'gemini-2.5-flash-lite',
-  'gemini-2.5-flash',
-  'gemini-2.5-pro',
-];
-
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const BATCH_SIZE = 50;
 
 interface ProductoBatch {
@@ -38,35 +26,15 @@ async function clasificarBatch(productos: ProductoBatch[]): Promise<GeminiResult
     'Formato exacto: [{"codigo":"...","categoria":"..."}]\n' +
     'Productos: ' + JSON.stringify(productos.map(p => ({ codigo: p.codigo, detalle: p.detalle })));
 
-  const payload = {
-    contents: [{ parts: [{ text: userPrompt }] }],
-    generationConfig: { temperature: 0, maxOutputTokens: 2000 },
-  };
-
-  for (const model of GEMINI_MODELS) {
-    for (const apiKey of GEMINI_API_KEYS) {
-      if (!apiKey) continue;
-      const url = `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`;
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.status === 429 || res.status === 403) continue;
-        if (!res.ok) continue;
-        const data = await res.json();
-        const raw = (data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '').trim();
-        // Strip backticks/markdown just in case
-        const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-        const parsed: GeminiResultItem[] = JSON.parse(cleaned);
-        return Array.isArray(parsed) ? parsed : null;
-      } catch {
-        continue;
-      }
-    }
+  const raw = await callGeminiText(userPrompt, { temperature: 0, maxOutputTokens: 2000 });
+  if (!raw) return null;
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+  try {
+    const parsed: GeminiResultItem[] = JSON.parse(cleaned);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
   }
-  return null;
 }
 
 export async function GET(request: Request) {

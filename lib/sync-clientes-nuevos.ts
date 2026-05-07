@@ -1,4 +1,5 @@
 import { normalizePhone } from '@/lib/phone-utils';
+import { callGeminiText } from '@/lib/gemini';
 
 export async function matchClientesNuevos(
   nuevo: { kcodclie: number; nombre: string; empresa_id: number; celular?: string | null },
@@ -40,15 +41,6 @@ export async function matchClientesNuevos(
 
   if (candidatos.length === 0) return 0;
 
-  // FASE IA: llamar a Gemini con fallback de modelos y keys
-  const GEMINI_API_KEYS = [
-    process.env.GEMINI_API_KEY_1!,
-    process.env.GEMINI_API_KEY_2!,
-    process.env.GEMINI_API_KEY_3!,
-  ];
-  const GEMINI_MODELS = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro'];
-  const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
-
   const prompt = `Dado el nombre de un cliente recién registrado en el sistema ERP: "${nuevo.nombre}"
 Y esta lista de clientes potencialmente relacionados:
 ${candidatos.map(c => `ID ${c.id}: ${c.nombre}`).join('\n')}
@@ -57,29 +49,8 @@ ${candidatos.map(c => `ID ${c.id}: ${c.nombre}`).join('\n')}
 Responde ÚNICAMENTE con JSON válido sin markdown:
 {"match": true/false, "cliente_deseado_id": number_or_null, "confidence": 0.0_to_1.0}`;
 
-  const payload = {
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0, maxOutputTokens: 100 },
-  };
-
   try {
-    let responseText = '';
-    outer: for (const model of GEMINI_MODELS) {
-      for (const apiKey of GEMINI_API_KEYS) {
-        if (!apiKey) continue;
-        const url = `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.status === 429 || res.status === 403) continue;
-        if (!res.ok) continue;
-        const data = await res.json();
-        responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
-        if (responseText) break outer;
-      }
-    }
+    const responseText = await callGeminiText(prompt, { temperature: 0, maxOutputTokens: 100 });
 
     if (!responseText) return 0;
 

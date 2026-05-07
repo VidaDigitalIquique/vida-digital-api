@@ -3,21 +3,8 @@ import { authOptions } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { uploadImage } from '@/lib/cloudinary';
+import { callGeminiText } from '@/lib/gemini';
 
-// Gemini config — mismas keys y modelos del script Python original
-const GEMINI_API_KEYS = [
-  process.env.GEMINI_API_KEY_1!,
-  process.env.GEMINI_API_KEY_2!,
-  process.env.GEMINI_API_KEY_3!,
-];
-
-const GEMINI_MODELS = [
-  'gemini-2.5-flash-lite',
-  'gemini-2.5-flash',
-  'gemini-2.5-pro',
-];
-
-const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const NULL_RESPONSES = new Set(['null', '0', '00', '000', '', 'none', 'n/a']);
 
 async function callGemini(b64Image: string, mime: string): Promise<string> {
@@ -29,40 +16,18 @@ async function callGemini(b64Image: string, mime: string): Promise<string> {
     'Responde SOLO con los digitos del numero de folio, sin espacios ni puntos. ' +
     'Si no puedes identificarlo con certeza, responde exactamente: NULL';
 
-  const payload = {
-    contents: [{
-      parts: [
-        { text: 'Cual es el numero de folio/nota/guia de este documento? Responde SOLO digitos o NULL.' },
-        { inline_data: { mime_type: mime, data: b64Image } },
-      ],
-    }],
-    systemInstruction: { parts: [{ text: sysPrompt }] },
-    generationConfig: { temperature: 0, maxOutputTokens: 50 },
-  };
-
-  for (const model of GEMINI_MODELS) {
-    for (let apiIdx = 0; apiIdx < GEMINI_API_KEYS.length; apiIdx++) {
-      const apiKey = GEMINI_API_KEYS[apiIdx];
-      if (!apiKey) continue;
-      const url = `${GEMINI_BASE}/${model}:generateContent?key=${apiKey}`;
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        if (res.status === 429 || res.status === 403) continue;
-        if (!res.ok) continue;
-        const data = await res.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
-        if (NULL_RESPONSES.has(text.toLowerCase())) return 'NULL';
-        return text;
-      } catch {
-        continue;
-      }
-    }
-  }
-  return 'NULL';
+  const text = await callGeminiText(
+    'Cual es el numero de folio/nota/guia de este documento? Responde SOLO digitos o NULL.',
+    {
+      temperature: 0,
+      maxOutputTokens: 50,
+      systemInstruction: sysPrompt,
+      images: [{ base64: b64Image, mimeType: mime }],
+    },
+  );
+  if (!text) return 'NULL';
+  if (NULL_RESPONSES.has(text.toLowerCase())) return 'NULL';
+  return text;
 }
 
 export async function POST(request: Request) {
