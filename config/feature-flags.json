@@ -17,7 +17,7 @@
   "deudas": true,
   "fix-catalogo-solo-nuevo": true,
   "catalog-image": false,
-  "catalogo-form-mejoras-slice1": false,
-  "catalogo-parsekeywords-slice2": false,
-  "catalogo-ingreso-top-n-slice3": false
+  "catalogo-form-mejoras-slice1": true,
+  "catalogo-parsekeywords-slice2": true,
+  "catalogo-ingreso-top-n-slice3": true
 }
