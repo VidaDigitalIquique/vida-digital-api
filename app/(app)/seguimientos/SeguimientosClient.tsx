@@ -26,7 +26,7 @@ const EMP_COLOR: Record<string, string> = {
   sanjh: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
 };
 
-export function SeguimientosClient({ isAdmin }: { isAdmin: boolean }) {
+export function SeguimientosClient() {
   const [empresa, setEmpresa] = useState('ambas');
   const [vendedor, setVendedor] = useState('');
   const [mesAnio, setMesAnio] = useState('');
@@ -53,7 +53,7 @@ export function SeguimientosClient({ isAdmin }: { isAdmin: boolean }) {
   useEffect(() => { fetchNotas(); }, [fetchNotas]);
 
   const visible = notas.filter(n =>
-    !isAdmin || !vendedor.trim() || (n.vendedor ?? '').toLowerCase().includes(vendedor.toLowerCase())
+    !vendedor.trim() || (n.vendedor ?? '').toLowerCase().includes(vendedor.toLowerCase())
   );
 
   const meses = Array.from({ length: 12 }, (_, i) => {
@@ -94,12 +94,10 @@ export function SeguimientosClient({ isAdmin }: { isAdmin: boolean }) {
       </div>
 
       <div className="flex flex-wrap gap-3">
-        {isAdmin && (
-          <input type="text" placeholder="Filtrar por vendedor…" value={vendedor}
-            onChange={e => setVendedor(e.target.value)}
-            className="w-full sm:w-64 px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        )}
+        <input type="text" placeholder="Filtrar por vendedor…" value={vendedor}
+          onChange={e => setVendedor(e.target.value)}
+          className="w-full sm:w-64 px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
         <select value={mesAnio} onChange={e => setMesAnio(e.target.value)}
           className="px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">Todos los meses</option>

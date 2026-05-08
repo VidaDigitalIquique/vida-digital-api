@@ -12,7 +12,6 @@ export default async function SeguimientoDetallePage({ params }: { params: { emp
     <SeguimientoDetalleClient
       empresa={params.empresa}
       folio={decodeURIComponent(params.folio)}
-      isAdmin={rol === "admin"}
     />
   );
 }

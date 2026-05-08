@@ -18,7 +18,7 @@ const card = 'bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:b
 const inp = 'w-full px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const lbl = 'block text-xs font-medium text-zinc-500 mb-1';
 
-export function SeguimientoDetalleClient({ empresa, folio, isAdmin }: { empresa: string; folio: string; isAdmin: boolean }) {
+export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; folio: string }) {
   const router = useRouter();
   const [nota, setNota] = useState<any>(null);
   const [segId, setSegId] = useState<number | null>(null);
@@ -189,12 +189,10 @@ export function SeguimientoDetalleClient({ empresa, folio, isAdmin }: { empresa:
                 </select>
               </div>
             </div>
-            {isAdmin && (
-              <div>
-                <label className={lbl}>Asignado a (ID usuario)</label>
-                <input type="number" value={seg.asignado_a ?? ''} onChange={e => setSeg(s => ({ ...s, asignado_a: e.target.value ? parseInt(e.target.value) : null }))} className={inp} placeholder="ID usuario" />
-              </div>
-            )}
+            <div>
+              <label className={lbl}>Asignado a (ID usuario)</label>
+              <input type="number" value={seg.asignado_a ?? ''} onChange={e => setSeg(s => ({ ...s, asignado_a: e.target.value ? parseInt(e.target.value) : null }))} className={inp} placeholder="ID usuario" />
+            </div>
             <div>
               <label className={lbl}>Notas internas</label>
               <textarea value={seg.notas_internas} onChange={e => setSeg(s => ({ ...s, notas_internas: e.target.value }))}

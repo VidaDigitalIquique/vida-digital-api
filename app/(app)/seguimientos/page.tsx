@@ -8,5 +8,5 @@ export default async function SeguimientosPage() {
   if (!session) redirect("/login");
   const rol = (session.user as any).rol;
   if (rol !== "admin" && rol !== "vendedor") redirect("/dashboard");
-  return <SeguimientosClient isAdmin={rol === "admin"} />;
+  return <SeguimientosClient />;
 }

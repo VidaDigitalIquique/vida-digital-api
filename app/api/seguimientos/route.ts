@@ -87,7 +87,7 @@ export async function GET(request: Request) {
   const empresa = searchParams.get('empresa') ?? 'ambas';
   const limit = Math.min(Number(searchParams.get('limit') ?? 50), 200);
   const offset = Number(searchParams.get('offset') ?? 0);
-  const vendedorFiltro = rol === 'admin' ? (searchParams.get('vendedor') ?? null) : nombre;
+  const vendedorFiltro = searchParams.get('vendedor') ?? null;
   const knumfoliFiltro = searchParams.get('knumfoli') ?? null;
   const mesFiltro  = searchParams.get('mes')  ? parseInt(searchParams.get('mes')!)  : null;
   const anioFiltro = searchParams.get('anio') ? parseInt(searchParams.get('anio')!) : null;
