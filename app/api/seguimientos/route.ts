@@ -37,7 +37,13 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
           (SELECT json_agg(json_build_object('descrip',i.descrip,'precdocd',i.precdocd,
              'codigo',i.codigo,'tcancaja',i.tcancaja,'cantxcaja',i.cantxcaja,
              'precread',i.precread,'totaldoc',i.totaldoc))
-           FROM vida.itemdcto i WHERE i.knumfoli=m.knumfoli) items,
+           FROM (
+             SELECT DISTINCT ON (descrip, precdocd)
+               descrip, precdocd, codigo, tcancaja, cantxcaja, precread, totaldoc
+             FROM vida.itemdcto
+             WHERE knumfoli=m.knumfoli
+             ORDER BY descrip, precdocd
+           ) i) items,
           s.id seg_id, s.prioridad, s.estado, s.asignado_a, s.notas_internas,
           (SELECT MAX(si.created_at)::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id) ultima_interaccion,
           (SELECT si.proximo_contacto::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) proximo_contacto
@@ -60,7 +66,13 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
           (SELECT json_agg(json_build_object('descrip',i.descrip,'precdocd',i.precdocd,
              'codigo',i.codigo,'tcancaja',i.tcancaja,'cantxcaja',i.cantxcaja,
              'precread',i.precread,'totaldoc',i.totaldoc))
-           FROM sanjh.itemdcto i WHERE i.knumfoli=m.knumfoli) items,
+           FROM (
+             SELECT DISTINCT ON (descrip, precdocd)
+               descrip, precdocd, codigo, tcancaja, cantxcaja, precread, totaldoc
+             FROM sanjh.itemdcto
+             WHERE knumfoli=m.knumfoli
+             ORDER BY descrip, precdocd
+           ) i) items,
           s.id seg_id, s.prioridad, s.estado, s.asignado_a, s.notas_internas,
           (SELECT MAX(si.created_at)::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id) ultima_interaccion,
           (SELECT si.proximo_contacto::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) proximo_contacto
