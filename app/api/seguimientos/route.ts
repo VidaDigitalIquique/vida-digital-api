@@ -26,7 +26,7 @@ function fmt(rows: any[]) {
   }));
 }
 
-async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knumfoli: string | null) {
+async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knumfoli: string | null, mes: number | null, anio: number | null) {
   const rows = schema === 'vida'
     ? await sql`
         SELECT 'vida' empresa, m.knumfoli, m.fechanvt::text, m.id_tdocu, m.vendedor,
@@ -48,7 +48,9 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
         WHERE m.pestadot='1' AND m.id_tdocu IN ('203','551','554')
           AND (m.visaadua IS NULL OR TRIM(m.visaadua)='')
           AND (${vendedor}::text IS NULL OR m.vendedor=${vendedor})
-          AND (${knumfoli}::text IS NULL OR m.knumfoli=${knumfoli})`
+          AND (${knumfoli}::text IS NULL OR m.knumfoli=${knumfoli})
+          AND (${mes}::integer IS NULL OR EXTRACT(MONTH FROM m.fechanvt) = ${mes})
+          AND (${anio}::integer IS NULL OR EXTRACT(YEAR FROM m.fechanvt) = ${anio})`
     : await sql`
         SELECT 'sanjh' empresa, m.knumfoli, m.fechanvt::text, m.id_tdocu, m.vendedor,
           m.kcodclie::text kcodclie, c1.nombress, COALESCE(c1.celular,'') celular,
@@ -69,7 +71,9 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
         WHERE m.pestadot='1' AND m.id_tdocu IN ('203','551','554')
           AND (m.visaadua IS NULL OR TRIM(m.visaadua)='')
           AND (${vendedor}::text IS NULL OR m.vendedor=${vendedor})
-          AND (${knumfoli}::text IS NULL OR m.knumfoli=${knumfoli})`;
+          AND (${knumfoli}::text IS NULL OR m.knumfoli=${knumfoli})
+          AND (${mes}::integer IS NULL OR EXTRACT(MONTH FROM m.fechanvt) = ${mes})
+          AND (${anio}::integer IS NULL OR EXTRACT(YEAR FROM m.fechanvt) = ${anio})`;
   return fmt(rows as any[]);
 }
 
@@ -85,10 +89,12 @@ export async function GET(request: Request) {
   const offset = Number(searchParams.get('offset') ?? 0);
   const vendedorFiltro = rol === 'admin' ? (searchParams.get('vendedor') ?? null) : nombre;
   const knumfoliFiltro = searchParams.get('knumfoli') ?? null;
+  const mesFiltro  = searchParams.get('mes')  ? parseInt(searchParams.get('mes')!)  : null;
+  const anioFiltro = searchParams.get('anio') ? parseInt(searchParams.get('anio')!) : null;
   try {
     let data: any[] = [];
-    if (empresa === 'vida' || empresa === 'ambas') data.push(...await queryNotas('vida', vendedorFiltro, knumfoliFiltro));
-    if (empresa === 'sanjh' || empresa === 'ambas') data.push(...await queryNotas('sanjh', vendedorFiltro, knumfoliFiltro));
+    if (empresa === 'vida' || empresa === 'ambas') data.push(...await queryNotas('vida', vendedorFiltro, knumfoliFiltro, mesFiltro, anioFiltro));
+    if (empresa === 'sanjh' || empresa === 'ambas') data.push(...await queryNotas('sanjh', vendedorFiltro, knumfoliFiltro, mesFiltro, anioFiltro));
     data.sort((a, b) => a.fechanvt.localeCompare(b.fechanvt));
     return NextResponse.json({ data: data.slice(offset, offset + limit), total: data.length });
   } catch (e: any) {

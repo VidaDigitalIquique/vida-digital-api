@@ -29,25 +29,42 @@ const EMP_COLOR: Record<string, string> = {
 export function SeguimientosClient({ isAdmin }: { isAdmin: boolean }) {
   const [empresa, setEmpresa] = useState('ambas');
   const [vendedor, setVendedor] = useState('');
+  const [mesAnio, setMesAnio] = useState('');
   const [notas, setNotas] = useState<Nota[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchNotas = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/seguimientos?empresa=${empresa}&limit=200`);
+      const params = new URLSearchParams({ empresa, limit: '200' });
+      if (mesAnio) {
+        const [anio, mes] = mesAnio.split('-');
+        params.set('mes', mes);
+        params.set('anio', anio);
+      }
+      const res = await fetch(`/api/seguimientos?${params}`);
       const body = await res.json();
       setNotas(body.data ?? []);
     } finally {
       setLoading(false);
     }
-  }, [empresa]);
+  }, [empresa, mesAnio]);
 
   useEffect(() => { fetchNotas(); }, [fetchNotas]);
 
   const visible = notas.filter(n =>
     !isAdmin || !vendedor.trim() || (n.vendedor ?? '').toLowerCase().includes(vendedor.toLowerCase())
   );
+
+  const meses = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth() - i);
+    return {
+      value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+      label: d.toLocaleDateString('es-CL', { month: 'short', year: 'numeric' }).replace(/^\w/, c => c.toUpperCase()),
+    };
+  });
 
   const tabs = [
     { value: 'ambas', label: 'Ambas' },
@@ -76,12 +93,19 @@ export function SeguimientosClient({ isAdmin }: { isAdmin: boolean }) {
         </div>
       </div>
 
-      {isAdmin && (
-        <input type="text" placeholder="Filtrar por vendedor…" value={vendedor}
-          onChange={e => setVendedor(e.target.value)}
-          className="w-full sm:w-64 px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      )}
+      <div className="flex flex-wrap gap-3">
+        {isAdmin && (
+          <input type="text" placeholder="Filtrar por vendedor…" value={vendedor}
+            onChange={e => setVendedor(e.target.value)}
+            className="w-full sm:w-64 px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        )}
+        <select value={mesAnio} onChange={e => setMesAnio(e.target.value)}
+          className="px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">Todos los meses</option>
+          {meses.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+        </select>
+      </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-zinc-400">
