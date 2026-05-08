@@ -46,7 +46,7 @@ export function SeguimientosClient({ isAdmin }: { isAdmin: boolean }) {
   useEffect(() => { fetchNotas(); }, [fetchNotas]);
 
   const visible = notas.filter(n =>
-    !isAdmin || !vendedor.trim() || n.vendedor.toLowerCase().includes(vendedor.toLowerCase())
+    !isAdmin || !vendedor.trim() || (n.vendedor ?? '').toLowerCase().includes(vendedor.toLowerCase())
   );
 
   const tabs = [
