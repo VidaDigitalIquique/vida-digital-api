@@ -2,15 +2,19 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { FileText, UserPlus, Heart, Package, Wallet, Banknote, Users } from 'lucide-react';
+import { FileText, UserPlus, Heart, Package, Wallet, Banknote, Users, Phone } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
+import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
+import flags from '@/config/feature-flags.json';
 
 export function Toolbar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const modoChina = searchParams.get('modo') === 'china';
   const { alertasCount, stockBajoCount } = useAlertas();
+  const { data: session } = useSession();
+  const rol = (session?.user as any)?.rol as string;
 
   const btn = (active: boolean) => cn(
     'flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900',
@@ -54,6 +58,11 @@ export function Toolbar({ isAdmin }: { isAdmin: boolean }) {
               <Users className="w-4 h-4" /><span>Sueldos</span>
             </Link>
           </>
+        )}
+        {flags['seguimientos'] && (isAdmin || rol === 'vendedor') && (
+          <Link href="/seguimientos" className={btn(pathname.startsWith('/seguimientos'))}>
+            <Phone className="w-4 h-4" /><span>Seguimientos</span>
+          </Link>
         )}
       </div>
     </div>
