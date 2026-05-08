@@ -22,7 +22,7 @@ function fmt(rows: any[]) {
     cliente_comprador: { kcodclie: r.kcodclie, nombress: r.nombress, celular: r.celular, email01: r.email01, ciudad: r.ciudad },
     cliente_factura: r.kcodcli2 ? { kcodclie: r.kcodcli2, nombress: r.factura_nombre } : null,
     items: r.items ?? [],
-    seguimiento: r.seg_id ? { id: r.seg_id, prioridad: r.prioridad, estado: r.estado, asignado_a: r.asignado_a, notas_internas: r.notas_internas, ultima_interaccion: r.ultima_interaccion, proximo_contacto: r.proximo_contacto } : null,
+    seguimiento: r.seg_id ? { id: r.seg_id, ultima_interaccion: r.ultima_interaccion, proximo_contacto: r.proximo_contacto } : null,
   }));
 }
 
@@ -44,7 +44,7 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
              WHERE knumfoli=m.knumfoli
              ORDER BY descrip, precdocd
            ) i) items,
-          s.id seg_id, s.prioridad, s.estado, s.asignado_a, s.notas_internas,
+          s.id seg_id,
           (SELECT MAX(si.created_at)::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id) ultima_interaccion,
           (SELECT si.proximo_contacto::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) proximo_contacto
         FROM vida.movidcto m
@@ -73,7 +73,7 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
              WHERE knumfoli=m.knumfoli
              ORDER BY descrip, precdocd
            ) i) items,
-          s.id seg_id, s.prioridad, s.estado, s.asignado_a, s.notas_internas,
+          s.id seg_id,
           (SELECT MAX(si.created_at)::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id) ultima_interaccion,
           (SELECT si.proximo_contacto::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) proximo_contacto
         FROM sanjh.movidcto m
@@ -119,16 +119,14 @@ export async function POST(request: Request) {
   const g = guard(session);
   if (g) return g;
   try {
-    const { empresa, knumfoli, prioridad, asignado_a, notas_internas } = await request.json();
+    const { empresa, knumfoli } = await request.json();
     if (!empresa || !knumfoli) return NextResponse.json({ error: 'empresa y knumfoli requeridos' }, { status: 400 });
     if (!['vida', 'sanjh'].includes(empresa)) return NextResponse.json({ error: 'empresa inválida' }, { status: 400 });
     const created_by = parseInt((session!.user as any).id, 10);
     const [row] = await sql`
-      INSERT INTO public.seguimientos (empresa, knumfoli, prioridad, asignado_a, notas_internas, created_by)
-      VALUES (${empresa}, ${knumfoli}, ${prioridad ?? 'normal'}, ${asignado_a ?? null}, ${notas_internas ?? null}, ${created_by})
-      ON CONFLICT (empresa, knumfoli) DO UPDATE
-        SET prioridad=EXCLUDED.prioridad, asignado_a=EXCLUDED.asignado_a,
-            notas_internas=EXCLUDED.notas_internas, updated_at=now()
+      INSERT INTO public.seguimientos (empresa, knumfoli, created_by)
+      VALUES (${empresa}, ${knumfoli}, ${created_by})
+      ON CONFLICT (empresa, knumfoli) DO UPDATE SET updated_at=now()
       RETURNING id, empresa, knumfoli`;
     return NextResponse.json(row);
   } catch (e: any) {
