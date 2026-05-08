@@ -118,7 +118,7 @@ export function SeguimientosClient({ isAdmin }: { isAdmin: boolean }) {
                         {n.empresa === 'vida' ? 'Vida' : 'Sanjh'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">{n.fechanvt?.slice(0, 10)}</td>
+                    <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">{new Date(n.fechanvt).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}</td>
                     <td className="px-4 py-3 font-semibold whitespace-nowrap">
                       <span className={dias > 30 ? 'text-red-600 dark:text-red-400' : 'text-zinc-700 dark:text-zinc-300'}>
                         {dias}d

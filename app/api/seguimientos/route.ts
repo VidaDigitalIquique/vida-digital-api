@@ -34,7 +34,9 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
           COALESCE(c1.email01,'') email01, COALESCE(c1.ciudad,'') ciudad,
           CASE WHEN m.kcodcli2 IS NOT NULL AND m.kcodcli2 != m.kcodclie THEN m.kcodcli2::text END kcodcli2,
           CASE WHEN m.kcodcli2 IS NOT NULL AND m.kcodcli2 != m.kcodclie THEN c2.nombress END factura_nombre,
-          (SELECT json_agg(json_build_object('descrip',i.descrip,'precdocd',i.precdocd))
+          (SELECT json_agg(json_build_object('descrip',i.descrip,'precdocd',i.precdocd,
+             'codigo',i.codigo,'tcancaja',i.tcancaja,'cantxcaja',i.cantxcaja,
+             'precread',i.precread,'totaldoc',i.totaldoc))
            FROM vida.itemdcto i WHERE i.knumfoli=m.knumfoli) items,
           s.id seg_id, s.prioridad, s.estado, s.asignado_a, s.notas_internas,
           (SELECT MAX(si.created_at)::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id) ultima_interaccion,
@@ -53,7 +55,9 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
           COALESCE(c1.email01,'') email01, COALESCE(c1.ciudad,'') ciudad,
           CASE WHEN m.kcodcli2 IS NOT NULL AND m.kcodcli2 != m.kcodclie THEN m.kcodcli2::text END kcodcli2,
           CASE WHEN m.kcodcli2 IS NOT NULL AND m.kcodcli2 != m.kcodclie THEN c2.nombress END factura_nombre,
-          (SELECT json_agg(json_build_object('descrip',i.descrip,'precdocd',i.precdocd))
+          (SELECT json_agg(json_build_object('descrip',i.descrip,'precdocd',i.precdocd,
+             'codigo',i.codigo,'tcancaja',i.tcancaja,'cantxcaja',i.cantxcaja,
+             'precread',i.precread,'totaldoc',i.totaldoc))
            FROM sanjh.itemdcto i WHERE i.knumfoli=m.knumfoli) items,
           s.id seg_id, s.prioridad, s.estado, s.asignado_a, s.notas_internas,
           (SELECT MAX(si.created_at)::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id) ultima_interaccion,

@@ -91,7 +91,7 @@ export function SeguimientoDetalleClient({ empresa, folio, isAdmin }: { empresa:
             </span>
           </div>
           <p className="text-sm text-zinc-500 mt-0.5">
-            {nota.fechanvt?.slice(0, 10)} · Vendedor: {nota.vendedor} ·{' '}
+            {new Date(nota.fechanvt).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })} · Vendedor: {nota.vendedor} ·{' '}
             <span className={cn('font-semibold', dias > 30 ? 'text-red-600 dark:text-red-400' : 'text-zinc-600 dark:text-zinc-400')}>{dias} días</span>
           </p>
         </div>
@@ -121,16 +121,42 @@ export function SeguimientoDetalleClient({ empresa, folio, isAdmin }: { empresa:
           )}
 
           {nota.items?.length > 0 && (
-            <div className={card}>
+            <div className={cn(card, 'overflow-x-auto')}>
               <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">Ítems ({nota.items.length})</h2>
-              <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {nota.items.map((item: any, i: number) => (
-                  <div key={i} className="flex justify-between py-1.5 text-sm">
-                    <span className="text-zinc-700 dark:text-zinc-300">{item.descrip}</span>
-                    <span className="text-zinc-500 whitespace-nowrap ml-4">USD {Number(item.precdocd).toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-zinc-100 dark:border-zinc-800 text-zinc-400 uppercase tracking-wide">
+                    <th className="py-2 pr-3 text-left font-medium">Código</th>
+                    <th className="py-2 pr-3 text-left font-medium">Descripción</th>
+                    <th className="py-2 pr-3 text-right font-medium">Bultos</th>
+                    <th className="py-2 pr-3 text-right font-medium">Packing</th>
+                    <th className="py-2 pr-3 text-right font-medium">Cantidad</th>
+                    <th className="py-2 pr-3 text-right font-medium">Precio Unit.</th>
+                    <th className="py-2 text-right font-medium">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {nota.items.map((item: any, i: number) => (
+                    <tr key={i} className="text-zinc-700 dark:text-zinc-300">
+                      <td className="py-1.5 pr-3 font-mono text-zinc-400">{item.codigo ?? '—'}</td>
+                      <td className="py-1.5 pr-3">{item.descrip}</td>
+                      <td className="py-1.5 pr-3 text-right">{item.tcancaja ?? '—'}</td>
+                      <td className="py-1.5 pr-3 text-right">{item.cantxcaja ?? '—'}</td>
+                      <td className="py-1.5 pr-3 text-right">
+                        {item.tcancaja != null && item.cantxcaja != null ? item.tcancaja * item.cantxcaja : '—'}
+                      </td>
+                      <td className="py-1.5 pr-3 text-right text-zinc-500">USD {Number(item.precread ?? 0).toFixed(2)}</td>
+                      <td className="py-1.5 text-right text-zinc-500">USD {Number(item.totaldoc ?? 0).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t border-zinc-200 dark:border-zinc-700 font-semibold text-zinc-800 dark:text-zinc-200">
+                    <td colSpan={6} className="py-2 pr-3 text-right">TOTAL</td>
+                    <td className="py-2 text-right">USD {nota.items.reduce((s: number, i: any) => s + Number(i.totaldoc ?? 0), 0).toFixed(2)}</td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
           )}
         </div>
