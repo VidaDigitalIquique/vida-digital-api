@@ -25,6 +25,7 @@ export function CrearCatalogoDialog({
   const [newDesc, setNewDesc] = useState('');
   const [newSoloStock, setNewSoloStock] = useState(true);
   const [newSoloNuevo, setNewSoloNuevo] = useState(false);
+  const [newSoloNuevoTopN, setNewSoloNuevoTopN] = useState(1);
   const [newMostrarStock, setNewMostrarStock] = useState(false);
   const [newMostrarPrecio, setNewMostrarPrecio] = useState(true);
   const [newMargen, setNewMargen] = useState(0);
@@ -55,6 +56,7 @@ export function CrearCatalogoDialog({
     setNewDesc('');
     setNewSoloStock(false);
     setNewSoloNuevo(false);
+    setNewSoloNuevoTopN(1);
     setNewMostrarStock(false);
     setNewMostrarPrecio(true);
     setNewMargen(0);
@@ -78,6 +80,7 @@ export function CrearCatalogoDialog({
           ambas_empresas: true,
           mostrar_stock: newMostrarStock,
           solo_nuevo: newSoloNuevo,
+          solo_nuevo_top_n: newSoloNuevo ? newSoloNuevoTopN : 1,
           palabras_incluir: newPalabrasIncluir,
           palabras_excluir: newPalabrasExcluir,
           categoria: newCategoria || null,
@@ -136,9 +139,20 @@ export function CrearCatalogoDialog({
               <input type="checkbox" checked={newMostrarStock} onChange={e => setNewMostrarStock(e.target.checked)} className="w-4 h-4 rounded" />
               Mostrar inventario disponible
             </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <label className="flex items-center gap-2 text-sm cursor-pointer flex-wrap">
               <input type="checkbox" checked={newSoloNuevo} onChange={e => setNewSoloNuevo(e.target.checked)} className="w-4 h-4 rounded" />
-              Solo productos nuevos ✨
+              Solo últimos{newSoloNuevo && (
+                <input
+                  type="number"
+                  aria-label="top n"
+                  className="w-14 h-6 rounded border border-zinc-300 dark:border-zinc-700 text-center text-sm px-1 mx-0.5"
+                  min={1}
+                  max={99}
+                  value={newSoloNuevoTopN}
+                  onChange={e => setNewSoloNuevoTopN(parseInt(e.target.value) || 1)}
+                  onClick={e => e.stopPropagation()}
+                />
+              )} ingresos llegados a Zofri
             </label>
             <div className="space-y-1">
               <label className="text-sm font-medium">Incluir solo si contiene (separar por espacio)</label>

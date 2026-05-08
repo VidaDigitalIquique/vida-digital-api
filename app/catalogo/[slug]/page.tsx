@@ -92,7 +92,7 @@ async function getCatalogData(slug: string) {
       productos = productos.filter((p: any) => Number(p.saldo) > 0);
     }
     if (soloNuevo) {
-      const latestCodigos = await getLatestIngresoRealCodigos(sql, cat.ambas_empresas, cat.empresa_id);
+      const latestCodigos = await getLatestIngresoRealCodigos(sql, cat.ambas_empresas, cat.empresa_id, cat.solo_nuevo_top_n ?? 1);
       productos = productos.filter((p: any) => latestCodigos.has(p.codigo.toUpperCase()));
     }
 

@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   const userId = (session.user as any).id;
 
   try {
-    const { empresaId, titulo, descripcion, mostrar_precio, margen_precio, solo_stock, mostrar_stock, solo_nuevo, palabras_incluir, palabras_excluir, ambas_empresas, categoria } = await request.json();
+    const { empresaId, titulo, descripcion, mostrar_precio, margen_precio, solo_stock, mostrar_stock, solo_nuevo, solo_nuevo_top_n, palabras_incluir, palabras_excluir, ambas_empresas, categoria } = await request.json();
 
     if (!empresaId || !titulo) return NextResponse.json({ error: "Datos requeridos faltantes" }, { status: 400 });
 
@@ -52,10 +52,10 @@ export async function POST(request: Request) {
     const slug = `${baseSlug}-${shortId}`;
 
     const inserted = await sql`
-      INSERT INTO catalogos (empresa_id, user_id, slug, titulo, descripcion, activo, mostrar_precio, margen_precio, solo_stock, mostrar_stock, solo_nuevo, palabras_incluir, palabras_excluir, ambas_empresas, categoria)
+      INSERT INTO catalogos (empresa_id, user_id, slug, titulo, descripcion, activo, mostrar_precio, margen_precio, solo_stock, mostrar_stock, solo_nuevo, solo_nuevo_top_n, palabras_incluir, palabras_excluir, ambas_empresas, categoria)
       VALUES (
         ${empresaId}, ${userId}, ${slug}, ${titulo}, ${descripcion || null}, true,
-        ${mostrar_precio ?? true}, ${margen_precio ?? 0}, ${solo_stock ?? false}, ${mostrar_stock ?? false}, ${solo_nuevo ?? false},
+        ${mostrar_precio ?? true}, ${margen_precio ?? 0}, ${solo_stock ?? false}, ${mostrar_stock ?? false}, ${solo_nuevo ?? false}, ${solo_nuevo_top_n ?? 1},
         ${palabras_incluir || ''}, ${palabras_excluir || ''}, ${ambas_empresas ?? true}, ${categoria ?? null}
       )
       RETURNING *

@@ -2,7 +2,7 @@
  * Tests PBT-IA — Slice 1: Mejoras UI CrearCatalogoDialog
  * Estado inicial: ROJO (cambios aún no implementados)
  */
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { CrearCatalogoDialog } from './CrearCatalogoDialog';
 
 jest.mock('sonner', () => ({
@@ -63,5 +63,33 @@ describe('CrearCatalogoDialog — Slice 1 smoke', () => {
   it('renderiza el modal sin crash con todos los cambios aplicados', () => {
     render(<CrearCatalogoDialog {...DEFAULT_PROPS} />);
     expect(screen.getByRole('button', { name: /crear/i })).toBeInTheDocument();
+  });
+});
+
+describe('CrearCatalogoDialog — Slice 3: solo últimos N ingresos', () => {
+  it('NO muestra "Solo productos nuevos ✨"', () => {
+    render(<CrearCatalogoDialog {...DEFAULT_PROPS} />);
+    expect(screen.queryByText(/solo productos nuevos/i)).not.toBeInTheDocument();
+  });
+
+  it('muestra checkbox "Solo últimos ... ingresos llegados a Zofri"', () => {
+    render(<CrearCatalogoDialog {...DEFAULT_PROPS} />);
+    expect(screen.getByRole('checkbox', { name: /ingresos llegados a zofri/i })).toBeInTheDocument();
+  });
+
+  it('input numérico NO visible cuando el checkbox está desmarcado', () => {
+    render(<CrearCatalogoDialog {...DEFAULT_PROPS} />);
+    const checkbox = screen.getByRole('checkbox', { name: /ingresos llegados a zofri/i });
+    expect(checkbox).not.toBeChecked();
+    expect(screen.queryByRole('spinbutton', { name: /top n/i })).not.toBeInTheDocument();
+  });
+
+  it('input numérico visible con valor 1 cuando el checkbox se marca', () => {
+    render(<CrearCatalogoDialog {...DEFAULT_PROPS} />);
+    const checkbox = screen.getByRole('checkbox', { name: /ingresos llegados a zofri/i });
+    fireEvent.click(checkbox);
+    const input = screen.getByRole('spinbutton', { name: /top n/i });
+    expect(input).toBeInTheDocument();
+    expect((input as HTMLInputElement).value).toBe('1');
   });
 });
