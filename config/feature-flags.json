@@ -19,5 +19,6 @@
   "catalog-image": false,
   "catalogo-form-mejoras-slice1": true,
   "catalogo-parsekeywords-slice2": true,
-  "catalogo-ingreso-top-n-slice3": true
+  "catalogo-ingreso-top-n-slice3": true,
+  "seguimientos": false
 }
