@@ -5,6 +5,12 @@ import { getLatestIngresoRealCodigos } from "@/utils/catalogo-ingreso";
 
 export const dynamic = 'force-dynamic';
 
+export function parseKeywords(raw: string): string[] {
+  if (!raw || !raw.trim()) return [];
+  const sep = raw.includes(',') ? ',' : ' ';
+  return raw.split(sep).map(s => s.trim()).filter(Boolean);
+}
+
 export async function GET(request: Request, { params }: { params: { slug: string } }) {
   const { slug } = params;
 
@@ -26,9 +32,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
     const mostrarPrecio = cat.mostrar_precio;
 
     // Parse keyword filters
-    const tokens = cat.palabras_incluir
-      ? cat.palabras_incluir.split(',').map((s: string) => s.trim()).filter(Boolean)
-      : [];
+    const tokens = parseKeywords(cat.palabras_incluir ?? '');
 
     let codigosIncluir: string[] = [];
     let keywordsIncluir: string[] = [];
@@ -47,9 +51,7 @@ export async function GET(request: Request, { params }: { params: { slug: string
         .map((t: string) => t.toLowerCase());
     }
 
-    const excluir = cat.palabras_excluir
-      ? cat.palabras_excluir.split(',').map((s: string) => s.trim().toLowerCase()).filter(Boolean)
-      : [];
+    const excluir = parseKeywords(cat.palabras_excluir ?? '').map((s: string) => s.toLowerCase());
 
     const categoriaFilter = cat.categoria;
 
