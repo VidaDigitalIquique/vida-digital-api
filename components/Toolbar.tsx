@@ -12,7 +12,7 @@ export function Toolbar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const modoChina = searchParams.get('modo') === 'china';
-  const { alertasCount, stockBajoCount } = useAlertas();
+  const { alertasCount, stockBajoCount, seguimientosCount } = useAlertas();
   const { data: session } = useSession();
   const rol = (session?.user as any)?.rol as string;
 
@@ -60,8 +60,13 @@ export function Toolbar({ isAdmin }: { isAdmin: boolean }) {
           </>
         )}
         {flags['seguimientos'] && (isAdmin || rol === 'vendedor') && (
-          <Link href="/seguimientos" className={btn(pathname.startsWith('/seguimientos'))}>
+          <Link href="/seguimientos" className={cn(btn(pathname.startsWith('/seguimientos')), 'relative')}>
             <Phone className="w-4 h-4" /><span>Seguimientos</span>
+            {seguimientosCount > 0 && (
+              <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[15px] h-3.5 flex items-center justify-center px-0.5 leading-none">
+                {seguimientosCount > 99 ? '99+' : seguimientosCount}
+              </span>
+            )}
           </Link>
         )}
       </div>

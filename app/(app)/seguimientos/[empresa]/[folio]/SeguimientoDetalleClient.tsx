@@ -22,11 +22,9 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
   const router = useRouter();
   const [nota, setNota] = useState<any>(null);
   const [segId, setSegId] = useState<number | null>(null);
-  const [seg, setSeg] = useState({ prioridad: 'normal', estado: 'activo', asignado_a: null as number | null, notas_internas: '' });
   const [ints, setInts] = useState<any[]>([]);
   const [nInt, setNInt] = useState({ tipo: 'llamada', resultado: '', proximo_contacto: '' });
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [savingInt, setSavingInt] = useState(false);
   const [notFound, setNotFound] = useState(false);
 
@@ -48,7 +46,6 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
       sid = (await cr.json()).id;
       setInts([]);
     } else {
-      setSeg({ prioridad: n.seguimiento.prioridad, estado: n.seguimiento.estado, asignado_a: n.seguimiento.asignado_a, notas_internas: n.seguimiento.notas_internas ?? '' });
       await fetchInts(sid);
     }
     setSegId(sid);
@@ -56,14 +53,6 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
   }, [empresa, folio, fetchInts]);
 
   useEffect(() => { fetchDetalle(); }, [fetchDetalle]);
-
-  const handlePatch = async () => {
-    if (!segId) return;
-    setSaving(true);
-    const r = await fetch(`/api/seguimientos/${segId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(seg) });
-    toast[r.ok ? 'success' : 'error'](r.ok ? 'Guardado' : 'Error al guardar');
-    setSaving(false);
-  };
 
   const handleNuevaInt = async () => {
     if (!segId) return;
@@ -170,41 +159,6 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
         {/* Columna derecha: gestión */}
         <div className="space-y-4">
           <div className={card}>
-            <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">Seguimiento</h2>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className={lbl}>Prioridad</label>
-                <select value={seg.prioridad} onChange={e => setSeg(s => ({ ...s, prioridad: e.target.value }))} className={inp}>
-                  <option value="alta">Alta</option>
-                  <option value="normal">Normal</option>
-                  <option value="baja">Baja</option>
-                </select>
-              </div>
-              <div>
-                <label className={lbl}>Estado</label>
-                <select value={seg.estado} onChange={e => setSeg(s => ({ ...s, estado: e.target.value }))} className={inp}>
-                  <option value="activo">Activo</option>
-                  <option value="pausado">Pausado</option>
-                  <option value="cerrado">Cerrado</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className={lbl}>Asignado a (ID usuario)</label>
-              <input type="number" value={seg.asignado_a ?? ''} onChange={e => setSeg(s => ({ ...s, asignado_a: e.target.value ? parseInt(e.target.value) : null }))} className={inp} placeholder="ID usuario" />
-            </div>
-            <div>
-              <label className={lbl}>Notas internas</label>
-              <textarea value={seg.notas_internas} onChange={e => setSeg(s => ({ ...s, notas_internas: e.target.value }))}
-                rows={3} className={cn(inp, 'resize-none')} placeholder="Observaciones internas…" />
-            </div>
-            <button onClick={handlePatch} disabled={saving}
-              className="w-full py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium transition-colors disabled:opacity-50">
-              {saving ? 'Guardando…' : 'Guardar cambios'}
-            </button>
-          </div>
-
-          <div className={card}>
             <h2 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide">Nueva interacción</h2>
             <div>
               <label className={lbl}>Tipo</label>
@@ -213,9 +167,9 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
               </select>
             </div>
             <div>
-              <label className={lbl}>Resultado</label>
+              <label className={lbl}>Observación</label>
               <textarea value={nInt.resultado} onChange={e => setNInt(s => ({ ...s, resultado: e.target.value }))}
-                rows={2} className={cn(inp, 'resize-none')} placeholder="¿Cómo fue el contacto?" />
+                rows={2} className={cn(inp, 'resize-none')} placeholder="Escribe tu observación..." />
             </div>
             <div>
               <label className={lbl}>Próximo contacto</label>
@@ -237,6 +191,7 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-zinc-700 dark:text-zinc-300 capitalize">{i.tipo}</span>
                         <span className="text-zinc-400 text-xs">{new Date(i.created_at).toLocaleDateString('es-CL')}</span>
+                        {i.creado_por_nombre && <span className="text-zinc-400 text-xs">· {i.creado_por_nombre}</span>}
                       </div>
                       {i.resultado && <p className="text-zinc-500">{i.resultado}</p>}
                       {i.proximo_contacto && <p className="text-xs text-blue-500">Próximo: {i.proximo_contacto}</p>}

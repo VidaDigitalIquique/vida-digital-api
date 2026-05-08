@@ -7,6 +7,8 @@ interface AlertasContextType {
   refreshAlertas: () => Promise<void>;
   stockBajoCount: number;
   refreshStockBajo: () => Promise<void>;
+  seguimientosCount: number;
+  refreshSeguimientos: () => Promise<void>;
 }
 
 const AlertasContext = createContext<AlertasContextType>({
@@ -14,11 +16,14 @@ const AlertasContext = createContext<AlertasContextType>({
   refreshAlertas: async () => {},
   stockBajoCount: 0,
   refreshStockBajo: async () => {},
+  seguimientosCount: 0,
+  refreshSeguimientos: async () => {},
 });
 
 export function AlertasProvider({ children }: { children: React.ReactNode }) {
   const [alertasCount, setAlertasCount] = useState(0);
   const [stockBajoCount, setStockBajoCount] = useState(0);
+  const [seguimientosCount, setSeguimientosCount] = useState(0);
 
   const refreshAlertas = useCallback(async () => {
     try {
@@ -40,6 +45,16 @@ export function AlertasProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, []);
 
+  const refreshSeguimientos = useCallback(async () => {
+    try {
+      const res = await fetch('/api/seguimientos/alertas');
+      if (res.ok) {
+        const data = await res.json();
+        setSeguimientosCount(data.count || 0);
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     refreshAlertas();
   }, [refreshAlertas]);
@@ -48,8 +63,12 @@ export function AlertasProvider({ children }: { children: React.ReactNode }) {
     refreshStockBajo();
   }, [refreshStockBajo]);
 
+  useEffect(() => {
+    refreshSeguimientos();
+  }, [refreshSeguimientos]);
+
   return (
-    <AlertasContext.Provider value={{ alertasCount, refreshAlertas, stockBajoCount, refreshStockBajo }}>
+    <AlertasContext.Provider value={{ alertasCount, refreshAlertas, stockBajoCount, refreshStockBajo, seguimientosCount, refreshSeguimientos }}>
       {children}
     </AlertasContext.Provider>
   );

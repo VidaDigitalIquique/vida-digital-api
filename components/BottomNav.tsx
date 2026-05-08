@@ -7,8 +7,9 @@ import { cn } from '@/lib/utils';
 import {
   ShoppingCart, Users, LayoutList, Tag, Box, Camera,
   Heart, Package, Settings, RefreshCw, ImageIcon,
-  Filter, UserPlus, FileText, ChevronRight, ClipboardList, Banknote, Wallet
+  Filter, UserPlus, FileText, ChevronRight, ClipboardList, Banknote, Wallet, Phone
 } from 'lucide-react';
+import flags from '@/config/feature-flags.json';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { signOut, useSession } from 'next-auth/react';
@@ -18,7 +19,7 @@ export function BottomNav() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const rol = (session?.user as any)?.rol as string;
-  const { alertasCount, stockBajoCount } = useAlertas();
+  const { alertasCount, stockBajoCount, seguimientosCount } = useAlertas();
   const searchParams = useSearchParams();
   const modoChina = searchParams.get('modo') === 'china';
 
@@ -197,6 +198,21 @@ export function BottomNav() {
               )}
             </div>
             <span className="text-[10px] font-medium">Deseados</span>
+          </Link>
+        )}
+
+        {/* Seguimientos — admin, vendedor */}
+        {flags['seguimientos'] && (isAdmin || isVendedor) && (
+          <Link href="/seguimientos" className={btnClass(pathname.startsWith('/seguimientos'))}>
+            <div className="relative">
+              <Phone className="w-6 h-6" />
+              {seguimientosCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 leading-none">
+                  {seguimientosCount > 99 ? '99+' : seguimientosCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[10px] font-medium">Seguimientos</span>
           </Link>
         )}
 

@@ -19,9 +19,11 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const id = parseInt(params.id, 10);
   try {
     const rows = await sql`
-      SELECT id, tipo, resultado, proximo_contacto::text, creado_por, created_at::text
-      FROM public.seguimiento_interacciones
-      WHERE seguimiento_id = ${id} ORDER BY created_at DESC`;
+      SELECT si.id, si.tipo, si.resultado, si.proximo_contacto::text, si.creado_por, si.created_at::text,
+             u.nombre as creado_por_nombre
+      FROM public.seguimiento_interacciones si
+      LEFT JOIN public.usuarios u ON u.id = si.creado_por
+      WHERE si.seguimiento_id = ${id} ORDER BY si.created_at DESC`;
     return NextResponse.json(rows);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
