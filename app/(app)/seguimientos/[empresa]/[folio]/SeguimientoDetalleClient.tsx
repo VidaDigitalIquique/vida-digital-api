@@ -8,6 +8,12 @@ import { toast } from 'sonner';
 
 const TIPOS = ['llamada', 'whatsapp', 'email', 'visita', 'nota'] as const;
 const diasDesde = (f: string) => Math.floor((Date.now() - new Date(f).getTime()) / 86400000);
+
+function extractCodigo(item: any): string {
+  if (item.codigo) return item.codigo;
+  const match = item.descrip?.match(/\s{2}([A-Z0-9][A-Z0-9\-\.\/]+)\s{2}/);
+  return match ? match[1] : '—';
+}
 const card = 'bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-4 space-y-3';
 const inp = 'w-full px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500';
 const lbl = 'block text-xs font-medium text-zinc-500 mb-1';
@@ -91,7 +97,7 @@ export function SeguimientoDetalleClient({ empresa, folio, isAdmin }: { empresa:
             </span>
           </div>
           <p className="text-sm text-zinc-500 mt-0.5">
-            {new Date(nota.fechanvt).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })} · Vendedor: {nota.vendedor} ·{' '}
+            {new Date(nota.fechanvt).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })} · Vendedor: {nota.vendedor} ·{' '}
             <span className={cn('font-semibold', dias > 30 ? 'text-red-600 dark:text-red-400' : 'text-zinc-600 dark:text-zinc-400')}>{dias} días</span>
           </p>
         </div>
@@ -138,7 +144,7 @@ export function SeguimientoDetalleClient({ empresa, folio, isAdmin }: { empresa:
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                   {nota.items.map((item: any, i: number) => (
                     <tr key={i} className="text-zinc-700 dark:text-zinc-300">
-                      <td className="py-1.5 pr-3 font-mono text-zinc-400">{item.codigo ?? '—'}</td>
+                      <td className="py-1.5 pr-3 font-mono text-zinc-400">{extractCodigo(item)}</td>
                       <td className="py-1.5 pr-3">{item.descrip}</td>
                       <td className="py-1.5 pr-3 text-right">{item.tcancaja ?? '—'}</td>
                       <td className="py-1.5 pr-3 text-right">{item.cantxcaja ?? '—'}</td>
