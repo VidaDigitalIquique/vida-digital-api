@@ -155,11 +155,11 @@ export function CrearCatalogoDialog({
               )} ingresos llegados a Zofri
             </label>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Incluir solo si contiene (separar por espacio)</label>
+              <label className="text-sm font-medium">Productos a incluir</label>
               <Input value={newPalabrasIncluir} onChange={e => setNewPalabrasIncluir(e.target.value)} placeholder="Ej: vidrio, licuadora" />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Excluir si contiene (separar por espacio)</label>
+              <label className="text-sm font-medium">Productos a excluir</label>
               <Input value={newPalabrasExcluir} onChange={e => setNewPalabrasExcluir(e.target.value)} placeholder="Ej: NAVIDAD, (ANIL)" />
             </div>
           </div>

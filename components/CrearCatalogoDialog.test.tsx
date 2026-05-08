@@ -35,15 +35,14 @@ describe('CrearCatalogoDialog — Slice 1 labels y defaults', () => {
     expect(input.closest('div[class*="hidden"]') ?? input.closest('.hidden')).not.toBeNull();
   });
 
-  it('label incluir usa "(separar por espacio)"', () => {
+  it('label incluir muestra "Productos a incluir"', () => {
     render(<CrearCatalogoDialog {...DEFAULT_PROPS} />);
-    expect(screen.getByText(/incluir solo si contiene \(separar por espacio\)/i, { selector: 'label' })).toBeInTheDocument();
+    expect(screen.getByText('Productos a incluir', { selector: 'label' })).toBeInTheDocument();
   });
 
-  it('label excluir usa "(separar por espacio)"', () => {
+  it('label excluir muestra "Productos a excluir"', () => {
     render(<CrearCatalogoDialog {...DEFAULT_PROPS} />);
-    const labels = screen.getAllByText(/separar por espacio/i, { selector: 'label' });
-    expect(labels.length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('Productos a excluir', { selector: 'label' })).toBeInTheDocument();
   });
 
   it('checkbox "Solo productos con stock" inicia marcado por defecto', () => {
