@@ -26,7 +26,7 @@ function fmt(rows: any[]) {
   }));
 }
 
-async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null) {
+async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knumfoli: string | null) {
   const rows = schema === 'vida'
     ? await sql`
         SELECT 'vida' empresa, m.knumfoli, m.fechanvt::text, m.id_tdocu, m.vendedor,
@@ -45,7 +45,8 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null) {
         LEFT JOIN public.seguimientos s ON s.empresa='vida' AND s.knumfoli=m.knumfoli
         WHERE m.pestadot='1' AND m.id_tdocu IN ('203','551','554')
           AND (m.visaadua IS NULL OR TRIM(m.visaadua)='')
-          AND (${vendedor}::text IS NULL OR m.vendedor=${vendedor})`
+          AND (${vendedor}::text IS NULL OR m.vendedor=${vendedor})
+          AND (${knumfoli}::text IS NULL OR m.knumfoli=${knumfoli})`
     : await sql`
         SELECT 'sanjh' empresa, m.knumfoli, m.fechanvt::text, m.id_tdocu, m.vendedor,
           m.kcodclie::text kcodclie, c1.nombress, COALESCE(c1.celular,'') celular,
@@ -63,7 +64,8 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null) {
         LEFT JOIN public.seguimientos s ON s.empresa='sanjh' AND s.knumfoli=m.knumfoli
         WHERE m.pestadot='1' AND m.id_tdocu IN ('203','551','554')
           AND (m.visaadua IS NULL OR TRIM(m.visaadua)='')
-          AND (${vendedor}::text IS NULL OR m.vendedor=${vendedor})`;
+          AND (${vendedor}::text IS NULL OR m.vendedor=${vendedor})
+          AND (${knumfoli}::text IS NULL OR m.knumfoli=${knumfoli})`;
   return fmt(rows as any[]);
 }
 
@@ -78,10 +80,11 @@ export async function GET(request: Request) {
   const limit = Math.min(Number(searchParams.get('limit') ?? 50), 200);
   const offset = Number(searchParams.get('offset') ?? 0);
   const vendedorFiltro = rol === 'admin' ? (searchParams.get('vendedor') ?? null) : nombre;
+  const knumfoliFiltro = searchParams.get('knumfoli') ?? null;
   try {
     let data: any[] = [];
-    if (empresa === 'vida' || empresa === 'ambas') data.push(...await queryNotas('vida', vendedorFiltro));
-    if (empresa === 'sanjh' || empresa === 'ambas') data.push(...await queryNotas('sanjh', vendedorFiltro));
+    if (empresa === 'vida' || empresa === 'ambas') data.push(...await queryNotas('vida', vendedorFiltro, knumfoliFiltro));
+    if (empresa === 'sanjh' || empresa === 'ambas') data.push(...await queryNotas('sanjh', vendedorFiltro, knumfoliFiltro));
     data.sort((a, b) => a.fechanvt.localeCompare(b.fechanvt));
     return NextResponse.json({ data: data.slice(offset, offset + limit), total: data.length });
   } catch (e: any) {
