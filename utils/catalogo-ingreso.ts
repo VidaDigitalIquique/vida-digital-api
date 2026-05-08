@@ -32,23 +32,25 @@ export async function getLatestIngresoRealCodigos(
 
   const folioRows = ambasEmpresas
     ? await sql`
-        SELECT DISTINCT SPLIT_PART(nroingreso,'-',3) as folio
+        SELECT SPLIT_PART(nroingreso,'-',3) as folio
         FROM productos
         WHERE nroingreso IS NOT NULL
           AND nroingreso NOT LIKE 'INICIAL%'
           AND SPLIT_PART(nroingreso,'-',1) = '101'
           AND SPLIT_PART(nroingreso,'-',2) = ${anio}
+        GROUP BY SPLIT_PART(nroingreso,'-',3)
         ORDER BY SPLIT_PART(nroingreso,'-',3)::integer DESC
         LIMIT ${topN}
       `
     : await sql`
-        SELECT DISTINCT SPLIT_PART(nroingreso,'-',3) as folio
+        SELECT SPLIT_PART(nroingreso,'-',3) as folio
         FROM productos
         WHERE empresa_id = ${empresaId}
           AND nroingreso IS NOT NULL
           AND nroingreso NOT LIKE 'INICIAL%'
           AND SPLIT_PART(nroingreso,'-',1) = '101'
           AND SPLIT_PART(nroingreso,'-',2) = ${anio}
+        GROUP BY SPLIT_PART(nroingreso,'-',3)
         ORDER BY SPLIT_PART(nroingreso,'-',3)::integer DESC
         LIMIT ${topN}
       `;
