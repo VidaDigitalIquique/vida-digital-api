@@ -23,7 +23,7 @@ export function CrearCatalogoDialog({
 }: CrearCatalogoDialogProps) {
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
-  const [newSoloStock, setNewSoloStock] = useState(false);
+  const [newSoloStock, setNewSoloStock] = useState(true);
   const [newSoloNuevo, setNewSoloNuevo] = useState(false);
   const [newMostrarStock, setNewMostrarStock] = useState(false);
   const [newMostrarPrecio, setNewMostrarPrecio] = useState(true);
@@ -104,7 +104,7 @@ export function CrearCatalogoDialog({
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Título Comercial</label>
+            <label className="text-sm font-medium">Nombre de Cliente</label>
             <Input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Ej: Ofertas Mayo 2026" />
           </div>
           <div className="space-y-2">
@@ -121,7 +121,7 @@ export function CrearCatalogoDialog({
             </select>
           </div>
 
-          <div className="space-y-2">
+          <div className="hidden space-y-2">
             <label className="text-sm font-medium">Descripción (Opcional)</label>
             <Input value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Breve mensaje para el cliente" />
           </div>
@@ -134,18 +134,18 @@ export function CrearCatalogoDialog({
             </label>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={newMostrarStock} onChange={e => setNewMostrarStock(e.target.checked)} className="w-4 h-4 rounded" />
-              Mostrar stock disponible
+              Mostrar inventario disponible
             </label>
             <label className="flex items-center gap-2 text-sm cursor-pointer">
               <input type="checkbox" checked={newSoloNuevo} onChange={e => setNewSoloNuevo(e.target.checked)} className="w-4 h-4 rounded" />
               Solo productos nuevos ✨
             </label>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Incluir solo si contiene (separar con coma)</label>
+              <label className="text-sm font-medium">Incluir solo si contiene (separar por espacio)</label>
               <Input value={newPalabrasIncluir} onChange={e => setNewPalabrasIncluir(e.target.value)} placeholder="Ej: vidrio, licuadora" />
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Excluir si contiene (separar con coma)</label>
+              <label className="text-sm font-medium">Excluir si contiene (separar por espacio)</label>
               <Input value={newPalabrasExcluir} onChange={e => setNewPalabrasExcluir(e.target.value)} placeholder="Ej: NAVIDAD, (ANIL)" />
             </div>
           </div>

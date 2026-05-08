@@ -16,5 +16,6 @@
   "sueldos": true,
   "deudas": true,
   "fix-catalogo-solo-nuevo": true,
-  "catalog-image": false
+  "catalog-image": false,
+  "catalogo-form-mejoras-slice1": false
 }
