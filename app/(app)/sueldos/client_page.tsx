@@ -4,6 +4,7 @@ import { nombreMes } from './sueldos-utils';
 import { formatMonto } from '../pettycash/pettycash-utils';
 import { toast } from 'sonner';
 import { useNumericInput } from '@/hooks/useNumericInput';
+import { Pencil } from 'lucide-react';
 
 interface Movimiento {
   id: number;
@@ -39,10 +40,14 @@ export function SueldosAdminClient() {
   const [editSueldoOpen, setEditSueldoOpen] = useState(false);
   const [editSueldoMonto, setEditSueldoMonto] = useState('');
   const [editSueldoDesc, setEditSueldoDesc] = useState('');
+  const [editMovId, setEditMovId] = useState<number | null>(null);
+  const [editMovMonto, setEditMovMonto] = useState('');
+  const [editMovDesc, setEditMovDesc] = useState('');
 
   const montoBaseProps = useNumericInput(montoBase, setMontoBase);
   const montoProps = useNumericInput(monto, setMonto);
   const editSueldoMontoProps = useNumericInput(editSueldoMonto, setEditSueldoMonto);
+  const editMovMontoProps = useNumericInput(editMovMonto, setEditMovMonto);
   const montoFinalCalc = Math.max(0, parseFloat(montoBase || '0') - totalDescuentos);
 
   useEffect(() => {
@@ -114,6 +119,46 @@ export function SueldosAdminClient() {
     await fetch(`/api/sueldos/${id}`, { method: 'PATCH' });
     setEditSueldoOpen(false);
     fetchMovimientos();
+  };
+
+  const startEditMov = (m: Movimiento) => {
+    setEditMovId(m.id);
+    setEditMovMonto(String(Math.round(parseFloat(String(m.monto)))));
+    setEditMovDesc(m.descripcion ?? '');
+  };
+
+  const saveMovEdit = async () => {
+    if (editMovId === null) return;
+    const res = await fetch(`/api/sueldos/${editMovId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        monto_final: parseFloat(editMovMonto),
+        descripcion: editMovDesc.trim() || null,
+      }),
+    });
+    if (res.ok) {
+      toast.success('Actualizado');
+      setEditMovId(null);
+      fetchMovimientos();
+    } else {
+      const { error } = await res.json();
+      toast.error(error ?? 'Error al actualizar');
+    }
+  };
+
+  const deleteMov = async () => {
+    if (editMovId === null) return;
+    if (!confirm('¿Eliminar este registro?')) return;
+    const res = await fetch(`/api/sueldos/${editMovId}`, { method: 'DELETE' });
+    if (res.ok) {
+      toast.success('Eliminado');
+      setEditMovId(null);
+      fetchMovimientos();
+    } else {
+      const { error } = await res.json();
+      toast.error(error ?? 'Error al eliminar');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -247,7 +292,7 @@ export function SueldosAdminClient() {
         <div className="border rounded-lg overflow-hidden">
           <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 text-xs font-semibold text-zinc-500 uppercase flex justify-between">
             <span>Detalle del mes — {nombreMes(formMes)} {formAnio}</span>
-            {totalDescuentos > 0 && <span className="text-red-600">−{formatMonto(totalDescuentos)}</span>}
+            {totalDescuentos > 0 && <span className="text-red-600 text-base font-bold">−{formatMonto(totalDescuentos)}</span>}
           </div>
           {loadingMovs ? (
             <p className="px-4 py-3 text-sm text-zinc-400 animate-pulse">Cargando...</p>
@@ -263,12 +308,47 @@ export function SueldosAdminClient() {
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {movimientos.map(m => (
+                  <>
                   <tr key={m.id}>
                     <td className="px-4 py-2 capitalize">{m.tipo}</td>
                     <td className="px-4 py-2 text-zinc-500">{m.descripcion ?? '—'}</td>
                     <td className="px-4 py-2 text-right text-red-600">−{formatMonto(parseFloat(String(m.monto)))}</td>
-                    <td />
+                    <td className="px-4 py-2 text-center">
+                      {editMovId !== m.id && (
+                        <button onClick={() => startEditMov(m)} className="text-xs p-1 rounded hover:bg-zinc-200">
+                          <Pencil className="w-3 h-3 text-zinc-400" />
+                        </button>
+                      )}
+                    </td>
                   </tr>
+                  {editMovId === m.id && (
+                    <tr className="bg-zinc-50 dark:bg-zinc-900/50">
+                      <td colSpan={4} className="px-4 py-3">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <div className="flex flex-col gap-1">
+                            <label className="text-xs text-zinc-400">Monto</label>
+                            <input type="number" min="0" step="1"
+                              className="border rounded px-2 py-1 w-28 text-sm"
+                              {...editMovMontoProps}
+                            />
+                          </div>
+                          <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
+                            <label className="text-xs text-zinc-400">Descripción</label>
+                            <input className="border rounded px-2 py-1 text-sm"
+                              value={editMovDesc}
+                              onChange={e => setEditMovDesc(e.target.value)}
+                            />
+                          </div>
+                          <div className="flex gap-2 items-end">
+                            <button onClick={saveMovEdit} className="text-xs px-3 py-1.5 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200">Guardar</button>
+                            <button onClick={deleteMov} className="text-xs px-3 py-1.5 rounded bg-red-100 text-red-700 hover:bg-red-200">Eliminar</button>
+                            <button onClick={() => setEditMovId(null)} className="text-xs px-3 py-1.5 rounded bg-zinc-100 text-zinc-600 hover:bg-zinc-200">Cancelar</button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </>
                 ))}
                 {sueldoRegistrado && (
                   <>
@@ -278,7 +358,9 @@ export function SueldosAdminClient() {
                     <td className="px-4 py-2 text-right text-emerald-700">{formatMonto(sueldoRegistrado.monto_final)}</td>
                     <td className="px-4 py-2 text-center">
                       {!editSueldoOpen && (
-                        <button onClick={startEditSueldo} className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200">Editar</button>
+                        <button onClick={startEditSueldo} className="text-xs p-1 rounded hover:bg-zinc-200">
+                          <Pencil className="w-3 h-3 text-zinc-400" />
+                        </button>
                       )}
                     </td>
                   </tr>
