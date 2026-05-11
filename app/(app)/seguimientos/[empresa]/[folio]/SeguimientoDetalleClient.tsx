@@ -190,11 +190,11 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
                     <div key={i.id} className="text-sm border-l-2 border-zinc-200 dark:border-zinc-700 pl-3 space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-zinc-700 dark:text-zinc-300 capitalize">{i.tipo}</span>
-                        <span className="text-zinc-400 text-xs">{new Date(i.created_at).toLocaleDateString('es-CL')}</span>
+                        <span className="text-zinc-400 text-xs">{new Date(i.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
                         {i.creado_por_nombre && <span className="text-zinc-400 text-xs">· {i.creado_por_nombre}</span>}
                       </div>
                       {i.resultado && <p className="text-zinc-500">{i.resultado}</p>}
-                      {i.proximo_contacto && <p className="text-xs text-blue-500">Próximo: {i.proximo_contacto}</p>}
+                      {i.proximo_contacto && <p className="text-xs text-blue-500">Próximo seguimiento: {new Date(i.proximo_contacto).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}</p>}
                     </div>
                   ))}
                 </div>

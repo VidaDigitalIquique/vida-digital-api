@@ -22,7 +22,7 @@ function fmt(rows: any[]) {
     cliente_comprador: { kcodclie: r.kcodclie, nombress: r.nombress, celular: r.celular, email01: r.email01, ciudad: r.ciudad },
     cliente_factura: r.kcodcli2 ? { kcodclie: r.kcodcli2, nombress: r.factura_nombre } : null,
     items: r.items ?? [],
-    seguimiento: r.seg_id ? { id: r.seg_id, ultima_interaccion: r.ultima_interaccion, proximo_contacto: r.proximo_contacto } : null,
+    seguimiento: r.seg_id ? { id: r.seg_id, estado: r.estado, ultima_interaccion: r.ultima_interaccion, proximo_contacto: r.proximo_contacto } : null,
   }));
 }
 
@@ -44,7 +44,7 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
              WHERE knumfoli=m.knumfoli
              ORDER BY descrip, precdocd
            ) i) items,
-          s.id seg_id,
+          s.id seg_id, s.estado,
           (SELECT MAX(si.created_at)::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id) ultima_interaccion,
           (SELECT si.proximo_contacto::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) proximo_contacto
         FROM vida.movidcto m
@@ -73,7 +73,7 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
              WHERE knumfoli=m.knumfoli
              ORDER BY descrip, precdocd
            ) i) items,
-          s.id seg_id,
+          s.id seg_id, s.estado,
           (SELECT MAX(si.created_at)::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id) ultima_interaccion,
           (SELECT si.proximo_contacto::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) proximo_contacto
         FROM sanjh.movidcto m
@@ -103,11 +103,15 @@ export async function GET(request: Request) {
   const knumfoliFiltro = searchParams.get('knumfoli') ?? null;
   const mesFiltro  = searchParams.get('mes')  ? parseInt(searchParams.get('mes')!)  : null;
   const anioFiltro = searchParams.get('anio') ? parseInt(searchParams.get('anio')!) : null;
+  const estadoFiltro = searchParams.get('estado') ?? 'activo';
   try {
     let data: any[] = [];
     if (empresa === 'vida' || empresa === 'ambas') data.push(...await queryNotas('vida', vendedorFiltro, knumfoliFiltro, mesFiltro, anioFiltro));
     if (empresa === 'sanjh' || empresa === 'ambas') data.push(...await queryNotas('sanjh', vendedorFiltro, knumfoliFiltro, mesFiltro, anioFiltro));
     data.sort((a, b) => a.fechanvt.localeCompare(b.fechanvt));
+    if (estadoFiltro !== 'todos') {
+      data = data.filter(n => estadoFiltro === 'activo' ? (!n.seguimiento || n.seguimiento.estado === 'activo') : n.seguimiento?.estado === estadoFiltro);
+    }
     return NextResponse.json({ data: data.slice(offset, offset + limit), total: data.length });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

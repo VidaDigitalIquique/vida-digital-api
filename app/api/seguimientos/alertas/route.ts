@@ -12,7 +12,8 @@ export async function GET() {
     const [{ count }] = await sql`
       SELECT COUNT(*)::int as count
       FROM public.seguimientos s
-      WHERE EXISTS (
+      WHERE s.estado = 'activo'
+      AND EXISTS (
         SELECT 1 FROM public.seguimiento_interacciones si WHERE si.seguimiento_id = s.id
       )
       AND (
