@@ -63,7 +63,7 @@ export function SueldosAdminClient() {
   const editMontoFinalProps = useNumericInput(editMontoFinal, setEditMontoFinal);
   const montoFinalCalc = Math.max(0, parseFloat(montoBase || '0') - totalDescuentos);
 
-  const filteredSueldos = usuarioId ? sueldos.filter(s => s.usuario_id === usuarioId) : sueldos;
+  const filteredSueldos = usuarioId ? sueldos.filter(s => s.usuario_id === usuarioId) : [];
 
   useEffect(() => {
     fetch('/api/admin/usuarios')
