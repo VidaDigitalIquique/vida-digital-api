@@ -146,7 +146,7 @@ export function DeudasAdminClient() {
   const prestamoConSaldo = usuarioId ? deudas.find(d => {
     const t = parseFloat(String(d.monto));
     const p = parseFloat(String(d.pagos_total));
-    return d.tipo === 'prestamo' && d.estado === 'confirmada' && (t - p) > 0;
+    return d.tipo === 'prestamo' && ['confirmada', 'aceptada'].includes(d.estado) && (t - p) > 0;
   }) : undefined;
 
   return (
