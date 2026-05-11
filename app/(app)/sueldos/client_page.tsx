@@ -228,23 +228,26 @@ export function SueldosAdminClient() {
         </select>
         {tipo === 'sueldo' ? (
           <>
-            <input
-              className="border rounded px-3 py-2 text-sm text-green-600 font-semibold"
-              placeholder="Monto base"
-              type="number" min="0" step="1"
-              required
-              {...montoBaseProps}
-              onBlur={(e) => {
-                montoBaseProps.onBlur(e);
-                if (usuarioId && montoBase) {
-                  fetch(`/api/trabajadores/${usuarioId}/config`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ monto_base: Math.round(parseFloat(montoBase)) }),
-                  });
-                }
-              }}
-            />
+            <div className="border rounded px-3 py-2 text-sm bg-zinc-50 dark:bg-zinc-800 flex items-center gap-2">
+              <span className="text-zinc-400 text-xs whitespace-nowrap">Monto base</span>
+              <input
+                className="bg-transparent text-right text-green-600 font-semibold outline-none w-full"
+                placeholder="0"
+                type="number" min="0" step="1"
+                required
+                {...montoBaseProps}
+                onBlur={(e) => {
+                  montoBaseProps.onBlur(e);
+                  if (usuarioId && montoBase) {
+                    fetch(`/api/trabajadores/${usuarioId}/config`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ monto_base: Math.round(parseFloat(montoBase)) }),
+                    });
+                  }
+                }}
+              />
+            </div>
             <div className="flex gap-2">
               <div className="border rounded px-3 py-2 text-sm flex-1 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-between">
                 <span className="text-zinc-400 text-xs mr-2">A pagar</span>
