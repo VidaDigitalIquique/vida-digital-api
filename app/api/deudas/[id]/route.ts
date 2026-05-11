@@ -53,15 +53,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     if (data.accion === "confirmar") {
       if (deuda.user_id !== userId) return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
       if (deuda.estado !== "aceptada") return NextResponse.json({ error: "Estado inválido" }, { status: 409 });
-      const concepto = buildConceptoDeuda(deuda.tipo, deuda.user_nombre, new Date());
-      const creadoPor = (session!.user as any).nombre as string;
       const [updated] = await sql`
         UPDATE deudas_solicitudes SET estado = 'confirmada', confirmado_at = NOW()
         WHERE id = ${id} RETURNING *
-      `;
-      await sql`
-        INSERT INTO pettycash_movimientos (tipo, concepto, monto, creado_por)
-        VALUES ('egreso', ${concepto}, ${deuda.monto}, ${creadoPor})
       `;
       return NextResponse.json({ data: updated });
     }

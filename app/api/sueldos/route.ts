@@ -56,8 +56,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 400 });
     }
     const trabajador_nombre = usuarioRows[0].nombre as string;
-    const concepto = buildConceptoPettycash(trabajador_nombre, mes, anio);
-
     const existing = await sql`
       SELECT id FROM sueldos WHERE usuario_id = ${usuario_id} AND mes = ${mes} AND anio = ${anio}
     `;
@@ -72,11 +70,6 @@ export async function POST(request: Request) {
       INSERT INTO sueldos (usuario_id, trabajador_nombre, mes, anio, monto_base, monto_final, creado_por)
       VALUES (${usuario_id}, ${trabajador_nombre}, ${mes}, ${anio}, ${monto_base}, ${monto_final}, ${creadoPor})
       RETURNING *
-    `;
-
-    await sql`
-      INSERT INTO pettycash_movimientos (tipo, concepto, monto, creado_por)
-      VALUES ('egreso', ${concepto}, ${monto_final}, ${creadoPor})
     `;
 
     return NextResponse.json({ data: sueldo }, { status: 201 });

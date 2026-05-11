@@ -101,15 +101,6 @@ export async function POST(request: Request) {
       RETURNING *
     `;
 
-    if (tipo !== 'prestamo') {
-      const conceptoTipo = tipo === 'adelanto' ? 'Adelanto' : 'Quincena';
-      const concepto = `${conceptoTipo} — ${userNombre}`;
-      await sql`
-        INSERT INTO pettycash_movimientos (tipo, concepto, monto, creado_por)
-        VALUES ('egreso', ${concepto}, ${monto}, ${creadoPor})
-      `;
-    }
-
     return NextResponse.json({ data: deuda }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
