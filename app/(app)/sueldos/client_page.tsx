@@ -228,7 +228,6 @@ export function SueldosAdminClient() {
         </select>
         {tipo === 'sueldo' ? (
           <>
-            <label className="text-xs text-zinc-400">Monto base</label>
             <input
               className="border rounded px-3 py-2 text-sm text-green-600 font-semibold"
               placeholder="Monto base"
