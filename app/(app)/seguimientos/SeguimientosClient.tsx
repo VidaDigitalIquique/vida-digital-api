@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 type Nota = {
@@ -11,16 +12,19 @@ type Nota = {
   fechanvt: string;
   vendedor: string;
   cliente_comprador: { nombress: string; ciudad: string };
-  seguimiento: { prioridad: string; ultima_interaccion: string | null; proximo_contacto: string | null } | null;
+  seguimiento: { id: number; estado: string; ultima_interaccion: string | null; proximo_contacto: string | null } | null;
 };
 
 const diasDesde = (fecha: string) => Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000);
 
-const PRI_COLOR: Record<string, string> = {
-  alta:   'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-  normal: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
-  baja:   'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+const ESTADO_COLOR: Record<string, string> = {
+  activo:  'text-red-600 dark:text-red-400',
+  resuelto: 'text-green-600 dark:text-green-400',
 };
+
+function estadoLabel(e: string) {
+  return e === 'activo' ? 'Activo' : e === 'resuelto' ? 'Resuelto' : e;
+}
 const EMP_COLOR: Record<string, string> = {
   vida:  'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
   sanjh: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
@@ -30,6 +34,7 @@ export function SeguimientosClient() {
   const [empresa, setEmpresa] = useState('ambas');
   const [vendedor, setVendedor] = useState('');
   const [mesAnio, setMesAnio] = useState('');
+  const [filtroEstado, setFiltroEstado] = useState('activo');
   const [notas, setNotas] = useState<Nota[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -42,13 +47,14 @@ export function SeguimientosClient() {
         params.set('mes', mes);
         params.set('anio', anio);
       }
+      params.set('estado', filtroEstado);
       const res = await fetch(`/api/seguimientos?${params}`);
       const body = await res.json();
       setNotas(body.data ?? []);
     } finally {
       setLoading(false);
     }
-  }, [empresa, mesAnio]);
+  }, [empresa, mesAnio, filtroEstado]);
 
   useEffect(() => { fetchNotas(); }, [fetchNotas]);
 
@@ -71,6 +77,32 @@ export function SeguimientosClient() {
     { value: 'vida',  label: 'Vida Digital' },
     { value: 'sanjh', label: 'Sanjh' },
   ];
+
+  const estadoTabs = [
+    { value: 'activo',  label: 'Activos' },
+    { value: 'resuelto', label: 'Resueltos' },
+    { value: 'todos',  label: 'Todos' },
+  ];
+
+  const handleEstadoChange = async (n: Nota, nuevoEstado: string) => {
+    let segId = n.seguimiento?.id;
+    if (!segId) {
+      const cr = await fetch('/api/seguimientos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ empresa: n.empresa, knumfoli: n.knumfoli }),
+      });
+      if (!cr.ok) { toast.error('Error al crear seguimiento'); return; }
+      segId = (await cr.json()).id;
+    }
+    const r = await fetch(`/api/seguimientos/${segId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: nuevoEstado }),
+    });
+    if (r.ok) { toast.success(`Estado: ${estadoLabel(nuevoEstado)}`); await fetchNotas(); }
+    else toast.error('Error al actualizar estado');
+  };
 
   return (
     <div className="space-y-4">
@@ -103,6 +135,18 @@ export function SeguimientosClient() {
           <option value="">Todos los meses</option>
           {meses.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
+        <div className="flex gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-lg">
+          {estadoTabs.map(t => (
+            <button key={t.value} onClick={() => setFiltroEstado(t.value)}
+              className={cn('px-3 py-1.5 rounded text-sm font-medium transition-all',
+                filtroEstado === t.value
+                  ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm'
+                  : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'
+              )}>
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -123,14 +167,13 @@ export function SeguimientosClient() {
                 <th className="px-4 py-3 text-left">Vendedor</th>
                 <th className="px-4 py-3 text-left">Último contacto</th>
                 <th className="px-4 py-3 text-left">Próximo</th>
-                <th className="px-4 py-3 text-left">Prioridad</th>
+                <th className="px-4 py-3 text-left">Estado</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {visible.map(n => {
                 const dias = diasDesde(n.fechanvt);
-                const pri = n.seguimiento?.prioridad ?? 'normal';
                 return (
                   <tr key={`${n.empresa}-${n.knumfoli}`}
                     className="bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
@@ -162,9 +205,14 @@ export function SeguimientosClient() {
                         : '—'}
                     </td>
                     <td className="px-4 py-3">
-                      <span className={cn('text-xs font-semibold px-2 py-1 rounded-full capitalize', PRI_COLOR[pri])}>
-                        {pri}
-                      </span>
+                      <select
+                        value={n.seguimiento?.estado ?? 'activo'}
+                        onChange={e => handleEstadoChange(n, e.target.value)}
+                        className={cn('text-xs font-semibold px-2 py-1 rounded-full border-0 bg-transparent cursor-pointer', ESTADO_COLOR[n.seguimiento?.estado ?? 'activo'])}
+                      >
+                        <option value="activo" className="text-red-600">Activo</option>
+                        <option value="resuelto" className="text-green-600">Resuelto</option>
+                      </select>
                     </td>
                     <td className="px-4 py-3">
                       <Link href={`/seguimientos/${n.empresa}/${n.knumfoli}`}

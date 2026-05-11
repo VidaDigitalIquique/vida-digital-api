@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Loader2, ArrowLeft, MessageCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, MessageCircle, Pencil, Trash2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 const TIPOS = ['llamada', 'whatsapp', 'email', 'visita', 'nota'] as const;
@@ -27,6 +27,10 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
   const [loading, setLoading] = useState(true);
   const [savingInt, setSavingInt] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [editingIntId, setEditingIntId] = useState<number | null>(null);
+  const [editResultado, setEditResultado] = useState('');
+  const [editProximo, setEditProximo] = useState('');
+  const [estado, setEstado] = useState('activo');
 
   const fetchInts = useCallback(async (id: number) => {
     const r = await fetch(`/api/seguimientos/${id}/interacciones`);
@@ -40,6 +44,7 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
     const n = body.data?.[0];
     if (!n) { setNotFound(true); setLoading(false); return; }
     setNota(n);
+    setEstado(n.seguimiento?.estado ?? 'activo');
     let sid = n.seguimiento?.id ?? null;
     if (!sid) {
       const cr = await fetch('/api/seguimientos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ empresa, knumfoli: folio }) });
@@ -66,6 +71,54 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
     setSavingInt(false);
   };
 
+  const handleEstadoChange = async (nuevoEstado: string) => {
+    if (!segId) return;
+    const r = await fetch(`/api/seguimientos/${segId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: nuevoEstado }),
+    });
+    if (r.ok) {
+      setEstado(nuevoEstado);
+      toast.success(`Estado: ${nuevoEstado === 'activo' ? 'Activo' : 'Resuelto'}`);
+    } else toast.error('Error al actualizar estado');
+  };
+
+  const handleDeleteInt = async (intId: number) => {
+    if (!segId || !confirm('¿Eliminar esta interacción?')) return;
+    const r = await fetch(`/api/seguimientos/${segId}/interacciones/${intId}`, { method: 'DELETE' });
+    if (r.ok) { toast.success('Interacción eliminada'); await fetchInts(segId); }
+    else toast.error('Error al eliminar');
+  };
+
+  const handleStartEdit = (i: any) => {
+    setEditingIntId(i.id);
+    setEditResultado(i.resultado ?? '');
+    setEditProximo(i.proximo_contacto ?? '');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIntId(null);
+    setEditResultado('');
+    setEditProximo('');
+  };
+
+  const handleSaveEdit = async (intId: number) => {
+    if (!segId) return;
+    const r = await fetch(`/api/seguimientos/${segId}/interacciones/${intId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resultado: editResultado || null, proximo_contacto: editProximo || null }),
+    });
+    if (r.ok) {
+      toast.success('Interacción actualizada');
+      setEditingIntId(null);
+      setEditResultado('');
+      setEditProximo('');
+      await fetchInts(segId);
+    } else toast.error('Error al actualizar');
+  };
+
   if (loading) return <div className="flex items-center justify-center py-20 text-zinc-400"><Loader2 className="w-5 h-5 animate-spin mr-2" />Cargando…</div>;
   if (notFound) return <div className="text-center py-20 text-zinc-400 text-sm">Nota no encontrada.</div>;
 
@@ -81,6 +134,16 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold font-mono text-zinc-900 dark:text-zinc-100">{nota.knumfoli}</h1>
+            <select
+              value={estado}
+              onChange={e => handleEstadoChange(e.target.value)}
+              className={cn('text-xs font-semibold px-2 py-1 rounded-full border-0 cursor-pointer',
+                estado === 'activo' ? 'text-red-600 bg-red-50 dark:bg-red-900/20' : 'text-green-600 bg-green-50 dark:bg-green-900/20'
+              )}
+            >
+              <option value="activo">Activo</option>
+              <option value="resuelto">Resuelto</option>
+            </select>
             <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', nota.empresa === 'vida' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700')}>
               {nota.empresa === 'vida' ? 'Vida Digital' : 'Sanjh'}
             </span>
@@ -186,17 +249,51 @@ export function SeguimientoDetalleClient({ empresa, folio }: { empresa: string; 
             {ints.length === 0
               ? <p className="text-sm text-zinc-400 italic">Sin interacciones aún.</p>
               : <div className="space-y-3">
-                  {ints.map((i: any) => (
+                  {ints.map((i: any) => {
+                    const isEditing = editingIntId === i.id;
+                    return (
                     <div key={i.id} className="text-sm border-l-2 border-zinc-200 dark:border-zinc-700 pl-3 space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-zinc-700 dark:text-zinc-300 capitalize">{i.tipo}</span>
-                        <span className="text-zinc-400 text-xs">{new Date(i.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
-                        {i.creado_por_nombre && <span className="text-zinc-400 text-xs">· {i.creado_por_nombre}</span>}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-zinc-700 dark:text-zinc-300 capitalize">{i.tipo}</span>
+                          <span className="text-zinc-400 text-xs">{new Date(i.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                          {i.creado_por_nombre && <span className="text-zinc-400 text-xs">· {i.creado_por_nombre}</span>}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {isEditing ? (
+                            <>
+                              <button onClick={handleCancelEdit} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"><X className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => handleSaveEdit(i.id)} className="p-1 rounded hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600"><Check className="w-3.5 h-3.5" /></button>
+                            </>
+                          ) : (
+                            <>
+                              <button onClick={() => handleStartEdit(i)} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"><Pencil className="w-3.5 h-3.5" /></button>
+                              <button onClick={() => handleDeleteInt(i.id)} className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                            </>
+                          )}
+                        </div>
                       </div>
-                      {i.resultado && <p className="text-zinc-500">{i.resultado}</p>}
-                      {i.proximo_contacto && <p className="text-xs text-blue-500">Próximo seguimiento: {new Date(i.proximo_contacto).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}</p>}
+                      {isEditing ? (
+                        <div className="space-y-2 pt-1">
+                          <div>
+                            <label className="text-[10px] text-zinc-400 uppercase">Observación</label>
+                            <textarea value={editResultado} onChange={e => setEditResultado(e.target.value)}
+                              rows={2} className={cn(inp, 'resize-none text-xs')} />
+                          </div>
+                          <div>
+                            <label className="text-[10px] text-zinc-400 uppercase">Próximo contacto</label>
+                            <input type="date" value={editProximo} onChange={e => setEditProximo(e.target.value)}
+                              className={cn(inp, 'text-xs')} />
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {i.resultado && <p className="text-zinc-500">{i.resultado}</p>}
+                          {i.proximo_contacto && <p className="text-xs text-blue-500">Próximo seguimiento: {new Date(i.proximo_contacto).toLocaleDateString('es-CL', { day: '2-digit', month: 'long', year: 'numeric' })}</p>}
+                        </>
+                      )}
                     </div>
-                  ))}
+                  )})}
                 </div>
             }
           </div>

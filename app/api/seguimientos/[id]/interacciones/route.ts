@@ -48,3 +48,22 @@ export async function POST(request: Request, { params }: { params: { id: string 
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  const g = guard(session);
+  if (g) return g;
+  try {
+    const seguimiento_id = parseInt(params.id, 10);
+    const { interaccion_id } = await request.json();
+    if (!interaccion_id) return NextResponse.json({ error: 'interaccion_id requerido' }, { status: 400 });
+    const [row] = await sql`
+      DELETE FROM public.seguimiento_interacciones
+      WHERE id = ${interaccion_id} AND seguimiento_id = ${seguimiento_id}
+      RETURNING id`;
+    if (!row) return NextResponse.json({ error: 'No encontrada' }, { status: 404 });
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
+}
