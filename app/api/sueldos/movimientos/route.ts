@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     );
 
     const sueldoRows = await sql`
-      SELECT id, monto_base, monto_final, pagado_at, created_at
+      SELECT id, tipo, monto_base, monto_final, descripcion, pagado_at, created_at
       FROM sueldos
       WHERE usuario_id = ${parseInt(usuario_id)} AND mes = ${mes} AND anio = ${anio}
       LIMIT 1
