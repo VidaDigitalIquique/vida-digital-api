@@ -34,7 +34,7 @@ export function SueldosAdminClient() {
   const [saving, setSaving] = useState(false);
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [totalDescuentos, setTotalDescuentos] = useState(0);
-  const [sueldoRegistrado, setSueldoRegistrado] = useState<{ id: number; monto_base: number; monto_final: number; descripcion: string | null; pagado_at: string | null } | null>(null);
+  const [sueldoRegistrado, setSueldoRegistrado] = useState<{ id: number; tipo: string; monto_base: number; monto_final: number; descripcion: string | null; pagado_at: string | null } | null>(null);
   const [loadingMovs, setLoadingMovs] = useState(false);
   const [editSueldoOpen, setEditSueldoOpen] = useState(false);
   const [editSueldoMonto, setEditSueldoMonto] = useState('');
@@ -183,6 +183,7 @@ export function SueldosAdminClient() {
         </select>
         {tipo === 'sueldo' ? (
           <>
+            <label className="text-xs text-zinc-400">Monto base</label>
             <input
               className="border rounded px-3 py-2 text-sm text-green-600 font-semibold"
               placeholder="Monto base"
@@ -272,7 +273,7 @@ export function SueldosAdminClient() {
                 {sueldoRegistrado && (
                   <>
                   <tr className="bg-emerald-50/60 dark:bg-emerald-900/10 font-medium">
-                    <td className="px-4 py-2">Pago sueldo</td>
+                    <td className="px-4 py-2 capitalize">{sueldoRegistrado.tipo}</td>
                     <td className="px-4 py-2 text-zinc-500">Base: {formatMonto(sueldoRegistrado.monto_base)}</td>
                     <td className="px-4 py-2 text-right text-emerald-700">{formatMonto(sueldoRegistrado.monto_final)}</td>
                     <td className="px-4 py-2 text-center">

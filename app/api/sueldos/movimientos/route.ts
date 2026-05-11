@@ -18,14 +18,13 @@ export async function GET(request: Request) {
 
   try {
     const movimientos = await sql`
-      SELECT id, tipo, monto, descripcion, mes, anio, solicitado_at, confirmado_at
-      FROM deudas_solicitudes
-      WHERE user_id = ${parseInt(usuario_id)}
-        AND tipo    IN ('adelanto', 'quincena')
-        AND estado  = 'confirmada'
-        AND mes     = ${mes}
-        AND anio    = ${anio}
-      ORDER BY solicitado_at ASC
+      SELECT id, tipo, monto_final AS monto, descripcion, mes, anio, created_at, confirmado_at
+      FROM sueldos
+      WHERE usuario_id = ${parseInt(usuario_id)}
+        AND tipo IN ('adelanto', 'quincena')
+        AND mes  = ${mes}
+        AND anio = ${anio}
+      ORDER BY created_at ASC
     `;
 
     const total_descuentos = movimientos.reduce(
@@ -36,7 +35,7 @@ export async function GET(request: Request) {
     const sueldoRows = await sql`
       SELECT id, tipo, monto_base, monto_final, descripcion, pagado_at, created_at
       FROM sueldos
-      WHERE usuario_id = ${parseInt(usuario_id)} AND mes = ${mes} AND anio = ${anio}
+      WHERE usuario_id = ${parseInt(usuario_id)} AND mes = ${mes} AND anio = ${anio} AND tipo = 'sueldo'
       LIMIT 1
     `;
     const sueldo = sueldoRows[0] ?? null;
