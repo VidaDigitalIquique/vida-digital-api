@@ -22,6 +22,7 @@ interface Sueldo {
   monto_base: number;
   monto_final: number;
   pagado_at: string | null;
+  confirmado_at: string | null;
 }
 
 interface Usuario {
@@ -32,7 +33,7 @@ interface Usuario {
 
 const ANIOS = [2024, 2025, 2026, 2027];
 
-export function SueldosClient() {
+export function SueldosAdminClient() {
   const hoy = new Date();
   const [mesFiltro, setMesFiltro] = useState(hoy.getMonth() + 1);
   const [anioFiltro, setAnioFiltro] = useState(hoy.getFullYear());
@@ -249,6 +250,7 @@ export function SueldosClient() {
                 <th className="px-4 py-3 text-right">Base</th>
                 <th className="px-4 py-3 text-right">Final</th>
                 <th className="px-4 py-3 text-center">Estado</th>
+                <th className="px-4 py-3 text-center">Confirmación</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -264,6 +266,13 @@ export function SueldosClient() {
                       ? <span className="text-emerald-600 text-xs font-semibold">Pagado</span>
                       : <span className="text-amber-500 text-xs font-semibold">Pendiente</span>
                     }
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {s.confirmado_at
+                      ? <span className="text-emerald-600 text-xs">
+                          {new Date(s.confirmado_at).toLocaleDateString('es-CL')}
+                        </span>
+                      : <span className="text-zinc-400 text-xs">—</span>}
                   </td>
                   <td className="px-4 py-3 text-right">
                     {!s.pagado_at && (

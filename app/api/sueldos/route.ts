@@ -2,34 +2,37 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { SueldoCreateSchema, buildConceptoPettycash } from "@/docs/specs/sueldos.spec";
-
-function adminOnly(session: any) {
-  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
-  if ((session.user as any).rol !== "admin") return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
-  return null;
-}
+import { SueldoCreateSchema } from "@/docs/specs/sueldos.spec";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
-  const guard = adminOnly(session);
-  if (guard) return guard;
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  const isAdmin = (session.user as any).rol === "admin";
+  const userId = parseInt((session.user as any).id, 10);
 
   const { searchParams } = new URL(request.url);
   const mes = searchParams.get("mes");
   const anio = searchParams.get("anio");
   try {
-    const rows = await sql`
-      SELECT s.id, s.usuario_id, s.trabajador_nombre, s.mes, s.anio,
-             s.monto_base, s.monto_final, s.pagado_at, s.creado_por, s.created_at,
-             u.rut AS trabajador_rut
-      FROM sueldos s
-      LEFT JOIN usuarios u ON u.id = s.usuario_id
-      WHERE
-        (${mes ?? null} IS NULL OR s.mes = ${mes ? parseInt(mes) : 0})
-        AND (${anio ?? null} IS NULL OR s.anio = ${anio ? parseInt(anio) : 0})
-      ORDER BY s.anio DESC, s.mes DESC, s.created_at DESC
-    `;
+    const rows = isAdmin
+      ? await sql`
+          SELECT s.id, s.usuario_id, s.trabajador_nombre, s.mes, s.anio,
+                 s.monto_base, s.monto_final, s.pagado_at, s.confirmado_at, s.creado_por, s.created_at,
+                 u.rut AS trabajador_rut
+          FROM sueldos s
+          LEFT JOIN usuarios u ON u.id = s.usuario_id
+          WHERE
+            (${mes ?? null} IS NULL OR s.mes = ${mes ? parseInt(mes) : 0})
+            AND (${anio ?? null} IS NULL OR s.anio = ${anio ? parseInt(anio) : 0})
+          ORDER BY s.anio DESC, s.mes DESC, s.created_at DESC
+        `
+      : await sql`
+          SELECT s.id, s.usuario_id, s.trabajador_nombre, s.mes, s.anio,
+                 s.monto_base, s.monto_final, s.pagado_at, s.confirmado_at, s.creado_por, s.created_at
+          FROM sueldos s
+          WHERE s.usuario_id = ${userId}
+          ORDER BY s.anio DESC, s.mes DESC, s.created_at DESC
+        `;
     return NextResponse.json({ sueldos: rows });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -38,8 +41,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  const guard = adminOnly(session);
-  if (guard) return guard;
+  if (!session || (session.user as any).rol !== "admin")
+    return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
 
   try {
     const body = await request.json();
@@ -56,6 +59,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Usuario no encontrado" }, { status: 400 });
     }
     const trabajador_nombre = usuarioRows[0].nombre as string;
+
     const existing = await sql`
       SELECT id FROM sueldos WHERE usuario_id = ${usuario_id} AND mes = ${mes} AND anio = ${anio}
     `;
