@@ -91,7 +91,6 @@ export function SueldosAdminClient() {
     setLoading(true);
     const res = await fetch(`/api/sueldos?mes=${mesFiltro}&anio=${anioFiltro}`);
     const data = await res.json();
-    console.log('[sueldos] status:', res.status, 'data:', JSON.stringify(data).substring(0, 300));
     setSueldos(data.sueldos ?? []);
     setLoading(false);
   }, [mesFiltro, anioFiltro]);

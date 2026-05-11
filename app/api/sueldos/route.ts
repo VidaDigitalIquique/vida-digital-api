@@ -23,8 +23,8 @@ export async function GET(request: Request) {
           FROM sueldos s
           LEFT JOIN usuarios u ON u.id = s.usuario_id
           WHERE
-            (${mes ?? null} IS NULL OR s.mes = ${mes ? parseInt(mes) : 0})
-            AND (${anio ?? null} IS NULL OR s.anio = ${anio ? parseInt(anio) : 0})
+            (${mes}::text IS NULL OR s.mes = ${mes ? parseInt(mes) : 0})
+            AND (${anio}::text IS NULL OR s.anio = ${anio ? parseInt(anio) : 0})
           ORDER BY s.anio DESC, s.mes DESC, s.created_at DESC
         `
       : await sql`
