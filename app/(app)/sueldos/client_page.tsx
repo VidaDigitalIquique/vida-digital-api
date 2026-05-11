@@ -19,8 +19,10 @@ interface Sueldo {
   trabajador_nombre: string;
   mes: number;
   anio: number;
+  tipo: string;
   monto_base: number;
   monto_final: number;
+  descripcion: string | null;
   pagado_at: string | null;
   confirmado_at: string | null;
 }
@@ -43,14 +45,22 @@ export function SueldosAdminClient() {
   const [usuarioId, setUsuarioId] = useState<number | ''>('');
   const [formMes, setFormMes] = useState(hoy.getMonth() + 1);
   const [formAnio, setFormAnio] = useState(hoy.getFullYear());
+  const [tipo, setTipo] = useState<'sueldo' | 'adelanto' | 'quincena'>('sueldo');
+  const [monto, setMonto] = useState('');
+  const [descripcion, setDescripcion] = useState('');
   const [montoBase, setMontoBase] = useState('');
   const [saving, setSaving] = useState(false);
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [totalDescuentos, setTotalDescuentos] = useState(0);
   const [sueldoRegistrado, setSueldoRegistrado] = useState<{ monto_base: number; monto_final: number; pagado_at: string | null } | null>(null);
   const [loadingMovs, setLoadingMovs] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editMontoFinal, setEditMontoFinal] = useState('');
+  const [editDescripcion, setEditDescripcion] = useState('');
 
   const montoBaseProps = useNumericInput(montoBase, setMontoBase);
+  const montoProps = useNumericInput(monto, setMonto);
+  const editMontoFinalProps = useNumericInput(editMontoFinal, setEditMontoFinal);
   const montoFinalCalc = Math.max(0, parseFloat(montoBase || '0') - totalDescuentos);
 
   useEffect(() => {
@@ -71,11 +81,11 @@ export function SueldosAdminClient() {
   useEffect(() => { fetchMovimientos(); }, [fetchMovimientos]);
 
   useEffect(() => {
-    if (!usuarioId) { setMontoBase(''); return; }
+    if (!usuarioId || tipo !== 'sueldo') { setMontoBase(''); return; }
     fetch(`/api/trabajadores/${usuarioId}/config`)
       .then(r => r.json())
       .then(d => { setMontoBase(d.monto_base ? String(Math.round(d.monto_base)) : ''); });
-  }, [usuarioId]);
+  }, [usuarioId, tipo]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -92,26 +102,50 @@ export function SueldosAdminClient() {
     load();
   };
 
+  const handleDelete = async (id: number) => {
+    if (!confirm('¿Eliminar este registro?')) return;
+    const res = await fetch(`/api/sueldos/${id}`, { method: 'DELETE' });
+    if (res.ok) { toast.success('Eliminado'); load(); fetchMovimientos(); }
+    else { const { error } = await res.json(); toast.error(error ?? 'Error al eliminar'); }
+  };
+
+  const handleEdit = (s: Sueldo) => {
+    setEditingId(s.id);
+    setEditMontoFinal(String(Math.round(s.monto_final)));
+    setEditDescripcion(s.descripcion ?? '');
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingId === null) return;
+    const res = await fetch(`/api/sueldos/${editingId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ monto_final: parseFloat(editMontoFinal), descripcion: editDescripcion.trim() || null }),
+    });
+    if (res.ok) { toast.success('Actualizado'); setEditingId(null); load(); }
+    else { const { error } = await res.json(); toast.error(error ?? 'Error al actualizar'); }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!usuarioId || !montoBase) return;
-    if (montoFinalCalc <= 0) { toast.error('El monto a pagar debe ser mayor a 0'); return; }
+    if (!usuarioId) return;
+    if (tipo === 'sueldo' && !montoBase) return;
+    if (tipo !== 'sueldo' && !monto) return;
     setSaving(true);
     try {
+      const body = tipo === 'sueldo'
+        ? { usuario_id: usuarioId, mes: formMes, anio: formAnio, tipo, monto_base: parseFloat(montoBase), monto_final: montoFinalCalc }
+        : { usuario_id: usuarioId, mes: formMes, anio: formAnio, tipo, monto: parseFloat(monto), descripcion: descripcion.trim() || undefined };
       const res = await fetch('/api/sueldos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          usuario_id: usuarioId,
-          mes: formMes,
-          anio: formAnio,
-          monto_base: parseFloat(montoBase),
-          monto_final: montoFinalCalc,
-        }),
+        body: JSON.stringify(body),
       });
       if (res.ok) {
-        toast.success('Sueldo registrado');
+        toast.success(tipo === 'sueldo' ? 'Sueldo registrado' : 'Registrado');
         setMontoBase('');
+        setMonto('');
+        setDescripcion('');
         load();
         fetchMovimientos();
       } else {
@@ -131,6 +165,15 @@ export function SueldosAdminClient() {
 
       <form onSubmit={handleSubmit} className="grid grid-cols-2 md:grid-cols-6 gap-3 p-4 border rounded-lg bg-white dark:bg-zinc-900">
         <select
+          className="border rounded px-3 py-2 text-sm"
+          value={tipo}
+          onChange={e => setTipo(e.target.value as typeof tipo)}
+        >
+          <option value="sueldo">Sueldo</option>
+          <option value="adelanto">Adelanto</option>
+          <option value="quincena">Quincena</option>
+        </select>
+        <select
           className="border rounded px-3 py-2 text-sm col-span-2"
           value={usuarioId}
           onChange={e => setUsuarioId(e.target.value ? Number(e.target.value) : '')}
@@ -149,38 +192,65 @@ export function SueldosAdminClient() {
         <select className="border rounded px-3 py-2 text-sm" value={formAnio} onChange={e => setFormAnio(Number(e.target.value))}>
           {ANIOS.map(a => <option key={a} value={a}>{a}</option>)}
         </select>
-        <input
-          className="border rounded px-3 py-2 text-sm text-green-600 font-semibold"
-          placeholder="Monto base"
-          type="number" min="0" step="1"
-          required
-          {...montoBaseProps}
-          onBlur={(e) => {
-            montoBaseProps.onBlur(e);
-            if (usuarioId && montoBase) {
-              fetch(`/api/trabajadores/${usuarioId}/config`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ monto_base: Math.round(parseFloat(montoBase)) }),
-              });
-            }
-          }}
-        />
-        <div className="flex gap-2">
-          <div className="border rounded px-3 py-2 text-sm flex-1 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-between">
-            <span className="text-zinc-400 text-xs mr-2">A pagar</span>
-            <span className="font-semibold text-red-600">
-              {formatMonto(montoFinalCalc)}
-            </span>
-          </div>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
-          >
-            {saving ? 'Registrando...' : 'Pagar Sueldo'}
-          </button>
-        </div>
+        {tipo === 'sueldo' ? (
+          <>
+            <input
+              className="border rounded px-3 py-2 text-sm text-green-600 font-semibold"
+              placeholder="Monto base"
+              type="number" min="0" step="1"
+              required
+              {...montoBaseProps}
+              onBlur={(e) => {
+                montoBaseProps.onBlur(e);
+                if (usuarioId && montoBase) {
+                  fetch(`/api/trabajadores/${usuarioId}/config`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ monto_base: Math.round(parseFloat(montoBase)) }),
+                  });
+                }
+              }}
+            />
+            <div className="flex gap-2">
+              <div className="border rounded px-3 py-2 text-sm flex-1 bg-zinc-50 dark:bg-zinc-800 flex items-center justify-between">
+                <span className="text-zinc-400 text-xs mr-2">A pagar</span>
+                <span className="font-semibold text-red-600">
+                  {formatMonto(montoFinalCalc)}
+                </span>
+              </div>
+              <button
+                type="submit"
+                disabled={saving}
+                className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+              >
+                {saving ? 'Registrando...' : 'Pagar Sueldo'}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <input
+              className="border rounded px-3 py-2 text-sm"
+              placeholder="Monto"
+              type="number" min="0" step="1"
+              required
+              {...montoProps}
+            />
+            <input
+              className="border rounded px-3 py-2 text-sm"
+              placeholder="Descripción (opcional)"
+              value={descripcion}
+              onChange={e => setDescripcion(e.target.value)}
+            />
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+            >
+              {saving ? 'Registrando...' : 'Registrar'}
+            </button>
+          </>
+        )}
       </form>
 
       {usuarioId && (
@@ -246,21 +316,37 @@ export function SueldosAdminClient() {
             <thead className="bg-zinc-50 dark:bg-zinc-800 text-zinc-500 uppercase text-xs">
               <tr>
                 <th className="px-4 py-3 text-left">Trabajador</th>
+                <th className="px-4 py-3 text-left">Tipo</th>
                 <th className="px-4 py-3 text-left">Período</th>
-                <th className="px-4 py-3 text-right">Base</th>
                 <th className="px-4 py-3 text-right">Final</th>
                 <th className="px-4 py-3 text-center">Estado</th>
                 <th className="px-4 py-3 text-center">Confirmación</th>
-                <th className="px-4 py-3" />
+                <th className="px-4 py-3 text-center">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {sueldos.map(s => (
                 <tr key={s.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
                   <td className="px-4 py-3 font-medium">{s.trabajador_nombre}</td>
+                  <td className="px-4 py-3 capitalize text-xs">
+                    <span className={`px-2 py-0.5 rounded-full ${
+                      s.tipo === 'sueldo' ? 'bg-blue-100 text-blue-700' :
+                      s.tipo === 'adelanto' ? 'bg-amber-100 text-amber-700' :
+                      'bg-purple-100 text-purple-700'
+                    }`}>{s.tipo}</span>
+                  </td>
                   <td className="px-4 py-3 text-zinc-500">{formatMesAnio(s.mes, s.anio)}</td>
-                  <td className="px-4 py-3 text-right">{formatMonto(s.monto_base)}</td>
-                  <td className="px-4 py-3 text-right font-semibold">{formatMonto(s.monto_final)}</td>
+                  <td className="px-4 py-3 text-right font-semibold">
+                    {editingId === s.id ? (
+                      <input
+                        type="number" min="0" step="1"
+                        className="border rounded px-2 py-1 w-24 text-right text-sm"
+                        {...editMontoFinalProps}
+                      />
+                    ) : (
+                      formatMonto(s.monto_final)
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-center">
                     {s.pagado_at
                       ? <span className="text-emerald-600 text-xs font-semibold">Pagado</span>
@@ -274,15 +360,28 @@ export function SueldosAdminClient() {
                         </span>
                       : <span className="text-zinc-400 text-xs">—</span>}
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    {!s.pagado_at && (
-                      <button
-                        onClick={() => marcarPagado(s.id)}
-                        className="text-xs px-3 py-1 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                      >
-                        Marcar pagado
-                      </button>
-                    )}
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      {editingId === s.id ? (
+                        <>
+                          <button onClick={handleSaveEdit} className="text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200">Guardar</button>
+                          <button onClick={() => setEditingId(null)} className="text-xs px-2 py-1 rounded bg-zinc-100 text-zinc-600 hover:bg-zinc-200">Cancelar</button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => handleEdit(s)} className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200">Editar</button>
+                          <button onClick={() => handleDelete(s.id)} className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">Eliminar</button>
+                          {!s.pagado_at && (
+                            <button
+                              onClick={() => marcarPagado(s.id)}
+                              className="text-xs px-3 py-1 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                            >
+                              Marcar pagado
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

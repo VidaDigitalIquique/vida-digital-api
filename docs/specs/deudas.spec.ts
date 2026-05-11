@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const DeudaCreateSchema = z.object({
   usuario_id: z.number().int().positive(),
-  tipo: z.enum(["prestamo", "adelanto", "quincena"]),
+  tipo: z.enum(["prestamo", "adelanto", "quincena"]).optional(),
   monto: z.number().positive(),
   descripcion: z.string().optional(),
   mes: z.number().int().min(1).max(12).optional(),

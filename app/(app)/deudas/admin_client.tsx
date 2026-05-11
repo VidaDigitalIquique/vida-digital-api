@@ -38,7 +38,6 @@ export function DeudasAdminClient() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [tipo, setTipo] = useState<'prestamo' | 'adelanto' | 'quincena'>('prestamo');
   const [monto, setMonto] = useState('');
   const [descripcion, setDescripcion] = useState('');
 
@@ -86,7 +85,6 @@ export function DeudasAdminClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           usuario_id: usuarioId,
-          tipo,
           monto: parseFloat(monto),
           descripcion: descripcion.trim() || undefined,
         }),
@@ -155,7 +153,7 @@ export function DeudasAdminClient() {
 
       {/* Formulario */}
       <form onSubmit={handleSubmit} className="bg-white dark:bg-zinc-900 border rounded-xl p-5 shadow-sm flex flex-col gap-4">
-        <h2 className="font-semibold text-lg">Registrar movimiento</h2>
+        <h2 className="font-semibold text-lg">Registrar préstamo</h2>
         <div className="flex flex-wrap gap-3">
           <select
             className="border rounded-md px-3 py-2 text-sm bg-white dark:bg-zinc-800 min-w-[180px]"
@@ -165,15 +163,6 @@ export function DeudasAdminClient() {
           >
             <option value="">Seleccionar trabajador...</option>
             {usuarios.map(u => <option key={u.id} value={u.id}>{u.nombre}</option>)}
-          </select>
-          <select
-            value={tipo}
-            onChange={e => setTipo(e.target.value as typeof tipo)}
-            className="border rounded-md px-3 py-2 text-sm bg-white dark:bg-zinc-800"
-          >
-            <option value="prestamo">Préstamo</option>
-            <option value="adelanto">Adelanto</option>
-            <option value="quincena">Quincena</option>
           </select>
           <Input
             type="number" placeholder="Monto" min={0.01} step={0.01}

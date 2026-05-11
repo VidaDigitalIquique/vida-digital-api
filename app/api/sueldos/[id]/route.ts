@@ -28,6 +28,17 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ data: updated });
     }
 
+    if (body.monto_final !== undefined) {
+      if (!isAdmin) return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
+      const existing = await sql`SELECT id FROM sueldos WHERE id = ${id}`;
+      if (existing.length === 0) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+      const [updated] = await sql`
+        UPDATE sueldos SET monto_final = ${body.monto_final}, descripcion = ${body.descripcion ?? null}
+        WHERE id = ${id} RETURNING *
+      `;
+      return NextResponse.json({ data: updated });
+    }
+
     if (!isAdmin) return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
     const existing = await sql`SELECT id, pagado_at FROM sueldos WHERE id = ${id}`;
     if (existing.length === 0) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
@@ -36,6 +47,26 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       UPDATE sueldos SET pagado_at = NOW() WHERE id = ${id} RETURNING *
     `;
     return NextResponse.json({ data: updated });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as any).rol !== "admin") {
+    return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
+  }
+
+  const { id } = params;
+
+  try {
+    const existing = await sql`SELECT id FROM sueldos WHERE id = ${id}`;
+    if (existing.length === 0) {
+      return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+    }
+    await sql`DELETE FROM sueldos WHERE id = ${id}`;
+    return NextResponse.json({ data: { id: parseInt(id) } });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

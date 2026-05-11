@@ -74,7 +74,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { usuario_id, tipo, monto, descripcion, mes, anio } = parsed.data;
+    const { usuario_id, monto, descripcion, mes, anio } = parsed.data;
     const creadoPor = (session!.user as any).nombre as string;
     const now = new Date();
     const mesEfectivo = mes ?? (now.getMonth() + 1);
@@ -86,11 +86,9 @@ export async function POST(request: Request) {
     }
     const userNombre = usuarioRows[0].nombre as string;
 
-    // préstamos: aceptada (worker confirma recepción); adelanto/quincena: confirmada directamente
-    const estado = tipo === "prestamo" ? "aceptada" : "confirmada";
-    const caduca_at = tipo === "prestamo"
-      ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
-      : new Date().toISOString();
+    const tipo = "prestamo";
+    const estado = "aceptada";
+    const caduca_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
     const [deuda] = await sql`
       INSERT INTO deudas_solicitudes
