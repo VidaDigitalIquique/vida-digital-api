@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { formatMesAnio, nombreMes } from './sueldos-utils';
 import { formatMonto } from '../pettycash/pettycash-utils';
 import { toast } from 'sonner';
@@ -62,6 +62,8 @@ export function SueldosAdminClient() {
   const montoProps = useNumericInput(monto, setMonto);
   const editMontoFinalProps = useNumericInput(editMontoFinal, setEditMontoFinal);
   const montoFinalCalc = Math.max(0, parseFloat(montoBase || '0') - totalDescuentos);
+
+  const filteredSueldos = usuarioId ? sueldos.filter(s => s.usuario_id === usuarioId) : sueldos;
 
   useEffect(() => {
     fetch('/api/admin/usuarios')
@@ -308,7 +310,7 @@ export function SueldosAdminClient() {
 
       {loading ? (
         <p className="text-zinc-400 text-sm">Cargando...</p>
-      ) : sueldos.length === 0 ? (
+      ) : filteredSueldos.length === 0 ? (
         <p className="text-zinc-400 text-sm">Sin sueldos para {formatMesAnio(mesFiltro, anioFiltro)}.</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
@@ -325,8 +327,9 @@ export function SueldosAdminClient() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {sueldos.map(s => (
-                <tr key={s.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
+              {filteredSueldos.map(s => (
+                <React.Fragment key={s.id}>
+                <tr className="hover:bg-zinc-50 dark:hover:bg-zinc-900/50">
                   <td className="px-4 py-3 font-medium">{s.trabajador_nombre}</td>
                   <td className="px-4 py-3 capitalize text-xs">
                     <span className={`px-2 py-0.5 rounded-full ${
@@ -337,15 +340,7 @@ export function SueldosAdminClient() {
                   </td>
                   <td className="px-4 py-3 text-zinc-500">{formatMesAnio(s.mes, s.anio)}</td>
                   <td className="px-4 py-3 text-right font-semibold">
-                    {editingId === s.id ? (
-                      <input
-                        type="number" min="0" step="1"
-                        className="border rounded px-2 py-1 w-24 text-right text-sm"
-                        {...editMontoFinalProps}
-                      />
-                    ) : (
-                      formatMonto(s.monto_final)
-                    )}
+                    {formatMonto(s.monto_final)}
                   </td>
                   <td className="px-4 py-3 text-center">
                     {s.pagado_at
@@ -361,29 +356,45 @@ export function SueldosAdminClient() {
                       : <span className="text-zinc-400 text-xs">—</span>}
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      {editingId === s.id ? (
-                        <>
-                          <button onClick={handleSaveEdit} className="text-xs px-2 py-1 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200">Guardar</button>
-                          <button onClick={() => setEditingId(null)} className="text-xs px-2 py-1 rounded bg-zinc-100 text-zinc-600 hover:bg-zinc-200">Cancelar</button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => handleEdit(s)} className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200">Editar</button>
-                          <button onClick={() => handleDelete(s.id)} className="text-xs px-2 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200">Eliminar</button>
-                          {!s.pagado_at && (
-                            <button
-                              onClick={() => marcarPagado(s.id)}
-                              className="text-xs px-3 py-1 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-                            >
-                              Marcar pagado
-                            </button>
-                          )}
-                        </>
-                      )}
-                    </div>
+                    {editingId !== s.id && (
+                      <button onClick={() => handleEdit(s)} className="text-xs px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200">Editar</button>
+                    )}
                   </td>
                 </tr>
+                {editingId === s.id && (
+                  <tr key={`edit-${s.id}`} className="bg-zinc-50 dark:bg-zinc-900/50">
+                    <td colSpan={7} className="px-4 py-3">
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs text-zinc-400">Monto final</label>
+                          <input
+                            type="number" min="0" step="1"
+                            className="border rounded px-2 py-1 w-28 text-sm"
+                            {...editMontoFinalProps}
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
+                          <label className="text-xs text-zinc-400">Descripción</label>
+                          <input
+                            className="border rounded px-2 py-1 text-sm"
+                            placeholder="Descripción"
+                            value={editDescripcion}
+                            onChange={e => setEditDescripcion(e.target.value)}
+                          />
+                        </div>
+                        <div className="flex gap-2 items-end">
+                          <button onClick={handleSaveEdit} className="text-xs px-3 py-1.5 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200">Guardar</button>
+                          {!s.pagado_at && (
+                            <button onClick={() => { marcarPagado(s.id); setEditingId(null); }} className="text-xs px-3 py-1.5 rounded bg-blue-100 text-blue-700 hover:bg-blue-200">Marcar pagado</button>
+                          )}
+                          <button onClick={() => handleDelete(s.id)} className="text-xs px-3 py-1.5 rounded bg-red-100 text-red-700 hover:bg-red-200">Eliminar</button>
+                          <button onClick={() => setEditingId(null)} className="text-xs px-3 py-1.5 rounded bg-zinc-100 text-zinc-600 hover:bg-zinc-200">Cancelar</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
