@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus, X } from 'lucide-react';
 
 type Garantia = {
   id: number;
@@ -24,6 +24,8 @@ function estadoLabel(e: string) {
   return e === 'recibido' ? 'Recibido' : e === 'devuelto' ? 'Devuelto' : e;
 }
 
+const inp = 'w-full px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500';
+
 export function GarantiasClient() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -33,6 +35,17 @@ export function GarantiasClient() {
   const [mesAnio, setMesAnio] = useState(searchParams.get('mesAnio') ?? '');
   const [garantias, setGarantias] = useState<Garantia[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [newKnumfoli, setNewKnumfoli] = useState('');
+  const [newCliente, setNewCliente] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  // Inline edit state
+  const [editing, setEditing] = useState<{ id: number; campo: 'knumfoli' | 'cliente' } | null>(null);
+  const [editValue, setEditValue] = useState('');
+  const autocompleteRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchGarantias = useCallback(async () => {
     setLoading(true);
@@ -75,6 +88,86 @@ export function GarantiasClient() {
     }
   };
 
+  // ── Autocomplete ──────────────────────────────────────
+  const autocompleteCliente = useCallback(async (knumfoli: string) => {
+    if (!knumfoli.trim()) return;
+    if (autocompleteRef.current) clearTimeout(autocompleteRef.current);
+    autocompleteRef.current = setTimeout(async () => {
+      const r = await fetch(`/api/garantias/autocomplete?knumfoli=${encodeURIComponent(knumfoli.trim())}`);
+      const body = await r.json();
+      if (body.cliente) {
+        if (showModal) {
+          setNewCliente(body.cliente);
+          toast.success('Cliente autocompletado');
+        } else if (editing) {
+          setEditValue(body.cliente);
+          toast.success('Cliente autocompletado');
+        }
+      }
+    }, 400);
+  }, [showModal, editing]);
+
+  // ── Modal handlers ────────────────────────────────────
+  const openModal = () => {
+    setNewKnumfoli('');
+    setNewCliente('');
+    setShowModal(true);
+  };
+
+  const handleCreate = async () => {
+    if (!newKnumfoli.trim() || !newCliente.trim()) {
+      toast.error('Nº Nota y Cliente son requeridos');
+      return;
+    }
+    setSaving(true);
+    const r = await fetch('/api/garantias', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ knumfoli: newKnumfoli.trim(), cliente: newCliente.trim() }),
+    });
+    if (r.ok) {
+      toast.success('Garantía creada');
+      setShowModal(false);
+      await fetchGarantias();
+    } else {
+      toast.error('Error al crear garantía');
+    }
+    setSaving(false);
+  };
+
+  // ── Inline edit handlers ──────────────────────────────
+  const startEdit = (g: Garantia, campo: 'knumfoli' | 'cliente') => {
+    setEditing({ id: g.id, campo });
+    setEditValue(g[campo]);
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    setEditValue('');
+  };
+
+  const saveEdit = async () => {
+    if (!editing || !editValue.trim()) return;
+    const r = await fetch(`/api/garantias/${editing.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campo: editing.campo, valor: editValue.trim() }),
+    });
+    if (r.ok) {
+      toast.success('Actualizado');
+      setEditing(null);
+      setEditValue('');
+      await fetchGarantias();
+    } else {
+      toast.error('Error al actualizar');
+    }
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') saveEdit();
+    if (e.key === 'Escape') cancelEdit();
+  };
+
   const meses = Array.from({ length: 12 }, (_, i) => {
     const d = new Date();
     d.setDate(1);
@@ -92,6 +185,12 @@ export function GarantiasClient() {
           Garantías
           {!loading && <span className="ml-2 text-base font-normal text-zinc-400">({garantias.length})</span>}
         </h1>
+        <button
+          onClick={openModal}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300 text-white dark:text-zinc-900 text-sm font-medium transition-colors"
+        >
+          <Plus className="w-4 h-4" /> Nueva Garantía
+        </button>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -133,8 +232,44 @@ export function GarantiasClient() {
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {garantias.map(g => (
                 <tr key={g.id} className="bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
-                  <td className="px-4 py-3 font-mono font-medium text-zinc-800 dark:text-zinc-200">{g.knumfoli}</td>
-                  <td className="px-4 py-3 font-medium text-zinc-800 dark:text-zinc-200">{g.cliente}</td>
+                  <td className="px-4 py-3">
+                    {editing?.id === g.id && editing?.campo === 'knumfoli' ? (
+                      <input
+                        className={cn(inp, 'font-mono text-sm w-28')}
+                        value={editValue}
+                        onChange={e => { setEditValue(e.target.value); autocompleteCliente(e.target.value); }}
+                        onBlur={saveEdit}
+                        onKeyDown={handleEditKeyDown}
+                        autoFocus
+                      />
+                    ) : (
+                      <button
+                        onClick={() => startEdit(g, 'knumfoli')}
+                        className="font-mono font-medium text-zinc-800 dark:text-zinc-200 hover:text-blue-600 cursor-pointer text-left"
+                      >
+                        {g.knumfoli}
+                      </button>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    {editing?.id === g.id && editing?.campo === 'cliente' ? (
+                      <input
+                        className={cn(inp, 'text-sm')}
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={saveEdit}
+                        onKeyDown={handleEditKeyDown}
+                        autoFocus
+                      />
+                    ) : (
+                      <button
+                        onClick={() => startEdit(g, 'cliente')}
+                        className="font-medium text-zinc-800 dark:text-zinc-200 hover:text-blue-600 cursor-pointer text-left"
+                      >
+                        {g.cliente}
+                      </button>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">
                     {new Date(g.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </td>
@@ -158,6 +293,43 @@ export function GarantiasClient() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* ── Modal Nueva Garantía ── */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowModal(false)}>
+          <div className="bg-white dark:bg-zinc-950 rounded-xl shadow-xl border border-zinc-200 dark:border-zinc-800 p-6 w-full max-w-md mx-4 space-y-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Nueva Garantía</h2>
+              <button onClick={() => setShowModal(false)} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"><X className="w-4 h-4" /></button>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1">Nº Nota de Venta</label>
+              <input
+                className={inp}
+                placeholder="Nº Nota de Venta"
+                value={newKnumfoli}
+                onChange={e => { setNewKnumfoli(e.target.value); autocompleteCliente(e.target.value); }}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1">Cliente</label>
+              <input
+                className={inp}
+                placeholder="Nombre del cliente"
+                value={newCliente}
+                onChange={e => setNewCliente(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={handleCreate}
+              disabled={saving}
+              className="w-full py-2 rounded-lg bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300 text-white dark:text-zinc-900 text-sm font-medium transition-colors disabled:opacity-50"
+            >
+              {saving ? 'Creando…' : 'Crear'}
+            </button>
+          </div>
         </div>
       )}
     </div>

@@ -94,4 +94,68 @@ describe('GarantiasClient — tabla principal', () => {
       );
     });
   });
+
+  it('abre modal al hacer clic en Nueva Garantia', async () => {
+    render(<GarantiasClient />);
+
+    await waitFor(() => expect(screen.getByText('Juan Pérez')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText('Nueva Garantía'));
+
+    expect(screen.getByPlaceholderText('Nº Nota de Venta')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Nombre del cliente')).toBeInTheDocument();
+  });
+
+  it('crea garantia via POST y actualiza tabla', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: mockGarantias }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { id: 3 } }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: [...mockGarantias, { id: 3, knumfoli: 'F003', cliente: 'Nuevo Cliente', estado: 'recibido', created_at: '2026-05-13T10:00:00.000Z', updated_at: '2026-05-13T10:00:00.000Z' }] }) });
+
+    render(<GarantiasClient />);
+
+    await waitFor(() => expect(screen.getByText('Juan Pérez')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText('Nueva Garantía'));
+
+    fireEvent.change(screen.getByPlaceholderText('Nº Nota de Venta'), { target: { value: 'F003' } });
+    fireEvent.change(screen.getByPlaceholderText('Nombre del cliente'), { target: { value: 'Nuevo Cliente' } });
+    fireEvent.click(screen.getByText('Crear'));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/garantias',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ knumfoli: 'F003', cliente: 'Nuevo Cliente' }),
+        })
+      );
+    });
+  });
+
+  it('edita knumfoli inline via PATCH al hacer clic en el texto', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: mockGarantias }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { ...mockGarantias[0], knumfoli: 'F999' } }) });
+
+    render(<GarantiasClient />);
+
+    await waitFor(() => expect(screen.getByText('F001')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByText('F001'));
+
+    const input = screen.getByDisplayValue('F001');
+    fireEvent.change(input, { target: { value: 'F999' } });
+    fireEvent.blur(input);
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/garantias/1',
+        expect.objectContaining({
+          method: 'PATCH',
+          body: JSON.stringify({ campo: 'knumfoli', valor: 'F999' }),
+        })
+      );
+    });
+  });
 });
