@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { FileText, UserPlus, Heart, Package, Wallet, Banknote, Users, Phone } from 'lucide-react';
+import { FileText, UserPlus, Heart, Package, Wallet, Banknote, Users, Phone, ShieldCheck } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
@@ -67,6 +67,11 @@ export function Toolbar({ isAdmin }: { isAdmin: boolean }) {
                 {seguimientosCount > 99 ? '99+' : seguimientosCount}
               </span>
             )}
+          </Link>
+        )}
+        {(isAdmin || rol === 'vendedor') && (
+          <Link href="/garantias" className={btn(pathname.startsWith('/garantias'))}>
+            <ShieldCheck className="w-4 h-4" /><span>GARANTÍAS</span>
           </Link>
         )}
       </div>

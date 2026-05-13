@@ -104,11 +104,6 @@ export function TopNav() {
                       <Users className="w-4 h-4" /> Kardex Cliente
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="/garantias" className="flex items-center gap-2 w-full">
-                      <ShieldCheck className="w-4 h-4" /> Garantías
-                    </Link>
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
