@@ -10,10 +10,14 @@ type Garantia = {
   id: number;
   knumfoli: string;
   cliente: string;
+  monto: number;
+  observaciones: string | null;
   estado: 'recibido' | 'devuelto';
   created_at: string;
   updated_at: string;
 };
+
+const formatCLP = (n: number) => '$' + n.toLocaleString('es-CL');
 
 const ESTADO_CLASS: Record<string, string> = {
   recibido: 'text-red-600 bg-red-50 dark:bg-red-900/20',
@@ -43,7 +47,7 @@ export function GarantiasClient() {
   const [saving, setSaving] = useState(false);
 
   // Inline edit state
-  const [editing, setEditing] = useState<{ id: number; campo: 'knumfoli' | 'cliente' } | null>(null);
+  const [editing, setEditing] = useState<{ id: number; campo: 'knumfoli' | 'cliente' | 'monto' | 'observaciones' } | null>(null);
   const [editValue, setEditValue] = useState('');
   const autocompleteRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -152,9 +156,9 @@ export function GarantiasClient() {
   };
 
   // ── Inline edit handlers ──────────────────────────────
-  const startEdit = (g: Garantia, campo: 'knumfoli' | 'cliente') => {
+  const startEdit = (g: Garantia, campo: 'knumfoli' | 'cliente' | 'monto' | 'observaciones') => {
     setEditing({ id: g.id, campo });
-    setEditValue(g[campo]);
+    setEditValue(campo === 'monto' ? String(g.monto) : (g[campo] ?? ''));
   };
 
   const cancelEdit = () => {
@@ -163,11 +167,13 @@ export function GarantiasClient() {
   };
 
   const saveEdit = async () => {
-    if (!editing || !editValue.trim()) return;
+    if (!editing) return;
+    if (editing.campo !== 'monto' && !editValue.trim()) return;
+    const valor = editing.campo === 'monto' ? parseInt(editValue) || 0 : editValue.trim();
     const r = await fetch(`/api/garantias/${editing.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ campo: editing.campo, valor: editValue.trim() }),
+      body: JSON.stringify({ campo: editing.campo, valor }),
     });
     if (r.ok) {
       toast.success('Actualizado');
@@ -242,6 +248,8 @@ export function GarantiasClient() {
                 <th className="px-4 py-3 text-left">Cliente</th>
                 <th className="px-4 py-3 text-left">Fecha</th>
                 <th className="px-4 py-3 text-left">Hora</th>
+                <th className="px-4 py-3 text-right">Monto</th>
+                <th className="px-4 py-3 text-left">Obs.</th>
                 <th className="px-4 py-3 text-left">Estado</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -292,6 +300,46 @@ export function GarantiasClient() {
                   </td>
                   <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">
                     {new Date(g.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {editing?.id === g.id && editing?.campo === 'monto' ? (
+                      <input
+                        type="number"
+                        className={cn(inp, 'text-sm w-28 text-right')}
+                        value={editValue}
+                        onFocus={e => (e.target as HTMLInputElement).select()}
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={saveEdit}
+                        onKeyDown={handleEditKeyDown}
+                        autoFocus
+                      />
+                    ) : (
+                      <button
+                        onClick={() => startEdit(g, 'monto')}
+                        className="font-mono text-sm text-zinc-700 dark:text-zinc-300 hover:text-blue-600 cursor-pointer text-right w-full"
+                      >
+                        {formatCLP(g.monto)}
+                      </button>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    {editing?.id === g.id && editing?.campo === 'observaciones' ? (
+                      <input
+                        className={cn(inp, 'text-sm w-36')}
+                        value={editValue}
+                        onChange={e => setEditValue(e.target.value)}
+                        onBlur={saveEdit}
+                        onKeyDown={handleEditKeyDown}
+                        autoFocus
+                      />
+                    ) : (
+                      <button
+                        onClick={() => startEdit(g, 'observaciones')}
+                        className="text-zinc-500 hover:text-blue-600 cursor-pointer text-left max-w-[150px] truncate block"
+                      >
+                        {g.observaciones || '—'}
+                      </button>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <select

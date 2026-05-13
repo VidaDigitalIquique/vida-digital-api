@@ -12,7 +12,7 @@ const admin = { user: { id: '1', name: 'Pablo', rol: 'admin' } };
 const vendedor = { user: { id: '2', name: 'Juan', rol: 'vendedor' } };
 
 const mockGarantia = {
-  id: 1, knumfoli: 'F001', cliente: 'Cliente A',
+  id: 1, knumfoli: 'F001', cliente: 'Cliente A', monto: 0, observaciones: null,
   estado: 'recibido', created_at: '2026-05-01T10:00:00.000Z', updated_at: '2026-05-01T10:00:00.000Z',
 };
 

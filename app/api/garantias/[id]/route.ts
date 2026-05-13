@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
-const CAMPOS_VALIDOS = ['estado', 'knumfoli', 'cliente'];
+const CAMPOS_VALIDOS = ['estado', 'knumfoli', 'cliente', 'monto', 'observaciones'];
 
 function guard(session: any) {
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const { id } = params;
 
     const existingRows = await sql`
-      SELECT id, knumfoli, cliente, estado FROM public.garantias WHERE id = ${id}
+      SELECT id, knumfoli, cliente, monto, observaciones, estado FROM public.garantias WHERE id = ${id}
     `;
     if (existingRows.length === 0) return NextResponse.json({ error: 'Garantia no encontrada' }, { status: 404 });
     const existing = existingRows[0];
@@ -43,7 +43,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       UPDATE public.garantias
       SET ${sql.unsafe(campo)} = ${valorNuevo}, updated_at = NOW()
       WHERE id = ${id}
-      RETURNING id, knumfoli, cliente, estado, created_at::text, updated_at::text
+      RETURNING id, knumfoli, cliente, monto, observaciones, estado, created_at::text, updated_at::text
     `;
 
     const usuario = (session!.user as any).name || (session!.user as any).nombre || 'desconocido';

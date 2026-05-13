@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     if (search) {
       const pattern = `%${search}%`;
       rows = await sql`
-        SELECT id, knumfoli, cliente, estado, created_at::text, updated_at::text
+        SELECT id, knumfoli, cliente, monto, observaciones, estado, created_at::text, updated_at::text
         FROM public.garantias
         WHERE (knumfoli ILIKE ${pattern} OR cliente ILIKE ${pattern})
           AND (${mes}::integer IS NULL OR EXTRACT(MONTH FROM created_at) = ${mes})
@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       `;
     } else {
       rows = await sql`
-        SELECT id, knumfoli, cliente, estado, created_at::text, updated_at::text
+        SELECT id, knumfoli, cliente, monto, observaciones, estado, created_at::text, updated_at::text
         FROM public.garantias
         WHERE (${mes}::integer IS NULL OR EXTRACT(MONTH FROM created_at) = ${mes})
           AND (${anio}::integer IS NULL OR EXTRACT(YEAR FROM created_at) = ${anio})
@@ -61,15 +61,15 @@ export async function POST(request: Request) {
   if (g) return g;
 
   try {
-    const { knumfoli, cliente } = await request.json();
+    const { knumfoli, cliente, monto, observaciones } = await request.json();
     if (!knumfoli?.trim() || !cliente?.trim()) {
       return NextResponse.json({ error: 'knumfoli y cliente son requeridos' }, { status: 400 });
     }
 
     const [row] = await sql`
-      INSERT INTO public.garantias (knumfoli, cliente)
-      VALUES (${knumfoli.trim()}, ${cliente.trim()})
-      RETURNING id, knumfoli, cliente, estado, created_at::text, updated_at::text
+      INSERT INTO public.garantias (knumfoli, cliente, monto, observaciones)
+      VALUES (${knumfoli.trim()}, ${cliente.trim()}, ${monto ?? 0}, ${observaciones ?? null})
+      RETURNING id, knumfoli, cliente, monto, observaciones, estado, created_at::text, updated_at::text
     `;
 
     const usuario = (session!.user as any).name || (session!.user as any).nombre || 'desconocido';

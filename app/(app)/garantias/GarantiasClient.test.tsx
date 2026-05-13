@@ -17,11 +17,11 @@ global.fetch = jest.fn();
 
 const mockGarantias = [
   {
-    id: 1, knumfoli: 'F001', cliente: 'Juan Pérez',
+    id: 1, knumfoli: 'F001', cliente: 'Juan Pérez', monto: 50000, observaciones: 'Pagó en efectivo',
     estado: 'recibido', created_at: '2026-05-10T10:00:00.000Z', updated_at: '2026-05-10T10:00:00.000Z',
   },
   {
-    id: 2, knumfoli: 'S002', cliente: 'María López',
+    id: 2, knumfoli: 'S002', cliente: 'María López', monto: 0, observaciones: null,
     estado: 'devuelto', created_at: '2026-05-11T14:00:00.000Z', updated_at: '2026-05-12T09:00:00.000Z',
   },
 ];
@@ -110,7 +110,7 @@ describe('GarantiasClient — tabla principal', () => {
     (global.fetch as jest.Mock)
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: mockGarantias }) })
       .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { id: 3 } }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: [...mockGarantias, { id: 3, knumfoli: 'F003', cliente: 'Nuevo Cliente', estado: 'recibido', created_at: '2026-05-13T10:00:00.000Z', updated_at: '2026-05-13T10:00:00.000Z' }] }) });
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: [...mockGarantias, { id: 3, knumfoli: 'F003', cliente: 'Nuevo Cliente', monto: 0, observaciones: null, estado: 'recibido', created_at: '2026-05-13T10:00:00.000Z', updated_at: '2026-05-13T10:00:00.000Z' }] }) });
 
     render(<GarantiasClient />);
 

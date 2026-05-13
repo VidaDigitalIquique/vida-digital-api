@@ -11,7 +11,7 @@ jest.mock('@/lib/auth', () => ({ authOptions: {} }));
 const admin = { user: { id: '1', name: 'Pablo', rol: 'admin' } };
 
 const mockGarantia = {
-  id: 1, knumfoli: 'F001', cliente: 'Cliente A',
+  id: 1, knumfoli: 'F001', cliente: 'Cliente A', monto: 0, observaciones: null,
   estado: 'recibido', created_at: '2026-05-01T10:00:00.000Z', updated_at: '2026-05-01T10:00:00.000Z',
 };
 
@@ -48,7 +48,7 @@ describe('PATCH /api/garantias/[id]', () => {
     const res = await PATCH(new Request('http://localhost/api/garantias/1', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ campo: 'monto', valor: '100' }),
+      body: JSON.stringify({ campo: 'direccion', valor: 'Iquique' }),
     }), { params: { id: '1' } });
     expect(res.status).toBe(400);
   });
