@@ -22,7 +22,7 @@ function fmt(rows: any[]) {
     cliente_comprador: { kcodclie: r.kcodclie, nombress: r.nombress, celular: r.celular, email01: r.email01, ciudad: r.ciudad },
     cliente_factura: r.kcodcli2 ? { kcodclie: r.kcodcli2, nombress: r.factura_nombre } : null,
     items: r.items ?? [],
-    seguimiento: r.seg_id ? { id: r.seg_id, estado: r.estado, ultima_interaccion: r.ultima_interaccion, proximo_contacto: r.proximo_contacto } : null,
+    seguimiento: r.seg_id ? { id: r.seg_id, estado: r.estado, ultima_interaccion: r.ultima_interaccion, proximo_contacto: r.proximo_contacto, ultima_observacion: r.ultima_observacion } : null,
   }));
 }
 
@@ -46,7 +46,8 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
            ) i) items,
           s.id seg_id, s.estado,
           (SELECT MAX(si.created_at)::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id) ultima_interaccion,
-          (SELECT si.proximo_contacto::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) proximo_contacto
+          (SELECT si.proximo_contacto::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) proximo_contacto,
+          (SELECT si.resultado FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) ultima_observacion
         FROM vida.movidcto m
         JOIN vida.clientes c1 ON c1.kcodclie=m.kcodclie
         LEFT JOIN vida.clientes c2 ON m.kcodcli2 IS NOT NULL AND m.kcodcli2!=m.kcodclie AND c2.kcodclie=m.kcodcli2
@@ -75,7 +76,8 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
            ) i) items,
           s.id seg_id, s.estado,
           (SELECT MAX(si.created_at)::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id) ultima_interaccion,
-          (SELECT si.proximo_contacto::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) proximo_contacto
+          (SELECT si.proximo_contacto::text FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) proximo_contacto,
+          (SELECT si.resultado FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) ultima_observacion
         FROM sanjh.movidcto m
         JOIN sanjh.clientes c1 ON c1.kcodclie=m.kcodclie
         LEFT JOIN sanjh.clientes c2 ON m.kcodcli2 IS NOT NULL AND m.kcodcli2!=m.kcodclie AND c2.kcodclie=m.kcodcli2

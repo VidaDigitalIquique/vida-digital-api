@@ -13,7 +13,7 @@ type Nota = {
   fechanvt: string;
   vendedor: string;
   cliente_comprador: { nombress: string; ciudad: string };
-  seguimiento: { id: number; estado: string; ultima_interaccion: string | null; proximo_contacto: string | null } | null;
+  seguimiento: { id: number; estado: string; ultima_interaccion: string | null; proximo_contacto: string | null; ultima_observacion: string | null } | null;
 };
 
 const diasDesde = (fecha: string) => Math.floor((Date.now() - new Date(fecha).getTime()) / 86400000);
@@ -190,7 +190,10 @@ export function SeguimientosClient() {
                 const dias = diasDesde(n.fechanvt);
                 return (
                   <tr key={`${n.empresa}-${n.knumfoli}`}
-                    className="bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
+                    className={cn(
+                      'bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors',
+                      n.seguimiento?.ultima_observacion && 'bg-amber-50 dark:bg-amber-950/20 border-l-2 border-l-amber-400'
+                    )}>
                     <td className="px-4 py-3">
                       <div className="font-mono font-medium text-zinc-800 dark:text-zinc-200">{n.knumfoli}</div>
                       <span className={cn('text-[10px] font-semibold px-1.5 py-0.5 rounded mt-0.5 inline-block', EMP_COLOR[n.empresa])}>

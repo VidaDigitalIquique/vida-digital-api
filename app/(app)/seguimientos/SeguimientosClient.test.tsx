@@ -97,4 +97,54 @@ describe('SeguimientosClient — filtros persistentes en URL', () => {
       { scroll: false }
     );
   });
+
+  it('destaca visualmente filas con ultima_observacion no vacia', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [{
+          empresa: 'vida', knumfoli: 'F001', fechanvt: '2024-01-15', vendedor: 'Juan',
+          cliente_comprador: { nombress: 'Cliente A', ciudad: 'Iquique' },
+          seguimiento: {
+            id: 1, estado: 'activo',
+            ultima_interaccion: '2024-01-20',
+            proximo_contacto: '2024-01-25',
+            ultima_observacion: 'Llamar urgente',
+          },
+        }],
+      }),
+    });
+
+    render(<SeguimientosClient />);
+
+    await waitFor(() => {
+      const row = screen.getByText('Cliente A').closest('tr');
+      expect(row?.className).toMatch(/amber/);
+    });
+  });
+
+  it('no destaca filas sin ultima_observacion', async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [{
+          empresa: 'vida', knumfoli: 'F002', fechanvt: '2024-02-20', vendedor: 'Maria',
+          cliente_comprador: { nombress: 'Cliente B', ciudad: 'Alto Hospicio' },
+          seguimiento: {
+            id: 2, estado: 'activo',
+            ultima_interaccion: '2024-02-20',
+            proximo_contacto: null,
+            ultima_observacion: null,
+          },
+        }],
+      }),
+    });
+
+    render(<SeguimientosClient />);
+
+    await waitFor(() => {
+      const row = screen.getByText('Cliente B').closest('tr');
+      expect(row?.className).not.toMatch(/amber/);
+    });
+  });
 });

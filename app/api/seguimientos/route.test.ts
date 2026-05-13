@@ -18,6 +18,7 @@ const mockRow = {
   kcodcli2: null, factura_nombre: null, items: null,
   seg_id: null, prioridad: null, estado: null, asignado_a: null, notas_internas: null,
   ultima_interaccion: null, proximo_contacto: null,
+  ultima_observacion: null,
 };
 
 describe('GET /api/seguimientos', () => {
@@ -42,6 +43,34 @@ describe('GET /api/seguimientos', () => {
     const res = await GET(new Request('http://localhost/api/seguimientos?empresa=vida&vendedor=Admin'));
     expect(res.status).toBe(200);
     expect(mockSql).toHaveBeenCalledTimes(1);
+  });
+
+  it('incluye ultima_observacion en seguimiento cuando la ultima interaccion tiene resultado', async () => {
+    mockSession.mockResolvedValue(admin as any);
+    mockSql.mockResolvedValue([{
+      ...mockRow,
+      seg_id: 1, estado: 'activo',
+      ultima_interaccion: '2024-01-20',
+      proximo_contacto: '2024-01-25',
+      ultima_observacion: 'Cliente pide descuento por volumen',
+    }] as any);
+    const res = await GET(new Request('http://localhost/api/seguimientos?empresa=vida'));
+    const body = await res.json();
+    expect(body.data[0].seguimiento.ultima_observacion).toBe('Cliente pide descuento por volumen');
+  });
+
+  it('retorna ultima_observacion null cuando no hay interacciones', async () => {
+    mockSession.mockResolvedValue(admin as any);
+    mockSql.mockResolvedValue([{
+      ...mockRow,
+      seg_id: 1, estado: 'activo',
+      ultima_interaccion: null,
+      proximo_contacto: null,
+      ultima_observacion: null,
+    }] as any);
+    const res = await GET(new Request('http://localhost/api/seguimientos?empresa=vida'));
+    const body = await res.json();
+    expect(body.data[0].seguimiento.ultima_observacion).toBeNull();
   });
 });
 
