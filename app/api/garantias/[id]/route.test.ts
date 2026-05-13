@@ -53,3 +53,33 @@ describe('PATCH /api/garantias/[id]', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('DELETE /api/garantias/[id]', () => {
+  beforeEach(() => { jest.clearAllMocks(); });
+
+  it('401 sin sesión', async () => {
+    getServerSession.mockResolvedValue(null);
+    const { DELETE } = await import('@/app/api/garantias/[id]/route');
+    const res = await DELETE(new Request('http://localhost/api/garantias/1', { method: 'DELETE' }), { params: { id: '1' } });
+    expect(res.status).toBe(401);
+  });
+
+  it('elimina garantia y escribe log', async () => {
+    getServerSession.mockResolvedValue(admin);
+    sql.mockResolvedValueOnce([mockGarantia]);
+    sql.mockResolvedValueOnce([{ id: 1 }]);
+    sql.mockResolvedValueOnce([mockGarantia]);
+    const { DELETE } = await import('@/app/api/garantias/[id]/route');
+    const res = await DELETE(new Request('http://localhost/api/garantias/1', { method: 'DELETE' }), { params: { id: '1' } });
+    expect(res.status).toBe(200);
+    expect(sql).toHaveBeenCalledTimes(3);
+  });
+
+  it('404 si no existe', async () => {
+    getServerSession.mockResolvedValue(admin);
+    sql.mockResolvedValueOnce([]);
+    const { DELETE } = await import('@/app/api/garantias/[id]/route');
+    const res = await DELETE(new Request('http://localhost/api/garantias/999', { method: 'DELETE' }), { params: { id: '999' } });
+    expect(res.status).toBe(404);
+  });
+});

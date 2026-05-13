@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Loader2, Plus, X, Clock } from 'lucide-react';
+import { Loader2, Plus, X, Clock, Trash2 } from 'lucide-react';
 
 type Garantia = {
   id: number;
@@ -38,6 +38,8 @@ export function GarantiasClient() {
   const [search, setSearch] = useState('');
   const [mesAnio, setMesAnio] = useState(searchParams.get('mesAnio') ?? '');
   const [garantias, setGarantias] = useState<Garantia[]>([]);
+  const [total, setTotal] = useState(0);
+  const [clienteFilter, setClienteFilter] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Modal state
@@ -70,7 +72,31 @@ export function GarantiasClient() {
     }
   }, [search, mesAnio]);
 
-  useEffect(() => { fetchGarantias(); }, [fetchGarantias]);
+  const fetchTotal = useCallback(async () => {
+    try {
+      const r = await fetch('/api/garantias/total');
+      const body = await r.json();
+      if (r.ok) setTotal(body.total);
+    } catch { /* noop */ }
+  }, []);
+
+  useEffect(() => { fetchGarantias(); fetchTotal(); }, [fetchGarantias, fetchTotal]);
+
+  const handleDelete = async (g: Garantia) => {
+    if (!confirm(`¿Eliminar garantía ${g.knumfoli} de ${g.cliente}?`)) return;
+    const r = await fetch(`/api/garantias/${g.id}`, { method: 'DELETE' });
+    if (r.ok) {
+      toast.success(`Garantía ${g.knumfoli} eliminada`);
+      await fetchGarantias();
+      await fetchTotal();
+    } else {
+      toast.error('Error al eliminar garantía');
+    }
+  };
+
+  const filtered = garantias.filter(g =>
+    g.cliente.toLowerCase().includes(clienteFilter.toLowerCase())
+  );
 
   const syncUrl = useCallback((m: string) => {
     const p = new URLSearchParams();
@@ -135,6 +161,7 @@ export function GarantiasClient() {
       toast.success('Garantía creada');
       setShowModal(false);
       await fetchGarantias();
+      await fetchTotal();
     } else {
       toast.error('Error al crear garantía');
     }
@@ -205,10 +232,13 @@ export function GarantiasClient() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
-          Garantías
-          {!loading && <span className="ml-2 text-base font-normal text-zinc-400">({garantias.length})</span>}
-        </h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+            Garantías
+            {!loading && <span className="ml-2 text-base font-normal text-zinc-400">({filtered.length})</span>}
+          </h1>
+          <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">{formatCLP(total)}</span>
+        </div>
         <button
           onClick={openModal}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-zinc-800 dark:bg-zinc-200 hover:bg-zinc-700 dark:hover:bg-zinc-300 text-white dark:text-zinc-900 text-sm font-medium transition-colors"
@@ -225,6 +255,13 @@ export function GarantiasClient() {
           onChange={e => setSearch(e.target.value)}
           className="w-full sm:w-64 px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        <input
+          type="text"
+          placeholder="Filtrar por cliente…"
+          value={clienteFilter}
+          onChange={e => setClienteFilter(e.target.value)}
+          className="w-full sm:w-56 px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
         <select
           value={mesAnio}
           onChange={e => { setMesAnio(e.target.value); syncUrl(e.target.value); }}
@@ -239,7 +276,7 @@ export function GarantiasClient() {
         <div className="flex items-center justify-center py-20 text-zinc-400">
           <Loader2 className="w-5 h-5 animate-spin mr-2" /> Cargando…
         </div>
-      ) : garantias.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-zinc-400 text-sm">No hay garantías registradas.</div>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-800">
@@ -257,7 +294,7 @@ export function GarantiasClient() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {garantias.map(g => (
+              {filtered.map(g => (
                 <tr key={g.id} className="bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors">
                   <td className="px-4 py-3">
                     {editing?.id === g.id && editing?.campo === 'knumfoli' ? (
@@ -362,6 +399,14 @@ export function GarantiasClient() {
                       className="text-zinc-400 hover:text-blue-600 transition-colors text-xs flex items-center gap-1"
                     >
                       <Clock className="w-3.5 h-3.5" /> Historial
+                    </button>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => handleDelete(g)}
+                      className="text-zinc-400 hover:text-red-600 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </td>
                 </tr>

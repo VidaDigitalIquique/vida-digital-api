@@ -20,5 +20,6 @@
   "catalogo-form-mejoras-slice1": true,
   "catalogo-parsekeywords-slice2": true,
   "catalogo-ingreso-top-n-slice3": true,
-  "seguimientos": true
+  "seguimientos": true,
+  "garantias-mejoras-slice1": false
 }

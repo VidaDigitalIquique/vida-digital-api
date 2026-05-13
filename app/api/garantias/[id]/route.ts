@@ -57,3 +57,33 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
+
+export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  const g = guard(session);
+  if (g) return g;
+
+  try {
+    const { id } = params;
+
+    const existingRows = await sql`
+      SELECT id, knumfoli FROM public.garantias WHERE id = ${id}
+    `;
+    if (existingRows.length === 0) return NextResponse.json({ error: 'Garantia no encontrada' }, { status: 404 });
+    const existing = existingRows[0];
+
+    const usuario = (session!.user as any).name || (session!.user as any).nombre || 'desconocido';
+    await sql`
+      INSERT INTO public.garantias_log (garantia_id, usuario, campo, valor_nuevo)
+      VALUES (${id}, ${usuario}, 'eliminado', 'true')
+    `;
+
+    await sql`
+      DELETE FROM public.garantias WHERE id = ${id}
+    `;
+
+    return NextResponse.json({ data: { id: existing.id, knumfoli: existing.knumfoli, mensaje: 'Garantia eliminada' } });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
+  }
+}
