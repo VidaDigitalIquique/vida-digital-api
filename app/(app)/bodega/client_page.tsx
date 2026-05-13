@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { toast } from 'sonner';
 import { useShareImage } from '@/hooks/useShareImage';
+import { cn } from '@/lib/utils';
 
 import { useEmpresaId } from '@/hooks/useEmpresaId';
 
@@ -315,7 +316,10 @@ function LoteEditor({ lote, cantcaja, onSaved }: { lote: LoteBodega; cantcaja: n
   const saldoResto = lote.saldo % cantcaja;
 
   return (
-    <div className="border rounded-xl overflow-hidden">
+    <div className={cn(
+      'border rounded-xl overflow-hidden',
+      (!lote.ubicacion || lote.ubicacion.trim() === '') && 'border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/20'
+    )}>
       <button
         type="button"
         className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"

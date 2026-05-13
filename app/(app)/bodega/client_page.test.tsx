@@ -34,7 +34,7 @@ describe('BodegaClient Sync', () => {
 
     render(<BodegaClient session={{}} empresasMap={{}} />);
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar UBICACIÓN o CÓDIGO...'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar ubicación o código...'), {
       target: { value: 'AB' },
     });
 
@@ -98,7 +98,7 @@ describe('BodegaClient Sync', () => {
 
     render(<BodegaClient session={{}} empresasMap={{ 1: 'acme' }} />);
 
-    fireEvent.change(screen.getByPlaceholderText('Buscar UBICACIÓN o CÓDIGO...'), {
+    fireEvent.change(screen.getByPlaceholderText('Buscar ubicación o código...'), {
       target: { value: 'AB' },
     });
 
@@ -128,5 +128,75 @@ describe('BodegaClient Sync', () => {
     await waitFor(() => {
       expect(screen.getByText('Sin ubicación')).toBeInTheDocument();
     });
+  });
+
+  it('destaca lotes con ubicacion null con borde ambar', async () => {
+    (useEmpresaId as jest.Mock).mockReturnValue({ empresaId: 1, isLoaded: true });
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [{
+          codigo: 'COD-NUEVO', detalle: 'Producto nuevo', producto_imagen_url: null,
+          empresa_id: 1, saldo_total: 100, cantcaja: 10, umed: 'UND',
+          fisico_total: null, diferencia_total: null, ubicaciones: [],
+          lotes: [{
+            id: 99, nroingreso: 'ING-RECIENTE', ubicacion: null,
+            saldo: 100, saldocajas: 10, fisico: null, fisico_cajas: null,
+            fisico_unidades: null, diferencia: null, observaciones: null,
+            updated_at: new Date().toISOString(),
+          }],
+        }],
+      }),
+    });
+
+    render(<BodegaClient session={{}} empresasMap={{ 1: 'sanjh' }} />);
+
+    fireEvent.change(screen.getByPlaceholderText('Buscar ubicación o código...'), {
+      target: { value: 'COD' },
+    });
+    await act(async () => { jest.advanceTimersByTime(300); });
+
+    const card = await screen.findByText('COD-NUEVO');
+    fireEvent.click(card);
+
+    const nroIng = await screen.findByText('ING-RECIENTE');
+    const loteDiv = nroIng.closest('.border.rounded-xl');
+    expect(loteDiv?.className).toMatch(/amber/);
+  });
+
+  it('no destaca lotes con ubicacion asignada', async () => {
+    (useEmpresaId as jest.Mock).mockReturnValue({ empresaId: 1, isLoaded: true });
+
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: [{
+          codigo: 'COD-VIEJO', detalle: 'Producto ubicado', producto_imagen_url: null,
+          empresa_id: 1, saldo_total: 50, cantcaja: 5, umed: 'UND',
+          fisico_total: null, diferencia_total: null, ubicaciones: ['B3'],
+          lotes: [{
+            id: 100, nroingreso: 'ING-VIEJO', ubicacion: 'B3',
+            saldo: 50, saldocajas: 5, fisico: null, fisico_cajas: null,
+            fisico_unidades: null, diferencia: null, observaciones: null,
+            updated_at: new Date().toISOString(),
+          }],
+        }],
+      }),
+    });
+
+    render(<BodegaClient session={{}} empresasMap={{ 1: 'sanjh' }} />);
+
+    fireEvent.change(screen.getByPlaceholderText('Buscar ubicación o código...'), {
+      target: { value: 'COD' },
+    });
+    await act(async () => { jest.advanceTimersByTime(300); });
+
+    const card = await screen.findByText('COD-VIEJO');
+    fireEvent.click(card);
+
+    const nroIng = await screen.findByText('ING-VIEJO');
+    const loteDiv = nroIng.closest('.border.rounded-xl');
+    expect(loteDiv?.className).not.toMatch(/amber/);
   });
 });
