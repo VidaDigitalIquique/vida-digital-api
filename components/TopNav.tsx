@@ -63,12 +63,12 @@ export function TopNav() {
   };
 
   const navLink = (active: boolean) => cn(
-    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900',
+    'flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium uppercase transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900',
     active ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
   );
 
   const dropdownTrigger = (active: boolean) => cn(
-    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none',
+    'flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium uppercase transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none',
     active ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
   );
 
