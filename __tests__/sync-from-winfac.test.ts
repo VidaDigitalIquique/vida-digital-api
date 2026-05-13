@@ -34,11 +34,11 @@ describe('POST /api/admin/sync-from-winfac', () => {
     expect(res.status).toBe(401);
   });
 
-  test('Rechaza rol no autorizado (401)', async () => {
+  test('Rechaza rol bodega (401)', async () => {
     const { POST } = await import('@/app/api/admin/sync-from-winfac/route');
 
     getServerSession.mockResolvedValue({
-      user: { rol: 'vendedor' },
+      user: { rol: 'bodega' },
     });
 
     const req = new Request('http://localhost/api/admin/sync-from-winfac', {
@@ -46,6 +46,23 @@ describe('POST /api/admin/sync-from-winfac', () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(401);
+  });
+
+  test('Acepta rol vendedor (200)', async () => {
+    const { POST } = await import('@/app/api/admin/sync-from-winfac/route');
+
+    getServerSession.mockResolvedValue({
+      user: { rol: 'vendedor' },
+    });
+
+    sql.mockResolvedValueOnce([{ count: 5 }]);
+    sql.mockResolvedValueOnce([{ count: 3 }]);
+
+    const req = new Request('http://localhost/api/admin/sync-from-winfac', {
+      method: 'POST',
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(200);
   });
 
   test('Respuesta exitosa tiene estructura correcta', async () => {

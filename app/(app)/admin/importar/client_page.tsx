@@ -12,14 +12,17 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { parseImportWorkbook } from './parser';
 
-export function ImportarClient({ 
-  lastSyncSanjh, 
-  lastSyncVida 
-}: { 
-  lastSyncSanjh: Date | null; 
-  lastSyncVida: Date | null; 
+export function ImportarClient({
+  lastSyncSanjh,
+  lastSyncVida,
+  rol,
+}: {
+  lastSyncSanjh: Date | null;
+  lastSyncVida: Date | null;
+  rol: string;
 }) {
   const router = useRouter();
+  const isAdmin = rol === 'admin' || rol === 'supervisor';
 
   const [empresaNombre, setEmpresaNombre] = useState<string | null>(null);
   const [parsedData, setParsedData] = useState<any[]>([]);
@@ -217,30 +220,34 @@ export function ImportarClient({
 
             </div>
           </div>
-          <div className="flex items-center gap-3 my-2">
-            <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
-            <span className="text-xs text-zinc-400 font-medium uppercase tracking-wide">o importa manualmente por Excel</span>
-            <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
-          </div>
-          <label className="flex flex-col items-center justify-center w-full h-80 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl cursor-pointer transition-colors group">
-            <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
-              {isParsing ? (
-                <Loader2 className="w-16 h-16 text-emerald-500 animate-spin mb-4" />
-              ) : (
-                <UploadCloud className="w-16 h-16 text-zinc-400 group-hover:text-emerald-500 transition-colors mb-4" />
-              )}
-              <p className="mb-2 text-xl font-bold text-zinc-700 dark:text-zinc-300">
-                {isParsing ? 'Analizando documento...' : 'Haz clic para subir archivo Excel (.xlsx, .xls)'}
-              </p>
-              <p className="text-sm text-zinc-500">
-                La empresa se detecta automáticamente desde la celda A2 del archivo.
-              </p>
+          {isAdmin && (
+            <div className="flex items-center gap-3 my-2">
+              <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+              <span className="text-xs text-zinc-400 font-medium uppercase tracking-wide">o importa manualmente por Excel</span>
+              <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
             </div>
-            <input type="file" className="hidden" accept=".xlsx, .xls, .csv" onChange={handleFileChange} disabled={isParsing} />
-          </label>
+          )}
+          {isAdmin && (
+            <label className="flex flex-col items-center justify-center w-full h-80 bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-900 dark:hover:bg-zinc-800/80 border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-2xl cursor-pointer transition-colors group">
+              <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                {isParsing ? (
+                  <Loader2 className="w-16 h-16 text-emerald-500 animate-spin mb-4" />
+                ) : (
+                  <UploadCloud className="w-16 h-16 text-zinc-400 group-hover:text-emerald-500 transition-colors mb-4" />
+                )}
+                <p className="mb-2 text-xl font-bold text-zinc-700 dark:text-zinc-300">
+                  {isParsing ? 'Analizando documento...' : 'Haz clic para subir archivo Excel (.xlsx, .xls)'}
+                </p>
+                <p className="text-sm text-zinc-500">
+                  La empresa se detecta automáticamente desde la celda A2 del archivo.
+                </p>
+              </div>
+              <input type="file" className="hidden" accept=".xlsx, .xls, .csv" onChange={handleFileChange} disabled={isParsing} />
+            </label>
+          )}
         </div>
 
-      ) : (
+      ) : isAdmin ? (
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white dark:bg-zinc-950 p-4 rounded-xl border flex items-center justify-between">
@@ -311,7 +318,7 @@ export function ImportarClient({
             </Table>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

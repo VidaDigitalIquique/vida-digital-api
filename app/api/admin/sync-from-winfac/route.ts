@@ -8,7 +8,7 @@ import { syncClientesNuevos } from '@/lib/sync-clientes-nuevos';
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  if (!session || !['admin', 'supervisor'].includes((session.user as any).rol)) {
+  if (!session || !['admin', 'supervisor', 'vendedor'].includes((session.user as any).rol)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
