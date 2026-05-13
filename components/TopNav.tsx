@@ -69,7 +69,7 @@ export function TopNav() {
   );
 
   const navLinkSm = (active: boolean) => cn(
-    'flex items-center gap-1.5 px-2.5 py-1 rounded text-sm font-semibold uppercase tracking-wide transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900',
+    'flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold uppercase tracking-wide transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900',
     active ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-500 dark:text-zinc-400'
   );
 
@@ -98,7 +98,7 @@ export function TopNav() {
                     pathname.startsWith('/ventas')
                   )}
                 >
-                  VENTAS <ChevronDown className="w-4 h-4" />
+                  Ventas <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-48" onMouseLeave={() => setVentasOpen(false)}>
                   <DropdownMenuItem>
@@ -126,7 +126,7 @@ export function TopNav() {
                     (pathname.startsWith('/deseados') && modoChina)
                   )}
                 >
-                  CATÁLOGO <ChevronDown className="w-4 h-4" />
+                  Catálogo <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-48" onMouseLeave={() => setCatalogoOpen(false)}>
                   <DropdownMenuItem>
@@ -155,7 +155,7 @@ export function TopNav() {
                   onMouseEnter={() => openOnly('bodega')}
                   className={dropdownTrigger(pathname.startsWith('/bodega'))}
                 >
-                  BODEGA <ChevronDown className="w-4 h-4" />
+                  Bodega <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-52" onMouseLeave={() => setBodegaOpen(false)}>
                   <DropdownMenuItem>
@@ -186,7 +186,7 @@ export function TopNav() {
                     pathname.startsWith('/admin') && !pathname.startsWith('/admin/categorias')
                   )}
                 >
-                  ADMINISTRACIÓN <ChevronDown className="w-4 h-4" />
+                  Administración <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48" onMouseLeave={() => setAdminOpen(false)}>
                   <DropdownMenuItem>
@@ -227,61 +227,28 @@ export function TopNav() {
         </div>
       </div>
       {/* ── Segunda fila ── */}
-      <nav className="flex items-center gap-1 pb-1.5 -mt-0.5 flex-wrap">
+      <nav className="flex items-center gap-1 pb-1.5 -mt-0.5">
         {(isAdmin || rol === 'vendedor') && (
-          <Link href="/prenotas" className={navLinkSm(pathname.startsWith('/prenotas'))}>
-            PRENOTAS
-          </Link>
-        )}
-        {(isAdmin || rol === 'vendedor') && (
-          <Link href="/clientes-nuevos" className={navLinkSm(pathname.startsWith('/clientes-nuevos'))}>
-            CLIENTES NUEVOS
-          </Link>
-        )}
-        {(isAdmin || rol === 'vendedor') && (
-          <Link href="/deseados" className={navLinkSm(pathname.startsWith('/deseados') && !modoChina)}>
-            DESEADOS
-          </Link>
-        )}
-        {(isAdmin || rol === 'vendedor') && (
-          <Link href="/deseados?modo=china" className={navLinkSm(pathname.startsWith('/deseados') && !!modoChina)}>
-            <div className="relative">
-              CHINA
-              {stockBajoCount > 0 && (
-                <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 leading-none">
-                  {stockBajoCount > 99 ? '99+' : stockBajoCount}
-                </span>
-              )}
-            </div>
-          </Link>
-        )}
-        {isAdmin && (
-          <Link href="/pettycash" className={navLinkSm(pathname.startsWith('/pettycash'))}>
-            PETTYCASH
-          </Link>
-        )}
-        {(!isAdmin && (rol === 'vendedor' || rol === 'bodeguero')) && (
-          <Link href="/deudas" className={navLinkSm(pathname.startsWith('/deudas'))}>
-            DEUDAS
-          </Link>
-        )}
-        {isAdmin && (
-          <Link href="/sueldos" className={navLinkSm(pathname.startsWith('/sueldos'))}>
-            SUELDOS
+          <Link href="/garantias" className={navLinkSm(pathname.startsWith('/garantias'))}>
+            <ShieldCheck className="w-3.5 h-3.5" />
+            GARANTÍAS
           </Link>
         )}
         {(isAdmin || rol === 'vendedor') && (
           <Link href="/seguimientos" className={navLinkSm(pathname.startsWith('/seguimientos'))}>
+            <Phone className="w-3.5 h-3.5" />
             SEGUIMIENTOS
           </Link>
         )}
-        {(isAdmin || rol === 'vendedor') && (
-          <Link href="/garantias" className={navLinkSm(pathname.startsWith('/garantias'))}>
-            GARANTÍAS
+        {(!isAdmin && (rol === 'vendedor' || rol === 'bodeguero')) && (
+          <Link href="/deudas" className={navLinkSm(pathname.startsWith('/deudas'))}>
+            <Banknote className="w-3.5 h-3.5" />
+            DEUDAS
           </Link>
         )}
         {rol === 'vendedor' && (
           <Link href="/admin/importar" className={navLinkSm(pathname.startsWith('/admin/importar'))}>
+            <RefreshCw className="w-3.5 h-3.5" />
             SINCRONIZAR
           </Link>
         )}

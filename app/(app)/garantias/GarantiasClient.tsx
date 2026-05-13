@@ -45,7 +45,6 @@ export function GarantiasClient() {
   const [newKnumfoli, setNewKnumfoli] = useState('');
   const [newCliente, setNewCliente] = useState('');
   const [newMonto, setNewMonto] = useState(0);
-  const [newObservaciones, setNewObservaciones] = useState('');
   const [saving, setSaving] = useState(false);
 
   // Inline edit state
@@ -118,7 +117,6 @@ export function GarantiasClient() {
     setNewKnumfoli('');
     setNewCliente('');
     setNewMonto(0);
-    setNewObservaciones('');
     setShowModal(true);
   };
 
@@ -131,7 +129,7 @@ export function GarantiasClient() {
     const r = await fetch('/api/garantias', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ knumfoli: newKnumfoli.trim(), cliente: newCliente.trim(), monto: newMonto, observaciones: newObservaciones.trim() || null }),
+      body: JSON.stringify({ knumfoli: newKnumfoli.trim(), cliente: newCliente.trim(), monto: newMonto }),
     });
     if (r.ok) {
       toast.success('Garantía creada');
@@ -442,15 +440,6 @@ export function GarantiasClient() {
                 value={newMonto || ''}
                 onFocus={e => (e.target as HTMLInputElement).select()}
                 onChange={e => setNewMonto(Number(e.target.value))}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-500 mb-1">Observaciones</label>
-              <input
-                className={inp}
-                placeholder="Observaciones (opcional)"
-                value={newObservaciones}
-                onChange={e => setNewObservaciones(e.target.value)}
               />
             </div>
             <button
