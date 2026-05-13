@@ -10,6 +10,7 @@ export default async function GarantiasPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect('/login');
   const rol = (session.user as any).rol;
+  console.log('ROL GARANTIAS:', rol, 'USER:', JSON.stringify(session?.user));
   if (!['admin', 'vendedor'].includes(rol)) redirect('/dashboard');
 
   return (
