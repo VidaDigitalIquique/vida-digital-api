@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
@@ -31,12 +32,25 @@ const EMP_COLOR: Record<string, string> = {
 };
 
 export function SeguimientosClient() {
-  const [empresa, setEmpresa] = useState('ambas');
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const [empresa, setEmpresa] = useState(searchParams.get('empresa') ?? 'ambas');
   const [vendedor, setVendedor] = useState('');
-  const [mesAnio, setMesAnio] = useState('');
-  const [filtroEstado, setFiltroEstado] = useState('activo');
+  const [mesAnio, setMesAnio] = useState(searchParams.get('mesAnio') ?? '');
+  const [filtroEstado, setFiltroEstado] = useState(searchParams.get('estado') ?? 'activo');
   const [notas, setNotas] = useState<Nota[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const syncUrl = useCallback((emp: string, mes: string, est: string) => {
+    const params = new URLSearchParams();
+    if (emp !== 'ambas') params.set('empresa', emp);
+    if (mes) params.set('mesAnio', mes);
+    if (est !== 'activo') params.set('estado', est);
+    const qs = params.toString();
+    router.replace(pathname + (qs ? '?' + qs : ''), { scroll: false });
+  }, [router, pathname]);
 
   const fetchNotas = useCallback(async () => {
     setLoading(true);
@@ -113,7 +127,7 @@ export function SeguimientosClient() {
         </h1>
         <div className="flex gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-lg">
           {tabs.map(t => (
-            <button key={t.value} onClick={() => setEmpresa(t.value)}
+            <button key={t.value} onClick={() => { setEmpresa(t.value); syncUrl(t.value, mesAnio, filtroEstado); }}
               className={cn('px-3 py-1.5 rounded text-sm font-medium transition-all',
                 empresa === t.value
                   ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm'
@@ -130,14 +144,14 @@ export function SeguimientosClient() {
           onChange={e => setVendedor(e.target.value)}
           className="w-full sm:w-64 px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <select value={mesAnio} onChange={e => setMesAnio(e.target.value)}
+        <select value={mesAnio} onChange={e => { setMesAnio(e.target.value); syncUrl(empresa, e.target.value, filtroEstado); }}
           className="px-3 py-2 text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">Todos los meses</option>
           {meses.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
         </select>
         <div className="flex gap-1 bg-zinc-100 dark:bg-zinc-900 p-1 rounded-lg">
           {estadoTabs.map(t => (
-            <button key={t.value} onClick={() => setFiltroEstado(t.value)}
+            <button key={t.value} onClick={() => { setFiltroEstado(t.value); syncUrl(empresa, mesAnio, t.value); }}
               className={cn('px-3 py-1.5 rounded text-sm font-medium transition-all',
                 filtroEstado === t.value
                   ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 shadow-sm'
