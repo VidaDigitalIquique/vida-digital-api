@@ -26,13 +26,7 @@ import {
   Tag,
   ClipboardList,
   Banknote,
-  ShieldCheck,
-  Phone,
-  UserPlus,
-  Heart,
-  Globe,
-  Wallet,
-  DollarSign
+  ShieldCheck
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 
@@ -73,20 +67,14 @@ export function TopNav() {
     active ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
   );
 
-  const navLinkSm = (active: boolean) => cn(
-    'flex items-center gap-1.5 px-2.5 py-1 rounded text-sm font-semibold uppercase tracking-wide transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900',
-    active ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-500 dark:text-zinc-400'
-  );
-
   const dropdownTrigger = (active: boolean) => cn(
-    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium uppercase transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none',
+    'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all hover:bg-zinc-100 dark:hover:bg-zinc-900 focus:outline-none',
     active ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' : 'text-zinc-600 dark:text-zinc-400'
   );
 
   return (
-    <header className="hidden md:block sticky top-0 z-50 w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl transition-all">
-      <div className="container max-w-7xl mx-auto px-4">
-        <div className="flex h-12 items-center justify-between">
+    <header className="hidden md:flex sticky top-0 z-50 w-full h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl transition-all">
+      <div className="container flex h-16 max-w-7xl items-center justify-between mx-auto px-4">
         <div className="flex items-center gap-8">
           <Link href={logoHref} className="font-bold text-xl tracking-tight text-blue-600 dark:text-blue-400">
             VidaDigital
@@ -103,7 +91,7 @@ export function TopNav() {
                     pathname.startsWith('/ventas')
                   )}
                 >
-                  VENTAS <ChevronDown className="w-4 h-4" />
+                  Ventas <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-48" onMouseLeave={() => setVentasOpen(false)}>
                   <DropdownMenuItem>
@@ -114,6 +102,11 @@ export function TopNav() {
                   <DropdownMenuItem>
                     <Link href="/ventas/kardex" className="flex items-center gap-2 w-full">
                       <Users className="w-4 h-4" /> Kardex Cliente
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/garantias" className="flex items-center gap-2 w-full">
+                      <ShieldCheck className="w-4 h-4" /> Garantías
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -131,7 +124,7 @@ export function TopNav() {
                     (pathname.startsWith('/deseados') && modoChina)
                   )}
                 >
-                  CATÁLOGO <ChevronDown className="w-4 h-4" />
+                  Catálogo <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-48" onMouseLeave={() => setCatalogoOpen(false)}>
                   <DropdownMenuItem>
@@ -160,7 +153,7 @@ export function TopNav() {
                   onMouseEnter={() => openOnly('bodega')}
                   className={dropdownTrigger(pathname.startsWith('/bodega'))}
                 >
-                  BODEGA <ChevronDown className="w-4 h-4" />
+                  Bodega <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-52" onMouseLeave={() => setBodegaOpen(false)}>
                   <DropdownMenuItem>
@@ -182,6 +175,14 @@ export function TopNav() {
               </DropdownMenu>
             )}
 
+            {/* Deudas — vendedor y bodeguero */}
+            {(!isAdmin && (rol === 'vendedor' || rol === 'bodeguero')) && (
+              <Link href="/deudas" className={navLink(pathname.startsWith('/deudas'))}>
+                <Banknote className="w-4 h-4" />
+                Deudas
+              </Link>
+            )}
+
             {/* 6. Administración — solo admin */}
             {isAdmin && (
               <DropdownMenu open={adminOpen} onOpenChange={setAdminOpen}>
@@ -191,7 +192,7 @@ export function TopNav() {
                     pathname.startsWith('/admin') && !pathname.startsWith('/admin/categorias')
                   )}
                 >
-                  ADMINISTRACIÓN <ChevronDown className="w-4 h-4" />
+                  Administración <ChevronDown className="w-4 h-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48" onMouseLeave={() => setAdminOpen(false)}>
                   <DropdownMenuItem>
@@ -230,71 +231,6 @@ export function TopNav() {
             <LogOut className="w-5 h-5" />
           </button>
         </div>
-      </div>
-      {/* ── Segunda fila ── */}
-      <nav className="flex items-center gap-1 pb-1.5 -mt-0.5">
-        {(isAdmin || rol === 'vendedor') && (
-          <Link href="/prenotas" className={navLinkSm(pathname.startsWith('/prenotas'))}>
-            <ClipboardList className="w-3.5 h-3.5" />
-            PRENOTAS
-          </Link>
-        )}
-        {(isAdmin || rol === 'vendedor') && (
-          <Link href="/clientes-nuevos" className={navLinkSm(pathname.startsWith('/clientes-nuevos'))}>
-            <UserPlus className="w-3.5 h-3.5" />
-            CLIENTES NUEVOS
-          </Link>
-        )}
-        {(isAdmin || rol === 'vendedor') && (
-          <Link href="/deseados" className={navLinkSm(pathname.startsWith('/deseados') && !modoChina)}>
-            <Heart className="w-3.5 h-3.5" />
-            DESEADOS
-          </Link>
-        )}
-        {(isAdmin || rol === 'vendedor') && (
-          <Link href="/deseados?modo=china" className={navLinkSm(pathname.startsWith('/deseados') && !!modoChina)}>
-            <div className="relative">
-              <Globe className="w-3.5 h-3.5" />
-              CHINA
-              {stockBajoCount > 0 && (
-                <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[14px] h-3.5 flex items-center justify-center px-0.5 leading-none">
-                  {stockBajoCount > 99 ? '99+' : stockBajoCount}
-                </span>
-              )}
-            </div>
-          </Link>
-        )}
-        {isAdmin && (
-          <Link href="/pettycash" className={navLinkSm(pathname.startsWith('/pettycash'))}>
-            <Wallet className="w-3.5 h-3.5" />
-            PETTYCASH
-          </Link>
-        )}
-        {(!isAdmin && (rol === 'vendedor' || rol === 'bodeguero')) && (
-          <Link href="/deudas" className={navLinkSm(pathname.startsWith('/deudas'))}>
-            <Banknote className="w-3.5 h-3.5" />
-            DEUDAS
-          </Link>
-        )}
-        {isAdmin && (
-          <Link href="/sueldos" className={navLinkSm(pathname.startsWith('/sueldos'))}>
-            <DollarSign className="w-3.5 h-3.5" />
-            SUELDOS
-          </Link>
-        )}
-        {(isAdmin || rol === 'vendedor') && (
-          <Link href="/seguimientos" className={navLinkSm(pathname.startsWith('/seguimientos'))}>
-            <Phone className="w-3.5 h-3.5" />
-            SEGUIMIENTOS
-          </Link>
-        )}
-        {(isAdmin || rol === 'vendedor') && (
-          <Link href="/garantias" className={navLinkSm(pathname.startsWith('/garantias'))}>
-            <ShieldCheck className="w-3.5 h-3.5" />
-            GARANTÍAS
-          </Link>
-        )}
-      </nav>
       </div>
     </header>
   );
