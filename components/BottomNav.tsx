@@ -102,6 +102,7 @@ export function BottomNav() {
                   {(isAdmin || isVendedor) && sheetLink('/precios', <ShoppingCart className="w-5 h-5" />, 'Sala de Venta', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor) && sheetLink('/ventas/kardex', <Users className="w-5 h-5" />, 'Kardex Cliente', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor) && sheetLink('/garantias', <ShieldCheck className="w-5 h-5" />, 'Garantías', () => setVentasOpen(false))}
+                  {(isAdmin || isVendedor) && sheetLink('/admin/importar', <RefreshCw className="w-5 h-5" />, 'Sincronizar WinFac', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor) && sheetLink('/prenotas', <FileText className="w-5 h-5" />, 'Pre-Notas', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor || isSupervisor) && sheetLink('/clientes-nuevos', <UserPlus className="w-5 h-5" />, 'Clientes Nuevos', () => setVentasOpen(false))}
                   {isVendedor && sheetLink('/deudas', <Banknote className="w-5 h-5" />, 'Mis Deudas', () => setVentasOpen(false))}

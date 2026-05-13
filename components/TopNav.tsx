@@ -183,6 +183,14 @@ export function TopNav() {
               </Link>
             )}
 
+            {/* Sincronizar WinFac — vendedor (acceso directo fuera de Administración) */}
+            {rol === 'vendedor' && (
+              <Link href="/admin/importar" className={navLink(pathname.startsWith('/admin/importar'))}>
+                <RefreshCw className="w-4 h-4" />
+                Sincronizar
+              </Link>
+            )}
+
             {/* 6. Administración — solo admin */}
             {isAdmin && (
               <DropdownMenu open={adminOpen} onOpenChange={setAdminOpen}>
