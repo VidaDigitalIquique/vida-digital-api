@@ -104,11 +104,6 @@ export function TopNav() {
                       <Users className="w-4 h-4" /> Kardex Cliente
                     </Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Link href="/garantias" className="flex items-center gap-2 w-full">
-                      <ShieldCheck className="w-4 h-4" /> Garantías
-                    </Link>
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
@@ -175,19 +170,27 @@ export function TopNav() {
               </DropdownMenu>
             )}
 
+            {/* Garantías — admin y vendedor */}
+            {(isAdmin || rol === 'vendedor') && (
+              <Link href="/garantias" className={navLink(pathname.startsWith('/garantias'))}>
+                <ShieldCheck className="w-4 h-4" />
+                GARANTÍAS
+              </Link>
+            )}
+
             {/* Deudas — vendedor y bodeguero */}
             {(!isAdmin && (rol === 'vendedor' || rol === 'bodeguero')) && (
               <Link href="/deudas" className={navLink(pathname.startsWith('/deudas'))}>
                 <Banknote className="w-4 h-4" />
-                Deudas
+                DEUDAS
               </Link>
             )}
 
-            {/* Sincronizar WinFac — vendedor (acceso directo fuera de Administración) */}
+            {/* Sincronizar WinFac — vendedor */}
             {rol === 'vendedor' && (
               <Link href="/admin/importar" className={navLink(pathname.startsWith('/admin/importar'))}>
                 <RefreshCw className="w-4 h-4" />
-                Sincronizar
+                SINCRONIZAR
               </Link>
             )}
 
