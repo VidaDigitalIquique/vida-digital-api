@@ -127,7 +127,7 @@ describe('GarantiasClient — tabla principal', () => {
         '/api/garantias',
         expect.objectContaining({
           method: 'POST',
-          body: JSON.stringify({ knumfoli: 'F003', cliente: 'Nuevo Cliente' }),
+          body: JSON.stringify({ knumfoli: 'F003', cliente: 'Nuevo Cliente', monto: 0 }),
         })
       );
     });

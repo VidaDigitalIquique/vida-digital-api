@@ -44,6 +44,7 @@ export function GarantiasClient() {
   const [showModal, setShowModal] = useState(false);
   const [newKnumfoli, setNewKnumfoli] = useState('');
   const [newCliente, setNewCliente] = useState('');
+  const [newMonto, setNewMonto] = useState(0);
   const [saving, setSaving] = useState(false);
 
   // Inline edit state
@@ -115,6 +116,7 @@ export function GarantiasClient() {
   const openModal = () => {
     setNewKnumfoli('');
     setNewCliente('');
+    setNewMonto(0);
     setShowModal(true);
   };
 
@@ -127,7 +129,7 @@ export function GarantiasClient() {
     const r = await fetch('/api/garantias', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ knumfoli: newKnumfoli.trim(), cliente: newCliente.trim() }),
+      body: JSON.stringify({ knumfoli: newKnumfoli.trim(), cliente: newCliente.trim(), monto: newMonto }),
     });
     if (r.ok) {
       toast.success('Garantía creada');
@@ -427,6 +429,17 @@ export function GarantiasClient() {
                 placeholder="Nombre del cliente"
                 value={newCliente}
                 onChange={e => setNewCliente(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-500 mb-1">Monto (CLP)</label>
+              <input
+                type="number"
+                className={inp}
+                placeholder="0"
+                value={newMonto || ''}
+                onFocus={e => (e.target as HTMLInputElement).select()}
+                onChange={e => setNewMonto(Number(e.target.value))}
               />
             </div>
             <button
