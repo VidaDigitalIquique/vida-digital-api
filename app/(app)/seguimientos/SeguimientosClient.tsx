@@ -192,7 +192,7 @@ export function SeguimientosClient() {
                   <tr key={`${n.empresa}-${n.knumfoli}`}
                     className={cn(
                       'bg-white dark:bg-zinc-950 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors',
-                      n.seguimiento?.ultima_observacion && 'bg-amber-50 dark:bg-amber-950/20 border-l-2 border-l-amber-400'
+                      n.seguimiento?.ultima_observacion && 'bg-blue-50 dark:bg-blue-950/20 border-l-2 border-l-blue-400'
                     )}>
                     <td className="px-4 py-3">
                       <div className="font-mono font-medium text-zinc-800 dark:text-zinc-200">{n.knumfoli}</div>

@@ -119,7 +119,7 @@ describe('SeguimientosClient — filtros persistentes en URL', () => {
 
     await waitFor(() => {
       const row = screen.getByText('Cliente A').closest('tr');
-      expect(row?.className).toMatch(/amber/);
+      expect(row?.className).toMatch(/blue/);
     });
   });
 
@@ -144,7 +144,7 @@ describe('SeguimientosClient — filtros persistentes en URL', () => {
 
     await waitFor(() => {
       const row = screen.getByText('Cliente B').closest('tr');
-      expect(row?.className).not.toMatch(/amber/);
+      expect(row?.className).not.toMatch(/blue/);
     });
   });
 });
