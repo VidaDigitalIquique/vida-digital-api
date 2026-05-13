@@ -25,7 +25,8 @@ import {
   Camera,
   Tag,
   ClipboardList,
-  Banknote
+  Banknote,
+  ShieldCheck
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 
@@ -101,6 +102,11 @@ export function TopNav() {
                   <DropdownMenuItem>
                     <Link href="/ventas/kardex" className="flex items-center gap-2 w-full">
                       <Users className="w-4 h-4" /> Kardex Cliente
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/garantias" className="flex items-center gap-2 w-full">
+                      <ShieldCheck className="w-4 h-4" /> Garantías
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

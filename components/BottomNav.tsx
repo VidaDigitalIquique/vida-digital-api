@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   ShoppingCart, Users, LayoutList, Tag, Box, Camera,
   Heart, Package, Settings, RefreshCw, ImageIcon,
-  Filter, UserPlus, FileText, ChevronRight, ClipboardList, Banknote, Wallet, Phone
+  Filter, UserPlus, FileText, ChevronRight, ClipboardList, Banknote, Wallet, Phone, ShieldCheck
 } from 'lucide-react';
 import flags from '@/config/feature-flags.json';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -101,6 +101,7 @@ export function BottomNav() {
                 <div className="space-y-0">
                   {(isAdmin || isVendedor) && sheetLink('/precios', <ShoppingCart className="w-5 h-5" />, 'Sala de Venta', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor) && sheetLink('/ventas/kardex', <Users className="w-5 h-5" />, 'Kardex Cliente', () => setVentasOpen(false))}
+                  {(isAdmin || isVendedor) && sheetLink('/garantias', <ShieldCheck className="w-5 h-5" />, 'Garantías', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor) && sheetLink('/prenotas', <FileText className="w-5 h-5" />, 'Pre-Notas', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor || isSupervisor) && sheetLink('/clientes-nuevos', <UserPlus className="w-5 h-5" />, 'Clientes Nuevos', () => setVentasOpen(false))}
                   {isVendedor && sheetLink('/deudas', <Banknote className="w-5 h-5" />, 'Mis Deudas', () => setVentasOpen(false))}

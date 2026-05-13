@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Loader2, Plus, X } from 'lucide-react';
+import { Loader2, Plus, X, Clock } from 'lucide-react';
 
 type Garantia = {
   id: number;
@@ -135,6 +135,22 @@ export function GarantiasClient() {
     setSaving(false);
   };
 
+  // ── Historial ─────────────────────────────────────────
+  const [historialId, setHistorialId] = useState<number | null>(null);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
+  const openHistorial = async (garantiaId: number) => {
+    setHistorialId(garantiaId);
+    setLoadingLogs(true);
+    try {
+      const r = await fetch(`/api/garantias/${garantiaId}/log`);
+      setLogs(await r.json());
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
+
   // ── Inline edit handlers ──────────────────────────────
   const startEdit = (g: Garantia, campo: 'knumfoli' | 'cliente') => {
     setEditing({ id: g.id, campo });
@@ -227,6 +243,7 @@ export function GarantiasClient() {
                 <th className="px-4 py-3 text-left">Fecha</th>
                 <th className="px-4 py-3 text-left">Hora</th>
                 <th className="px-4 py-3 text-left">Estado</th>
+                <th className="px-4 py-3" />
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -289,10 +306,52 @@ export function GarantiasClient() {
                       <option value="devuelto" className="text-green-600">Devuelto</option>
                     </select>
                   </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => openHistorial(g.id)}
+                      className="text-zinc-400 hover:text-blue-600 transition-colors text-xs flex items-center gap-1"
+                    >
+                      <Clock className="w-3.5 h-3.5" /> Historial
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* ── Historial Drawer ── */}
+      {historialId && (
+        <div className="fixed inset-0 z-50 flex justify-end" onClick={() => setHistorialId(null)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative w-full max-w-md bg-white dark:bg-zinc-950 h-full overflow-y-auto shadow-xl border-l border-zinc-200 dark:border-zinc-800 p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100">Historial de cambios</h2>
+              <button onClick={() => setHistorialId(null)} className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"><X className="w-4 h-4" /></button>
+            </div>
+            {loadingLogs ? (
+              <div className="flex items-center justify-center py-10 text-zinc-400"><Loader2 className="w-4 h-4 animate-spin mr-2" /> Cargando…</div>
+            ) : logs.length === 0 ? (
+              <p className="text-sm text-zinc-400 italic">Sin eventos registrados.</p>
+            ) : (
+              <div className="space-y-3">
+                {logs.map((l: any) => (
+                  <div key={l.id} className="border-l-2 border-zinc-200 dark:border-zinc-700 pl-3 text-sm space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-zinc-700 dark:text-zinc-300 capitalize">{l.campo}</span>
+                      <span className="text-zinc-400 text-xs">{new Date(l.created_at).toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' })} {new Date(l.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <p className="text-zinc-500 text-xs">Por: {l.usuario}</p>
+                    {l.valor_anterior !== null && (
+                      <p className="text-zinc-400 text-xs line-through">{l.valor_anterior}</p>
+                    )}
+                    <p className="text-zinc-800 dark:text-zinc-200 text-xs">{l.valor_nuevo}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 

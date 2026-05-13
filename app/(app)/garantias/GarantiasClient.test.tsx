@@ -158,4 +158,23 @@ describe('GarantiasClient — tabla principal', () => {
       );
     });
   });
+
+  it('abre panel de historial al hacer clic en el boton de la fila', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: mockGarantias }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ([
+        { id: 1, garantia_id: 1, usuario: 'Pablo', campo: 'creacion', valor_anterior: null, valor_nuevo: 'F001', created_at: '2026-05-10T10:00:00.000Z' },
+      ]) });
+
+    render(<GarantiasClient />);
+
+    await waitFor(() => expect(screen.getByText('Juan Pérez')).toBeInTheDocument());
+
+    fireEvent.click(screen.getAllByText('Historial')[0]);
+
+    await waitFor(() => {
+      expect(screen.getByText('Historial de cambios')).toBeInTheDocument();
+      expect(screen.getByText(/Por: Pablo/)).toBeInTheDocument();
+    });
+  });
 });
