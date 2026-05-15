@@ -104,6 +104,11 @@ export function TopNav() {
                       <Users className="w-4 h-4" /> Kardex Cliente
                     </Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/admin/importar" className="flex items-center gap-2 w-full">
+                      <RefreshCw className="w-4 h-4" /> Sincronizar WinFac
+                    </Link>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             )}
