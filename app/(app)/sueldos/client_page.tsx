@@ -5,6 +5,8 @@ import { formatMonto } from '../pettycash/pettycash-utils';
 import { toast } from 'sonner';
 import { useNumericInput } from '@/hooks/useNumericInput';
 import { Pencil } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface Movimiento {
   id: number;
@@ -305,6 +307,7 @@ export function SueldosAdminClient() {
                   <th className="px-4 py-2 text-left">Tipo</th>
                   <th className="px-4 py-2 text-left">Descripción</th>
                   <th className="px-4 py-2 text-right">Monto</th>
+                  <th className="px-4 py-2 text-left">Fecha de pago</th>
                   <th className="px-4 py-2 text-center w-24">Acciones</th>
                 </tr>
               </thead>
@@ -315,6 +318,7 @@ export function SueldosAdminClient() {
                     <td className="px-4 py-2 capitalize">{m.tipo}</td>
                     <td className="px-4 py-2 text-zinc-500">{m.descripcion ?? '—'}</td>
                     <td className="px-4 py-2 text-right text-red-600">−{formatMonto(parseFloat(String(m.monto)))}</td>
+                    <td className="px-4 py-2 text-zinc-400 text-sm">—</td>
                     <td className="px-4 py-2 text-center">
                       {editMovId !== m.id && (
                         <button onClick={() => startEditMov(m)} className="text-xs p-1 rounded hover:bg-zinc-200">
@@ -325,7 +329,7 @@ export function SueldosAdminClient() {
                   </tr>
                   {editMovId === m.id && (
                     <tr className="bg-zinc-50 dark:bg-zinc-900/50">
-                      <td colSpan={4} className="px-4 py-3">
+                      <td colSpan={5} className="px-4 py-3">
                         <div className="flex items-center gap-3 flex-wrap">
                           <div className="flex flex-col gap-1">
                             <label className="text-xs text-zinc-400">Monto</label>
@@ -358,6 +362,11 @@ export function SueldosAdminClient() {
                     <td className="px-4 py-2 capitalize">{sueldoRegistrado.tipo}</td>
                     <td className="px-4 py-2 text-zinc-500">Base: {formatMonto(sueldoRegistrado.monto_base)}</td>
                     <td className="px-4 py-2 text-right text-emerald-700">{formatMonto(sueldoRegistrado.monto_final)}</td>
+                    <td className="px-4 py-2 text-zinc-500 text-sm">
+                      {sueldoRegistrado.pagado_at
+                        ? format(parseISO(sueldoRegistrado.pagado_at), "d 'de' MMMM 'de' yyyy, HH:mm", { locale: es })
+                        : '—'}
+                    </td>
                     <td className="px-4 py-2 text-center">
                       {!editSueldoOpen && (
                         <button onClick={startEditSueldo} className="text-xs p-1 rounded hover:bg-zinc-200">
@@ -368,7 +377,7 @@ export function SueldosAdminClient() {
                   </tr>
                   {editSueldoOpen && (
                     <tr className="bg-zinc-50 dark:bg-zinc-900/50">
-                      <td colSpan={4} className="px-4 py-3">
+                      <td colSpan={5} className="px-4 py-3">
                         <div className="flex items-center gap-3 flex-wrap">
                           <div className="flex flex-col gap-1">
                             <label className="text-xs text-zinc-400">Monto final</label>
@@ -401,7 +410,7 @@ export function SueldosAdminClient() {
                   </>
                 )}
                 {!sueldoRegistrado && movimientos.length === 0 && (
-                  <tr><td colSpan={4} className="px-4 py-3 text-zinc-400 text-center">Sin movimientos este mes.</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-3 text-zinc-400 text-center">Sin movimientos este mes.</td></tr>
                 )}
               </tbody>
             </table>

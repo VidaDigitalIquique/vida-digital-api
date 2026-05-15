@@ -74,11 +74,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { usuario_id, monto, descripcion, mes, anio } = parsed.data;
+    const { usuario_id, monto, descripcion } = parsed.data;
     const creadoPor = (session!.user as any).nombre as string;
     const now = new Date();
-    const mesEfectivo = mes ?? (now.getMonth() + 1);
-    const anioEfectivo = anio ?? now.getFullYear();
+    const mes = now.getMonth() + 1;
+    const anio = now.getFullYear();
+    const tipo = "prestamo";
+    const estado = "confirmada";
+    const caduca_at = "2099-12-31";
 
     const usuarioRows = await sql`SELECT nombre FROM usuarios WHERE id = ${usuario_id}`;
     if (usuarioRows.length === 0) {
@@ -86,16 +89,12 @@ export async function POST(request: Request) {
     }
     const userNombre = usuarioRows[0].nombre as string;
 
-    const tipo = "prestamo";
-    const estado = "aceptada";
-    const caduca_at = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
     const [deuda] = await sql`
       INSERT INTO deudas_solicitudes
         (user_id, user_nombre, tipo, monto, descripcion, mes, anio, estado, creado_por, caduca_at)
       VALUES
         (${usuario_id}, ${userNombre}, ${tipo}, ${monto}, ${descripcion ?? null},
-         ${mesEfectivo}, ${anioEfectivo}, ${estado}, ${creadoPor}, ${caduca_at})
+         ${mes}, ${anio}, ${estado}, ${creadoPor}, ${caduca_at})
       RETURNING *
     `;
 

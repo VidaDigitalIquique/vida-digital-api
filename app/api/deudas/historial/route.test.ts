@@ -19,7 +19,7 @@ function makeReq(params?: Record<string, string>) {
   return new Request(url.toString()) as any;
 }
 
-const prestamoItem = { deuda_id: 1, pago_id: null, tipo: 'prestamo', monto: 50000, descripcion: null, fecha_hora: '2026-05-01T10:00:00Z', item_tipo: 'deuda' };
+const prestamoItem = { deuda_id: 1, pago_id: null, tipo: 'prestamo', monto: 50000, descripcion: null, registrado_at: '2026-05-01T10:00:00Z', item_tipo: 'deuda' };
 
 describe('GET /api/deudas/historial', () => {
   beforeEach(() => vi.clearAllMocks());

@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { DeudaPatchSchema, buildConceptoDeuda } from "@/docs/specs/deudas.spec";
+import { DeudaPatchSchema } from "@/docs/specs/deudas.spec";
 
 function authGuard(session: any) {
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -16,7 +16,6 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 
   const { id } = params;
   const isAdmin = (session!.user as any).rol === "admin";
-  const userId = parseInt((session!.user as any).id, 10);
 
   try {
     const body = await request.json();
@@ -25,40 +24,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    const rows = await sql`SELECT * FROM deudas_solicitudes WHERE id = ${id}`;
-    if (rows.length === 0) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
-    const deuda = rows[0];
     const data = parsed.data;
-
-    if (data.accion === "aceptar") {
-      if (!isAdmin) return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
-      if (deuda.estado !== "pendiente") return NextResponse.json({ error: "Estado inválido" }, { status: 409 });
-      const [updated] = await sql`
-        UPDATE deudas_solicitudes SET estado = 'aceptada', aceptado_at = NOW()
-        WHERE id = ${id} RETURNING *
-      `;
-      return NextResponse.json({ data: updated });
-    }
-
-    if (data.accion === "rechazar") {
-      if (!isAdmin) return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
-      if (deuda.estado !== "pendiente") return NextResponse.json({ error: "Estado inválido" }, { status: 409 });
-      const [updated] = await sql`
-        UPDATE deudas_solicitudes SET estado = 'rechazada', rechazado_motivo = ${data.motivo}
-        WHERE id = ${id} RETURNING *
-      `;
-      return NextResponse.json({ data: updated });
-    }
-
-    if (data.accion === "confirmar") {
-      if (deuda.user_id !== userId) return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
-      if (deuda.estado !== "aceptada") return NextResponse.json({ error: "Estado inválido" }, { status: 409 });
-      const [updated] = await sql`
-        UPDATE deudas_solicitudes SET estado = 'confirmada', confirmado_at = NOW()
-        WHERE id = ${id} RETURNING *
-      `;
-      return NextResponse.json({ data: updated });
-    }
 
     if (data.accion === "pagar") {
       if (!isAdmin) return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
@@ -68,6 +34,29 @@ export async function PATCH(request: Request, { params }: { params: { id: string
         VALUES (${id}, ${data.monto}, ${creadoPor})
         RETURNING *
       `;
+      return NextResponse.json({ data: pago });
+    }
+
+    if (data.accion === "editar") {
+      if (!isAdmin) return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
+      const [updated] = await sql`
+        UPDATE deudas_solicitudes
+        SET monto = COALESCE(${data.monto ?? null}, monto),
+            descripcion = COALESCE(${data.descripcion ?? null}, descripcion)
+        WHERE id = ${id} RETURNING *
+      `;
+      if (!updated) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+      return NextResponse.json({ data: updated });
+    }
+
+    if (data.accion === "editar_pago") {
+      if (!isAdmin) return NextResponse.json({ error: "Acceso denegado" }, { status: 403 });
+      const [pago] = await sql`
+        UPDATE deuda_pagos SET monto = ${data.monto}
+        WHERE id = ${data.pago_id} AND deuda_id = ${id}
+        RETURNING *
+      `;
+      if (!pago) return NextResponse.json({ error: "Pago no encontrado o no pertenece a esta deuda" }, { status: 404 });
       return NextResponse.json({ data: pago });
     }
 

@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { formatMonto, estadoBadge } from './deudas-utils';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 type Prestamo = {
   id: number;
@@ -13,6 +14,8 @@ type Prestamo = {
   solicitado_at: string;
   pagos_total: string | number;
 };
+
+const fmtFecha = (iso: string) => format(parseISO(iso), "d 'de' MMMM 'de' yyyy", { locale: es });
 
 export function DeudasUserClient() {
   const [prestamos, setPrestamos] = useState<Prestamo[]>([]);
@@ -34,25 +37,6 @@ export function DeudasUserClient() {
   }, []);
 
   useEffect(() => { fetchPrestamos(); }, [fetchPrestamos]);
-
-  const handleConfirmar = async (id: number) => {
-    try {
-      const res = await fetch(`/api/deudas/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion: 'confirmar' }),
-      });
-      if (res.ok) {
-        toast.success('Recepción confirmada');
-        fetchPrestamos();
-      } else {
-        const { error } = await res.json();
-        toast.error(error ?? 'Error al confirmar');
-      }
-    } catch {
-      toast.error('Error al confirmar');
-    }
-  };
 
   return (
     <div className="flex flex-col gap-6 w-full fade-in">
@@ -76,33 +60,19 @@ export function DeudasUserClient() {
                   <div>
                     <p className="font-semibold text-lg">{formatMonto(total)}</p>
                     {p.descripcion && <p className="text-sm text-zinc-500">{p.descripcion}</p>}
-                    <p className="text-xs text-zinc-400">
-                      {new Date(p.solicitado_at).toLocaleDateString('es-CL')}
-                    </p>
+                    <p className="text-xs text-zinc-400">{fmtFecha(p.solicitado_at)}</p>
                   </div>
                   <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${estadoBadge(p.estado)}`}>
-                    {p.estado === 'aceptada' ? 'Pendiente tu confirmación' : p.estado}
+                    {p.estado}
                   </span>
                 </div>
 
-                {p.estado === 'confirmada' && (
-                  <div className="flex gap-4 text-sm">
-                    {pagado > 0 && <span className="text-emerald-600">Pagado: {formatMonto(pagado)}</span>}
-                    <span className={saldo > 0 ? 'text-red-600 font-semibold' : 'text-emerald-600'}>
-                      {saldo > 0 ? `Saldo: ${formatMonto(saldo)}` : 'Cancelado'}
-                    </span>
-                  </div>
-                )}
-
-                {p.estado === 'aceptada' && (
-                  <Button
-                    size="sm"
-                    className="self-start bg-emerald-600 hover:bg-emerald-700 text-white"
-                    onClick={() => handleConfirmar(p.id)}
-                  >
-                    Confirmar recepción
-                  </Button>
-                )}
+                <div className="flex gap-4 text-sm">
+                  {pagado > 0 && <span className="text-emerald-600">Pagado: {formatMonto(pagado)}</span>}
+                  <span className={saldo > 0 ? 'text-red-600 font-semibold' : 'text-emerald-600'}>
+                    {saldo > 0 ? `Saldo: ${formatMonto(saldo)}` : 'Cancelado'}
+                  </span>
+                </div>
               </div>
             );
           })}

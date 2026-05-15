@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { formatMonto, tipoLabel, estadoBadge } from './deudas-utils';
+import { formatMonto, tipoLabel } from './deudas-utils';
 import { useNumericInput } from '@/hooks/useNumericInput';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface Usuario { id: number; nombre: string; }
 
@@ -27,8 +29,17 @@ interface HistorialItem {
   monto: string | number;
   descripcion: string | null;
   estado?: string;
-  fecha_hora: string;
+  registrado_at: string;
   item_tipo: 'deuda' | 'pago';
+}
+
+const fmtFecha = (iso: string) => format(parseISO(iso), "d 'de' MMMM 'de' yyyy, HH:mm", { locale: es });
+
+const itemKey = (item: HistorialItem) => `${item.deuda_id}-${item.pago_id ?? 'n'}-${item.item_tipo}`;
+
+function conceptoLabel(item: HistorialItem) {
+  if (item.item_tipo === 'deuda') return 'Préstamo entregado';
+  return <span className="text-emerald-600 font-medium">Pago recibido</span>;
 }
 
 export function DeudasAdminClient() {
@@ -48,6 +59,12 @@ export function DeudasAdminClient() {
   const montoPagoProps = useNumericInput(montoPago, setMontoPago);
   const [historial, setHistorial] = useState<{ prestamos: HistorialItem[]; adelantos: HistorialItem[] }>({ prestamos: [], adelantos: [] });
 
+  // Edición inline
+  const [editKey, setEditKey] = useState<string | null>(null);
+  const [editMonto, setEditMonto] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const editMontoProps = useNumericInput(editMonto, setEditMonto);
+
   useEffect(() => {
     fetch('/api/admin/usuarios').then(r => r.json()).then(d => setUsuarios(d.data ?? []));
   }, []);
@@ -62,9 +79,6 @@ export function DeudasAdminClient() {
   }, [usuarioId]);
 
   useEffect(() => { fetchDeudas(); }, [fetchDeudas]);
-
-  const fmtFechaHora = (iso: string) =>
-    new Date(iso).toLocaleString('es-CL', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
   const fetchHistorial = useCallback(async () => {
     if (!usuarioId) { setHistorial({ prestamos: [], adelantos: [] }); return; }
@@ -125,6 +139,42 @@ export function DeudasAdminClient() {
     } catch { toast.error('Error al registrar pago'); }
   };
 
+  const startEdit = (item: HistorialItem) => {
+    setEditKey(itemKey(item));
+    setEditMonto(String(parseFloat(String(item.monto))));
+    setEditDesc(item.descripcion ?? '');
+  };
+
+  const cancelEdit = () => {
+    setEditKey(null);
+    setEditMonto('');
+    setEditDesc('');
+  };
+
+  const saveEdit = async (item: HistorialItem) => {
+    const montoNum = parseFloat(editMonto);
+    if (!montoNum || montoNum <= 0) { toast.error('Monto inválido'); return; }
+    try {
+      const body = item.item_tipo === 'deuda'
+        ? { accion: 'editar', monto: montoNum, descripcion: editDesc.trim() || undefined }
+        : { accion: 'editar_pago', pago_id: item.pago_id, monto: montoNum };
+      const res = await fetch(`/api/deudas/${item.deuda_id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (res.ok) {
+        toast.success('Actualizado');
+        cancelEdit();
+        fetchDeudas();
+        fetchHistorial();
+      } else {
+        const { error } = await res.json();
+        toast.error(error ?? 'Error al actualizar');
+      }
+    } catch { toast.error('Error al actualizar'); }
+  };
+
   const handleDeleteItem = async (item: HistorialItem) => {
     if (!confirm('¿Eliminar este registro?')) return;
     const url = item.item_tipo === 'pago'
@@ -146,6 +196,71 @@ export function DeudasAdminClient() {
     const p = parseFloat(String(d.pagos_total));
     return d.tipo === 'prestamo' && ['confirmada', 'aceptada'].includes(d.estado) && (t - p) > 0;
   }) : undefined;
+
+  const renderTable = (items: HistorialItem[], showConcepto: boolean) => (
+    <table className="w-full text-sm">
+      <thead className="bg-zinc-50 dark:bg-zinc-800 text-zinc-500 text-xs uppercase">
+        <tr>
+          <th className="px-4 py-3 text-left">Fecha/Hora</th>
+          <th className="px-4 py-3 text-left">Concepto</th>
+          <th className="px-4 py-3 text-right">Monto</th>
+          <th className="px-4 py-3 text-left">Descripción</th>
+          <th className="px-4 py-3"></th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+        {items.map((item, i) => {
+          const isEditing = editKey === itemKey(item);
+          return (
+            <>
+              <tr key={i} className={item.item_tipo === 'pago' ? 'bg-emerald-50/60 dark:bg-emerald-900/10' : ''}>
+                <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">{fmtFecha(item.registrado_at)}</td>
+                <td className="px-4 py-3">{showConcepto ? conceptoLabel(item) : (item.item_tipo === 'pago' ? 'Pago' : tipoLabel(item.tipo))}</td>
+                <td className="px-4 py-3 text-right font-medium">{formatMonto(parseFloat(String(item.monto)))}</td>
+                <td className="px-4 py-3 text-zinc-500">{item.descripcion || '—'}</td>
+                <td className="px-4 py-3 text-right">
+                  {!isEditing && (
+                    <div className="flex gap-2 justify-end">
+                      <button onClick={() => startEdit(item)} className="text-xs text-blue-500 hover:text-blue-700">Editar</button>
+                      <button onClick={() => handleDeleteItem(item)} className="text-xs text-red-500 hover:text-red-700">Eliminar</button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+              {isEditing && (
+                <tr className="bg-zinc-50 dark:bg-zinc-900/50">
+                  <td colSpan={5} className="px-4 py-3">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs text-zinc-400">Monto</label>
+                        <input type="number" min={0.01} step={0.01}
+                          className="border rounded px-2 py-1 w-32 text-sm"
+                          {...editMontoProps}
+                        />
+                      </div>
+                      {item.item_tipo === 'deuda' && (
+                        <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
+                          <label className="text-xs text-zinc-400">Descripción</label>
+                          <input className="border rounded px-2 py-1 text-sm"
+                            value={editDesc}
+                            onChange={e => setEditDesc(e.target.value)}
+                          />
+                        </div>
+                      )}
+                      <div className="flex gap-2 items-end">
+                        <button onClick={() => saveEdit(item)} className="text-xs px-3 py-1.5 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200">Guardar</button>
+                        <button onClick={cancelEdit} className="text-xs px-3 py-1.5 rounded bg-zinc-100 text-zinc-600 hover:bg-zinc-200">Cancelar</button>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </>
+          );
+        })}
+      </tbody>
+    </table>
+  );
 
   return (
     <div className="flex flex-col gap-6 w-full fade-in">
@@ -214,30 +329,7 @@ export function DeudasAdminClient() {
             ) : historial.prestamos.length === 0 ? (
               <p className="p-5 text-sm text-zinc-400">Sin préstamos registrados.</p>
             ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-zinc-50 dark:bg-zinc-800 text-zinc-500 text-xs uppercase">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Fecha/Hora</th>
-                    <th className="px-4 py-3 text-left">Tipo</th>
-                    <th className="px-4 py-3 text-left">Estado</th>
-                    <th className="px-4 py-3 text-right">Monto</th>
-                    <th className="px-4 py-3 text-left">Descripción</th>
-                    <th className="px-4 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {historial.prestamos.map((item, i) => (
-                    <tr key={i} className={item.item_tipo === 'pago' ? 'bg-emerald-50/60 dark:bg-emerald-900/10' : ''}>
-                      <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">{fmtFechaHora(item.fecha_hora)}</td>
-                      <td className="px-4 py-3">{item.tipo === 'pago' ? 'Pago' : tipoLabel(item.tipo)}</td>
-                      <td className="px-4 py-3">{item.estado ? <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${estadoBadge(item.estado)}`}>{item.estado}</span> : '—'}</td>
-                      <td className="px-4 py-3 text-right font-medium">{formatMonto(parseFloat(String(item.monto)))}</td>
-                      <td className="px-4 py-3 text-zinc-500">{item.descripcion || '—'}</td>
-                      <td className="px-4 py-3 text-right"><button onClick={() => handleDeleteItem(item)} className="text-xs text-red-500 hover:text-red-700">Eliminar</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              renderTable(historial.prestamos, true)
             )}
           </div>
 
@@ -251,28 +343,7 @@ export function DeudasAdminClient() {
             ) : historial.adelantos.length === 0 ? (
               <p className="p-5 text-sm text-zinc-400">Sin adelantos ni quincenas registrados.</p>
             ) : (
-              <table className="w-full text-sm">
-                <thead className="bg-zinc-50 dark:bg-zinc-800 text-zinc-500 text-xs uppercase">
-                  <tr>
-                    <th className="px-4 py-3 text-left">Fecha/Hora</th>
-                    <th className="px-4 py-3 text-left">Tipo</th>
-                    <th className="px-4 py-3 text-right">Monto</th>
-                    <th className="px-4 py-3 text-left">Descripción</th>
-                    <th className="px-4 py-3"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {historial.adelantos.map((item, i) => (
-                    <tr key={i}>
-                      <td className="px-4 py-3 text-zinc-500 whitespace-nowrap">{fmtFechaHora(item.fecha_hora)}</td>
-                      <td className="px-4 py-3">{item.tipo === 'pago' ? 'Pago' : tipoLabel(item.tipo)}</td>
-                      <td className="px-4 py-3 text-right font-medium">{formatMonto(parseFloat(String(item.monto)))}</td>
-                      <td className="px-4 py-3 text-zinc-500">{item.descripcion || '—'}</td>
-                      <td className="px-4 py-3 text-right"><button onClick={() => handleDeleteItem(item)} className="text-xs text-red-500 hover:text-red-700">Eliminar</button></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              renderTable(historial.adelantos, false)
             )}
           </div>
         </div>
