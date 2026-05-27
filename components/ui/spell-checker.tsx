@@ -20,6 +20,9 @@ export function SpellCheckedInput({
   const [matches, setMatches] = useState<LTMatch[]>([])
   const [tooltipMatch, setTooltipMatch] = useState<LTMatch | null>(null)
   const [internalValue, setInternalValue] = useState<string>(String(value ?? ''))
+  const [tooltipHovered, setTooltipHovered] = useState(false)
+  const tooltipHoveredRef = useRef(false)
+  const [tooltipLeft, setTooltipLeft] = useState(0)
 
   const inputRef = useRef<HTMLInputElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -166,9 +169,16 @@ export function SpellCheckedInput({
           const charIndex = Math.floor((e.clientX - inputRect.left - paddingLeft + inputEl.scrollLeft) / charWidth)
           const found = matches.find(m => charIndex >= m.offset && charIndex < m.offset + m.length)
           setTooltipMatch(found ?? null)
+          if (found) {
+            const xPalabraInicio = inputRect.left + paddingLeft + found.offset * charWidth - inputEl.scrollLeft
+            const clamped = Math.max(0, Math.min(xPalabraInicio, window.innerWidth - 140))
+            setTooltipLeft(clamped - inputRect.left)
+          }
         }}
         onMouseLeave={() => {
-          hideTooltipRef.current = setTimeout(() => setTooltipMatch(null), 150)
+          hideTooltipRef.current = setTimeout(() => {
+            if (!tooltipHoveredRef.current) setTooltipMatch(null)
+          }, 150)
         }}
         className={className}
         tabIndex={0}
@@ -179,12 +189,20 @@ export function SpellCheckedInput({
       {/* TOOLTIP */}
       {tooltipMatch && tooltipMatch.replacements.length > 0 && (
         <div
-          onMouseEnter={() => clearTimeout(hideTooltipRef.current)}
-          onMouseLeave={() => setTooltipMatch(null)}
+          onMouseEnter={() => {
+            clearTimeout(hideTooltipRef.current)
+            setTooltipHovered(true)
+            tooltipHoveredRef.current = true
+          }}
+          onMouseLeave={() => {
+            setTooltipHovered(false)
+            tooltipHoveredRef.current = false
+            hideTooltipRef.current = setTimeout(() => setTooltipMatch(null), 100)
+          }}
           style={{
             position: 'absolute',
             top: '100%',
-            left: 0,
+            left: `${tooltipLeft}px`,
             marginTop: '4px',
             zIndex: 9999,
             background: 'white',
