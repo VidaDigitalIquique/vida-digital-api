@@ -66,6 +66,7 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
       if (filtroTipo) params.set('tipo', filtroTipo);
       if (filtroDesde) params.set('desde', filtroDesde);
       if (filtroHasta) params.set('hasta', filtroHasta);
+      params.set('limit', '500');
       const res = await fetch(`/api/pettycash?${params}`);
       if (res.ok) {
         const { data, saldo: s } = await res.json();
