@@ -29,6 +29,17 @@ function lastDayOfMonth(): string {
   return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10);
 }
 
+function daysInRange(desde: string, hasta: string): string[] {
+  const days: string[] = [];
+  const d = new Date(desde + 'T00:00:00');
+  const end = new Date(hasta + 'T00:00:00');
+  while (d <= end) {
+    days.push(d.toISOString().slice(0, 10));
+    d.setDate(d.getDate() + 1);
+  }
+  return days.reverse();
+}
+
 export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [saldo, setSaldo] = useState(0);
@@ -265,58 +276,66 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
       {/* Lista */}
       {loading ? (
         <div className="py-12 text-center text-zinc-500 animate-pulse">Cargando...</div>
-      ) : movimientos.length === 0 ? (
-        <div className="border border-dashed rounded-xl p-10 text-center text-zinc-400 text-sm">
-          No hay movimientos registrados.
-        </div>
       ) : (
-        <div className="bg-white dark:bg-zinc-900 border rounded-xl overflow-hidden shadow-sm">
-          <table className="w-full text-sm">
-            <thead className="bg-zinc-50 dark:bg-zinc-800 text-zinc-500 text-xs uppercase">
-              <tr>
-                <th className="px-4 py-3 text-left">Fecha</th>
-                <th className="px-4 py-3 text-left">Hora</th>
-                <th className="px-4 py-3 text-left">Tipo</th>
-                <th className="px-4 py-3 text-left">Concepto</th>
-                <th className="px-4 py-3 text-right">Monto</th>
-                {isAdmin && <th className="px-4 py-3" />}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {movimientos.map(m => (
-                <tr key={m.id} className={`transition-colors ${m.tipo === 'ingreso' ? 'bg-emerald-50/60 hover:bg-emerald-100/60 dark:bg-emerald-900/10 dark:hover:bg-emerald-900/20' : 'bg-red-50/60 hover:bg-red-100/60 dark:bg-red-900/10 dark:hover:bg-red-900/20'}`}>
-                  <td className="px-4 py-3 text-zinc-500">{formatFecha(m.fecha)}</td>
-                  <td className="px-4 py-3 text-zinc-500">{m.created_at ? new Date(m.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
-                  <td className="px-4 py-3">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                      m.tipo === 'ingreso'
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}>
-                      {m.tipo === 'egreso' ? 'gasto' : m.tipo}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{m.concepto}</td>
-                  <td className={`px-4 py-3 text-right font-medium ${
-                    m.tipo === 'ingreso' ? 'text-emerald-600' : 'text-red-600'
-                  }`}>
-                    {m.tipo === 'egreso' ? '-' : ''}{formatMonto(parseFloat(String(m.monto)))}
-                  </td>
-                  {isAdmin && (
-                    <td className="px-4 py-3">
-                      <button
-                        aria-label="Editar registro"
-                        onClick={() => openEdit(m)}
-                        className="text-zinc-400 hover:text-blue-600 transition-colors"
-                      >
-                        ✏️
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="flex flex-col gap-4">
+          {daysInRange(filtroDesde, filtroHasta).map(day => {
+            const dayMovs = movimientos.filter(m => m.fecha.slice(0, 10) === day);
+            return (
+              <div key={day} className="bg-white dark:bg-zinc-900 border rounded-xl overflow-hidden shadow-sm">
+                <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border-b">
+                  <span className="font-semibold text-sm">{formatFecha(day)}</span>
+                </div>
+                {dayMovs.length === 0 ? (
+                  <div className="py-6 text-center text-zinc-400 text-sm">NO HUBO MOVIMIENTOS ESTE DÍA</div>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead className="bg-zinc-50 dark:bg-zinc-800 text-zinc-500 text-xs uppercase">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Hora</th>
+                        <th className="px-4 py-2 text-left">Tipo</th>
+                        <th className="px-4 py-2 text-left">Concepto</th>
+                        <th className="px-4 py-2 text-right">Monto</th>
+                        {isAdmin && <th className="px-4 py-2" />}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                      {dayMovs.map(m => (
+                        <tr key={m.id} className={`transition-colors ${m.tipo === 'ingreso' ? 'bg-emerald-50/60 hover:bg-emerald-100/60 dark:bg-emerald-900/10 dark:hover:bg-emerald-900/20' : 'bg-red-50/60 hover:bg-red-100/60 dark:bg-red-900/10 dark:hover:bg-red-900/20'}`}>
+                          <td className="px-4 py-2 text-zinc-500">{m.created_at ? new Date(m.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                          <td className="px-4 py-2">
+                            <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                              m.tipo === 'ingreso'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'bg-red-100 text-red-700'
+                            }`}>
+                              {m.tipo === 'egreso' ? 'gasto' : m.tipo}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">{m.concepto}</td>
+                          <td className={`px-4 py-2 text-right font-medium ${
+                            m.tipo === 'ingreso' ? 'text-emerald-600' : 'text-red-600'
+                          }`}>
+                            {m.tipo === 'egreso' ? '-' : ''}{formatMonto(parseFloat(String(m.monto)))}
+                          </td>
+                          {isAdmin && (
+                            <td className="px-4 py-2">
+                              <button
+                                aria-label="Editar registro"
+                                onClick={() => openEdit(m)}
+                                className="text-zinc-400 hover:text-blue-600 transition-colors"
+                              >
+                                ✏️
+                              </button>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
       </div>
