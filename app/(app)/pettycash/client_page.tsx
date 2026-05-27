@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -277,29 +277,32 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
       {loading ? (
         <div className="py-12 text-center text-zinc-500 animate-pulse">Cargando...</div>
       ) : (
-        <div className="flex flex-col gap-4">
-          {daysInRange(filtroDesde, filtroHasta).map(day => {
-            const dayMovs = movimientos.filter(m => m.fecha.slice(0, 10) === day);
-            return (
-              <div key={day} className="bg-white dark:bg-zinc-900 border rounded-xl overflow-hidden shadow-sm">
-                <div className="px-4 py-2 bg-zinc-50 dark:bg-zinc-800 border-b">
-                  <span className="font-semibold text-sm">{formatFecha(day)}</span>
-                </div>
-                {dayMovs.length === 0 ? (
-                  <div className="py-6 text-center text-zinc-400 text-sm">NO HUBO MOVIMIENTOS ESTE DÍA</div>
-                ) : (
-                  <table className="w-full text-sm">
-                    <thead className="bg-zinc-50 dark:bg-zinc-800 text-zinc-500 text-xs uppercase">
+        <div className="bg-white dark:bg-zinc-900 border rounded-xl overflow-hidden shadow-sm">
+          <table className="w-full text-sm">
+            <thead className="bg-zinc-50 dark:bg-zinc-800 text-zinc-500 text-xs uppercase">
+              <tr>
+                <th className="px-4 py-2 text-left">Hora</th>
+                <th className="px-4 py-2 text-left">Tipo</th>
+                <th className="px-4 py-2 text-left">Concepto</th>
+                <th className="px-4 py-2 text-right">Monto</th>
+                {isAdmin && <th className="px-4 py-2" />}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {daysInRange(filtroDesde, filtroHasta).map(day => {
+                const dayMovs = movimientos.filter(m => m.fecha.slice(0, 10) === day);
+                const colSpan = isAdmin ? 5 : 4;
+                return (
+                  <React.Fragment key={day}>
+                    <tr className="bg-zinc-50 dark:bg-zinc-800">
+                      <td colSpan={colSpan} className="px-4 py-2 text-sm font-semibold">{formatFecha(day)}</td>
+                    </tr>
+                    {dayMovs.length === 0 ? (
                       <tr>
-                        <th className="px-4 py-2 text-left">Hora</th>
-                        <th className="px-4 py-2 text-left">Tipo</th>
-                        <th className="px-4 py-2 text-left">Concepto</th>
-                        <th className="px-4 py-2 text-right">Monto</th>
-                        {isAdmin && <th className="px-4 py-2" />}
+                        <td colSpan={colSpan} className="px-4 py-2 text-center text-zinc-400 text-sm">NO HUBO MOVIMIENTOS ESTE DÍA</td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                      {dayMovs.map(m => (
+                    ) : (
+                      dayMovs.map(m => (
                         <tr key={m.id} className={`transition-colors ${m.tipo === 'ingreso' ? 'bg-emerald-50/60 hover:bg-emerald-100/60 dark:bg-emerald-900/10 dark:hover:bg-emerald-900/20' : 'bg-red-50/60 hover:bg-red-100/60 dark:bg-red-900/10 dark:hover:bg-red-900/20'}`}>
                           <td className="px-4 py-2 text-zinc-500">{m.created_at ? new Date(m.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
                           <td className="px-4 py-2">
@@ -329,13 +332,13 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
                             </td>
                           )}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
-            );
-          })}
+                      ))
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
       </div>
