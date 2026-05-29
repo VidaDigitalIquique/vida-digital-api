@@ -220,16 +220,16 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
       <div className="bg-white dark:bg-zinc-900 border rounded-xl p-6 shadow-sm">
         <div className="grid grid-cols-3 gap-4">
           <div className="flex flex-col gap-1">
-            <p className="text-sm text-zinc-500">Saldo actual</p>
-            <p className={`text-4xl font-bold ${saldoColor(saldo)}`}>{formatMonto(saldo)}</p>
-          </div>
-          <div className="flex flex-col gap-1 border-l border-r border-zinc-200 dark:border-zinc-700 px-4">
             <p className="text-sm text-zinc-500">Ingresos</p>
             <p className="text-4xl font-bold text-emerald-600">{formatMonto(totalIngresosPeriodo)}</p>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 border-l border-r border-zinc-200 dark:border-zinc-700 px-4">
             <p className="text-sm text-zinc-500">Gastos</p>
-            <p className="text-4xl font-bold text-red-600">{formatMonto(totalEgresosPeriodo)}</p>
+            <p className="text-4xl font-bold text-blue-600">{formatMonto(totalEgresosPeriodo)}</p>
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm text-zinc-500">Saldo actual</p>
+            <p className="text-4xl font-bold text-red-600">{formatMonto(saldo)}</p>
           </div>
         </div>
       </div>
