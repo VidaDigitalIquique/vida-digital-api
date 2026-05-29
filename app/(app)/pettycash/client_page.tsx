@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -44,6 +44,11 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [saldo, setSaldo] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  // Totales del período según filtros activos (derivados del estado ya filtrado)
+  const totalIngresosPeriodo = useMemo(() => movimientos.reduce((acc, m) => m.tipo === 'ingreso' ? acc + Number(m.monto) : acc, 0), [movimientos]);
+  const totalEgresosPeriodo = useMemo(() => movimientos.reduce((acc, m) => m.tipo === 'egreso' ? acc + Number(m.monto) : acc, 0), [movimientos]);
+
   const [saving, setSaving] = useState(false);
 
   // Filtros
@@ -211,10 +216,22 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
         </div>
       </div>
 
-      {/* Saldo */}
-      <div className="bg-white dark:bg-zinc-900 border rounded-xl p-6 shadow-sm flex flex-col gap-1">
-        <p className="text-sm text-zinc-500">Saldo actual</p>
-        <p className={`text-4xl font-bold ${saldoColor(saldo)}`}>{formatMonto(saldo)}</p>
+      {/* Saldo + métricas del período */}
+      <div className="bg-white dark:bg-zinc-900 border rounded-xl p-6 shadow-sm">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="flex flex-col gap-1">
+            <p className="text-sm text-zinc-500">Saldo actual</p>
+            <p className={`text-4xl font-bold ${saldoColor(saldo)}`}>{formatMonto(saldo)}</p>
+          </div>
+          <div className="flex flex-col gap-1 border-l border-r border-zinc-200 dark:border-zinc-700 px-4">
+            <p className="text-sm text-zinc-500">Ingresos</p>
+            <p className="text-4xl font-bold text-emerald-600">{formatMonto(totalIngresosPeriodo)}</p>
+          </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm text-zinc-500">Gastos</p>
+            <p className="text-4xl font-bold text-red-600">{formatMonto(totalEgresosPeriodo)}</p>
+          </div>
+        </div>
       </div>
 
       {/* Formulario */}
