@@ -36,6 +36,147 @@ const CUENTAS = {
   },
 } as const;
 
+// ─── Mapeo manual de nombres (Excel → movidcto) ──────────────────
+
+const NOMBRE_MAP: Record<string, string> = {
+  "ABONO OLIVER VILLA": "OLIVER VILLA",
+  "ALEXANDER (PREVIOUS DEBT)": "ALEXANDER RAFAEL FLORES",
+  "Andrea 0097 U$3124 / Mirna Paredes 0083 / 2832 U$3886": "MIRNA PAREDES",
+  "BLANCA GONZALEZ": "BLANCA GONZÁLEZ GONZÁLEZ",
+  "CARLOS ROMAN YUVISA": "CARLOS ROMAN RAMIREZ ZAMORA",
+  "CARLOS ROMAN YUVISCA": "CARLOS ROMAN RAMIREZ ZAMORA",
+  "CAROLA PEREZ (CHEQUE BY GHANIMA)": "CAROLA MAMANI PEREZ",
+  "CAROLA PEREZ SOLD GOODS TO MARIO": "CAROLA MAMANI PEREZ",
+  "CECILIA (MARIO)": "CECILIA CRUZ ALTAMIRANO",
+  "CHANDRU (DAS LTDA)": "IMPORT EXPORT DAS LTDA",
+  "COMERCIAL CAS": "COMERCIALIZADORA E IMPORTADORA CAS.SPA",
+  "COMERCIALIZADORA CAS": "COMERCIALIZADORA E IMPORTADORA CAS.SPA",
+  "COMERCIALIZADORA SOLANGE ADAME EIRL": "COMERCIALIZADORA SOLANGE ADASME EIRL",
+  "COSME CORDOBA (ABONO)": "COSME CORDOBA",
+  "CRISTIAN REYES": "CRISTIAN BELMAR REYES",
+  "DATTA (KAMLESH)": "IMPORT EXPORT DATTA SPA",
+  "DIPEN - SURI CREACIONES": "SURI CREACIONES SPA",
+  "DOLPHIN LTDA": "IMPORT EXPORT DOLPHIN LIMITADA",
+  "EDWIN MIRANDA (ABONO)": "EDWIN LEONARDO MIRANDA MENDOZA",
+  "EMEC LTDA": "EMEC LIMITADA (SR. GABRIEL) URUGUAY",
+  "ERWIN FIGUEREOA": "ERWIN FIGUEROA",
+  "FATIMA (FREIDORA Y PASTA)": "TIENDA BAZAR (FATIMA MORINGO)",
+  "FATIMA ARAYA": "LUCERO FATIMA ARRAYA ARRAYA",
+  "HERNAN CHAMORRO": "HERNAN CHAMORO PARAGUAY",
+  "JAVIER TICONA (PAULA)": "JAVIER TICONA PATZI",
+  "JUAN PABLO (Montesur) Torino": "JUAN PABLO",
+  "KAMLESH": "IMPORT EXPORT DATTA SPA",
+  "KESWANI PEPE": "COMERCIAL KESWANI Y CIA LIMITADA",
+  "LIDIA (HIJA EULOGIA)": "LIDIA CHINCHE QUENTA",
+  "LUIS FERNANDO (MATUS - MATIAS)": "MATIAS BERNAL (MATUS PARAGUAY)",
+  "LUISCITO": "DIAZ E HIJOS S.A.",
+  "LUISITO U$24397 - U$41.65 BANK CHARGE": "DIAZ E HIJOS S.A.",
+  "MARCO PGY": "MARCO MIGUEL JACQUET STEPPHUN",
+  "MARIO AUCACHI": "MARIO LEONCIO AUCACHI QUISPE",
+  "MARIO AUCACHI US$30,000 - US$4,000 PRAVIN": "MARIO LEONCIO AUCACHI QUISPE",
+  "MASHITLA (RATTAN)": "MASHITLA S.A.",
+  "MATIAS BERNAL (MATUS)": "MATIAS BERNAL (MATUS PARAGUAY)",
+  "MAURICIO (abono)": "MAURICIO CHOQUE FUENTES",
+  "MAURICIO CHOQUE U$2,475 - U$2,000 PRAVIN": "MAURICIO CHOQUE FUENTES",
+  "MAURICIO FUENTE CHOQUE": "MAURICIO CHOQUE FUENTES",
+  "MAURICIO U$4000-U$2000 PRAVIN": "MAURICIO CHOQUE FUENTES",
+  "MELISSA ROSEMARY": "MELISA ROSMERY SOLIZ FERNANDEZ",
+  "MILENKA - U$4206 - U$6 discount - U$400 Office Expenses": "MILENKA CONDORI CONDORI",
+  "MILENKA CONDORI (sold of Wilma - All)": "MILENKA CONDORI CONDORI",
+  "MODESTO $40.000 - $250 COMISION": "MODESTO MAMANI",
+  "MODESTO ($19.900 - $18.000 given to Shashi)": "MODESTO MAMANI",
+  "MODESTO U$23635 - U$15000 SHASHI": "MODESTO MAMANI",
+  "Modesto US$80,000 - US$400 Comission": "MODESTO MAMANI",
+  "Modesto US$90,000 - US$450 Comission": "MODESTO MAMANI",
+  "MYRIAN (CHEQUE GUARANY)": "MYRIAN TERESITA MACHADO PRIETO (CASA MATI)",
+  "NIEVE CONDORI": "NIEVES CONDORI",
+  "NOEMI GONZALEZ": "NOEMI GONZÁLES",
+  "PAMELA BARAHONA COTAPI": "PAMELA BARAHONA COTAIPI",
+  "PAOLA (CRISTIAN)": "PAOLA ARIAS RUCHICHI",
+  "PAOLA ARIAS (CRISTIAN REYES ABONO)": "PAOLA ARIAS RUCHICHI",
+  "PAOLA ARIAS (CRISTIAN)": "PAOLA ARIAS RUCHICHI",
+  "PAOLA ARIAS (SANTANDER)": "PAOLA ARIAS RUCHICHI",
+  "PAOLA ARIAS (SCOTIA SJ)": "PAOLA ARIAS RUCHICHI",
+  "PAOLA ARIAS RUCHICHI (CRISTIAN)": "PAOLA ARIAS RUCHICHI",
+  "PAOLA ARIAS SANTANDER": "PAOLA ARIAS RUCHICHI",
+  "PAOLA ARIAS SANTANDER SJ": "PAOLA ARIAS RUCHICHI",
+  "PEPE ARICA": "COMERCIAL KESWANI Y CIA LIMITADA",
+  "PEPE ARICA (U$186+U$336)": "COMERCIAL KESWANI Y CIA LIMITADA",
+  "Pepe Arica Keswani": "COMERCIAL KESWANI Y CIA LIMITADA",
+  "RAQUELA ALVAREZ PAREDES": "RAQUEL ALVAREZ PREDES",
+  "RATTAN MASHITLA": "MASHITLA S.A.",
+  "SUPER MERCADO PUEBLO (ROSIO)": "SUPER MERCADOS PUEBLO SA ROSIO DAVALOS",
+  "SUPER MERCADO PUEBLO ROSIO": "SUPER MERCADOS PUEBLO SA ROSIO DAVALOS",
+  "TORINO (EMEC LTDA)": "EMEC LIMITADA (SR. GABRIEL) URUGUAY",
+  "TRAVITTA": "IMPORT EXPORT TRAVITA SPA",
+  "WILMA FIGUEROA (SANJH)": "WILMA FIGUEROA SANTA CRUZ",
+  "WILMA FIGUEROA US$13,305 - US$167 COMISSION": "WILMA FIGUEROA SANTA CRUZ",
+  "YASSIM (TRES HERMANOS)": "TRES HERMANO Y HERMANA S.A (ASUNCION)",
+  "YOLANDA (TACNA) Abono Mole Pen": "YOLANDA HUAYCANI COAQUIRA",
+};
+
+// Nombres del Excel que deben ignorarse completamente
+const IGNORAR_NOMBRES = new Set([
+  "---",
+  "$144000 $256000",
+  "(200K + 130T)",
+  "(500K + 700K + 976K)",
+  "(SCOTIA SJ)",
+  "0191 U$210 ($199500) / 2931 U$120 ($114000)",
+  "0419 - U$117 ($113200) + 3076 - U$721 ($695800)",
+  "100K + 100K + 119.200 (3 TRANSFERS)",
+  "3099 US$500 / 453 US$250",
+  "668-U$577 / 3217 - U$230",
+  "ABHISHEK",
+  "ABHISHNEK U$2.00",
+  "ADVANCE",
+  "ANGEL RAFAEL SALAZAR GONZALEZ",
+  "ASRAF",
+  "CASH",
+  "FLORA ANGELA GALLEGUILLOS HERRERA",
+  "HEMANT (GLOBAL TRADERS / ANAND)",
+  "MR -(RECD FROM DINIALI)",
+  "NV 119 $88.000 (US93) NV 129 $200.000 (US210)",
+  "PAULINA",
+  "SUPER MERCADOR PUEBLO (ROSIO)",
+  "T-$101500+T-250000",
+  "TRANSFERRED FROM SANJH TO VIDA DIGITAL",
+  "US$4,500 - US$4,000 PRAVIN",
+  "US$450 - US$300 RAHUL",
+]);
+
+// Patrones de nombre que deben ignorarse (case-insensitive, subcadena)
+const IGNORAR_PATRONES = [
+  "cambio de pesos",
+  "cambio de dolar",
+  "transferencia desde",
+  "transferencia a banco",
+  "movimiento a banco",
+  "depósito en banco",
+  "SALDOS EN LAS CUENTAS",
+  "trabajador",
+  "usuario de la app",
+  "usuario del app",
+  "Santander DEP",
+  "SANTANDER SJ",
+  "SCOTIA SJ",
+  "SCOTIA VD",
+  "TRANSF SANTANDER",
+  "FROM SANTANDER",
+  "PURCHASE",
+  "PURCHASED",
+  "Exchange",
+  "EXCHANGE",
+];
+
+function debeIgnorarFila(nombre: string | null): boolean {
+  if (!nombre) return false;
+  const trimmed = nombre.trim();
+  if (IGNORAR_NOMBRES.has(trimmed)) return true;
+  const lower = trimmed.toLowerCase();
+  return IGNORAR_PATRONES.some((p) => lower.includes(p.toLowerCase()));
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────
 
 function roundUpToHalf(value: number): number {
@@ -152,6 +293,9 @@ async function main() {
         nombreCliente = String(altNameRaw).trim();
       }
 
+      // Skip ignored rows
+      if (debeIgnorarFila(nombreCliente)) continue;
+
       const columnaNotas = notaRaw ? String(notaRaw).trim() : null;
 
       // Observaciones: content from NOTAS column, or CLIENTE if it looks like a description
@@ -241,6 +385,9 @@ async function main() {
       } else if (altNameRaw && String(altNameRaw).trim()) {
         nombreCliente = String(altNameRaw).trim();
       }
+
+      // Skip ignored rows
+      if (debeIgnorarFila(nombreCliente)) continue;
 
       const columnaNotas = notaRaw ? String(notaRaw).trim() : null;
 
@@ -343,7 +490,10 @@ async function main() {
   }> {
     if (!nombre) return { kcodcli2: null, empresa: null };
 
-    const key = nombre.toLowerCase().trim();
+    // Use manual mapping if available
+    const nombreBuscado = NOMBRE_MAP[nombre.trim()] ?? nombre.trim();
+
+    const key = nombreBuscado.toLowerCase().trim();
     if (clientCache.has(key)) {
       const cached = clientCache.get(key)!;
       if (cached === null) return { kcodcli2: null, empresa: null };
@@ -353,7 +503,7 @@ async function main() {
     // Search vida first, then sanjh
     const vidaRows = await sql`
       SELECT DISTINCT kcodcli2 FROM vida.movidcto
-      WHERE cliente ILIKE ${"%" + nombre + "%"} AND tipomovi = 'V'
+      WHERE cliente ILIKE ${"%" + nombreBuscado + "%"} AND tipomovi = 'V'
       LIMIT 1
     `;
     if (vidaRows.length > 0) {
@@ -364,7 +514,7 @@ async function main() {
 
     const sanjhRows = await sql`
       SELECT DISTINCT kcodcli2 FROM sanjh.movidcto
-      WHERE cliente ILIKE ${"%" + nombre + "%"} AND tipomovi = 'V'
+      WHERE cliente ILIKE ${"%" + nombreBuscado + "%"} AND tipomovi = 'V'
       LIMIT 1
     `;
     if (sanjhRows.length > 0) {
