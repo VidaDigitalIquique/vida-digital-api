@@ -1,0 +1,208 @@
+import { z } from "zod";
+
+// ─── Configuración ───────────────────────────────────────────────
+
+export const CajaConfigSchema = z.object({
+  dolar_dia: z.number().min(0, "El valor del dólar no puede ser negativo"),
+});
+
+export type CajaConfig = z.infer<typeof CajaConfigSchema>;
+
+export interface CajaConfigResponse {
+  dolar_dia: number;
+  updated_at: string;
+  updated_por: string;
+}
+
+// ─── Cuentas bancarias ───────────────────────────────────────────
+
+export const CajaCuentaCreateSchema = z.object({
+  nombre: z
+    .string()
+    .min(1, "El nombre es requerido")
+    .max(100, "Máximo 100 caracteres"),
+  moneda: z.enum(["USD", "CLP"]),
+  orden: z.number().int().min(0).default(0),
+  activa: z.boolean().default(true),
+});
+
+export const CajaCuentaUpdateSchema = z.object({
+  nombre: z.string().min(1).max(100).optional(),
+  moneda: z.enum(["USD", "CLP"]).optional(),
+  orden: z.number().int().min(0).optional(),
+  activa: z.boolean().optional(),
+});
+
+export type CajaCuentaCreate = z.infer<typeof CajaCuentaCreateSchema>;
+export type CajaCuentaUpdate = z.infer<typeof CajaCuentaUpdateSchema>;
+
+export interface CajaCuenta {
+  id: number;
+  nombre: string;
+  moneda: "USD" | "CLP";
+  activa: boolean;
+  orden: number;
+  created_at: string;
+}
+
+// ─── Movimientos ─────────────────────────────────────────────────
+
+export const CajaMovimientoCreateSchema = z.object({
+  fecha: z.string().min(1, "La fecha es requerida"),
+  tipo: z.enum(["cobro", "gasto"]),
+  kcodcli2: z.number().int().positive().nullable().optional(),
+  nombre_cliente: z.string().nullable().optional(),
+  cuenta_id: z.number().int().positive("Selecciona una cuenta"),
+  moneda: z.enum(["USD", "CLP"]),
+  monto: z.number().positive("El monto debe ser mayor a 0"),
+  forma_pago: z.enum(["efectivo", "cheque", "transferencia"]),
+  observaciones: z.string().nullable().optional(),
+  empresa: z.enum(["vida", "sanjh"]).nullable().optional(),
+});
+
+export const CajaMovimientoUpdateSchema = z.object({
+  fecha: z.string().min(1).optional(),
+  tipo: z.enum(["cobro", "gasto"]).optional(),
+  kcodcli2: z.number().int().positive().nullable().optional(),
+  nombre_cliente: z.string().nullable().optional(),
+  cuenta_id: z.number().int().positive().optional(),
+  moneda: z.enum(["USD", "CLP"]).optional(),
+  monto: z.number().positive().optional(),
+  forma_pago: z.enum(["efectivo", "cheque", "transferencia"]).optional(),
+  observaciones: z.string().nullable().optional(),
+  empresa: z.enum(["vida", "sanjh"]).nullable().optional(),
+});
+
+export type CajaMovimientoUpdate = z.infer<typeof CajaMovimientoUpdateSchema>;
+
+/**
+ * Conversión CLP → USD según fórmula del Excel:
+ * ROUNDUP(monto_clp / dolar_dia, 0.5)
+ * = redondea hacia arriba al múltiplo de 0.5 más cercano.
+ */
+export function roundUpToHalf(value: number): number {
+  return Math.ceil(value * 2) / 2;
+}
+
+export type CajaMovimientoCreate = z.infer<typeof CajaMovimientoCreateSchema>;
+
+export interface CajaMovimiento {
+  id: number;
+  fecha: string;
+  tipo: "cobro" | "gasto";
+  kcodcli2: number | null;
+  nombre_cliente: string | null;
+  cuenta_id: number;
+  cuenta_nombre?: string;
+  moneda: "USD" | "CLP";
+  monto: number;
+  monto_usd: number | null;
+  tipo_cambio: number | null;
+  forma_pago: "efectivo" | "cheque" | "transferencia";
+  observaciones: string | null;
+  empresa: "vida" | "sanjh" | null;
+  usuario_id: number;
+  usuario_nombre: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Búsqueda de clientes compradores ─────────────────────────────
+
+export interface ClienteComprador {
+  kcodcli2: number;
+  nombre: string;
+  empresas: ("vida" | "sanjh")[];
+  total_compras: number;
+  ultima_compra: string;
+}
+
+// ─── Imputación a notas de venta ──────────────────────────────────
+
+export const NotaImputacionSchema = z.object({
+  empresa: z.enum(["vida", "sanjh"]),
+  knumfoli: z.string().min(1, "Número de nota requerido"),
+  monto_aplicado: z.number().positive("El monto debe ser mayor a 0"),
+});
+
+export const CajaImputacionCreateSchema = z.object({
+  notas: z.array(NotaImputacionSchema),
+});
+
+export type NotaImputacion = z.infer<typeof NotaImputacionSchema>;
+export type CajaImputacionCreate = z.infer<typeof CajaImputacionCreateSchema>;
+
+export interface NotaVentaConSaldo {
+  knumfoli: string;
+  fechanvt: string;
+  val_rea: number;
+  total_pagado: number;
+  saldo_pendiente: number;
+  empresa: "vida" | "sanjh";
+}
+
+export interface ImputacionResult {
+  movimiento_id: number;
+  total_imputado: number;
+  monto_disponible: number;
+  notas: {
+    id: number;
+    empresa: string;
+    knumfoli: string;
+    monto_aplicado: number;
+  }[];
+}
+
+// ─── Resumen de cliente (tabla de notas) ─────────────────────────
+
+export interface PagoDetalle {
+  movimiento_id: number;
+  fecha: string;
+  monto_original: number;
+  moneda_original: "USD" | "CLP";
+  tipo_cambio: number | null;
+  monto_usd: number;
+  forma_pago: string;
+}
+
+export interface NotaConPagos extends NotaVentaConSaldo {
+  pagos: PagoDetalle[];
+}
+
+export interface ResumenClienteResponse {
+  cliente: {
+    kcodcli2: number;
+    nombre: string;
+  };
+  notas: NotaConPagos[];
+  totales: {
+    total_vendido: number;
+    total_pagado: number;
+    total_pendiente: number;
+  };
+}
+
+// ─── Vista general (tabla de movimientos + saldos) ───────────────
+
+export interface MovimientoConCuenta extends CajaMovimiento {
+  cuenta_nombre: string;
+}
+
+export interface MovimientosPaginados {
+  data: MovimientoConCuenta[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface SaldoCuenta {
+  cuenta_id: number;
+  cuenta_nombre: string;
+  moneda: "USD" | "CLP";
+  total_cobros: number;
+  total_gastos: number;
+  saldo_neto: number;
+}
