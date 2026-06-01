@@ -397,7 +397,9 @@ async function main() {
     }
 
     const notas: NotaInfo[] = [];
-    for (const num of numeros) {
+    for (const rawNum of numeros) {
+      // movidcto.knumfoli usa formato 6 dígitos con ceros a la izquierda (ej: "002640")
+      const num = rawNum.padStart(6, "0");
       const rows = empresa === "vida"
         ? await sql`SELECT knumfoli, val_rea, fechanvt::text FROM vida.movidcto WHERE knumfoli = ${num} AND tipomovi = 'V' LIMIT 1`
         : await sql`SELECT knumfoli, val_rea, fechanvt::text FROM sanjh.movidcto WHERE knumfoli = ${num} AND tipomovi = 'V' LIMIT 1`;
