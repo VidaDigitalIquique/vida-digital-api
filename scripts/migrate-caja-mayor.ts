@@ -1,7 +1,8 @@
 /**
  * Migración del Excel "Caja Mayor (Bank).xlsm" → caja_movimientos + caja_movimiento_notas.
  *
- * Uso: npx tsx --env-file=.env scripts/migrate-caja-mayor.ts
+ * Uso: npx tsx --env-file=.env scripts/migrate-caja-mayor.ts "<ruta al Excel>"
+ * Ejemplo: npx tsx --env-file=.env scripts/migrate-caja-mayor.ts "C:\Users\pablo\Downloads\Caja Mayor (Bank).xlsm"
  */
 
 import { neon } from "@neondatabase/serverless";
@@ -10,7 +11,16 @@ import * as path from "path";
 
 // ─── Config ──────────────────────────────────────────────────────
 
-const EXCEL_PATH = path.resolve(process.cwd(), "Caja Mayor (Bank).xlsm");
+const excelArg = process.argv[2];
+
+if (!excelArg) {
+  console.error("ERROR: Debes especificar la ruta al archivo Excel.");
+  console.error("Uso: npx tsx --env-file=.env scripts/migrate-caja-mayor.ts \"<ruta al Excel>\"");
+  console.error('Ejemplo: npx tsx --env-file=.env scripts/migrate-caja-mayor.ts "C:\\Users\\pablo\\Downloads\\Caja Mayor (Bank).xlsm"');
+  process.exit(1);
+}
+
+const EXCEL_PATH = path.resolve(excelArg);
 
 // Cuentas bancarias según seed del PRD
 const CUENTAS = {
