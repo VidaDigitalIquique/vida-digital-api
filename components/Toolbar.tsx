@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { FileText, UserPlus, Heart, Package, Wallet, Banknote, Users, Phone, ShieldCheck } from 'lucide-react';
+import { FileText, UserPlus, Heart, Package, Wallet, Banknote, Users, Phone, ShieldCheck, Landmark } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
@@ -54,6 +54,17 @@ export function Toolbar({ isAdmin }: { isAdmin: boolean }) {
             <Link href="/deudas" className={btn(pathname.startsWith('/deudas'))}>
               <Banknote className="w-4 h-4" /><span>Deudas</span>
             </Link>
+          </>
+        )}
+        {(isAdmin || rol === 'vendedor') && (
+          <>
+            <Link href="/caja-mayor" className={btn(pathname.startsWith('/caja-mayor'))}>
+              <Landmark className="w-4 h-4" /><span>CAJA MAYOR</span>
+            </Link>
+          </>
+        )}
+        {isAdmin && (
+          <>
             <Link href="/sueldos" className={btn(pathname.startsWith('/sueldos'))}>
               <Users className="w-4 h-4" /><span>Sueldos</span>
             </Link>

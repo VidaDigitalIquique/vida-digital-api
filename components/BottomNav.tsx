@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   ShoppingCart, Users, LayoutList, Tag, Box, Camera,
   Heart, Package, Settings, RefreshCw, ImageIcon,
-  Filter, UserPlus, FileText, ChevronRight, ClipboardList, Banknote, Wallet, Phone, ShieldCheck
+  Filter, UserPlus, FileText, ChevronRight, ClipboardList, Banknote, Wallet, Phone, ShieldCheck, Landmark
 } from 'lucide-react';
 import flags from '@/config/feature-flags.json';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -102,6 +102,7 @@ export function BottomNav() {
                   {(isAdmin || isVendedor) && sheetLink('/precios', <ShoppingCart className="w-5 h-5" />, 'Sala de Venta', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor) && sheetLink('/ventas/kardex', <Users className="w-5 h-5" />, 'Kardex Cliente', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor) && sheetLink('/garantias', <ShieldCheck className="w-5 h-5" />, 'Garantías', () => setVentasOpen(false))}
+                  {(isAdmin || isVendedor) && sheetLink('/caja-mayor', <Landmark className="w-5 h-5" />, 'Caja Mayor', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor) && sheetLink('/admin/importar', <RefreshCw className="w-5 h-5" />, 'Sincronizar WinFac', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor) && sheetLink('/prenotas', <FileText className="w-5 h-5" />, 'Pre-Notas', () => setVentasOpen(false))}
                   {(isAdmin || isVendedor || isSupervisor) && sheetLink('/clientes-nuevos', <UserPlus className="w-5 h-5" />, 'Clientes Nuevos', () => setVentasOpen(false))}
@@ -251,6 +252,10 @@ export function BottomNav() {
                     <Link href="/admin/kardex-exclusiones" onClick={() => setAdminOpen(false)}
                       className="flex items-center gap-3 py-3 font-medium border-b border-zinc-100 dark:border-zinc-800">
                       <Filter className="w-4 h-4 text-zinc-400" /> Exclusiones Kardex
+                    </Link>
+                    <Link href="/admin/caja-config" onClick={() => setAdminOpen(false)}
+                      className="flex items-center gap-3 py-3 font-medium border-b border-zinc-100 dark:border-zinc-800">
+                      <Landmark className="w-4 h-4 text-zinc-400" /> Caja Mayor Config
                     </Link>
                     <Link href="/pettycash" onClick={() => setAdminOpen(false)}
                       className="flex items-center gap-3 py-3 font-medium border-b border-zinc-100 dark:border-zinc-800">

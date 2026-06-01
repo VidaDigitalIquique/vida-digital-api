@@ -26,7 +26,8 @@ import {
   Tag,
   ClipboardList,
   Banknote,
-  ShieldCheck
+  ShieldCheck,
+  Landmark
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
 
@@ -213,6 +214,11 @@ export function TopNav() {
                   <DropdownMenuItem>
                     <Link href="/admin/kardex-exclusiones" className="flex items-center gap-2 w-full">
                       <Filter className="w-4 h-4" /> Exclusiones Kardex
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href="/admin/caja-config" className="flex items-center gap-2 w-full">
+                      <Landmark className="w-4 h-4" /> Caja Mayor Config
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
