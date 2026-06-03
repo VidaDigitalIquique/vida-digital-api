@@ -50,11 +50,14 @@ export interface CajaCuenta {
 export const CajaMovimientoCreateSchema = z.object({
   fecha: z.string().min(1, "La fecha es requerida"),
   tipo: z.enum(["cobro", "gasto"]),
-  kcodcli2: z.number().int().positive().nullable().optional(),
+  kcodcli2: z.preprocess(
+    (v) => (v == null || v === "" ? null : Number(v)),
+    z.number().int().positive().nullable().optional()
+  ),
   nombre_cliente: z.string().nullable().optional(),
-  cuenta_id: z.number().int().positive("Selecciona una cuenta"),
+  cuenta_id: z.coerce.number().int().positive("Selecciona una cuenta"),
   moneda: z.enum(["USD", "CLP"]),
-  monto: z.number().positive("El monto debe ser mayor a 0"),
+  monto: z.coerce.number().positive("El monto debe ser mayor a 0"),
   forma_pago: z.enum(["efectivo", "cheque", "transferencia"]),
   observaciones: z.string().nullable().optional(),
   empresa: z.enum(["vida", "sanjh"]).nullable().optional(),
@@ -63,11 +66,14 @@ export const CajaMovimientoCreateSchema = z.object({
 export const CajaMovimientoUpdateSchema = z.object({
   fecha: z.string().min(1).optional(),
   tipo: z.enum(["cobro", "gasto"]).optional(),
-  kcodcli2: z.number().int().positive().nullable().optional(),
+  kcodcli2: z.preprocess(
+    (v) => (v == null || v === "" ? null : Number(v)),
+    z.number().int().positive().nullable().optional()
+  ),
   nombre_cliente: z.string().nullable().optional(),
-  cuenta_id: z.number().int().positive().optional(),
+  cuenta_id: z.coerce.number().int().positive().optional(),
   moneda: z.enum(["USD", "CLP"]).optional(),
-  monto: z.number().positive().optional(),
+  monto: z.coerce.number().positive().optional(),
   forma_pago: z.enum(["efectivo", "cheque", "transferencia"]).optional(),
   observaciones: z.string().nullable().optional(),
   empresa: z.enum(["vida", "sanjh"]).nullable().optional(),

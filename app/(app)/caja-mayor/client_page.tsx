@@ -245,7 +245,7 @@ export function CajaMayorClient({
     const body: Record<string, unknown> = {
       fecha: editFecha,
       tipo: editTipo,
-      kcodcli2: editCliente?.kcodcli2 ?? null,
+      kcodcli2: editCliente?.kcodcli2 ? Number(editCliente.kcodcli2) : null,
       nombre_cliente: editCliente?.nombre ?? null,
       cuenta_id: parseInt(editCuentaId, 10),
       moneda: editMoneda,
@@ -286,7 +286,7 @@ export function CajaMayorClient({
     const body: Record<string, unknown> = {
       fecha,
       tipo,
-      kcodcli2: cliente?.kcodcli2 ?? null,
+      kcodcli2: cliente?.kcodcli2 ? Number(cliente.kcodcli2) : null,
       nombre_cliente: cliente?.nombre ?? null,
       cuenta_id: parseInt(cuentaId, 10),
       moneda,
