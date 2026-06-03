@@ -311,6 +311,8 @@ export function CajaMayorClient({
       setObservaciones("");
       if (moneda === "CLP") setMoneda("USD");
       setFormaPago("transferencia");
+      fetchMovimientos(1);
+      fetchSaldos();
     } else {
       const err = await res.json();
       const msg = err.error?.fieldErrors
