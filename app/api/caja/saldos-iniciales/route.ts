@@ -67,15 +67,16 @@ export async function POST(request: Request) {
     }
 
     const { cuenta_id, fecha, saldo, observaciones } = parsed.data;
+    const creadoPor = (session!.user as any).nombre as string;
 
     // UPSERT: solo un saldo inicial por cuenta
     const rows = await sql`
-      INSERT INTO caja_saldos_iniciales (cuenta_id, fecha, saldo, observaciones)
-      VALUES (${cuenta_id}, ${fecha}::date, ${saldo}, ${observaciones ?? null})
+      INSERT INTO caja_saldos_iniciales (cuenta_id, fecha, saldo, observaciones, creado_por)
+      VALUES (${cuenta_id}, ${fecha}::date, ${saldo}, ${observaciones ?? null}, ${creadoPor})
       ON CONFLICT (cuenta_id)
       DO UPDATE SET fecha = EXCLUDED.fecha, saldo = EXCLUDED.saldo,
         observaciones = EXCLUDED.observaciones
-      RETURNING id, cuenta_id, fecha::text, saldo, observaciones, created_at::text
+      RETURNING id, cuenta_id, fecha::text, saldo, observaciones, creado_por, created_at::text
     `;
 
     // Fetch cuenta name/moneda
