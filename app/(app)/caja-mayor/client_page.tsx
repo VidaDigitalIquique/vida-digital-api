@@ -323,7 +323,7 @@ export function CajaMayorClient({
 
   // ─── Render ──────────────────────────────────────────
   return (
-    <div className="max-w-xl mx-auto p-6 space-y-6">
+    <div className="flex flex-col gap-6 w-full fade-in p-6">
       <div>
         <h1 className="text-2xl font-bold">Caja Mayor</h1>
         <p className="text-sm text-zinc-500 mt-1">
