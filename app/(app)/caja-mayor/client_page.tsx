@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Loader2, Search, X, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { roundUpToHalf } from "@/docs/specs/caja-mayor.spec";
-import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta } from "@/docs/specs/caja-mayor.spec";
+import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta, NotaVentaConSaldo } from "@/docs/specs/caja-mayor.spec";
 
 interface Cuenta {
   id: number;
@@ -55,6 +55,12 @@ export function CajaMayorClient({
   const [formaPago, setFormaPago] = useState<"efectivo" | "cheque" | "transferencia">("transferencia");
   const [observaciones, setObservaciones] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // ─── Imputación manual ─────────────────────────────────
+  const [imputacionManual, setImputacionManual] = useState(false);
+  const [notaSeleccionada, setNotaSeleccionada] = useState<NotaVentaConSaldo | null>(null);
+  const [notasPendientes, setNotasPendientes] = useState<NotaVentaConSaldo[]>([]);
+  const [notasPendientesLoading, setNotasPendientesLoading] = useState(false);
 
   // ─── Resumen de notas del cliente ───────────────────
   const [resumen, setResumen] = useState<ResumenClienteResponse | null>(null);
@@ -210,11 +216,38 @@ export function CajaMayorClient({
     setClienteOpen(false);
   };
 
+  // ─── Fetch notas pendientes para imputación manual ───
+  useEffect(() => {
+    if (!imputacionManual || !cliente) {
+      setNotasPendientes([]);
+      setNotaSeleccionada(null);
+      return;
+    }
+    setNotaSeleccionada(null);
+    setNotasPendientesLoading(true);
+    fetch(`/api/caja/notas/${cliente.kcodcli2}`)
+      .then((r) => r.json())
+      .then((json) => {
+        const todas: NotaVentaConSaldo[] = json.data || [];
+        const pendientes = todas.filter((n) => {
+          if (n.saldo_pendiente <= 0.005) return false;
+          if (empresa && n.empresa !== empresa) return false;
+          return true;
+        });
+        setNotasPendientes(pendientes);
+      })
+      .catch(() => setNotasPendientes([]))
+      .finally(() => setNotasPendientesLoading(false));
+  }, [imputacionManual, cliente, empresa]);
+
   const clearCliente = () => {
     setCliente(null);
     setClienteQuery("");
     setClienteOpen(false);
     setEmpresa("");
+    setImputacionManual(false);
+    setNotaSeleccionada(null);
+    setNotasPendientes([]);
   };
 
   // ─── Edit modal ──────────────────────────────────────
@@ -303,6 +336,48 @@ export function CajaMayorClient({
     });
 
     if (res.ok) {
+      const created = await res.json();
+      const movimientoId = created.data?.id;
+
+      // Imputación manual a nota específica
+      if (movimientoId && imputacionManual && notaSeleccionada && tipo === "cobro" && montoUSD) {
+        let remaining = montoUSD;
+        const notasParaImputar: { empresa: string; knumfoli: string; monto_aplicado: number }[] = [];
+
+        // Aplicar a la nota seleccionada
+        const aplicado = Math.min(remaining, notaSeleccionada.saldo_pendiente);
+        if (aplicado > 0.005) {
+          notasParaImputar.push({
+            empresa: notaSeleccionada.empresa,
+            knumfoli: notaSeleccionada.knumfoli,
+            monto_aplicado: aplicado,
+          });
+          remaining -= aplicado;
+        }
+
+        // Excedente → siguientes notas más antiguas
+        if (remaining > 0.005) {
+          const sorted = [...notasPendientes].sort((a, b) => a.fechanvt.localeCompare(b.fechanvt));
+          for (const nota of sorted) {
+            if (nota.knumfoli === notaSeleccionada.knumfoli && nota.empresa === notaSeleccionada.empresa) continue;
+            if (remaining <= 0.005) break;
+            const aplicar = Math.min(remaining, nota.saldo_pendiente);
+            if (aplicar > 0.005) {
+              notasParaImputar.push({ empresa: nota.empresa, knumfoli: nota.knumfoli, monto_aplicado: aplicar });
+              remaining -= aplicar;
+            }
+          }
+        }
+
+        if (notasParaImputar.length > 0) {
+          await fetch(`/api/caja/movimientos/${movimientoId}/notas`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ notas: notasParaImputar }),
+          });
+        }
+      }
+
       toast.success(`Movimiento registrado — ${tipo === "cobro" ? "Cobro" : "Gasto"} por $${parseFloat(monto).toLocaleString("es-CL")} ${moneda}`);
       // Reset form
       setFecha(new Date().toISOString().slice(0, 10));
@@ -348,7 +423,11 @@ export function CajaMayorClient({
               key={t}
               onClick={() => {
                 setTipo(t);
-                if (t === "gasto") clearCliente();
+                if (t === "gasto") {
+                  clearCliente();
+                  setImputacionManual(false);
+                  setNotaSeleccionada(null);
+                }
               }}
               className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
                 tipo === t
@@ -520,6 +599,69 @@ export function CajaMayorClient({
             ))}
           </div>
         </div>
+
+        {/* ─── Imputación manual ────────────────────── */}
+        {tipo === "cobro" && cliente && (
+          <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={imputacionManual}
+                onChange={(e) => setImputacionManual(e.target.checked)}
+                className="w-4 h-4 rounded border-zinc-300"
+              />
+              <span className="text-sm font-medium">¿Imputar a nota específica?</span>
+            </label>
+
+            {imputacionManual && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Seleccionar nota de venta</label>
+                {notasPendientesLoading ? (
+                  <div className="text-sm text-zinc-400 py-2">
+                    <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+                    Cargando notas pendientes...
+                  </div>
+                ) : notasPendientes.length === 0 ? (
+                  <p className="text-sm text-zinc-400 italic">No hay notas pendientes para este cliente{empresa ? " en " + LABELS[empresa] : ""}.</p>
+                ) : (
+                  <select
+                    value={notaSeleccionada ? `${notaSeleccionada.empresa}:${notaSeleccionada.knumfoli}` : ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (!val) { setNotaSeleccionada(null); return; }
+                      const idx = val.lastIndexOf(":");
+                      const emp = val.slice(0, idx);
+                      const knum = val.slice(idx + 1);
+                      setNotaSeleccionada(notasPendientes.find((n) => n.empresa === emp && n.knumfoli === knum) || null);
+                    }}
+                    className="w-full h-9 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900"
+                  >
+                    <option value="">— Seleccionar nota —</option>
+                    {notasPendientes.map((n) => (
+                      <option key={`${n.empresa}:${n.knumfoli}`} value={`${n.empresa}:${n.knumfoli}`}>
+                        #{n.knumfoli} · {n.fechanvt} · ${n.val_rea.toLocaleString("es-CL")} · Pend: ${n.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {/* Preview de imputación */}
+                {notaSeleccionada && montoUSD !== null && (
+                  <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2 text-sm text-green-800 dark:text-green-200 mt-2">
+                    {montoUSD <= notaSeleccionada.saldo_pendiente ? (
+                      <>Se imputarán <strong>${montoUSD.toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> a la nota #{notaSeleccionada.knumfoli} ({notaSeleccionada.empresa === "vida" ? "Vida Digital" : "SANJH"}).</>
+                    ) : (
+                      <div>
+                        <p>Se imputarán <strong>${notaSeleccionada.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> a la nota #{notaSeleccionada.knumfoli}.</p>
+                        <p className="mt-0.5">Excedente de <strong>${(montoUSD - notaSeleccionada.saldo_pendiente).toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> → siguiente nota más antigua.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ─── Observaciones ────────────────────────── */}
         <div className="space-y-1">
