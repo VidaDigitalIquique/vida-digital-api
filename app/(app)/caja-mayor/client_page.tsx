@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Loader2, Search, X, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { roundUpToHalf } from "@/docs/specs/caja-mayor.spec";
-import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta, NotaVentaConSaldo, NotaBusquedaResult, CierrePeriodo, MovimientoOCierre } from "@/docs/specs/caja-mayor.spec";
+import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta, NotaVentaConSaldo, NotaBusquedaResult, MovimientoOCierre } from "@/docs/specs/caja-mayor.spec";
 
 interface Cuenta {
   id: number;
@@ -77,7 +77,6 @@ export function CajaMayorClient({
 
   // ─── Movimientos table state ──────────────────────────
   const [movimientos, setMovimientos] = useState<MovimientoOCierre[]>([]);
-  const [cierresEnRango, setCierresEnRango] = useState<CierrePeriodo[]>([]);
   const [movsLoading, setMovsLoading] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, totalPages: 0 });
   const [filtros, setFiltros] = useState({ moneda: "", cuenta_id: "", tipo: "", empresa: "", desde: "", hasta: "" });
@@ -118,7 +117,6 @@ export function CajaMayorClient({
       .then((r) => r.json())
       .then((json) => {
         setMovimientos((json.data || []) as MovimientoOCierre[]);
-        setCierresEnRango((json.cierres_en_rango || []) as CierrePeriodo[]);
         setPagination(json.pagination || { page: 1, limit: 50, total: 0, totalPages: 0 });
       })
       .catch(() => {})

@@ -42,7 +42,8 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
+  void _request;
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   const rol = (session.user as any).rol;
