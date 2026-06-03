@@ -834,7 +834,7 @@ export function CajaMayorClient({
                     <th className="py-2 pr-2 font-medium">Cuenta</th>
                     <th className="py-2 pr-2 font-medium text-right">Monto</th>
                     <th className="py-2 pr-2 font-medium">Mon.</th>
-                    <th className="py-2 pr-2 font-medium max-w-[80px]">Obs.</th>
+                    <th className="py-2 pr-2 font-medium max-w-[80px]">Observación</th>
                     <th className="py-2 w-[60px]"></th>
                   </tr>
                 </thead>
