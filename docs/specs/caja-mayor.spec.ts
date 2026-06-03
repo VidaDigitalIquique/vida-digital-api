@@ -147,6 +147,17 @@ export interface NotaVentaConSaldo {
   empresa: "vida" | "sanjh";
 }
 
+export interface NotaBusquedaResult {
+  knumfoli: string;
+  fechanvt: string;
+  val_rea: number;
+  total_pagado: number;
+  saldo_pendiente: number;
+  kcodcli2: number;
+  nombre_cliente: string;
+  empresa: "vida" | "sanjh";
+}
+
 export interface ImputacionResult {
   movimiento_id: number;
   total_imputado: number;

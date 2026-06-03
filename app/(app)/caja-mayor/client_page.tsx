@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Loader2, Search, X, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { roundUpToHalf } from "@/docs/specs/caja-mayor.spec";
-import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta, NotaVentaConSaldo } from "@/docs/specs/caja-mayor.spec";
+import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta, NotaVentaConSaldo, NotaBusquedaResult } from "@/docs/specs/caja-mayor.spec";
 
 interface Cuenta {
   id: number;
@@ -61,6 +61,13 @@ export function CajaMayorClient({
   const [notaSeleccionada, setNotaSeleccionada] = useState<NotaVentaConSaldo | null>(null);
   const [notasPendientes, setNotasPendientes] = useState<NotaVentaConSaldo[]>([]);
   const [notasPendientesLoading, setNotasPendientesLoading] = useState(false);
+
+  // ─── Modo de búsqueda ────────────────────────────────
+  const [modoBusqueda, setModoBusqueda] = useState<"cliente" | "nota">("cliente");
+  const [notaQuery, setNotaQuery] = useState("");
+  const [notaResults, setNotaResults] = useState<NotaBusquedaResult[]>([]);
+  const [notaLoading, setNotaLoading] = useState(false);
+  const [notaOpen, setNotaOpen] = useState(false);
 
   // ─── Resumen de notas del cliente ───────────────────
   const [resumen, setResumen] = useState<ResumenClienteResponse | null>(null);
@@ -214,6 +221,51 @@ export function CajaMayorClient({
     setCliente(c);
     setClienteQuery(c.nombre);
     setClienteOpen(false);
+  };
+
+  // ─── Fetch notas por número ──────────────────────────
+  useEffect(() => {
+    if (modoBusqueda !== "nota" || notaQuery.length < 3) {
+      setNotaResults([]);
+      setNotaOpen(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setNotaLoading(true);
+      const res = await fetch(`/api/caja/nota-busqueda?q=${encodeURIComponent(notaQuery)}`);
+      if (res.ok) {
+        const json = await res.json();
+        setNotaResults(json.data || []);
+        setNotaOpen((json.data || []).length > 0);
+      }
+      setNotaLoading(false);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [notaQuery, modoBusqueda]);
+
+  const selectNota = (n: NotaBusquedaResult) => {
+    const clienteOpt: ClienteOption = {
+      kcodcli2: n.kcodcli2,
+      nombre: n.nombre_cliente,
+      empresas: [n.empresa],
+      total_compras: 0,
+      ultima_compra: "",
+    };
+    setCliente(clienteOpt);
+    setClienteQuery(n.nombre_cliente);
+    setEmpresa(n.empresa);
+    setNotaSeleccionada({
+      knumfoli: n.knumfoli,
+      fechanvt: n.fechanvt,
+      val_rea: n.val_rea,
+      total_pagado: n.val_rea - n.saldo_pendiente,
+      saldo_pendiente: n.saldo_pendiente,
+      empresa: n.empresa,
+    });
+    setImputacionManual(true);
+    setNotaQuery("");
+    setNotaResults([]);
+    setNotaOpen(false);
   };
 
   // ─── Fetch notas pendientes para imputación manual ───
@@ -416,6 +468,32 @@ export function CajaMayorClient({
       )}
 
       <div className="border rounded-xl p-5 space-y-5">
+        {/* ─── Modo de búsqueda ──────────────────── */}
+        <div className="flex rounded-lg border p-1 bg-muted/50">
+          {(["cliente", "nota"] as const).map((modo) => (
+            <button
+              key={modo}
+              onClick={() => {
+                setModoBusqueda(modo);
+                if (modo === "cliente") {
+                  setNotaQuery("");
+                  setNotaResults([]);
+                  setNotaOpen(false);
+                } else {
+                  clearCliente();
+                }
+              }}
+              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                modoBusqueda === modo
+                  ? "bg-background shadow-sm text-foreground"
+                  : "text-zinc-500 hover:text-foreground"
+              }`}
+            >
+              {modo === "cliente" ? "🔍 Buscar por cliente" : "📄 Buscar por nota de venta"}
+            </button>
+          ))}
+        </div>
+
         {/* ─── Tipo toggle ──────────────────────────── */}
         <div className="flex rounded-lg border p-1 bg-muted/50">
           {(["cobro", "gasto"] as const).map((t) => (
@@ -450,8 +528,8 @@ export function CajaMayorClient({
           />
         </div>
 
-        {/* ─── Cliente autocomplete (solo cobro) ────── */}
-        {tipo === "cobro" ? (
+        {/* ─── Cliente autocomplete (solo cobro, modo cliente) ────── */}
+        {modoBusqueda === "cliente" && tipo === "cobro" ? (
           <div className="space-y-1 relative">
             <label className="text-sm font-medium">
               Cliente <span className="text-red-500">*</span>
@@ -508,6 +586,78 @@ export function CajaMayorClient({
             )}
           </div>
         ) : null}
+
+        {/* ─── Búsqueda por nota de venta (modo nota) ────── */}
+        {modoBusqueda === "nota" && tipo === "cobro" && (
+          <>
+            {!cliente ? (
+              <div className="space-y-1 relative">
+                <label className="text-sm font-medium">
+                  Número de nota de venta
+                </label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
+                  <Input
+                    value={notaQuery}
+                    onChange={(e) => setNotaQuery(e.target.value)}
+                    placeholder="Ej: 001710 o 1710 (mín. 3 caracteres)"
+                    className="pl-9"
+                    autoComplete="off"
+                  />
+                  {notaLoading && (
+                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-zinc-400" />
+                  )}
+                </div>
+                {notaOpen && notaResults.length > 0 && (
+                  <div className="absolute z-20 mt-1 w-full border rounded-lg bg-background shadow-lg max-h-72 overflow-y-auto">
+                    {notaResults.map((n) => (
+                      <button
+                        key={`${n.empresa}:${n.knumfoli}`}
+                        onClick={() => selectNota(n)}
+                        className={`w-full text-left px-3 py-2 hover:bg-muted transition-colors border-b last:border-0 ${
+                          n.saldo_pendiente <= 0.005 ? "opacity-60" : ""
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">#{n.knumfoli}</span>
+                          <Badge variant="outline" className="text-[10px] px-1 py-0">
+                            {LABELS[n.empresa]}
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-zinc-500 mt-0.5">
+                          {n.fechanvt} · {n.nombre_cliente} · Total: ${n.val_rea.toLocaleString("es-CL")}
+                          {" · "}
+                          <span className={n.saldo_pendiente <= 0.005 ? "text-green-600" : "text-red-600 font-medium"}>
+                            Pend: ${n.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Nota seleccionada — info card */
+              <div className="flex items-center gap-2 border rounded-lg px-3 py-2 bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">
+                    📄 Nota #{notaSeleccionada?.knumfoli} — {cliente.nombre}
+                  </div>
+                  <div className="text-xs text-zinc-500">
+                    {notaSeleccionada?.fechanvt} · {LABELS[notaSeleccionada?.empresa || "vida"]} · Total: ${notaSeleccionada?.val_rea.toLocaleString("es-CL")} · Pend: ${notaSeleccionada?.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon-sm" onClick={() => {
+                  clearCliente();
+                  setNotaSeleccionada(null);
+                  setNotaQuery("");
+                }}>
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </>
+        )}
 
         {/* ─── Empresa ──────────────────────────────── */}
         {cliente && cliente.empresas.length === 2 && (
