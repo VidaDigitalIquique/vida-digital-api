@@ -25,14 +25,18 @@ export default async function CajaConfigPage() {
     ORDER BY orden ASC, id ASC
   `;
 
-  const saldosIniciales = await sql`
-    SELECT si.id, si.cuenta_id, cc.nombre AS cuenta_nombre, cc.moneda AS cuenta_moneda,
-      si.fecha::text, si.saldo, si.observaciones,
-      si.created_at::text, si.updated_at::text
-    FROM caja_saldos_iniciales si
-    JOIN caja_cuentas cc ON cc.id = si.cuenta_id
-    ORDER BY cc.orden ASC
-  `;
+  let saldosIniciales: any[] = [];
+  try {
+    saldosIniciales = await sql`
+      SELECT si.id, si.cuenta_id, cc.nombre AS cuenta_nombre, cc.moneda AS cuenta_moneda,
+        si.fecha::text, si.saldo, si.observaciones, si.created_at::text
+      FROM caja_saldos_iniciales si
+      JOIN caja_cuentas cc ON cc.id = si.cuenta_id
+      ORDER BY cc.orden ASC
+    `;
+  } catch {
+    saldosIniciales = [];
+  }
 
   return (
     <CajaConfigClient

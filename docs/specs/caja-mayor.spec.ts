@@ -243,7 +243,6 @@ export interface CajaSaldoInicial {
   saldo: number;
   observaciones: string | null;
   created_at: string;
-  updated_at: string;
 }
 
 // ─── Cierres de período ───────────────────────────────────────────

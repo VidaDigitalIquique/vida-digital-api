@@ -31,7 +31,7 @@ export async function GET() {
     const rows = await sql`
       SELECT si.id, si.cuenta_id, cc.nombre AS cuenta_nombre, cc.moneda AS cuenta_moneda,
         si.fecha::text, si.saldo, si.observaciones,
-        si.created_at::text, si.updated_at::text
+        si.created_at::text
       FROM caja_saldos_iniciales si
       JOIN caja_cuentas cc ON cc.id = si.cuenta_id
       ORDER BY cc.orden ASC
@@ -46,7 +46,6 @@ export async function GET() {
       saldo: parseFloat(r.saldo),
       observaciones: r.observaciones,
       created_at: r.created_at,
-      updated_at: r.updated_at,
     }));
 
     return NextResponse.json({ data });
@@ -75,8 +74,8 @@ export async function POST(request: Request) {
       VALUES (${cuenta_id}, ${fecha}::date, ${saldo}, ${observaciones ?? null})
       ON CONFLICT (cuenta_id)
       DO UPDATE SET fecha = EXCLUDED.fecha, saldo = EXCLUDED.saldo,
-        observaciones = EXCLUDED.observaciones, updated_at = now()
-      RETURNING id, cuenta_id, fecha::text, saldo, observaciones, created_at::text, updated_at::text
+        observaciones = EXCLUDED.observaciones
+      RETURNING id, cuenta_id, fecha::text, saldo, observaciones, created_at::text
     `;
 
     // Fetch cuenta name/moneda
@@ -93,7 +92,6 @@ export async function POST(request: Request) {
       saldo: parseFloat(rows[0].saldo),
       observaciones: rows[0].observaciones,
       created_at: rows[0].created_at,
-      updated_at: rows[0].updated_at,
     };
 
     return NextResponse.json({ data: result }, { status: 201 });
