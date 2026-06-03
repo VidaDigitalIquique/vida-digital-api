@@ -30,6 +30,7 @@ export default async function CajaMayorPage() {
       dolarDia={dolarDia}
       cuentas={cuentas as any}
       userName={(session.user as any).nombre || (session.user as any).name || ""}
+      userRol={(session.user as any).rol || ""}
     />
   );
 }

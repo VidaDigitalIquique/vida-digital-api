@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Loader2, Search, X, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { roundUpToHalf } from "@/docs/specs/caja-mayor.spec";
-import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta, NotaVentaConSaldo, NotaBusquedaResult } from "@/docs/specs/caja-mayor.spec";
+import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta, NotaVentaConSaldo, NotaBusquedaResult, CierrePeriodo, MovimientoOCierre } from "@/docs/specs/caja-mayor.spec";
 
 interface Cuenta {
   id: number;
@@ -35,10 +35,12 @@ export function CajaMayorClient({
   dolarDia,
   cuentas,
   userName,
+  userRol,
 }: {
   dolarDia: number;
   cuentas: Cuenta[];
   userName: string;
+  userRol: string;
 }) {
   // ─── Form state ──────────────────────────────────────
   const [tipo, setTipo] = useState<"cobro" | "gasto">("cobro");
@@ -74,11 +76,16 @@ export function CajaMayorClient({
   const [notaExpandida, setNotaExpandida] = useState<string | null>(null);
 
   // ─── Movimientos table state ──────────────────────────
-  const [movimientos, setMovimientos] = useState<MovimientoConCuenta[]>([]);
+  const [movimientos, setMovimientos] = useState<MovimientoOCierre[]>([]);
+  const [cierresEnRango, setCierresEnRango] = useState<CierrePeriodo[]>([]);
   const [movsLoading, setMovsLoading] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, limit: 50, total: 0, totalPages: 0 });
   const [filtros, setFiltros] = useState({ moneda: "", cuenta_id: "", tipo: "", empresa: "", desde: "", hasta: "" });
   const [saldos, setSaldos] = useState<SaldoCuenta[]>([]);
+
+  // ─── Cierre de período ────────────────────────────────
+  const [cierreModalOpen, setCierreModalOpen] = useState(false);
+  const [cierreLoading, setCierreLoading] = useState(false);
 
   // ─── Edit modal state ─────────────────────────────────
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -110,7 +117,8 @@ export function CajaMayorClient({
     fetch(`/api/caja/movimientos?${params}`)
       .then((r) => r.json())
       .then((json) => {
-        setMovimientos(json.data || []);
+        setMovimientos((json.data || []) as MovimientoOCierre[]);
+        setCierresEnRango((json.cierres_en_rango || []) as CierrePeriodo[]);
         setPagination(json.pagination || { page: 1, limit: 50, total: 0, totalPages: 0 });
       })
       .catch(() => {})
@@ -438,14 +446,51 @@ export function CajaMayorClient({
     setSaving(false);
   };
 
+  // ─── Cierre de período ────────────────────────────────
+  const handleCierre = async () => {
+    setCierreLoading(true);
+    const res = await fetch("/api/caja/cierres", { method: "POST" });
+    if (res.ok) {
+      const json = await res.json();
+      toast.success(`Cierre creado — ${json.data.fecha_desde} al ${json.data.fecha_hasta}`);
+      setCierreModalOpen(false);
+      fetchMovimientos(1);
+      fetchSaldos();
+    } else {
+      const err = await res.json();
+      toast.error(err.error || "Error al crear cierre");
+    }
+    setCierreLoading(false);
+  };
+
+  const handleDeleteCierre = async (id: number) => {
+    if (!confirm("¿Eliminar este cierre? Los movimientos no se borrarán, solo el snapshot del cierre.")) return;
+    const res = await fetch(`/api/caja/cierres/${id}`, { method: "DELETE" });
+    if (res.ok) {
+      toast.success("Cierre eliminado");
+      fetchMovimientos(pagination.page);
+      fetchSaldos();
+    } else {
+      const err = await res.json();
+      toast.error(err.error || "Error al eliminar cierre");
+    }
+  };
+
   // ─── Render ──────────────────────────────────────────
   return (
     <div className="flex flex-col gap-6 w-full fade-in p-6">
-      <div>
-        <h1 className="text-2xl font-bold">Caja Mayor</h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          Registrar cobro o gasto {userName ? `— ${userName}` : ""}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Caja Mayor</h1>
+          <p className="text-sm text-zinc-500 mt-1">
+            Registrar cobro o gasto {userName ? `— ${userName}` : ""}
+          </p>
+        </div>
+        {userRol === "admin" && (
+          <Button onClick={() => setCierreModalOpen(true)} variant="outline">
+            🔒 Cierre de Período
+          </Button>
+        )}
       </div>
 
       {/* Dollar banner */}
@@ -839,31 +884,69 @@ export function CajaMayorClient({
                   </tr>
                 </thead>
                 <tbody>
-                  {movimientos.map((mov) => (
-                    <tr key={mov.id} className="border-b hover:bg-muted/50">
-                      <td className="py-1.5 pr-2 whitespace-nowrap">{mov.fecha}</td>
-                      <td className="py-1.5 pr-2">{mov.tipo === "cobro" ? "💰" : "📤"}</td>
-                      <td className="py-1.5 pr-2 max-w-[120px] truncate">{mov.nombre_cliente || "—"}</td>
-                      <td className="py-1.5 pr-2">
-                        {mov.empresa ? <Badge variant="outline" className="text-[10px] px-1 py-0">{mov.empresa === "vida" ? "VD" : "SJ"}</Badge> : "—"}
-                      </td>
-                      <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate">
-                        {mov.notas_imputadas?.length ? mov.notas_imputadas.join(", ") : "—"}
-                      </td>
-                      <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate">{mov.cuenta_nombre}</td>
-                      <td className={`py-1.5 pr-2 text-right font-medium whitespace-nowrap ${mov.tipo === "cobro" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
-                        {mov.tipo === "gasto" ? "-" : ""}{mov.monto.toLocaleString("es-CL", mov.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}
-                      </td>
-                      <td className="py-1.5 pr-2 text-xs text-zinc-500">{mov.moneda}</td>
-                      <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[80px] truncate" title={mov.observaciones || undefined}>
-                        {mov.observaciones || "—"}
-                      </td>
-                      <td className="py-1.5 flex gap-1">
-                        <Button variant="ghost" size="icon-sm" onClick={() => openEditModal(mov)} title="Editar"><Pencil className="w-3.5 h-3.5" /></Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => { openEditModal(mov); setEditDeleteConfirm(true); }} title="Eliminar"><Trash2 className="w-3.5 h-3.5 text-red-500" /></Button>
-                      </td>
-                    </tr>
-                  ))}
+                  {movimientos.map((item) =>
+                    item.tipo_fila === "cierre" ? (
+                      <tr key={`cierre-${item.data.id}`} className="bg-blue-100 dark:bg-blue-950/40 border-b">
+                        <td colSpan={10} className="py-3 px-4">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <span className="font-bold text-blue-800 dark:text-blue-300 text-sm">
+                                🔒 CIERRE DE PERÍODO — {item.data.fecha_desde} al {item.data.fecha_hasta}
+                              </span>
+                              <span className="text-xs text-blue-600 dark:text-blue-400 ml-3">
+                                por {item.data.usuario_nombre}
+                              </span>
+                            </div>
+                            {userRol === "admin" && (
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                onClick={() => handleDeleteCierre(item.data.id)}
+                                title="Eliminar cierre"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                              </Button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-2">
+                            {item.data.resumen.map((c) => (
+                              <div key={c.cuenta_id} className="text-xs bg-white/60 dark:bg-zinc-800/60 rounded p-1.5">
+                                <div className="font-medium truncate">{c.cuenta_nombre}</div>
+                                <div className="text-zinc-500">{c.moneda}</div>
+                                <div className={c.saldo_final >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
+                                  Saldo: {c.moneda === "CLP" ? "$" : ""}{c.saldo_final.toLocaleString("es-CL", c.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      <tr key={item.data.id} className="border-b hover:bg-muted/50">
+                        <td className="py-1.5 pr-2 whitespace-nowrap">{item.data.fecha}</td>
+                        <td className="py-1.5 pr-2">{item.data.tipo === "cobro" ? "💰" : "📤"}</td>
+                        <td className="py-1.5 pr-2 max-w-[120px] truncate">{item.data.nombre_cliente || "—"}</td>
+                        <td className="py-1.5 pr-2">
+                          {item.data.empresa ? <Badge variant="outline" className="text-[10px] px-1 py-0">{item.data.empresa === "vida" ? "VD" : "SJ"}</Badge> : "—"}
+                        </td>
+                        <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate">
+                          {item.data.notas_imputadas?.length ? item.data.notas_imputadas.join(", ") : "—"}
+                        </td>
+                        <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate">{item.data.cuenta_nombre}</td>
+                        <td className={`py-1.5 pr-2 text-right font-medium whitespace-nowrap ${item.data.tipo === "cobro" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
+                          {item.data.tipo === "gasto" ? "-" : ""}{item.data.monto.toLocaleString("es-CL", item.data.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}
+                        </td>
+                        <td className="py-1.5 pr-2 text-xs text-zinc-500">{item.data.moneda}</td>
+                        <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[80px] truncate" title={item.data.observaciones || undefined}>
+                          {item.data.observaciones || "—"}
+                        </td>
+                        <td className="py-1.5 flex gap-1">
+                          <Button variant="ghost" size="icon-sm" onClick={() => openEditModal(item.data as MovimientoConCuenta)} title="Editar"><Pencil className="w-3.5 h-3.5" /></Button>
+                          <Button variant="ghost" size="icon-sm" onClick={() => { openEditModal(item.data as MovimientoConCuenta); setEditDeleteConfirm(true); }} title="Eliminar"><Trash2 className="w-3.5 h-3.5 text-red-500" /></Button>
+                        </td>
+                      </tr>
+                    )
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1006,6 +1089,34 @@ export function CajaMayorClient({
           )}
         </div>
       )}
+
+      {/* ─── Modal cierre de período ────────────────── */}
+      <Dialog open={cierreModalOpen} onOpenChange={setCierreModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>🔒 Cierre de Período</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <p className="text-sm text-zinc-500">
+              Se calculará automáticamente el resumen por cuenta desde el último cierre hasta hoy.
+              Los movimientos no se eliminan — solo se guarda un snapshot con los saldos al día de hoy.
+            </p>
+            <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
+              ⚠️ Esta acción no se puede deshacer fácilmente. Asegúrate de que todos los
+              movimientos del período estén registrados.
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCierreModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCierre} disabled={cierreLoading}>
+              {cierreLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Confirmar cierre
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ─── Modal editar movimiento ──────────────────── */}
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>

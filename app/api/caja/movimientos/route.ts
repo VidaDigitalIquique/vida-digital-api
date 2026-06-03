@@ -6,6 +6,7 @@ import {
   CajaMovimientoCreateSchema,
   roundUpToHalf,
 } from "@/docs/specs/caja-mayor.spec";
+import type { MovimientoConCuenta, CierrePeriodo, MovimientoOCierre, MovimientosPaginadosConCierres } from "@/docs/specs/caja-mayor.spec";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -66,15 +67,64 @@ export async function GET(request: Request) {
 
     const total = countRows[0].total as number;
 
-    return NextResponse.json({
-      data: rows,
+    // Fetch cierres within the filtered date range
+    // Use filter dates if provided, otherwise broad range
+    const minFecha = desde || "2000-01-01";
+    const maxFecha = hasta || new Date().toISOString().slice(0, 10);
+
+    const cierresRows = await sql`
+      SELECT id, fecha_desde::text, fecha_hasta::text, resumen,
+        usuario_id, usuario_nombre, created_at::text
+      FROM caja_cierres
+      WHERE fecha_hasta >= ${minFecha}::date
+        AND fecha_desde <= ${maxFecha}::date
+      ORDER BY fecha_hasta ASC
+    `;
+
+    const cierresEnRango: CierrePeriodo[] = cierresRows.map((r: any) => ({
+      id: r.id,
+      fecha_desde: r.fecha_desde,
+      fecha_hasta: r.fecha_hasta,
+      resumen: r.resumen,
+      usuario_id: r.usuario_id,
+      usuario_nombre: r.usuario_nombre,
+      created_at: r.created_at,
+    }));
+
+    // Intercalate cierres with movimientos
+    // Movimientos are ordered by fecha DESC, id DESC
+    // Cierres are ordered by fecha_hasta ASC
+    // Insert cierres where their fecha_hasta is >= the movimiento's fecha
+    const data: MovimientoOCierre[] = [];
+    let cierreIdx = cierresEnRango.length - 1; // iterate cierres from most recent to oldest
+
+    for (const row of rows) {
+      const mov = row as MovimientoConCuenta;
+      // Insert any cierres that should appear at or after this movement's date
+      while (cierreIdx >= 0 && cierresEnRango[cierreIdx].fecha_hasta >= mov.fecha) {
+        data.push({ tipo_fila: "cierre", data: cierresEnRango[cierreIdx] });
+        cierreIdx--;
+      }
+      data.push({ tipo_fila: "movimiento", data: mov });
+    }
+    // Remaining cierres (older than any visible movimiento)
+    while (cierreIdx >= 0) {
+      data.push({ tipo_fila: "cierre", data: cierresEnRango[cierreIdx] });
+      cierreIdx--;
+    }
+
+    const result: MovimientosPaginadosConCierres = {
+      data,
       pagination: {
         page,
         limit,
         total,
         totalPages: Math.ceil(total / limit),
       },
-    });
+      cierres_en_rango: cierresEnRango,
+    };
+
+    return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

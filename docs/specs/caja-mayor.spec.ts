@@ -224,3 +224,63 @@ export interface SaldoCuenta {
   total_gastos: number;
   saldo_neto: number;
 }
+
+// ─── Saldos Iniciales ──────────────────────────────────────────────
+
+export const CajaSaldoInicialSchema = z.object({
+  cuenta_id: z.coerce.number().int().positive("Selecciona una cuenta"),
+  fecha: z.string().min(1, "La fecha es requerida"),
+  saldo: z.coerce.number().min(0, "El saldo no puede ser negativo"),
+  observaciones: z.string().nullable().optional(),
+});
+
+export interface CajaSaldoInicial {
+  id: number;
+  cuenta_id: number;
+  cuenta_nombre: string;
+  cuenta_moneda: "USD" | "CLP";
+  fecha: string;
+  saldo: number;
+  observaciones: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Cierres de período ───────────────────────────────────────────
+
+export interface CuentaCierreResumen {
+  cuenta_id: number;
+  cuenta_nombre: string;
+  moneda: "USD" | "CLP";
+  saldo_anterior: number;
+  total_cobros: number;
+  total_gastos: number;
+  saldo_final: number;
+}
+
+export interface CierrePeriodo {
+  id: number;
+  fecha_desde: string;
+  fecha_hasta: string;
+  resumen: CuentaCierreResumen[];
+  usuario_id: number;
+  usuario_nombre: string;
+  created_at: string;
+}
+
+// ─── Movimiento o Cierre (unión para tabla) ───────────────────────
+
+export type MovimientoOCierre =
+  | { tipo_fila: "movimiento"; data: MovimientoConCuenta }
+  | { tipo_fila: "cierre"; data: CierrePeriodo };
+
+export interface MovimientosPaginadosConCierres {
+  data: MovimientoOCierre[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  cierres_en_rango: CierrePeriodo[];
+}
