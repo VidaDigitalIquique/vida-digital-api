@@ -44,10 +44,6 @@ export function CajaMayorClient({
   const [tipo, setTipo] = useState<"cobro" | "gasto">("cobro");
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
   const [cliente, setCliente] = useState<ClienteOption | null>(null);
-  const [clienteQuery, setClienteQuery] = useState("");
-  const [clienteResults, setClienteResults] = useState<ClienteOption[]>([]);
-  const [clienteLoading, setClienteLoading] = useState(false);
-  const [clienteOpen, setClienteOpen] = useState(false);
   const [empresa, setEmpresa] = useState<"vida" | "sanjh" | "">("");
   const [moneda, setMoneda] = useState<"USD" | "CLP">("USD");
   const [monto, setMonto] = useState("");
@@ -62,12 +58,14 @@ export function CajaMayorClient({
   const [notasPendientes, setNotasPendientes] = useState<NotaVentaConSaldo[]>([]);
   const [notasPendientesLoading, setNotasPendientesLoading] = useState(false);
 
-  // ─── Modo de búsqueda ────────────────────────────────
-  const [modoBusqueda, setModoBusqueda] = useState<"cliente" | "nota">("cliente");
-  const [notaQuery, setNotaQuery] = useState("");
-  const [notaResults, setNotaResults] = useState<NotaBusquedaResult[]>([]);
-  const [notaLoading, setNotaLoading] = useState(false);
-  const [notaOpen, setNotaOpen] = useState(false);
+  // ─── Búsqueda unificada ───────────────────────────────
+  type ResultadoBusqueda =
+    | { tipo: "cliente"; cliente: ClienteOption }
+    | { tipo: "nota"; nota: NotaBusquedaResult };
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<ResultadoBusqueda[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // ─── Resumen de notas del cliente ───────────────────
   const [resumen, setResumen] = useState<ResumenClienteResponse | null>(null);
@@ -175,25 +173,36 @@ export function CajaMayorClient({
     parseFloat(monto) > 0 &&
     (tipo === "gasto" || !!empresa);
 
-  // ─── Autocomplete ────────────────────────────────────
+  // ─── Búsqueda unificada (cliente o nota) ──────────────
   useEffect(() => {
-    if (clienteQuery.length < 2) {
-      setClienteResults([]);
-      setClienteOpen(false);
+    const isDigits = /^\d+$/.test(searchQuery);
+
+    if ((isDigits && searchQuery.length < 3) || (!isDigits && searchQuery.length < 2)) {
+      setSearchResults([]);
+      setSearchOpen(false);
       return;
     }
+
+    const endpoint = isDigits
+      ? `/api/caja/nota-busqueda?q=${encodeURIComponent(searchQuery)}`
+      : `/api/caja/clientes?q=${encodeURIComponent(searchQuery)}`;
+
     const timer = setTimeout(async () => {
-      setClienteLoading(true);
-      const res = await fetch(`/api/caja/clientes?q=${encodeURIComponent(clienteQuery)}`);
+      setSearchLoading(true);
+      const res = await fetch(endpoint);
       if (res.ok) {
         const json = await res.json();
-        setClienteResults(json.data || []);
-        setClienteOpen((json.data || []).length > 0);
+        const data: any[] = json.data || [];
+        const results: ResultadoBusqueda[] = isDigits
+          ? data.map((n) => ({ tipo: "nota" as const, nota: n as NotaBusquedaResult }))
+          : data.map((c) => ({ tipo: "cliente" as const, cliente: c as ClienteOption }));
+        setSearchResults(results);
+        setSearchOpen(results.length > 0);
       }
-      setClienteLoading(false);
+      setSearchLoading(false);
     }, 250);
     return () => clearTimeout(timer);
-  }, [clienteQuery]);
+  }, [searchQuery]);
 
   // Auto-select empresa when client has only one
   useEffect(() => {
@@ -219,29 +228,9 @@ export function CajaMayorClient({
 
   const selectCliente = (c: ClienteOption) => {
     setCliente(c);
-    setClienteQuery(c.nombre);
-    setClienteOpen(false);
+    setSearchQuery(c.nombre);
+    setSearchOpen(false);
   };
-
-  // ─── Fetch notas por número ──────────────────────────
-  useEffect(() => {
-    if (modoBusqueda !== "nota" || notaQuery.length < 3) {
-      setNotaResults([]);
-      setNotaOpen(false);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      setNotaLoading(true);
-      const res = await fetch(`/api/caja/nota-busqueda?q=${encodeURIComponent(notaQuery)}`);
-      if (res.ok) {
-        const json = await res.json();
-        setNotaResults(json.data || []);
-        setNotaOpen((json.data || []).length > 0);
-      }
-      setNotaLoading(false);
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [notaQuery, modoBusqueda]);
 
   const selectNota = (n: NotaBusquedaResult) => {
     const clienteOpt: ClienteOption = {
@@ -252,7 +241,7 @@ export function CajaMayorClient({
       ultima_compra: "",
     };
     setCliente(clienteOpt);
-    setClienteQuery(n.nombre_cliente);
+    setSearchQuery("");
     setEmpresa(n.empresa);
     setNotaSeleccionada({
       knumfoli: n.knumfoli,
@@ -263,9 +252,8 @@ export function CajaMayorClient({
       empresa: n.empresa,
     });
     setImputacionManual(true);
-    setNotaQuery("");
-    setNotaResults([]);
-    setNotaOpen(false);
+    setSearchResults([]);
+    setSearchOpen(false);
   };
 
   // ─── Fetch notas pendientes para imputación manual ───
@@ -294,8 +282,8 @@ export function CajaMayorClient({
 
   const clearCliente = () => {
     setCliente(null);
-    setClienteQuery("");
-    setClienteOpen(false);
+    setSearchQuery("");
+    setSearchOpen(false);
     setEmpresa("");
     setImputacionManual(false);
     setNotaSeleccionada(null);
@@ -468,32 +456,6 @@ export function CajaMayorClient({
       )}
 
       <div className="border rounded-xl p-5 space-y-5">
-        {/* ─── Modo de búsqueda ──────────────────── */}
-        <div className="flex rounded-lg border p-1 bg-muted/50">
-          {(["cliente", "nota"] as const).map((modo) => (
-            <button
-              key={modo}
-              onClick={() => {
-                setModoBusqueda(modo);
-                if (modo === "cliente") {
-                  setNotaQuery("");
-                  setNotaResults([]);
-                  setNotaOpen(false);
-                } else {
-                  clearCliente();
-                }
-              }}
-              className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
-                modoBusqueda === modo
-                  ? "bg-background shadow-sm text-foreground"
-                  : "text-zinc-500 hover:text-foreground"
-              }`}
-            >
-              {modo === "cliente" ? "🔍 Buscar por cliente" : "📄 Buscar por nota de venta"}
-            </button>
-          ))}
-        </div>
-
         {/* ─── Tipo toggle ──────────────────────────── */}
         <div className="flex rounded-lg border p-1 bg-muted/50">
           {(["cobro", "gasto"] as const).map((t) => (
@@ -528,136 +490,114 @@ export function CajaMayorClient({
           />
         </div>
 
-        {/* ─── Cliente autocomplete (solo cobro, modo cliente) ────── */}
-        {modoBusqueda === "cliente" && tipo === "cobro" ? (
+        {/* ─── Búsqueda unificada (solo cobro) ────── */}
+        {tipo === "cobro" ? (
           <div className="space-y-1 relative">
             <label className="text-sm font-medium">
-              Cliente <span className="text-red-500">*</span>
+              {cliente ? (notaSeleccionada ? "Nota de venta" : "Cliente") : "Buscar"}{" "}
+              <span className="text-red-500">*</span>
             </label>
             {cliente ? (
-              <div className="flex items-center gap-2 border rounded-lg px-3 py-2 bg-muted/30">
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{cliente.nombre}</div>
-                  <div className="text-xs text-zinc-500">
-                    {cliente.empresas.map((e) => LABELS[e]).join(" + ")} · {cliente.total_compras} compras · última {cliente.ultima_compra}
+              notaSeleccionada ? (
+                /* Nota seleccionada — info card verde */
+                <div className="flex items-center gap-2 border rounded-lg px-3 py-2 bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">
+                      📄 Nota #{notaSeleccionada.knumfoli} — {cliente.nombre}
+                    </div>
+                    <div className="text-xs text-zinc-500">
+                      {notaSeleccionada.fechanvt} · {LABELS[notaSeleccionada.empresa]} · Total: ${notaSeleccionada.val_rea.toLocaleString("es-CL")} · Pend: ${notaSeleccionada.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                    </div>
                   </div>
+                  <Button variant="ghost" size="icon-sm" onClick={clearCliente}>
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
-                <Button variant="ghost" size="icon-sm" onClick={clearCliente}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
+              ) : (
+                /* Cliente seleccionado — card gris */
+                <div className="flex items-center gap-2 border rounded-lg px-3 py-2 bg-muted/30">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium truncate">{cliente.nombre}</div>
+                    <div className="text-xs text-zinc-500">
+                      {cliente.empresas.map((e) => LABELS[e]).join(" + ")} · {cliente.total_compras} compras · última {cliente.ultima_compra}
+                    </div>
+                  </div>
+                  <Button variant="ghost" size="icon-sm" onClick={clearCliente}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )
             ) : (
+              /* Input unificado + dropdown */
               <div>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
                   <Input
-                    value={clienteQuery}
-                    onChange={(e) => setClienteQuery(e.target.value)}
-                    placeholder="Buscar por nombre (mín. 2 caracteres)"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar por nombre de cliente o número de nota..."
                     className="pl-9"
                     autoComplete="off"
                   />
-                  {clienteLoading && (
+                  {searchLoading && (
                     <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-zinc-400" />
                   )}
                 </div>
-                {clienteOpen && clienteResults.length > 0 && (
-                  <div className="absolute z-20 mt-1 w-full border rounded-lg bg-background shadow-lg max-h-60 overflow-y-auto">
-                    {clienteResults.map((c) => (
-                      <button
-                        key={c.kcodcli2}
-                        onClick={() => selectCliente(c)}
-                        className="w-full text-left px-3 py-2 hover:bg-muted transition-colors border-b last:border-0"
-                      >
-                        <div className="text-sm font-medium">{c.nombre}</div>
-                        <div className="text-xs text-zinc-500 flex items-center gap-1">
-                          {c.empresas.map((e) => (
-                            <Badge key={e} variant="outline" className="text-[10px] px-1 py-0">
-                              {LABELS[e]}
+                {searchOpen && searchResults.length > 0 && (
+                  <div className="absolute z-20 mt-1 w-full border rounded-lg bg-background shadow-lg max-h-72 overflow-y-auto">
+                    {searchResults.map((r) =>
+                      r.tipo === "cliente" ? (
+                        <button
+                          key={`cliente-${r.cliente.kcodcli2}`}
+                          onClick={() => selectCliente(r.cliente)}
+                          className="w-full text-left px-3 py-2 hover:bg-muted transition-colors border-b last:border-0"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-base shrink-0">👤</span>
+                            <span className="text-sm font-medium truncate">{r.cliente.nombre}</span>
+                          </div>
+                          <div className="text-xs text-zinc-500 flex items-center gap-1 ml-7">
+                            {r.cliente.empresas.map((e) => (
+                              <Badge key={e} variant="outline" className="text-[10px] px-1 py-0">
+                                {LABELS[e]}
+                              </Badge>
+                            ))}
+                            <span>· {r.cliente.total_compras} compras · {r.cliente.ultima_compra}</span>
+                          </div>
+                        </button>
+                      ) : (
+                        <button
+                          key={`nota-${r.nota.empresa}:${r.nota.knumfoli}`}
+                          onClick={() => selectNota(r.nota)}
+                          className={`w-full text-left px-3 py-2 hover:bg-muted transition-colors border-b last:border-0 ${
+                            r.nota.saldo_pendiente <= 0.005 ? "opacity-60" : ""
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-base shrink-0">📄</span>
+                              <span className="text-sm font-medium">#{r.nota.knumfoli}</span>
+                            </div>
+                            <Badge variant="outline" className="text-[10px] px-1 py-0">
+                              {LABELS[r.nota.empresa]}
                             </Badge>
-                          ))}
-                          <span>· {c.total_compras} compras · {c.ultima_compra}</span>
-                        </div>
-                      </button>
-                    ))}
+                          </div>
+                          <div className="text-xs text-zinc-500 mt-0.5 ml-7">
+                            {r.nota.fechanvt} · {r.nota.nombre_cliente} · Total: ${r.nota.val_rea.toLocaleString("es-CL")}
+                            {" · "}
+                            <span className={r.nota.saldo_pendiente <= 0.005 ? "text-green-600" : "text-red-600 font-medium"}>
+                              Pend: ${r.nota.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        </button>
+                      )
+                    )}
                   </div>
                 )}
               </div>
             )}
           </div>
         ) : null}
-
-        {/* ─── Búsqueda por nota de venta (modo nota) ────── */}
-        {modoBusqueda === "nota" && tipo === "cobro" && (
-          <>
-            {!cliente ? (
-              <div className="space-y-1 relative">
-                <label className="text-sm font-medium">
-                  Número de nota de venta
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-                  <Input
-                    value={notaQuery}
-                    onChange={(e) => setNotaQuery(e.target.value)}
-                    placeholder="Ej: 001710 o 1710 (mín. 3 caracteres)"
-                    className="pl-9"
-                    autoComplete="off"
-                  />
-                  {notaLoading && (
-                    <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-zinc-400" />
-                  )}
-                </div>
-                {notaOpen && notaResults.length > 0 && (
-                  <div className="absolute z-20 mt-1 w-full border rounded-lg bg-background shadow-lg max-h-72 overflow-y-auto">
-                    {notaResults.map((n) => (
-                      <button
-                        key={`${n.empresa}:${n.knumfoli}`}
-                        onClick={() => selectNota(n)}
-                        className={`w-full text-left px-3 py-2 hover:bg-muted transition-colors border-b last:border-0 ${
-                          n.saldo_pendiente <= 0.005 ? "opacity-60" : ""
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium">#{n.knumfoli}</span>
-                          <Badge variant="outline" className="text-[10px] px-1 py-0">
-                            {LABELS[n.empresa]}
-                          </Badge>
-                        </div>
-                        <div className="text-xs text-zinc-500 mt-0.5">
-                          {n.fechanvt} · {n.nombre_cliente} · Total: ${n.val_rea.toLocaleString("es-CL")}
-                          {" · "}
-                          <span className={n.saldo_pendiente <= 0.005 ? "text-green-600" : "text-red-600 font-medium"}>
-                            Pend: ${n.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* Nota seleccionada — info card */
-              <div className="flex items-center gap-2 border rounded-lg px-3 py-2 bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">
-                    📄 Nota #{notaSeleccionada?.knumfoli} — {cliente.nombre}
-                  </div>
-                  <div className="text-xs text-zinc-500">
-                    {notaSeleccionada?.fechanvt} · {LABELS[notaSeleccionada?.empresa || "vida"]} · Total: ${notaSeleccionada?.val_rea.toLocaleString("es-CL")} · Pend: ${notaSeleccionada?.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon-sm" onClick={() => {
-                  clearCliente();
-                  setNotaSeleccionada(null);
-                  setNotaQuery("");
-                }}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-          </>
-        )}
 
         {/* ─── Empresa ──────────────────────────────── */}
         {cliente && cliente.empresas.length === 2 && (
