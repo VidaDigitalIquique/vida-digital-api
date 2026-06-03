@@ -599,6 +599,69 @@ export function CajaMayorClient({
           </div>
         ) : null}
 
+        {/* ─── Imputación manual ────────────────────── */}
+        {tipo === "cobro" && cliente && (
+          <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={imputacionManual}
+                onChange={(e) => setImputacionManual(e.target.checked)}
+                className="w-4 h-4 rounded border-zinc-300"
+              />
+              <span className="text-sm font-medium">¿Imputar a nota específica?</span>
+            </label>
+
+            {imputacionManual && (
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Seleccionar nota de venta</label>
+                {notasPendientesLoading ? (
+                  <div className="text-sm text-zinc-400 py-2">
+                    <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+                    Cargando notas pendientes...
+                  </div>
+                ) : notasPendientes.length === 0 ? (
+                  <p className="text-sm text-zinc-400 italic">No hay notas pendientes para este cliente{empresa ? " en " + LABELS[empresa] : ""}.</p>
+                ) : (
+                  <select
+                    value={notaSeleccionada ? `${notaSeleccionada.empresa}:${notaSeleccionada.knumfoli}` : ""}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (!val) { setNotaSeleccionada(null); return; }
+                      const idx = val.lastIndexOf(":");
+                      const emp = val.slice(0, idx);
+                      const knum = val.slice(idx + 1);
+                      setNotaSeleccionada(notasPendientes.find((n) => n.empresa === emp && n.knumfoli === knum) || null);
+                    }}
+                    className="w-full h-9 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900"
+                  >
+                    <option value="">— Seleccionar nota —</option>
+                    {notasPendientes.map((n) => (
+                      <option key={`${n.empresa}:${n.knumfoli}`} value={`${n.empresa}:${n.knumfoli}`}>
+                        #{n.knumfoli} · {n.fechanvt} · ${n.val_rea.toLocaleString("es-CL")} · Pend: ${n.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {/* Preview de imputación */}
+                {notaSeleccionada && montoUSD !== null && (
+                  <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2 text-sm text-green-800 dark:text-green-200 mt-2">
+                    {montoUSD <= notaSeleccionada.saldo_pendiente ? (
+                      <>Se imputarán <strong>${montoUSD.toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> a la nota #{notaSeleccionada.knumfoli} ({notaSeleccionada.empresa === "vida" ? "Vida Digital" : "SANJH"}).</>
+                    ) : (
+                      <div>
+                        <p>Se imputarán <strong>${notaSeleccionada.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> a la nota #{notaSeleccionada.knumfoli}.</p>
+                        <p className="mt-0.5">Excedente de <strong>${(montoUSD - notaSeleccionada.saldo_pendiente).toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> → siguiente nota más antigua.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* ─── Empresa ──────────────────────────────── */}
         {cliente && cliente.empresas.length === 2 && (
           <div className="space-y-1">
@@ -689,69 +752,6 @@ export function CajaMayorClient({
             ))}
           </div>
         </div>
-
-        {/* ─── Imputación manual ────────────────────── */}
-        {tipo === "cobro" && cliente && (
-          <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={imputacionManual}
-                onChange={(e) => setImputacionManual(e.target.checked)}
-                className="w-4 h-4 rounded border-zinc-300"
-              />
-              <span className="text-sm font-medium">¿Imputar a nota específica?</span>
-            </label>
-
-            {imputacionManual && (
-              <div className="space-y-1">
-                <label className="text-sm font-medium">Seleccionar nota de venta</label>
-                {notasPendientesLoading ? (
-                  <div className="text-sm text-zinc-400 py-2">
-                    <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
-                    Cargando notas pendientes...
-                  </div>
-                ) : notasPendientes.length === 0 ? (
-                  <p className="text-sm text-zinc-400 italic">No hay notas pendientes para este cliente{empresa ? " en " + LABELS[empresa] : ""}.</p>
-                ) : (
-                  <select
-                    value={notaSeleccionada ? `${notaSeleccionada.empresa}:${notaSeleccionada.knumfoli}` : ""}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (!val) { setNotaSeleccionada(null); return; }
-                      const idx = val.lastIndexOf(":");
-                      const emp = val.slice(0, idx);
-                      const knum = val.slice(idx + 1);
-                      setNotaSeleccionada(notasPendientes.find((n) => n.empresa === emp && n.knumfoli === knum) || null);
-                    }}
-                    className="w-full h-9 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900"
-                  >
-                    <option value="">— Seleccionar nota —</option>
-                    {notasPendientes.map((n) => (
-                      <option key={`${n.empresa}:${n.knumfoli}`} value={`${n.empresa}:${n.knumfoli}`}>
-                        #{n.knumfoli} · {n.fechanvt} · ${n.val_rea.toLocaleString("es-CL")} · Pend: ${n.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
-                      </option>
-                    ))}
-                  </select>
-                )}
-
-                {/* Preview de imputación */}
-                {notaSeleccionada && montoUSD !== null && (
-                  <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2 text-sm text-green-800 dark:text-green-200 mt-2">
-                    {montoUSD <= notaSeleccionada.saldo_pendiente ? (
-                      <>Se imputarán <strong>${montoUSD.toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> a la nota #{notaSeleccionada.knumfoli} ({notaSeleccionada.empresa === "vida" ? "Vida Digital" : "SANJH"}).</>
-                    ) : (
-                      <div>
-                        <p>Se imputarán <strong>${notaSeleccionada.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> a la nota #{notaSeleccionada.knumfoli}.</p>
-                        <p className="mt-0.5">Excedente de <strong>${(montoUSD - notaSeleccionada.saldo_pendiente).toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> → siguiente nota más antigua.</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* ─── Observaciones ────────────────────────── */}
         <div className="space-y-1">
