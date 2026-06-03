@@ -178,9 +178,9 @@ export async function POST(_request: Request) {
     const usuarioNombre = (session!.user as any).nombre as string;
 
     const insertRows = await sql`
-      INSERT INTO caja_cierres (fecha_desde, fecha_hasta, resumen, usuario_id, usuario_nombre)
-      VALUES (${fechaDesde}::date, ${hoy}::date, ${JSON.stringify(resumen)}::jsonb, ${usuarioId}, ${usuarioNombre})
-      RETURNING id, fecha_desde::text, fecha_hasta::text, resumen, usuario_id, usuario_nombre, created_at::text
+      INSERT INTO caja_cierres (fecha_desde, fecha_hasta, resumen, usuario_id, usuario_nombre, creado_por)
+      VALUES (${fechaDesde}::date, ${hoy}::date, ${JSON.stringify(resumen)}::jsonb, ${usuarioId}, ${usuarioNombre}, ${usuarioNombre})
+      RETURNING id, fecha_desde::text, fecha_hasta::text, resumen, usuario_id, usuario_nombre, creado_por, created_at::text
     `;
 
     const result: CierrePeriodo = {
