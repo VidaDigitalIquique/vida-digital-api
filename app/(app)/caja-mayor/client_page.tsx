@@ -907,15 +907,19 @@ export function CajaMayorClient({
                             )}
                           </div>
                           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-2">
-                            {item.data.resumen.map((c) => (
-                              <div key={c.cuenta_id} className="text-xs bg-white/60 dark:bg-zinc-800/60 rounded p-1.5">
-                                <div className="font-medium truncate">{c.cuenta_nombre}</div>
-                                <div className="text-zinc-500">{c.moneda}</div>
-                                <div className={c.saldo_final >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
-                                  Saldo: {c.moneda === "CLP" ? "$" : ""}{c.saldo_final.toLocaleString("es-CL", c.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}
+                            {item.data.resumen
+                              .filter((c) => c.saldo_final !== 0 || c.total_cobros !== 0 || c.total_gastos !== 0)
+                              .map((c) => (
+                                <div key={c.cuenta_id} className="text-xs bg-white/60 dark:bg-zinc-800/60 rounded p-1.5">
+                                  <div className="font-medium truncate">{c.cuenta_nombre}</div>
+                                  <div className="text-zinc-500">{c.moneda}</div>
+                                  <div>Depósito total: {c.moneda === "CLP" ? "$" : ""}{c.total_cobros.toLocaleString("es-CL", c.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}</div>
+                                  <div>Gasto total: {c.moneda === "CLP" ? "$" : ""}{c.total_gastos.toLocaleString("es-CL", c.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}</div>
+                                  <div className={c.saldo_final >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
+                                    Saldo: {c.moneda === "CLP" ? "$" : ""}{c.saldo_final.toLocaleString("es-CL", c.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
                           </div>
                         </td>
                       </tr>
