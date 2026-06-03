@@ -830,9 +830,11 @@ export function CajaMayorClient({
                     <th className="py-2 pr-2 font-medium">Tipo</th>
                     <th className="py-2 pr-2 font-medium">Cliente</th>
                     <th className="py-2 pr-2 font-medium">Emp.</th>
+                    <th className="py-2 pr-2 font-medium">Nota(s)</th>
                     <th className="py-2 pr-2 font-medium">Cuenta</th>
                     <th className="py-2 pr-2 font-medium text-right">Monto</th>
                     <th className="py-2 pr-2 font-medium">Mon.</th>
+                    <th className="py-2 pr-2 font-medium max-w-[80px]">Obs.</th>
                     <th className="py-2 w-[60px]"></th>
                   </tr>
                 </thead>
@@ -845,11 +847,17 @@ export function CajaMayorClient({
                       <td className="py-1.5 pr-2">
                         {mov.empresa ? <Badge variant="outline" className="text-[10px] px-1 py-0">{mov.empresa === "vida" ? "VD" : "SJ"}</Badge> : "—"}
                       </td>
+                      <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate">
+                        {mov.notas_imputadas?.length ? mov.notas_imputadas.join(", ") : "—"}
+                      </td>
                       <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate">{mov.cuenta_nombre}</td>
                       <td className={`py-1.5 pr-2 text-right font-medium whitespace-nowrap ${mov.tipo === "cobro" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
                         {mov.tipo === "gasto" ? "-" : ""}{mov.monto.toLocaleString("es-CL", mov.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}
                       </td>
                       <td className="py-1.5 pr-2 text-xs text-zinc-500">{mov.moneda}</td>
+                      <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[80px] truncate" title={mov.observaciones || undefined}>
+                        {mov.observaciones || "—"}
+                      </td>
                       <td className="py-1.5 flex gap-1">
                         <Button variant="ghost" size="icon-sm" onClick={() => openEditModal(mov)} title="Editar"><Pencil className="w-3.5 h-3.5" /></Button>
                         <Button variant="ghost" size="icon-sm" onClick={() => { openEditModal(mov); setEditDeleteConfirm(true); }} title="Eliminar"><Trash2 className="w-3.5 h-3.5 text-red-500" /></Button>

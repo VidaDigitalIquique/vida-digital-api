@@ -203,6 +203,7 @@ export interface ResumenClienteResponse {
 
 export interface MovimientoConCuenta extends CajaMovimiento {
   cuenta_nombre: string;
+  notas_imputadas: string[];
 }
 
 export interface MovimientosPaginados {

@@ -34,6 +34,11 @@ export async function GET(request: Request) {
       SELECT m.id, m.fecha::text, m.tipo, m.kcodcli2::bigint, m.nombre_cliente,
         m.cuenta_id, cc.nombre AS cuenta_nombre, m.moneda, m.monto, m.monto_usd,
         m.tipo_cambio, m.forma_pago, m.observaciones, m.empresa,
+        COALESCE((
+          SELECT ARRAY_AGG(cmn.knumfoli ORDER BY cmn.id)
+          FROM caja_movimiento_notas cmn
+          WHERE cmn.movimiento_id = m.id
+        ), '{}') AS notas_imputadas,
         m.usuario_id, m.usuario_nombre, m.created_at::text, m.updated_at::text
       FROM caja_movimientos m
       JOIN caja_cuentas cc ON cc.id = m.cuenta_id
