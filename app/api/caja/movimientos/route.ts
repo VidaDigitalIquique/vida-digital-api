@@ -67,64 +67,69 @@ export async function GET(request: Request) {
 
     const total = countRows[0].total as number;
 
-    // Fetch cierres within the filtered date range
-    // Use filter dates if provided, otherwise broad range
-    const minFecha = desde || "2000-01-01";
-    const maxFecha = hasta || new Date().toISOString().slice(0, 10);
+    // Fetch cierres within the filtered date range (non-blocking)
+    let cierresEnRango: CierrePeriodo[] = [];
+    try {
+      const minFecha = desde || "2000-01-01";
+      const maxFecha = hasta || new Date().toISOString().slice(0, 10);
 
-    const cierresRows = await sql`
-      SELECT id, fecha_desde::text, fecha_hasta::text, resumen,
-        usuario_id, usuario_nombre, created_at::text
-      FROM caja_cierres
-      WHERE fecha_hasta >= ${minFecha}::date
-        AND fecha_desde <= ${maxFecha}::date
-      ORDER BY fecha_hasta ASC
-    `;
+      const cierresRows = await sql`
+        SELECT id, fecha_desde::text, fecha_hasta::text, resumen,
+          usuario_id, usuario_nombre, created_at::text
+        FROM caja_cierres
+        WHERE fecha_hasta >= ${minFecha}::date
+          AND fecha_desde <= ${maxFecha}::date
+        ORDER BY fecha_hasta ASC
+      `;
 
-    const cierresEnRango: CierrePeriodo[] = cierresRows.map((r: any) => ({
-      id: r.id,
-      fecha_desde: r.fecha_desde,
-      fecha_hasta: r.fecha_hasta,
-      resumen: r.resumen,
-      usuario_id: r.usuario_id,
-      usuario_nombre: r.usuario_nombre,
-      created_at: r.created_at,
+      cierresEnRango = cierresRows.map((r: any) => ({
+        id: r.id,
+        fecha_desde: r.fecha_desde,
+        fecha_hasta: r.fecha_hasta,
+        resumen: typeof r.resumen === "string" ? JSON.parse(r.resumen) : r.resumen,
+        usuario_id: r.usuario_id,
+        usuario_nombre: r.usuario_nombre,
+        created_at: r.created_at,
+      }));
+    } catch {
+      // cierres table might not exist yet — continue without cierres
+      cierresEnRango = [];
+    }
+
+    // Wrap movimientos as MovimientoOCierre
+    const data: MovimientoOCierre[] = rows.map((row) => ({
+      tipo_fila: "movimiento" as const,
+      data: row as MovimientoConCuenta,
     }));
 
-    // Intercalate cierres with movimientos
-    // Movimientos are ordered by fecha DESC, id DESC
-    // Cierres are ordered by fecha_hasta ASC
-    // Insert cierres where their fecha_hasta is >= the movimiento's fecha
-    const data: MovimientoOCierre[] = [];
-    let cierreIdx = cierresEnRango.length - 1; // iterate cierres from most recent to oldest
-
-    for (const row of rows) {
-      const mov = row as MovimientoConCuenta;
-      // Insert any cierres that should appear at or after this movement's date
-      while (cierreIdx >= 0 && cierresEnRango[cierreIdx].fecha_hasta >= mov.fecha) {
-        data.push({ tipo_fila: "cierre", data: cierresEnRango[cierreIdx] });
+    // Intercalate cierres (sorted ASC) into movimientos (sorted DESC)
+    if (cierresEnRango.length > 0) {
+      let cierreIdx = cierresEnRango.length - 1;
+      const merged: MovimientoOCierre[] = [];
+      for (const item of data) {
+        const mov = item.data as MovimientoConCuenta;
+        while (cierreIdx >= 0 && cierresEnRango[cierreIdx].fecha_hasta >= mov.fecha) {
+          merged.push({ tipo_fila: "cierre", data: cierresEnRango[cierreIdx] });
+          cierreIdx--;
+        }
+        merged.push(item);
+      }
+      while (cierreIdx >= 0) {
+        merged.push({ tipo_fila: "cierre", data: cierresEnRango[cierreIdx] });
         cierreIdx--;
       }
-      data.push({ tipo_fila: "movimiento", data: mov });
-    }
-    // Remaining cierres (older than any visible movimiento)
-    while (cierreIdx >= 0) {
-      data.push({ tipo_fila: "cierre", data: cierresEnRango[cierreIdx] });
-      cierreIdx--;
+      return NextResponse.json({
+        data: merged,
+        pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+        cierres_en_rango: cierresEnRango,
+      } satisfies MovimientosPaginadosConCierres);
     }
 
-    const result: MovimientosPaginadosConCierres = {
+    return NextResponse.json({
       data,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-      cierres_en_rango: cierresEnRango,
-    };
-
-    return NextResponse.json(result);
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
+      cierres_en_rango: [],
+    } satisfies MovimientosPaginadosConCierres);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
