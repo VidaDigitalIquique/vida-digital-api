@@ -874,9 +874,9 @@ export function CajaMayorClient({
                     <th className="py-2 pr-2 font-medium">Cliente</th>
                     <th className="py-2 pr-2 font-medium">Emp.</th>
                     <th className="py-2 pr-2 font-medium">Nota(s)</th>
+                    <th className="py-2 pr-2 font-medium text-right">CLP</th>
                     <th className="py-2 pr-2 font-medium">Cuenta</th>
-                    <th className="py-2 pr-2 font-medium text-right">Monto</th>
-                    <th className="py-2 pr-2 font-medium">Mon.</th>
+                    <th className="py-2 pr-2 font-medium text-right">USD</th>
                     <th className="py-2 pr-2 font-medium max-w-[80px]">Observación</th>
                     <th className="py-2 w-[60px]"></th>
                   </tr>
@@ -934,11 +934,15 @@ export function CajaMayorClient({
                         <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate">
                           {item.data.notas_imputadas?.length ? item.data.notas_imputadas.join(", ") : "—"}
                         </td>
+                        <td className={`py-1.5 pr-2 text-right font-medium whitespace-nowrap ${item.data.tipo === "cobro" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
+                          {item.data.moneda === "CLP"
+                            ? `${item.data.tipo === "gasto" ? "-" : ""}$${item.data.monto.toLocaleString("es-CL")}`
+                            : "—"}
+                        </td>
                         <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate">{item.data.cuenta_nombre}</td>
                         <td className={`py-1.5 pr-2 text-right font-medium whitespace-nowrap ${item.data.tipo === "cobro" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
-                          {item.data.tipo === "gasto" ? "-" : ""}{item.data.monto.toLocaleString("es-CL", item.data.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}
+                          {item.data.tipo === "gasto" ? "-" : ""}{(item.data.monto_usd ?? item.data.monto).toLocaleString("es-CL", { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="py-1.5 pr-2 text-xs text-zinc-500">{item.data.moneda}</td>
                         <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[80px] truncate" title={item.data.observaciones || undefined}>
                           {item.data.observaciones || "—"}
                         </td>
