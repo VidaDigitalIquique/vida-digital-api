@@ -20,7 +20,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Pencil, Plus, Save, Loader2, Trash2 } from "lucide-react";
+import { Pencil, Plus, Save, Loader2, Trash2, RefreshCw } from "lucide-react";
 import { formatMonto } from "@/docs/specs/caja-mayor.spec";
 
 interface Cuenta {
@@ -61,6 +61,31 @@ export function CajaConfigClient({
   const [dolarDia, setDolarDia] = useState(String(initialConfig.dolar_dia));
   const [dolarSaving, setDolarSaving] = useState(false);
   const [dolarInfo, setDolarInfo] = useState(initialConfig);
+  const [dolarObsLoading, setDolarObsLoading] = useState(false);
+  const [dolarObsMeta, setDolarObsMeta] = useState<{
+    fecha: string;
+    fuente: string;
+  } | null>(null);
+
+  const handleObtenerDolarObservado = async () => {
+    setDolarObsLoading(true);
+    setDolarObsMeta(null);
+    try {
+      const res = await fetch("/api/caja/dolar-observado");
+      if (res.ok) {
+        const json = await res.json();
+        setDolarDia(String(json.data.valor));
+        setDolarObsMeta({ fecha: json.data.fecha, fuente: json.data.fuente });
+        toast.success(`Dólar observado: $${json.data.valor}`);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Error al obtener dólar observado");
+      }
+    } catch {
+      toast.error("Error de conexión al consultar el Banco Central");
+    }
+    setDolarObsLoading(false);
+  };
 
   const handleSaveDolar = async () => {
     const num = parseFloat(dolarDia);
@@ -298,14 +323,31 @@ export function CajaConfigClient({
         <div className="flex gap-2 items-end">
           <div className="flex-1 space-y-1">
             <label className="text-xs text-zinc-500">Valor USD a CLP</label>
-            <Input
-              type="number"
-              min="0"
-              step="0.01"
-              value={dolarDia}
-              onChange={(e) => setDolarDia(e.target.value)}
-              placeholder="Ej: 980.50"
-            />
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min="0"
+                step="0.01"
+                value={dolarDia}
+                onChange={(e) => setDolarDia(e.target.value)}
+                placeholder="Ej: 980.50"
+                className="flex-1"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleObtenerDolarObservado}
+                disabled={dolarObsLoading}
+                className="whitespace-nowrap"
+              >
+                {dolarObsLoading ? (
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                )}
+                Dólar observado
+              </Button>
+            </div>
           </div>
           <Button onClick={handleSaveDolar} disabled={dolarSaving}>
             {dolarSaving ? (
@@ -316,6 +358,11 @@ export function CajaConfigClient({
             Guardar
           </Button>
         </div>
+        {dolarObsMeta && (
+          <p className="text-xs text-blue-700 dark:text-blue-300">
+            Dólar observado + $12 · Banco Central de Chile · {dolarObsMeta.fecha}
+          </p>
+        )}
         {dolarInfo.updated_at && (
           <p className="text-xs text-zinc-400">
             Última actualización:{" "}
