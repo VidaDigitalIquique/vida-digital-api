@@ -115,18 +115,18 @@ export async function PATCH(
           ORDER BY id DESC
         `;
 
-        let pendiente = diferencia;
+        let pendiente = Math.round(diferencia * 100) / 100;
         for (const nota of notas) {
           if (pendiente <= 0.005) break;
           const montoActual = parseFloat(nota.monto_aplicado);
-          const reduccion = Math.min(montoActual, pendiente);
-          const nuevoMonto = Math.max(0, Math.round((montoActual - reduccion) * 100) / 100);
+          const reduccion = Math.round(Math.min(montoActual, pendiente) * 100) / 100;
+          const nuevoMonto = Math.round((montoActual - reduccion) * 100) / 100;
           await sql`
             UPDATE caja_movimiento_notas
             SET monto_aplicado = ${nuevoMonto}
             WHERE id = ${nota.id}
           `;
-          pendiente -= reduccion;
+          pendiente = Math.round((pendiente - reduccion) * 100) / 100;
         }
 
         ajusteRequerido = {
