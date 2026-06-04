@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Search, X, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, Search, X, Pencil, Trash2, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { roundUpToHalf, formatMonto } from "@/docs/specs/caja-mayor.spec";
-import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta, NotaVentaConSaldo, NotaBusquedaResult, MovimientoOCierre } from "@/docs/specs/caja-mayor.spec";
+import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta, NotaVentaConSaldo, NotaBusquedaResult, MovimientoOCierre, CierrePeriodo } from "@/docs/specs/caja-mayor.spec";
 
 interface Cuenta {
   id: number;
@@ -121,6 +121,12 @@ export function CajaMayorClient({
   const [editFormaPago, setEditFormaPago] = useState<"efectivo" | "cheque" | "transferencia">("transferencia");
   const [editObs, setEditObs] = useState("");
   const [editDeleteConfirm, setEditDeleteConfirm] = useState(false);
+
+  // ─── Edición inline de cierre ─────────────────────────
+  const [cierreEditId, setCierreEditId] = useState<number | null>(null);
+  const [cierreEditDesde, setCierreEditDesde] = useState("");
+  const [cierreEditHasta, setCierreEditHasta] = useState("");
+  const [cierreEditSaving, setCierreEditSaving] = useState(false);
 
   // ─── Fetch movimientos ────────────────────────────────
   const fetchMovimientos = useCallback((page = 1) => {
@@ -498,6 +504,32 @@ export function CajaMayorClient({
       const err = await res.json();
       toast.error(err.error || "Error al eliminar cierre");
     }
+  };
+
+  const handleOpenCierreEdit = (cierre: CierrePeriodo) => {
+    setCierreEditId(cierre.id);
+    setCierreEditDesde(cierre.fecha_desde);
+    setCierreEditHasta(cierre.fecha_hasta);
+  };
+
+  const handleCierreEditSave = async () => {
+    if (!cierreEditId || !cierreEditDesde || !cierreEditHasta) return;
+    setCierreEditSaving(true);
+    const res = await fetch(`/api/caja/cierres/${cierreEditId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fecha_desde: cierreEditDesde, fecha_hasta: cierreEditHasta }),
+    });
+    if (res.ok) {
+      toast.success("Cierre actualizado");
+      setCierreEditId(null);
+      fetchMovimientos(pagination.page);
+      fetchSaldos();
+    } else {
+      const err = await res.json();
+      toast.error(err.error || "Error al actualizar cierre");
+    }
+    setCierreEditSaving(false);
   };
 
   // ─── Render ──────────────────────────────────────────
@@ -913,23 +945,50 @@ export function CajaMayorClient({
                       <tr key={`cierre-${item.data.id}`} className="bg-blue-100 dark:bg-blue-950/40 border-b">
                         <td colSpan={10} className="py-3 px-4">
                           <div className="flex items-center justify-between">
-                            <div>
+                            <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-bold text-blue-800 dark:text-blue-300 text-sm">
-                                🔒 CIERRE DE PERÍODO — {item.data.fecha_desde} al {item.data.fecha_hasta}
+                                🔒 CIERRE DE PERÍODO
                               </span>
+                              {cierreEditId === item.data.id ? (
+                                <>
+                                  <Input
+                                    type="date"
+                                    value={cierreEditDesde}
+                                    onChange={(e) => setCierreEditDesde(e.target.value)}
+                                    className="h-7 w-[140px] text-xs"
+                                  />
+                                  <span className="text-xs text-zinc-500">al</span>
+                                  <Input
+                                    type="date"
+                                    value={cierreEditHasta}
+                                    onChange={(e) => setCierreEditHasta(e.target.value)}
+                                    className="h-7 w-[140px] text-xs"
+                                  />
+                                  <Button size="icon-sm" onClick={handleCierreEditSave} disabled={cierreEditSaving} className="h-7 w-7">
+                                    {cierreEditSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+                                  </Button>
+                                  <Button size="icon-sm" variant="ghost" onClick={() => setCierreEditId(null)} className="h-7 w-7">
+                                    <X className="w-3 h-3" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <span>— {item.data.fecha_desde} al {item.data.fecha_hasta}</span>
+                              )}
                               <span className="text-xs text-blue-600 dark:text-blue-400 ml-3">
                                 por {item.data.usuario_nombre}
                               </span>
                             </div>
                             {userRol === "admin" && (
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                onClick={() => handleDeleteCierre(item.data.id)}
-                                title="Eliminar cierre"
-                              >
-                                <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                              </Button>
+                              <div className="flex gap-1">
+                                {cierreEditId !== item.data.id && (
+                                  <Button variant="ghost" size="icon-sm" onClick={() => handleOpenCierreEdit(item.data as CierrePeriodo)} title="Editar fechas">
+                                    <Pencil className="w-3.5 h-3.5" />
+                                  </Button>
+                                )}
+                                <Button variant="ghost" size="icon-sm" onClick={() => handleDeleteCierre(item.data.id)} title="Eliminar cierre">
+                                  <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                                </Button>
+                              </div>
                             )}
                           </div>
                           {(() => {
