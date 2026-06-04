@@ -906,21 +906,47 @@ export function CajaMayorClient({
                               </Button>
                             )}
                           </div>
-                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-2">
-                            {item.data.resumen
-                              .filter((c) => c.saldo_final !== 0 || c.total_cobros !== 0 || c.total_gastos !== 0)
-                              .map((c) => (
-                                <div key={c.cuenta_id} className="text-xs bg-white/60 dark:bg-zinc-800/60 rounded p-1.5">
-                                  <div className="font-medium truncate">{c.cuenta_nombre}</div>
-                                  <div className="text-zinc-500">{c.moneda}</div>
-                                  <div>Depósito total: {c.moneda === "CLP" ? "$" : ""}{formatMonto(c.total_cobros, c.moneda)}</div>
-                                  <div>Gasto total: {c.moneda === "CLP" ? "$" : ""}{formatMonto(c.total_gastos, c.moneda)}</div>
-                                  <div className={c.saldo_final >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
-                                    Saldo: {c.moneda === "CLP" ? "$" : ""}{formatMonto(c.saldo_final, c.moneda)}
-                                  </div>
+                          {(() => {
+                            const activas = item.data.resumen.filter(
+                              (c) => c.saldo_final !== 0 || c.total_cobros !== 0 || c.total_gastos !== 0
+                            );
+                            const usd = activas.filter((c) => c.moneda === "USD");
+                            const clp = activas.filter((c) => c.moneda === "CLP");
+                            const TarjetaCuenta = ({ c }: { c: typeof activas[number] }) => (
+                              <div key={c.cuenta_id} className="text-xs bg-white/60 dark:bg-zinc-800/60 rounded p-1.5">
+                                <div className="font-medium truncate">{c.cuenta_nombre}</div>
+                                <div>Depósito total: {c.moneda === "CLP" ? "$" : ""}{formatMonto(c.total_cobros, c.moneda)}</div>
+                                <div>Gasto total: {c.moneda === "CLP" ? "$" : ""}{formatMonto(c.total_gastos, c.moneda)}</div>
+                                <div className={c.saldo_final >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
+                                  Saldo: {c.moneda === "CLP" ? "$" : ""}{formatMonto(c.saldo_final, c.moneda)}
                                 </div>
-                              ))}
-                          </div>
+                              </div>
+                            );
+                            return (
+                              <>
+                                {usd.length > 0 && (
+                                  <div className="mt-2">
+                                    <div className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1.5 uppercase tracking-wide">
+                                      Dólares (USD)
+                                    </div>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                                      {usd.map((c) => <TarjetaCuenta key={c.cuenta_id} c={c} />)}
+                                    </div>
+                                  </div>
+                                )}
+                                {clp.length > 0 && (
+                                  <div className="mt-2">
+                                    <div className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-1.5 uppercase tracking-wide">
+                                      Pesos Chilenos (CLP)
+                                    </div>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                                      {clp.map((c) => <TarjetaCuenta key={c.cuenta_id} c={c} />)}
+                                    </div>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
                         </td>
                       </tr>
                     ) : (
