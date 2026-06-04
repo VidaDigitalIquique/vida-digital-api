@@ -54,6 +54,25 @@ export function CajaMayorClient({
   const [observaciones, setObservaciones] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Dólar del día vigente (inicia con prop del server, se refresca de la API)
+  const [dolarVigente, setDolarVigente] = useState(dolarDia);
+
+  useEffect(() => {
+    async function refrescarDolar() {
+      try {
+        const res = await fetch("/api/caja/config");
+        if (res.ok) {
+          const json = await res.json();
+          const valor = parseFloat(json.data.valor);
+          if (valor > 0) setDolarVigente(valor);
+        }
+      } catch {
+        // mantener dolarVigente actual
+      }
+    }
+    refrescarDolar();
+  }, [moneda]);
+
   // ─── Imputación manual ─────────────────────────────────
   const [imputacionManual, setImputacionManual] = useState(false);
   const [notaSeleccionada, setNotaSeleccionada] = useState<NotaVentaConSaldo | null>(null);
@@ -167,9 +186,9 @@ export function CajaMayorClient({
     const n = parseFloat(monto);
     if (isNaN(n) || n <= 0) return null;
     if (moneda === "USD") return n;
-    if (dolarDia <= 0) return null;
-    return roundUpToHalf(n / dolarDia);
-  }, [monto, moneda, dolarDia]);
+    if (dolarVigente <= 0) return null;
+    return roundUpToHalf(n / dolarVigente);
+  }, [monto, moneda, dolarVigente]);
 
   const canSubmit =
     !saving &&
@@ -499,9 +518,9 @@ export function CajaMayorClient({
       </div>
 
       {/* Dollar banner */}
-      {dolarDia > 0 && (
+      {dolarVigente > 0 && (
         <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2 text-sm text-blue-800 dark:text-blue-200">
-          💱 Dólar del día: <strong>${formatMonto(dolarDia, "CLP")}</strong>
+          💱 Dólar del día: <strong>${formatMonto(dolarVigente, "CLP")}</strong>
         </div>
       )}
 
@@ -758,7 +777,7 @@ export function CajaMayorClient({
         {/* ─── CLP → USD preview ────────────────────── */}
         {moneda === "CLP" && montoUSD !== null && (
           <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
-            ≈ <strong>{formatMonto(montoUSD, "USD")} USD</strong> (tasa: ${formatMonto(dolarDia, "CLP")})
+            ≈ <strong>{formatMonto(montoUSD, "USD")} USD</strong> (tasa: ${formatMonto(dolarVigente, "CLP")})
             <span className="text-xs block mt-0.5">Redondeado al múltiplo de 0.5 más cercano hacia arriba</span>
           </div>
         )}
