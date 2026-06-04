@@ -96,7 +96,8 @@ export async function PATCH(
       }
     }
 
-    // R27: if monto_usd decreased, validate against existing imputaciones
+    // R27: if monto_usd decreased, auto-adjust imputaciones
+    let ajusteRequerido: { diferencia: number; mensaje: string } | null = null;
     if (montoUsd < parseFloat(current.monto_usd || "0") - 0.005) {
       const imputado = await sql`
         SELECT COALESCE(SUM(monto_aplicado), 0) AS total
@@ -104,12 +105,34 @@ export async function PATCH(
       `;
       const totalImputado = parseFloat(imputado[0].total);
       if (totalImputado > montoUsd + 0.005) {
-        return NextResponse.json(
-          {
-            error: `El nuevo monto ($${montoUsd.toFixed(2)} USD) es menor que el total imputado ($${totalImputado.toFixed(2)} USD). Ajusta las imputaciones primero.`,
-          },
-          { status: 422 }
-        );
+        const diferencia = Math.round((totalImputado - montoUsd) * 100) / 100;
+
+        // Reducir imputaciones empezando por la última (ORDER BY id DESC)
+        const notas = await sql`
+          SELECT id, monto_aplicado
+          FROM caja_movimiento_notas
+          WHERE movimiento_id = ${movimientoId}
+          ORDER BY id DESC
+        `;
+
+        let pendiente = diferencia;
+        for (const nota of notas) {
+          if (pendiente <= 0.005) break;
+          const montoActual = parseFloat(nota.monto_aplicado);
+          const reduccion = Math.min(montoActual, pendiente);
+          const nuevoMonto = Math.max(0, Math.round((montoActual - reduccion) * 100) / 100);
+          await sql`
+            UPDATE caja_movimiento_notas
+            SET monto_aplicado = ${nuevoMonto}
+            WHERE id = ${nota.id}
+          `;
+          pendiente -= reduccion;
+        }
+
+        ajusteRequerido = {
+          diferencia,
+          mensaje: `El total imputado supera el monto por $${diferencia.toFixed(2)} USD. Se ajustó automáticamente.`,
+        };
       }
     }
 
@@ -151,7 +174,11 @@ export async function PATCH(
         created_at::text, updated_at::text
     `;
 
-    return NextResponse.json({ data: updated[0] });
+    const result: Record<string, unknown> = { data: updated[0] };
+    if (ajusteRequerido) {
+      result.ajuste_requerido = ajusteRequerido;
+    }
+    return NextResponse.json(result);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

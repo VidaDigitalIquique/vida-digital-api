@@ -339,7 +339,14 @@ export function CajaMayorClient({
       body: JSON.stringify(body),
     });
     if (res.ok) {
-      toast.success("Movimiento actualizado");
+      const json = await res.json();
+      if (json.ajuste_requerido) {
+        toast(json.ajuste_requerido.mensaje, {
+          style: { background: "#FEF3C7", color: "#92400E", border: "1px solid #FCD34D" },
+        });
+      } else {
+        toast.success("Movimiento actualizado");
+      }
       setEditModalOpen(false);
       fetchMovimientos(pagination.page);
       fetchSaldos();
