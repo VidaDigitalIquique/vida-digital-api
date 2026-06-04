@@ -199,7 +199,6 @@ export function CajaMayorClient({
   const canSubmit =
     !saving &&
     fecha &&
-    (tipo === "gasto" || !!cliente) &&
     cuentaId &&
     parseFloat(monto) > 0 &&
     (tipo === "gasto" || !!empresa);

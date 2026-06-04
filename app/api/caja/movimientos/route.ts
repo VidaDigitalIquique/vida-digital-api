@@ -158,14 +158,6 @@ export async function POST(request: Request) {
 
     const { fecha, tipo, kcodcli2, nombre_cliente, cuenta_id, moneda, monto, forma_pago, observaciones, empresa } = parsed.data;
 
-    // R5: cobro requires client
-    if (tipo === "cobro" && (!kcodcli2 || !nombre_cliente)) {
-      return NextResponse.json(
-        { error: "Cliente requerido para cobros" },
-        { status: 400 }
-      );
-    }
-
     // R6: gasto → empresa can be null
     const finalEmpresa = tipo === "gasto" ? (empresa ?? null) : empresa;
 
