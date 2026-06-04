@@ -94,7 +94,7 @@ export async function getDolarObservado(): Promise<{
       return null;
     }
 
-    const valor = Math.round((parseFloat(lastValue) + 12) * 100) / 100;
+    const valor = Math.round((parseFloat(lastValue) + 12) / 10) * 10;
 
     // Convertir DD-MM-YYYY → YYYY-MM-DD
     let fecha = hoy.toISOString().slice(0, 10);
