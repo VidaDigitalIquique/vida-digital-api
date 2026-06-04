@@ -949,28 +949,28 @@ export function CajaMayorClient({
                               </div>
                             );
                             return (
-                              <>
+                              <div className="flex flex-row gap-4 mt-2">
                                 {usd.length > 0 && (
-                                  <div className="mt-2">
+                                  <div className="flex-1 min-w-0">
                                     <div className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1.5 uppercase tracking-wide">
                                       Dólares (USD)
                                     </div>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                       {usd.map((c) => <TarjetaCuenta key={c.cuenta_id} c={c} />)}
                                     </div>
                                   </div>
                                 )}
                                 {clp.length > 0 && (
-                                  <div className="mt-2">
+                                  <div className="flex-1 min-w-0">
                                     <div className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-1.5 uppercase tracking-wide">
                                       Pesos Chilenos (CLP)
                                     </div>
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                       {clp.map((c) => <TarjetaCuenta key={c.cuenta_id} c={c} />)}
                                     </div>
                                   </div>
                                 )}
-                              </>
+                              </div>
                             );
                           })()}
                         </td>
