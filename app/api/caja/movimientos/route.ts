@@ -49,7 +49,7 @@ export async function GET(request: Request) {
         AND (${empresaFiltro}::text IS NULL OR m.empresa = ${empresaFiltro})
         AND (${desde}::date IS NULL OR m.fecha >= ${desde}::date)
         AND (${hasta}::date IS NULL OR m.fecha <= ${hasta}::date)
-      ORDER BY CASE WHEN m.tipo = 'cobro' THEN 0 ELSE 1 END ASC, m.fecha DESC, m.id DESC
+      ORDER BY m.fecha DESC, m.id DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
