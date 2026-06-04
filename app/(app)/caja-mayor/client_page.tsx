@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Search, X, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { roundUpToHalf } from "@/docs/specs/caja-mayor.spec";
+import { roundUpToHalf, formatMonto } from "@/docs/specs/caja-mayor.spec";
 import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta, NotaVentaConSaldo, NotaBusquedaResult, MovimientoOCierre } from "@/docs/specs/caja-mayor.spec";
 
 interface Cuenta {
@@ -424,7 +424,7 @@ export function CajaMayorClient({
         }
       }
 
-      toast.success(`Movimiento registrado — ${tipo === "cobro" ? "Cobro" : "Gasto"} por $${parseFloat(monto).toLocaleString("es-CL")} ${moneda}`);
+      toast.success(`Movimiento registrado — ${tipo === "cobro" ? "Cobro" : "Gasto"} por $${formatMonto(parseFloat(monto), moneda)} ${moneda}`);
       // Reset form
       setFecha(new Date().toISOString().slice(0, 10));
       clearCliente();
@@ -494,7 +494,7 @@ export function CajaMayorClient({
       {/* Dollar banner */}
       {dolarDia > 0 && (
         <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2 text-sm text-blue-800 dark:text-blue-200">
-          💱 Dólar del día: <strong>${dolarDia.toLocaleString("es-CL")}</strong>
+          💱 Dólar del día: <strong>${formatMonto(dolarDia, "CLP")}</strong>
         </div>
       )}
 
@@ -549,7 +549,7 @@ export function CajaMayorClient({
                       📄 Nota #{notaSeleccionada.knumfoli} — {cliente.nombre}
                     </div>
                     <div className="text-xs text-zinc-500">
-                      {notaSeleccionada.fechanvt} · {LABELS[notaSeleccionada.empresa]} · Total: ${notaSeleccionada.val_rea.toLocaleString("es-CL")} · Pend: ${notaSeleccionada.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                      {notaSeleccionada.fechanvt} · {LABELS[notaSeleccionada.empresa]} · Total: ${formatMonto(notaSeleccionada.val_rea, "CLP")} · Pend: ${formatMonto(notaSeleccionada.saldo_pendiente, "USD")}
                     </div>
                   </div>
                   <Button variant="ghost" size="icon-sm" onClick={clearCliente}>
@@ -626,10 +626,10 @@ export function CajaMayorClient({
                             </Badge>
                           </div>
                           <div className="text-xs text-zinc-500 mt-0.5 ml-7">
-                            {r.nota.fechanvt} · {r.nota.nombre_cliente} · Total: ${r.nota.val_rea.toLocaleString("es-CL")}
+                            {r.nota.fechanvt} · {r.nota.nombre_cliente} · Total: ${formatMonto(r.nota.val_rea, "CLP")}
                             {" · "}
                             <span className={r.nota.saldo_pendiente <= 0.005 ? "text-green-600" : "text-red-600 font-medium"}>
-                              Pend: ${r.nota.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                              Pend: ${formatMonto(r.nota.saldo_pendiente, "USD")}
                             </span>
                           </div>
                         </button>
@@ -681,7 +681,7 @@ export function CajaMayorClient({
                     <option value="">— Seleccionar nota —</option>
                     {notasPendientes.map((n) => (
                       <option key={`${n.empresa}:${n.knumfoli}`} value={`${n.empresa}:${n.knumfoli}`}>
-                        #{n.knumfoli} · {n.fechanvt} · ${n.val_rea.toLocaleString("es-CL")} · Pend: ${n.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                        #{n.knumfoli} · {n.fechanvt} · ${formatMonto(n.val_rea, "CLP")} · Pend: ${formatMonto(n.saldo_pendiente, "USD")}
                       </option>
                     ))}
                   </select>
@@ -691,11 +691,11 @@ export function CajaMayorClient({
                 {notaSeleccionada && montoUSD !== null && (
                   <div className="bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg px-3 py-2 text-sm text-green-800 dark:text-green-200 mt-2">
                     {montoUSD <= notaSeleccionada.saldo_pendiente ? (
-                      <>Se imputarán <strong>${montoUSD.toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> a la nota #{notaSeleccionada.knumfoli} ({notaSeleccionada.empresa === "vida" ? "Vida Digital" : "SANJH"}).</>
+                      <>Se imputarán <strong>${formatMonto(montoUSD, "USD")} USD</strong> a la nota #{notaSeleccionada.knumfoli} ({notaSeleccionada.empresa === "vida" ? "Vida Digital" : "SANJH"}).</>
                     ) : (
                       <div>
-                        <p>Se imputarán <strong>${notaSeleccionada.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> a la nota #{notaSeleccionada.knumfoli}.</p>
-                        <p className="mt-0.5">Excedente de <strong>${(montoUSD - notaSeleccionada.saldo_pendiente).toLocaleString("es-CL", { minimumFractionDigits: 2 })} USD</strong> → siguiente nota más antigua.</p>
+                        <p>Se imputarán <strong>${formatMonto(notaSeleccionada.saldo_pendiente, "USD")} USD</strong> a la nota #{notaSeleccionada.knumfoli}.</p>
+                        <p className="mt-0.5">Excedente de <strong>${formatMonto(montoUSD - notaSeleccionada.saldo_pendiente, "USD")} USD</strong> → siguiente nota más antigua.</p>
                       </div>
                     )}
                   </div>
@@ -751,7 +751,7 @@ export function CajaMayorClient({
         {/* ─── CLP → USD preview ────────────────────── */}
         {moneda === "CLP" && montoUSD !== null && (
           <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
-            ≈ <strong>{montoUSD.toLocaleString("es-CL")} USD</strong> (tasa: ${dolarDia.toLocaleString("es-CL")})
+            ≈ <strong>{formatMonto(montoUSD, "USD")} USD</strong> (tasa: ${formatMonto(dolarDia, "CLP")})
             <span className="text-xs block mt-0.5">Redondeado al múltiplo de 0.5 más cercano hacia arriba</span>
           </div>
         )}
@@ -828,7 +828,7 @@ export function CajaMayorClient({
               <div className="text-xs text-zinc-500 truncate">{s.cuenta_nombre}</div>
               <div className="text-[10px] text-zinc-400">{s.moneda}</div>
               <div className={`text-sm font-bold mt-1 ${s.saldo_neto >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
-                {s.moneda === "CLP" ? "$" : ""}{s.saldo_neto.toLocaleString("es-CL", s.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}
+                {s.moneda === "CLP" ? "$" : ""}{formatMonto(s.saldo_neto, s.moneda)}
               </div>
             </div>
           ))}
@@ -913,10 +913,10 @@ export function CajaMayorClient({
                                 <div key={c.cuenta_id} className="text-xs bg-white/60 dark:bg-zinc-800/60 rounded p-1.5">
                                   <div className="font-medium truncate">{c.cuenta_nombre}</div>
                                   <div className="text-zinc-500">{c.moneda}</div>
-                                  <div>Depósito total: {c.moneda === "CLP" ? "$" : ""}{c.total_cobros.toLocaleString("es-CL", c.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}</div>
-                                  <div>Gasto total: {c.moneda === "CLP" ? "$" : ""}{c.total_gastos.toLocaleString("es-CL", c.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}</div>
+                                  <div>Depósito total: {c.moneda === "CLP" ? "$" : ""}{formatMonto(c.total_cobros, c.moneda)}</div>
+                                  <div>Gasto total: {c.moneda === "CLP" ? "$" : ""}{formatMonto(c.total_gastos, c.moneda)}</div>
                                   <div className={c.saldo_final >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}>
-                                    Saldo: {c.moneda === "CLP" ? "$" : ""}{c.saldo_final.toLocaleString("es-CL", c.moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}
+                                    Saldo: {c.moneda === "CLP" ? "$" : ""}{formatMonto(c.saldo_final, c.moneda)}
                                   </div>
                                 </div>
                               ))}
@@ -936,12 +936,12 @@ export function CajaMayorClient({
                         </td>
                         <td className={`py-1.5 pr-2 text-right font-medium whitespace-nowrap ${item.data.tipo === "cobro" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
                           {item.data.moneda === "CLP"
-                            ? `${item.data.tipo === "gasto" ? "-" : ""}$${item.data.monto.toLocaleString("es-CL")}`
+                            ? `${item.data.tipo === "gasto" ? "-" : ""}$${formatMonto(item.data.monto, "CLP")}`
                             : "—"}
                         </td>
                         <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate">{item.data.cuenta_nombre}</td>
                         <td className={`py-1.5 pr-2 text-right font-medium whitespace-nowrap ${item.data.tipo === "cobro" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
-                          {item.data.tipo === "gasto" ? "-" : ""}{(item.data.monto_usd ?? item.data.monto).toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                          {item.data.tipo === "gasto" ? "-" : ""}{formatMonto((item.data.monto_usd ?? item.data.monto), "USD")}
                         </td>
                         <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[80px] truncate" title={item.data.observaciones || undefined}>
                           {item.data.observaciones || "—"}
@@ -1047,10 +1047,10 @@ export function CajaMayorClient({
                               <Badge variant="outline" className="text-[10px] px-1 py-0 min-w-[40px]">
                                 {n.empresa === "vida" ? "VD" : "SJ"}
                               </Badge>
-                              <span className="text-right min-w-[70px]">${n.val_rea.toLocaleString("es-CL")}</span>
-                              <span className="text-right min-w-[70px]">${n.total_pagado.toLocaleString("es-CL")}</span>
+                              <span className="text-right min-w-[70px]">${formatMonto(n.val_rea, "CLP")}</span>
+                              <span className="text-right min-w-[70px]">${formatMonto(n.total_pagado, "CLP")}</span>
                               <span className={`text-right min-w-[70px] font-semibold ${saldado ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
-                                ${n.saldo_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                                ${formatMonto(n.saldo_pendiente, "USD")}
                               </span>
                             </div>
 
@@ -1062,8 +1062,8 @@ export function CajaMayorClient({
                                     Mov #{p.movimiento_id} — {p.fecha} — {p.forma_pago}
                                     {" · "}
                                     {p.moneda_original === "CLP"
-                                      ? `${p.monto_original.toLocaleString("es-CL")} CLP → ${p.monto_usd} USD (tasa: ${p.tipo_cambio})`
-                                      : `${p.monto_usd} USD`}
+                                      ? `${formatMonto(p.monto_original, "CLP")} CLP → ${formatMonto(p.monto_usd, "USD")} USD (tasa: ${p.tipo_cambio})`
+                                      : `${formatMonto(p.monto_usd, "USD")} USD`}
                                   </div>
                                 ))}
                               </div>
@@ -1083,10 +1083,10 @@ export function CajaMayorClient({
                 <tfoot>
                   <tr className="border-t-2 text-xs font-semibold">
                     <td className="py-2 pr-2" colSpan={3}>TOTALES</td>
-                    <td className="py-2 pr-2 text-right">${resumen.totales.total_vendido.toLocaleString("es-CL")}</td>
-                    <td className="py-2 pr-2 text-right">${resumen.totales.total_pagado.toLocaleString("es-CL")}</td>
+                    <td className="py-2 pr-2 text-right">${formatMonto(resumen.totales.total_vendido, "CLP")}</td>
+                    <td className="py-2 pr-2 text-right">${formatMonto(resumen.totales.total_pagado, "CLP")}</td>
                     <td className={`py-2 text-right ${resumen.totales.total_pendiente > 0 ? "text-red-700 dark:text-red-400" : "text-green-700 dark:text-green-400"}`}>
-                      ${resumen.totales.total_pendiente.toLocaleString("es-CL", { minimumFractionDigits: 2 })}
+                      ${formatMonto(resumen.totales.total_pendiente, "USD")}
                     </td>
                   </tr>
                 </tfoot>

@@ -90,6 +90,24 @@ export function roundUpToHalf(value: number): number {
   return Math.ceil(value * 2) / 2;
 }
 
+/**
+ * Formatea un monto en formato chileno.
+ * - Separador de miles: punto (.)
+ * - Separador decimal: coma (,)
+ * - CLP: sin decimales (ej: 1.200.000)
+ * - USD: decimales solo si no es entero, máx 2 (ej: 500,50)
+ */
+export function formatMonto(n: number, moneda: "USD" | "CLP"): string {
+  if (moneda === "CLP") {
+    return n.toLocaleString("es-CL", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  }
+  const esEntero = n % 1 === 0;
+  return n.toLocaleString("es-CL", {
+    minimumFractionDigits: esEntero ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export type CajaMovimientoCreate = z.infer<typeof CajaMovimientoCreateSchema>;
 
 export interface CajaMovimiento {

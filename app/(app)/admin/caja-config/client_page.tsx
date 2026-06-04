@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { Pencil, Plus, Save, Loader2, Trash2 } from "lucide-react";
+import { formatMonto } from "@/docs/specs/caja-mayor.spec";
 
 interface Cuenta {
   id: number;
@@ -429,7 +430,7 @@ export function CajaConfigClient({
                   <TableCell>{s.fecha}</TableCell>
                   <TableCell className="text-right">
                     {s.cuenta_moneda === "CLP" ? "$" : ""}
-                    {s.saldo.toLocaleString("es-CL", s.cuenta_moneda === "USD" ? { minimumFractionDigits: 2 } : undefined)}
+                    {formatMonto(s.saldo, s.cuenta_moneda)}
                   </TableCell>
                   <TableCell className="text-zinc-500 max-w-[120px] truncate">
                     {s.observaciones || "—"}
