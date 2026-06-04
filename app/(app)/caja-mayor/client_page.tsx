@@ -200,8 +200,7 @@ export function CajaMayorClient({
     !saving &&
     fecha &&
     cuentaId &&
-    parseFloat(monto) > 0 &&
-    (tipo === "gasto" || !!empresa);
+    parseFloat(monto) > 0;
 
   // ─── Búsqueda unificada (cliente o nota) ──────────────
   useEffect(() => {
