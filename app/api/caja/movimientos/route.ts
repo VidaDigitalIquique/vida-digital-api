@@ -102,20 +102,28 @@ export async function GET(request: Request) {
       data: row as MovimientoConCuenta,
     }));
 
+    // Solo intercalar cierres cuyas fechas caen dentro de esta página
+    const fechasMovimientos = rows.map((r: any) => r.fecha as string);
+    const fechaMinPagina = fechasMovimientos.length ? fechasMovimientos[fechasMovimientos.length - 1] : null;
+    const fechaMaxPagina = fechasMovimientos.length ? fechasMovimientos[0] : null;
+    const cierresDePagina = fechaMinPagina && fechaMaxPagina
+      ? cierresEnRango.filter(c => c.fecha_hasta >= fechaMinPagina && c.fecha_hasta <= fechaMaxPagina)
+      : [];
+
     // Intercalate cierres (sorted ASC) into movimientos (sorted DESC)
-    if (cierresEnRango.length > 0) {
-      let cierreIdx = cierresEnRango.length - 1;
+    if (cierresDePagina.length > 0) {
+      let cierreIdx = cierresDePagina.length - 1;
       const merged: MovimientoOCierre[] = [];
       for (const item of data) {
         const mov = item.data as MovimientoConCuenta;
-        while (cierreIdx >= 0 && cierresEnRango[cierreIdx].fecha_hasta >= mov.fecha) {
-          merged.push({ tipo_fila: "cierre", data: cierresEnRango[cierreIdx] });
+        while (cierreIdx >= 0 && cierresDePagina[cierreIdx].fecha_hasta >= mov.fecha) {
+          merged.push({ tipo_fila: "cierre", data: cierresDePagina[cierreIdx] });
           cierreIdx--;
         }
         merged.push(item);
       }
       while (cierreIdx >= 0) {
-        merged.push({ tipo_fila: "cierre", data: cierresEnRango[cierreIdx] });
+        merged.push({ tipo_fila: "cierre", data: cierresDePagina[cierreIdx] });
         cierreIdx--;
       }
       return NextResponse.json({
