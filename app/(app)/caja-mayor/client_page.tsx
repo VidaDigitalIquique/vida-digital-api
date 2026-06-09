@@ -455,8 +455,7 @@ export function CajaMayorClient({
       }
 
       toast.success(`Movimiento registrado — ${tipo === "cobro" ? "Cobro" : "Gasto"} por $${formatMonto(parseFloat(monto), moneda)} ${moneda}`);
-      // Reset form
-      setFecha(new Date().toISOString().slice(0, 10));
+      // Reset form (fecha persiste entre registros; solo se resetea al cerrar período)
       clearCliente();
       setMonto("");
       setObservaciones("");
@@ -482,6 +481,7 @@ export function CajaMayorClient({
       const json = await res.json();
       toast.success(`Cierre creado — ${json.data.fecha_desde} al ${json.data.fecha_hasta}`);
       setCierreModalOpen(false);
+      setFecha(new Date().toISOString().slice(0, 10));
       fetchMovimientos(1);
       fetchSaldos();
     } else {
