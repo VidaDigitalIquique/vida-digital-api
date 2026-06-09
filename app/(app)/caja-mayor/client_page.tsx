@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Loader2, Search, X, Pencil, Trash2, ChevronLeft, ChevronRight, Save } from "lucide-react";
+import { Loader2, Search, X, Pencil, Trash2, ChevronLeft, ChevronRight, Save, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { roundUpToHalf, formatMonto } from "@/docs/specs/caja-mayor.spec";
 import type { ResumenClienteResponse, MovimientoConCuenta, SaldoCuenta, NotaVentaConSaldo, NotaBusquedaResult, MovimientoOCierre, CierrePeriodo } from "@/docs/specs/caja-mayor.spec";
@@ -535,6 +535,126 @@ export function CajaMayorClient({
     setCierreEditSaving(false);
   };
 
+  // ─── Exportar a Excel ────────────────────────────────
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (filtros.moneda) params.set("moneda", filtros.moneda);
+      if (filtros.cuenta_id) params.set("cuenta_id", filtros.cuenta_id);
+      if (filtros.tipo) params.set("tipo", filtros.tipo);
+      if (filtros.empresa) params.set("empresa", filtros.empresa);
+      if (filtros.desde) params.set("desde", filtros.desde);
+      if (filtros.hasta) params.set("hasta", filtros.hasta);
+
+      const res = await fetch(`/api/caja/export?${params}`);
+      if (!res.ok) { toast.error("Error al exportar"); return; }
+      const json = await res.json();
+      const items: MovimientoOCierre[] = json.data || [];
+
+      // Build Excel
+      const XLSX = await import("xlsx");
+      const rows: Record<string, string | number>[] = [];
+
+      for (const item of items) {
+        if (item.tipo_fila === "cierre") {
+          const c = item.data as CierrePeriodo;
+          // Header row
+          rows.push({
+            "Fecha": `CIERRE DE PERÍODO — ${c.fecha_desde} al ${c.fecha_hasta}`,
+            "Tipo": "", "Cliente": "", "Emp.": "", "Nota(s)": "", "CLP": "", "Cuenta": "", "USD": "", "Observación": "", "Crédito": "",
+          });
+          // Resumen rows — only cuentas with activity
+          const activas = c.resumen.filter((r) => r.saldo_final !== 0 || r.total_cobros !== 0 || r.total_gastos !== 0);
+          for (const r of activas) {
+            rows.push({
+              "Fecha": "",
+              "Tipo": "",
+              "Cliente": "",
+              "Emp.": "",
+              "Nota(s)": r.cuenta_nombre,
+              "CLP": r.moneda === "CLP" ? r.total_cobros : r.total_cobros,
+              "Cuenta": r.moneda,
+              "USD": r.total_gastos,
+              "Observación": r.saldo_final,
+              "Crédito": "",
+            });
+          }
+        } else {
+          const m = item.data as MovimientoConCuenta;
+          rows.push({
+            "Fecha": m.fecha,
+            "Tipo": m.tipo === "cobro" ? "Cobro" : "Gasto",
+            "Cliente": m.nombre_cliente || "",
+            "Emp.": m.empresa === "vida" ? "Vida Digital" : m.empresa === "sanjh" ? "SANJH" : "",
+            "Nota(s)": m.notas_imputadas?.join(", ") || "",
+            "CLP": m.moneda === "CLP" ? m.monto : "",
+            "Cuenta": m.cuenta_nombre,
+            "USD": m.moneda === "USD" ? (m.monto_usd ?? m.monto) : "",
+            "Observación": m.observaciones || "",
+            "Crédito": m.es_credito ? "Sí" : "No",
+          });
+        }
+      }
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+
+      // Style: blue background for cierre rows
+      const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
+      for (let R = range.s.r; R <= range.e.r; R++) {
+        const cellRef = XLSX.utils.encode_cell({ r: R, c: 0 });
+        const cell = ws[cellRef];
+        if (cell && typeof cell.v === "string" && (cell.v as string).startsWith("CIERRE DE PERÍODO")) {
+          // Blue fill for header row
+          for (let C = range.s.c; C <= range.e.c; C++) {
+            const ref = XLSX.utils.encode_cell({ r: R, c: C });
+            if (!ws[ref]) ws[ref] = { t: "s", v: "" };
+            ws[ref].s = { fill: { fgColor: { rgb: "DAEEF3" } }, font: { bold: true } };
+          }
+          // Also style the resumen rows that follow (until next movement or cierre header)
+          for (let RR = R + 1; RR <= range.e.r; RR++) {
+            const checkRef = XLSX.utils.encode_cell({ r: RR, c: 0 });
+            const checkCell = ws[checkRef];
+            if (checkCell && typeof checkCell.v === "string" && (checkCell.v as string).startsWith("CIERRE DE PERÍODO")) break;
+            // Check if this is a movement row (has a date)
+            if (checkCell && typeof checkCell.v === "string" && /^\d{4}-\d{2}-\d{2}/.test(checkCell.v as string)) break;
+            for (let C = range.s.c; C <= range.e.c; C++) {
+              const ref = XLSX.utils.encode_cell({ r: RR, c: C });
+              if (!ws[ref]) ws[ref] = { t: "s", v: "" };
+              ws[ref].s = { fill: { fgColor: { rgb: "DAEEF3" } } };
+            }
+          }
+        }
+      }
+
+      // Column widths
+      ws["!cols"] = [
+        { wch: 12 }, // Fecha
+        { wch: 8 },  // Tipo
+        { wch: 25 }, // Cliente
+        { wch: 12 }, // Emp.
+        { wch: 15 }, // Nota(s)
+        { wch: 14 }, // CLP
+        { wch: 20 }, // Cuenta
+        { wch: 14 }, // USD
+        { wch: 30 }, // Observación
+        { wch: 10 }, // Crédito
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Caja Mayor");
+      XLSX.writeFile(wb, "caja-mayor-export.xlsx");
+
+      toast.success("Excel descargado");
+    } catch (e) {
+      toast.error("Error al generar Excel");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   // ─── Render ──────────────────────────────────────────
   return (
     <div className="flex flex-col gap-6 w-full fade-in p-6">
@@ -914,23 +1034,35 @@ export function CajaMayorClient({
         <div className="border rounded-xl p-5 space-y-4">
           <h2 className="font-semibold text-sm uppercase tracking-wide text-zinc-500">Movimientos</h2>
 
-          {/* Filtros */}
-          <div className="flex flex-wrap gap-2">
-            <select value={filtros.moneda} onChange={(e) => setFiltros((f) => ({ ...f, moneda: e.target.value }))} className="h-8 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900">
-              <option value="">Todas monedas</option><option value="USD">USD</option><option value="CLP">CLP</option>
-            </select>
-            <select value={filtros.tipo} onChange={(e) => setFiltros((f) => ({ ...f, tipo: e.target.value }))} className="h-8 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900">
-              <option value="">Todos tipos</option><option value="cobro">Cobro</option><option value="gasto">Gasto</option>
-            </select>
-            <select value={filtros.empresa} onChange={(e) => setFiltros((f) => ({ ...f, empresa: e.target.value }))} className="h-8 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900">
-              <option value="">Todas empresas</option><option value="vida">Vida Digital</option><option value="sanjh">SANJH</option>
-            </select>
-            <Input type="date" value={filtros.desde} onChange={(e) => setFiltros((f) => ({ ...f, desde: e.target.value }))} className="h-8 w-[140px] text-xs" />
-            <Input type="date" value={filtros.hasta} onChange={(e) => setFiltros((f) => ({ ...f, hasta: e.target.value }))} className="h-8 w-[140px] text-xs" />
-            <select value={filtros.cuenta_id} onChange={(e) => setFiltros((f) => ({ ...f, cuenta_id: e.target.value }))} className="h-8 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900">
-              <option value="">Todas cuentas</option>
-              {cuentas.map((c) => <option key={c.id} value={c.id}>{c.nombre} ({c.moneda})</option>)}
-            </select>
+          {/* Exportar + filtros */}
+          <div className="flex items-center justify-between">
+            <div className="flex flex-wrap gap-2">
+              <select value={filtros.moneda} onChange={(e) => setFiltros((f) => ({ ...f, moneda: e.target.value }))} className="h-8 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900">
+                <option value="">Todas monedas</option><option value="USD">USD</option><option value="CLP">CLP</option>
+              </select>
+              <select value={filtros.tipo} onChange={(e) => setFiltros((f) => ({ ...f, tipo: e.target.value }))} className="h-8 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900">
+                <option value="">Todos tipos</option><option value="cobro">Cobro</option><option value="gasto">Gasto</option>
+              </select>
+              <select value={filtros.empresa} onChange={(e) => setFiltros((f) => ({ ...f, empresa: e.target.value }))} className="h-8 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900">
+                <option value="">Todas empresas</option><option value="vida">Vida Digital</option><option value="sanjh">SANJH</option>
+              </select>
+              <Input type="date" value={filtros.desde} onChange={(e) => setFiltros((f) => ({ ...f, desde: e.target.value }))} className="h-8 w-[140px] text-xs" />
+              <Input type="date" value={filtros.hasta} onChange={(e) => setFiltros((f) => ({ ...f, hasta: e.target.value }))} className="h-8 w-[140px] text-xs" />
+              <select value={filtros.cuenta_id} onChange={(e) => setFiltros((f) => ({ ...f, cuenta_id: e.target.value }))} className="h-8 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900">
+                <option value="">Todas cuentas</option>
+                {cuentas.map((c) => <option key={c.id} value={c.id}>{c.nombre} ({c.moneda})</option>)}
+              </select>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              disabled={exporting}
+              className="shrink-0"
+            >
+              {exporting ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Download className="w-3.5 h-3.5 mr-1" />}
+              Exportar Excel
+            </Button>
           </div>
 
           {/* Tabla */}
