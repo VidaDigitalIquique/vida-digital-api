@@ -554,98 +554,90 @@ export function CajaMayorClient({
       const json = await res.json();
       const items: MovimientoOCierre[] = json.data || [];
 
-      // Build Excel
-      const XLSX = await import("xlsx");
-      const rows: Record<string, string | number>[] = [];
+      const ExcelJS = await import("exceljs");
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet("Caja Mayor");
 
+      // Column definitions with widths
+      ws.columns = [
+        { header: "Fecha", key: "Fecha", width: 14 },
+        { header: "Tipo", key: "Tipo", width: 9 },
+        { header: "Cliente", key: "Cliente", width: 30 },
+        { header: "Emp.", key: "Emp.", width: 10 },
+        { header: "Nota(s)", key: "Nota(s)", width: 13 },
+        { header: "CLP", key: "CLP", width: 16 },
+        { header: "Cuenta", key: "Cuenta", width: 12 },
+        { header: "USD", key: "USD", width: 9 },
+        { header: "Observación", key: "Observación", width: 32 },
+        { header: "Crédito", key: "Crédito", width: 8 },
+      ];
+
+      // Style: header row — orange bg, black bold text
+      const headerRow = ws.getRow(1);
+      headerRow.eachCell((cell) => {
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFF9900" } };
+        cell.font = { color: { argb: "FF000000" }, bold: true };
+      });
+
+      // Build data rows
       for (const item of items) {
         if (item.tipo_fila === "cierre") {
           const c = item.data as CierrePeriodo;
-          // Header row
-          rows.push({
-            "Fecha": `CIERRE DE PERÍODO — ${c.fecha_desde} al ${c.fecha_hasta}`,
-            "Tipo": "", "Cliente": "", "Emp.": "", "Nota(s)": "", "CLP": "", "Cuenta": "", "USD": "", "Observación": "", "Crédito": "",
+          // Title row — blue bg, gray bold text
+          const titleRow = ws.addRow({
+            Fecha: `CIERRE DE PERÍODO — ${c.fecha_desde} al ${c.fecha_hasta}`,
+            Tipo: "", Cliente: "", "Emp.": "", "Nota(s)": "", CLP: "", Cuenta: "", USD: "", Observación: "", Crédito: "",
           });
-          // Resumen rows — only cuentas with activity
+          titleRow.eachCell((cell) => {
+            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC9DAF8" } };
+            cell.font = { color: { argb: "FF666666" }, bold: true };
+          });
+          // Resumen rows — blue bg, normal text
           const activas = c.resumen.filter((r) => r.saldo_final !== 0 || r.total_cobros !== 0 || r.total_gastos !== 0);
           for (const r of activas) {
-            rows.push({
-              "Fecha": "",
-              "Tipo": "",
-              "Cliente": "",
-              "Emp.": "",
-              "Nota(s)": r.cuenta_nombre,
-              "CLP": r.moneda === "CLP" ? r.total_cobros : r.total_cobros,
-              "Cuenta": r.moneda,
-              "USD": r.total_gastos,
-              "Observación": r.saldo_final,
-              "Crédito": "",
+            const resumenRow = ws.addRow({
+              Fecha: "", Tipo: "", Cliente: "", "Emp.": "", "Nota(s)": r.cuenta_nombre,
+              CLP: r.moneda === "CLP" ? r.total_cobros : r.total_cobros,
+              Cuenta: r.moneda,
+              USD: r.total_gastos,
+              Observación: r.saldo_final,
+              Crédito: "",
+            });
+            resumenRow.eachCell((cell) => {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFC9DAF8" } };
             });
           }
         } else {
           const m = item.data as MovimientoConCuenta;
-          rows.push({
-            "Fecha": m.fecha,
-            "Tipo": m.tipo === "cobro" ? "Cobro" : "Gasto",
-            "Cliente": m.nombre_cliente || "",
+          ws.addRow({
+            Fecha: m.fecha,
+            Tipo: m.tipo === "cobro" ? "Cobro" : "Gasto",
+            Cliente: m.nombre_cliente || "",
             "Emp.": m.empresa === "vida" ? "Vida Digital" : m.empresa === "sanjh" ? "SANJH" : "",
             "Nota(s)": m.notas_imputadas?.join(", ") || "",
-            "CLP": m.moneda === "CLP" ? m.monto : "",
-            "Cuenta": m.cuenta_nombre,
-            "USD": m.moneda === "USD" ? (m.monto_usd ?? m.monto) : "",
-            "Observación": m.observaciones || "",
-            "Crédito": m.es_credito ? "Sí" : "No",
+            CLP: m.moneda === "CLP" ? m.monto : "",
+            Cuenta: m.cuenta_nombre,
+            USD: m.moneda === "USD" ? (m.monto_usd ?? m.monto) : "",
+            Observación: m.observaciones || "",
+            Crédito: m.es_credito ? "Sí" : "No",
           });
         }
       }
 
-      const ws = XLSX.utils.json_to_sheet(rows);
+      // Freeze first row (header always visible on scroll)
+      ws.views = [{ state: "frozen", ySplit: 1 }];
 
-      // Style: blue background for cierre rows
-      const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
-      for (let R = range.s.r; R <= range.e.r; R++) {
-        const cellRef = XLSX.utils.encode_cell({ r: R, c: 0 });
-        const cell = ws[cellRef];
-        if (cell && typeof cell.v === "string" && (cell.v as string).startsWith("CIERRE DE PERÍODO")) {
-          // Blue fill for header row
-          for (let C = range.s.c; C <= range.e.c; C++) {
-            const ref = XLSX.utils.encode_cell({ r: R, c: C });
-            if (!ws[ref]) ws[ref] = { t: "s", v: "" };
-            ws[ref].s = { fill: { fgColor: { rgb: "DAEEF3" } }, font: { bold: true } };
-          }
-          // Also style the resumen rows that follow (until next movement or cierre header)
-          for (let RR = R + 1; RR <= range.e.r; RR++) {
-            const checkRef = XLSX.utils.encode_cell({ r: RR, c: 0 });
-            const checkCell = ws[checkRef];
-            if (checkCell && typeof checkCell.v === "string" && (checkCell.v as string).startsWith("CIERRE DE PERÍODO")) break;
-            // Check if this is a movement row (has a date)
-            if (checkCell && typeof checkCell.v === "string" && /^\d{4}-\d{2}-\d{2}/.test(checkCell.v as string)) break;
-            for (let C = range.s.c; C <= range.e.c; C++) {
-              const ref = XLSX.utils.encode_cell({ r: RR, c: C });
-              if (!ws[ref]) ws[ref] = { t: "s", v: "" };
-              ws[ref].s = { fill: { fgColor: { rgb: "DAEEF3" } } };
-            }
-          }
-        }
-      }
-
-      // Column widths
-      ws["!cols"] = [
-        { wch: 12 }, // Fecha
-        { wch: 8 },  // Tipo
-        { wch: 25 }, // Cliente
-        { wch: 12 }, // Emp.
-        { wch: 15 }, // Nota(s)
-        { wch: 14 }, // CLP
-        { wch: 20 }, // Cuenta
-        { wch: 14 }, // USD
-        { wch: 30 }, // Observación
-        { wch: 10 }, // Crédito
-      ];
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Caja Mayor");
-      XLSX.writeFile(wb, "caja-mayor-export.xlsx");
+      // Download as .xlsx
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "caja-mayor-export.xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
 
       toast.success("Excel descargado");
     } catch (e) {
