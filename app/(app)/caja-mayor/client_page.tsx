@@ -52,6 +52,7 @@ export function CajaMayorClient({
   const [cuentaId, setCuentaId] = useState("");
   const [formaPago, setFormaPago] = useState<"efectivo" | "cheque" | "transferencia">("transferencia");
   const [observaciones, setObservaciones] = useState("");
+  const [esCredito, setEsCredito] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Dólar del día vigente (inicia con prop del server, se refresca de la API)
@@ -120,6 +121,7 @@ export function CajaMayorClient({
   const [editCuentaId, setEditCuentaId] = useState("");
   const [editFormaPago, setEditFormaPago] = useState<"efectivo" | "cheque" | "transferencia">("transferencia");
   const [editObs, setEditObs] = useState("");
+  const [editEsCredito, setEditEsCredito] = useState(false);
   const [editDeleteConfirm, setEditDeleteConfirm] = useState(false);
 
   // ─── Edición inline de cierre ─────────────────────────
@@ -329,6 +331,7 @@ export function CajaMayorClient({
     setEditCuentaId(String(mov.cuenta_id));
     setEditFormaPago(mov.forma_pago as "efectivo" | "cheque" | "transferencia");
     setEditObs(mov.observaciones || "");
+    setEditEsCredito(mov.es_credito ?? false);
     setEditEmpresa((mov.empresa as "vida" | "sanjh" | "") || "");
     if (mov.kcodcli2) {
       setEditCliente({ kcodcli2: mov.kcodcli2, nombre: mov.nombre_cliente || "", empresas: mov.empresa ? [mov.empresa as "vida" | "sanjh"] : [], total_compras: 0, ultima_compra: "" });
@@ -355,6 +358,7 @@ export function CajaMayorClient({
       forma_pago: editFormaPago,
       observaciones: editObs.trim() || null,
       empresa: editEmpresa || null,
+      es_credito: editTipo === "cobro" ? editEsCredito : false,
     };
     const res = await fetch(`/api/caja/movimientos/${editMov.id}`, {
       method: "PATCH",
@@ -403,6 +407,7 @@ export function CajaMayorClient({
       forma_pago: formaPago,
       observaciones: observaciones.trim() || null,
       empresa: empresa || null,
+      es_credito: tipo === "cobro" ? esCredito : false,
     };
 
     const res = await fetch("/api/caja/movimientos", {
@@ -852,6 +857,19 @@ export function CajaMayorClient({
           </div>
         </div>
 
+        {/* ─── Venta a crédito (solo cobro) ─────────── */}
+        {tipo === "cobro" && (
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={esCredito}
+              onChange={(e) => setEsCredito(e.target.checked)}
+              className="w-4 h-4 rounded border-zinc-300"
+            />
+            <span className="text-sm font-medium">Venta a crédito</span>
+          </label>
+        )}
+
         {/* ─── Observaciones ────────────────────────── */}
         <div className="space-y-1">
           <label className="text-sm font-medium">Observaciones (opcional)</label>
@@ -1035,7 +1053,12 @@ export function CajaMayorClient({
                     ) : (
                       <tr key={item.data.id} className="border-b hover:bg-muted/50">
                         <td className="py-1.5 pr-2 whitespace-nowrap">{item.data.fecha}</td>
-                        <td className="py-1.5 pr-2">{item.data.tipo === "cobro" ? "💰" : "📤"}</td>
+                        <td className="py-1.5 pr-2">
+                          {item.data.tipo === "cobro" ? "💰" : "📤"}
+                          {item.data.es_credito && (
+                            <Badge variant="outline" className="text-[10px] ml-1 px-1 py-0 bg-blue-100 text-blue-700 border-blue-300">Crédito</Badge>
+                          )}
+                        </td>
                         <td className="py-1.5 pr-2 max-w-[120px] truncate">{item.data.nombre_cliente || "—"}</td>
                         <td className="py-1.5 pr-2">
                           {item.data.empresa ? <Badge variant="outline" className="text-[10px] px-1 py-0">{item.data.empresa === "vida" ? "VD" : "SJ"}</Badge> : "—"}
@@ -1282,6 +1305,19 @@ export function CajaMayorClient({
                 <option value="efectivo">Efectivo</option><option value="cheque">Cheque</option><option value="transferencia">Transferencia</option>
               </select>
             </div>
+            {/* Venta a crédito (solo cobro) */}
+            {editTipo === "cobro" && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editEsCredito}
+                  onChange={(e) => setEditEsCredito(e.target.checked)}
+                  className="w-4 h-4 rounded border-zinc-300"
+                />
+                <span className="text-sm font-medium">Venta a crédito</span>
+              </label>
+            )}
+
             {/* Observaciones */}
             <div className="space-y-1"><label className="text-xs font-medium">Observaciones</label><Input value={editObs} onChange={(e) => setEditObs(e.target.value)} placeholder="Opcional" /></div>
 

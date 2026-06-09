@@ -61,6 +61,7 @@ export const CajaMovimientoCreateSchema = z.object({
   forma_pago: z.enum(["efectivo", "cheque", "transferencia"]),
   observaciones: z.string().nullable().optional(),
   empresa: z.enum(["vida", "sanjh"]).nullable().optional(),
+  es_credito: z.boolean().default(false),
 });
 
 export const CajaMovimientoUpdateSchema = z.object({
@@ -77,6 +78,7 @@ export const CajaMovimientoUpdateSchema = z.object({
   forma_pago: z.enum(["efectivo", "cheque", "transferencia"]).optional(),
   observaciones: z.string().nullable().optional(),
   empresa: z.enum(["vida", "sanjh"]).nullable().optional(),
+  es_credito: z.boolean().optional(),
 });
 
 export type CajaMovimientoUpdate = z.infer<typeof CajaMovimientoUpdateSchema>;
@@ -125,6 +127,7 @@ export interface CajaMovimiento {
   forma_pago: "efectivo" | "cheque" | "transferencia";
   observaciones: string | null;
   empresa: "vida" | "sanjh" | null;
+  es_credito: boolean;
   usuario_id: number;
   usuario_nombre: string;
   created_at: string;

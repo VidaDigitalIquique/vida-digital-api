@@ -34,7 +34,7 @@ export async function GET(request: Request) {
     const rows = await sql`
       SELECT m.id, m.fecha::text, m.tipo, m.kcodcli2::bigint, m.nombre_cliente,
         m.cuenta_id, cc.nombre AS cuenta_nombre, m.moneda, m.monto, m.monto_usd,
-        m.tipo_cambio, m.forma_pago, m.observaciones, m.empresa,
+        m.tipo_cambio, m.forma_pago, m.observaciones, m.empresa, m.es_credito,
         COALESCE((
           SELECT ARRAY_AGG(cmn.knumfoli ORDER BY cmn.id)
           FROM caja_movimiento_notas cmn
@@ -167,7 +167,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    const { fecha, tipo, kcodcli2, nombre_cliente, cuenta_id, moneda, monto, forma_pago, observaciones, empresa } = parsed.data;
+    const { fecha, tipo, kcodcli2, nombre_cliente, cuenta_id, moneda, monto, forma_pago, observaciones, empresa, es_credito } = parsed.data;
 
     // R6: gasto → empresa can be null
     const finalEmpresa = tipo === "gasto" ? (empresa ?? null) : empresa;
@@ -214,18 +214,18 @@ export async function POST(request: Request) {
       INSERT INTO caja_movimientos (
         fecha, tipo, kcodcli2, nombre_cliente, cuenta_id, moneda,
         monto, monto_usd, tipo_cambio, forma_pago, observaciones,
-        empresa, usuario_id, usuario_nombre
+        empresa, es_credito, usuario_id, usuario_nombre
       ) VALUES (
         ${fecha}::date, ${tipo},
         ${kcodcli2 ?? null}, ${nombre_cliente ?? null},
         ${cuenta_id}, ${moneda},
         ${monto}, ${monto_usd}, ${tipo_cambio},
         ${forma_pago}, ${observaciones ?? null},
-        ${finalEmpresa ?? null}, ${usuarioId}, ${usuarioNombre}
+        ${finalEmpresa ?? null}, ${es_credito ?? false}, ${usuarioId}, ${usuarioNombre}
       )
       RETURNING id, fecha::text, tipo, kcodcli2::bigint, nombre_cliente,
         cuenta_id, moneda, monto, monto_usd, tipo_cambio, forma_pago,
-        observaciones, empresa, usuario_id, usuario_nombre,
+        observaciones, empresa, es_credito, usuario_id, usuario_nombre,
         created_at::text, updated_at::text
     `;
 

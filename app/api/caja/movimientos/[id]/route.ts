@@ -150,6 +150,7 @@ export async function PATCH(
     const updateKcodcli2 = updates.kcodcli2 !== undefined ? updates.kcodcli2 : current.kcodcli2;
     const updateNombreCliente = updates.nombre_cliente !== undefined ? updates.nombre_cliente : current.nombre_cliente;
     const updateObservaciones = updates.observaciones !== undefined ? updates.observaciones : current.observaciones;
+    const updateEsCredito = updates.es_credito !== undefined ? updates.es_credito : current.es_credito;
 
     const updated = await sql`
       UPDATE caja_movimientos
@@ -165,12 +166,13 @@ export async function PATCH(
           forma_pago = COALESCE(${updateFormaPago}, forma_pago),
           observaciones = ${updateObservaciones},
           empresa = ${newEmpresa},
+          es_credito = ${updateEsCredito},
           usuario_nombre = ${usuarioNombre},
           updated_at = now()
       WHERE id = ${movimientoId}
       RETURNING id, fecha::text, tipo, kcodcli2::bigint, nombre_cliente,
         cuenta_id, moneda, monto, monto_usd, tipo_cambio, forma_pago,
-        observaciones, empresa, usuario_id, usuario_nombre,
+        observaciones, empresa, es_credito, usuario_id, usuario_nombre,
         created_at::text, updated_at::text
     `;
 
