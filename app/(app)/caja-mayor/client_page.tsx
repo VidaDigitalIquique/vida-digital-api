@@ -1074,15 +1074,17 @@ export function CajaMayorClient({
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs text-zinc-500 uppercase">
-                    <th className="py-2 pr-2 font-medium">Fecha</th>
-                    <th className="py-2 pr-2 font-medium">Tipo</th>
+                    <th className="py-2 pr-2 font-medium w-[90px]">Fecha</th>
+                    <th className="py-2 pr-2 font-medium w-[32px]">Tipo</th>
                     <th className="py-2 pr-2 font-medium">Cliente</th>
-                    <th className="py-2 pr-2 font-medium">Emp.</th>
+                    <th className="py-2 pr-2 font-medium w-[36px]">Emp.</th>
                     <th className="py-2 pr-2 font-medium">Nota(s)</th>
-                    <th className="py-2 pr-2 font-medium text-right">CLP</th>
+                    <th className="py-2 pr-2 font-medium text-right w-[110px]">CLP</th>
                     <th className="py-2 pr-2 font-medium">Cuenta</th>
-                    <th className="py-2 pr-2 font-medium text-right">USD</th>
-                    <th className="py-2 pr-2 font-medium max-w-[80px]">Observación</th>
+                    <th className="py-2 pr-2 font-medium text-right w-[90px]">USD</th>
+                    <th className="py-2 pr-2 font-medium">Observación</th>
+                    <th className="py-2 pr-2 font-medium w-[70px]">Forma pago</th>
+                    <th className="py-2 pr-2 font-medium w-[50px]">Crédito</th>
                     <th className="py-2 w-[60px]"></th>
                   </tr>
                 </thead>
@@ -1090,7 +1092,7 @@ export function CajaMayorClient({
                   {movimientos.map((item) =>
                     item.tipo_fila === "cierre" ? (
                       <tr key={`cierre-${item.data.id}`} className="bg-blue-100 dark:bg-blue-950/40 border-b">
-                        <td colSpan={10} className="py-3 px-4">
+                        <td colSpan={12} className="py-3 px-4">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-bold text-blue-800 dark:text-blue-300 text-sm">
@@ -1183,31 +1185,34 @@ export function CajaMayorClient({
                       </tr>
                     ) : (
                       <tr key={item.data.id} className="border-b hover:bg-muted/50">
-                        <td className="py-1.5 pr-2 whitespace-nowrap">{item.data.fecha}</td>
-                        <td className="py-1.5 pr-2">
-                          {item.data.tipo === "cobro" ? "💰" : "📤"}
-                          {item.data.es_credito && (
-                            <Badge variant="outline" className="text-[10px] ml-1 px-1 py-0 bg-blue-100 text-blue-700 border-blue-300">Crédito</Badge>
-                          )}
-                        </td>
-                        <td className="py-1.5 pr-2 max-w-[120px] truncate">{item.data.nombre_cliente || "—"}</td>
+                        <td className="py-1.5 pr-2 whitespace-nowrap w-[90px]">{item.data.fecha}</td>
+                        <td className="py-1.5 pr-2 w-[32px]">{item.data.tipo === "cobro" ? "💰" : "📤"}</td>
+                        <td className="py-1.5 pr-2 max-w-[140px] truncate" title={item.data.nombre_cliente || undefined}>{item.data.nombre_cliente || "—"}</td>
                         <td className="py-1.5 pr-2">
                           {item.data.empresa ? <Badge variant="outline" className="text-[10px] px-1 py-0">{item.data.empresa === "vida" ? "VD" : "SJ"}</Badge> : "—"}
                         </td>
-                        <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate">
+                        <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate" title={item.data.notas_imputadas?.length ? item.data.notas_imputadas.join(", ") : undefined}>
                           {item.data.notas_imputadas?.length ? item.data.notas_imputadas.join(", ") : "—"}
                         </td>
-                        <td className={`py-1.5 pr-2 text-right font-medium whitespace-nowrap ${item.data.tipo === "cobro" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
+                        <td className={`py-1.5 pr-2 text-right font-medium whitespace-nowrap w-[110px] ${item.data.tipo === "cobro" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
                           {item.data.moneda === "CLP"
                             ? `${item.data.tipo === "gasto" ? "-" : ""}$${formatMonto(item.data.monto, "CLP")}`
                             : "—"}
                         </td>
-                        <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate">{item.data.cuenta_nombre}</td>
-                        <td className={`py-1.5 pr-2 text-right font-medium whitespace-nowrap ${item.data.tipo === "cobro" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
+                        <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[100px] truncate" title={item.data.cuenta_nombre}>{item.data.cuenta_nombre}</td>
+                        <td className={`py-1.5 pr-2 text-right font-medium whitespace-nowrap w-[90px] ${item.data.tipo === "cobro" ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"}`}>
                           {item.data.tipo === "gasto" ? "-" : ""}{formatMonto((item.data.monto_usd ?? item.data.monto), "USD")}
                         </td>
-                        <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[80px] truncate" title={item.data.observaciones || undefined}>
+                        <td className="py-1.5 pr-2 text-xs text-zinc-500 max-w-[120px] truncate" title={item.data.observaciones || undefined}>
                           {item.data.observaciones || "—"}
+                        </td>
+                        <td className="py-1.5 pr-2 text-xs w-[70px]">
+                          {item.data.forma_pago === "efectivo" ? "💵 Efectivo" : item.data.forma_pago === "cheque" ? "🔖 Cheque" : "🏦 Transf."}
+                        </td>
+                        <td className="py-1.5 pr-2 w-[50px]">
+                          {item.data.es_credito ? (
+                            <Badge variant="outline" className="text-[10px] px-1 py-0 bg-blue-100 text-blue-700 border-blue-300">C</Badge>
+                          ) : "—"}
                         </td>
                         <td className="py-1.5 flex gap-1">
                           <Button variant="ghost" size="icon-sm" onClick={() => openEditModal(item.data as MovimientoConCuenta)} title="Editar"><Pencil className="w-3.5 h-3.5" /></Button>
