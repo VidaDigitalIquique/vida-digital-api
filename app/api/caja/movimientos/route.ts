@@ -107,8 +107,11 @@ export async function GET(request: Request) {
     const fechaMinPagina = fechasMovimientos.length ? fechasMovimientos[fechasMovimientos.length - 1] : null;
     const fechaMaxPagina = fechasMovimientos.length ? fechasMovimientos[0] : null;
     const cierresDePagina = fechaMinPagina && fechaMaxPagina
-      ? cierresEnRango.filter(c => c.fecha_hasta >= fechaMinPagina && c.fecha_hasta <= fechaMaxPagina)
-      : [];
+      ? cierresEnRango.filter(c =>
+          c.fecha_hasta >= fechaMinPagina &&
+          (c.fecha_hasta <= fechaMaxPagina || page === 1)
+        )
+      : (page === 1 ? cierresEnRango : []);
 
     // Intercalate cierres (sorted ASC) into movimientos (sorted DESC)
     if (cierresDePagina.length > 0) {
