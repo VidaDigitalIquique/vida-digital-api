@@ -609,7 +609,7 @@ export function CajaMayorClient({
           }
         } else {
           const m = item.data as MovimientoConCuenta;
-          ws.addRow({
+          const movRow = ws.addRow({
             Fecha: m.fecha,
             Tipo: m.tipo === "cobro" ? "Cobro" : "Gasto",
             Cliente: m.nombre_cliente || "",
@@ -621,6 +621,13 @@ export function CajaMayorClient({
             Observación: m.observaciones || "",
             Crédito: m.es_credito ? "Sí" : "No",
           });
+          // Color the Tipo cell (column B, index 2)
+          const tipoCell = movRow.getCell(2);
+          tipoCell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: m.tipo === "cobro" ? "FFE2EFDA" : "FFFCE4D6" },
+          };
         }
       }
 
