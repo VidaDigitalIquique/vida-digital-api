@@ -1,6 +1,7 @@
 import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { recalculateNuevoFlags } from '@/lib/services/product-service';
+import { syncPostProcess } from '@/lib/services/sync-post-process';
 
 export async function POST(request: Request) {
   const authHeader = request.headers.get('authorization');
@@ -72,6 +73,8 @@ export async function POST(request: Request) {
     const sanjh_count = Number(sanjhResult?.[0]?.count ?? 0);
     const vida_count = Number(vidaResult?.[0]?.count ?? 0);
 
+    const postProcess = await syncPostProcess(sql);
+
     await recalculateNuevoFlags(1);
     await recalculateNuevoFlags(2);
 
@@ -79,6 +82,11 @@ export async function POST(request: Request) {
       message: 'Sincronizacion completada',
       sanjh_count,
       vida_count,
+      alertas_generadas: postProcess.alertas_generadas,
+      alertas_stock_bajo: postProcess.alertas_stock_bajo,
+      client_ratings_updated: postProcess.client_ratings.updated,
+      clientes_nuevos: postProcess.clientes_nuevos.nuevos,
+      sugerencias_nuevas: postProcess.clientes_nuevos.sugerencias,
     });
   } catch (error: any) {
     console.error('POST /api/cron/sync-inventar error:', error);

@@ -21,5 +21,6 @@
   "catalogo-parsekeywords-slice2": true,
   "catalogo-ingreso-top-n-slice3": true,
   "seguimientos": true,
-  "garantias-mejoras-slice1": false
+  "garantias-mejoras-slice1": false,
+  "sync-post-process-unificado": false
 }
