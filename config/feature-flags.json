@@ -19,7 +19,7 @@
   "catalog-image": false,
   "catalogo-form-mejoras-slice1": true,
   "catalogo-parsekeywords-slice2": true,
-  "catalogo-precio-override": false,
+  "catalogo-precio-override": true,
   "catalogo-ingreso-top-n-slice3": true,
   "seguimientos": true,
   "garantias-mejoras-slice1": false,
