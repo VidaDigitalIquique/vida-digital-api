@@ -126,7 +126,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
     setEditOverrides(prev => {
       const next = { ...prev };
       const num = parseFloat(value);
-      if (isNaN(num) || value.trim() === '') {
+      if (isNaN(num) || value.trim() === '' || num <= 0) {
         delete next[codigo];
       } else {
         next[codigo] = num;

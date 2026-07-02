@@ -36,3 +36,19 @@
 - `__tests__/catalogo-solo-nuevo-fix.test.ts`
 - `__tests__/api/catalogos-categoria.test.ts` (+1 mock para query de overrides)
 
+---
+
+## [2026-07-02] — Guardar con input de precio en "0" dispara error 400 del servidor
+
+**Síntoma:** Al editar un catálogo, borrar el valor de un precio individual carácter por carácter y hacer click en "Guardar" cuando el campo mostraba `0` (estado intermedio antes de vaciarse completamente), el PUT fallaba con error 400. El servidor rechazaba `precio: 0` porque la validación requiere `precio > 0`.
+
+**Causa raíz:** `handleOverrideChange` en `client_page.tsx` solo borraba el override del estado si el valor era `NaN` o string vacío. `parseFloat("0")` retorna `0` — no es `NaN` ni string vacío — así que `0` se persistía en `editOverrides` y se enviaba al PUT como `{codigo: "XXX", precio: 0}`.
+
+**Fix:** Agregado `num <= 0` a la condición de borrado (1 línea en `handleOverrideChange`). `0` y negativos ahora se tratan igual que valor vacío: se elimina el override del estado y no se envía al servidor.
+
+**Archivos modificados:**
+- `app/(app)/catalogo/admin/client_page.tsx` (1 línea)
+- `__tests__/catalogo-edit-modal.test.tsx` (T9 agregado)
+
+**Verificación:** T9 reproduce el escenario (escribir "0" → guardar → verificar que el código NO aparece en `precio_overrides`). Suite completa 15/15 verde.
+

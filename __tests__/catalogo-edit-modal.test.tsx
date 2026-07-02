@@ -261,3 +261,79 @@ describe('T4 — Loading state bloquea doble submit', () => {
     jest.useRealTimers();
   });
 });
+
+// ---------------------------------------------------------------------------
+// T9 — Regresión: "0" en input de precio NO debe enviarse como override
+// ---------------------------------------------------------------------------
+
+describe('T9 — Input con valor "0" no persiste en precio_overrides', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('escribir "0" en el input y guardar NO incluye ese código en precio_overrides', async () => {
+    let putBody: any = null;
+    (global as any).fetch = jest.fn((url: string, init?: any) => {
+      // PUT al guardar — capturar body
+      if (init?.method === 'PUT') {
+        putBody = JSON.parse(init.body);
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      }
+      // GET categorias (CrearCatalogoDialog)
+      if (String(url).includes('/api/categorias')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }
+      // GET público del catálogo (modal edición)
+      if (String(url).includes('/api/catalogos/public/')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ data: { productos: MOCK_PRODUCTOS } }),
+        });
+      }
+      // GET lista de catálogos
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ data: [CATALOG_WITH_PRICE] }),
+      });
+    });
+
+    renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByText('Catálogo Test')).toBeInTheDocument();
+    });
+
+    const editBtn = screen.getByRole('button', { name: /editar/i });
+    await act(async () => {
+      fireEvent.click(editBtn);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Producto Test 1')).toBeInTheDocument();
+    });
+
+    // Encontrar el input de precio individual del primer producto
+    const priceInput = screen.getByRole('spinbutton', {
+      name: `Precio individual ${MOCK_PRODUCTOS[0].codigo}`,
+    });
+
+    // Escribir "0" en el input
+    await act(async () => {
+      fireEvent.change(priceInput, { target: { value: '0' } });
+    });
+
+    // Click en Guardar
+    const saveBtn = screen.getByRole('button', { name: /guardar cambios/i });
+    await act(async () => {
+      fireEvent.click(saveBtn);
+    });
+
+    // Verificar que el PUT NO incluye el código en precio_overrides
+    expect(putBody).not.toBeNull();
+    const overrides: any[] = putBody?.precio_overrides ?? [];
+    const contieneCodigoCero = overrides.some(
+      (po: any) => po.codigo === MOCK_PRODUCTOS[0].codigo
+    );
+    expect(contieneCodigoCero).toBe(false);
+  });
+});
