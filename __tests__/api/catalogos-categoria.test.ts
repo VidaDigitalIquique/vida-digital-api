@@ -163,6 +163,9 @@ describe('catalogos — soporte de campo categoria', () => {
       categoria: 'Belleza',
     }]);
 
+    // sql call 3: SELECT precio_overrides (nuevo — vacío)
+    sqlMock.mockResolvedValueOnce([]);
+
     const req = { url: 'http://localhost/api/catalogos/public/test-belleza-12345' } as Request;
     const res = await GET_PUBLIC(req, { params: { slug: 'test-belleza-12345' } });
     expect(res.status).toBe(200);

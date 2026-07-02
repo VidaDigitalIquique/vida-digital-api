@@ -23,6 +23,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
   const [editingCatalog, setEditingCatalog] = useState<any | null>(null);
   const [editItems, setEditItems] = useState<any[]>([]);
   const [editMargen, setEditMargen] = useState<number>(0);
+  const [editOverrides, setEditOverrides] = useState<Record<string, number | null>>({});
   const [editLoading, setEditLoading] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const editItemsOriginalRef = useRef<any[]>([]);
@@ -91,6 +92,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
     setEditingCatalog(cat);
     setEditItems([]);
     setEditMargen(parseFloat(cat.margen_precio) || 0);
+    setEditOverrides({});
     setEditLoading(true);
     try {
       const res = await fetch(`/api/catalogos/public/${cat.slug}`);
@@ -98,6 +100,12 @@ export function CatalogoAdminClient({ session }: { session: any }) {
         const { data } = await res.json();
         setEditItems(data.productos || []);
         editItemsOriginalRef.current = data.productos || [];
+        // Populate existing overrides from response
+        const overrides: Record<string, number | null> = {};
+        (data.productos || []).forEach((p: any) => {
+          if (p.precio_override != null) overrides[p.codigo] = p.precio_override;
+        });
+        setEditOverrides(overrides);
       } else {
         toast.error('Error al cargar productos del catálogo');
         setEditingCatalog(null);
@@ -114,13 +122,26 @@ export function CatalogoAdminClient({ session }: { session: any }) {
     setEditItems(prev => prev.filter(item => item.codigo !== productoId));
   };
 
+  const handleOverrideChange = (codigo: string, value: string) => {
+    setEditOverrides(prev => {
+      const next = { ...prev };
+      const num = parseFloat(value);
+      if (isNaN(num) || value.trim() === '') {
+        delete next[codigo];
+      } else {
+        next[codigo] = num;
+      }
+      return next;
+    });
+  };
+
   const handleSaveEdit = async () => {
     if (!editingCatalog) return;
     setEditSaving(true);
     try {
       // Códigos que quedaron en el listado
       const codigosRestantes = new Set(editItems.map(p => p.codigo.toUpperCase()));
-      
+
       // Códigos originales que fueron eliminados por el usuario
       const codigosEliminados = editItemsOriginalRef.current
         .map(p => p.codigo.toUpperCase())
@@ -130,21 +151,32 @@ export function CatalogoAdminClient({ session }: { session: any }) {
       const excluirActual = editingCatalog.palabras_excluir
         ? editingCatalog.palabras_excluir.split(',').map((s: string) => s.trim()).filter(Boolean)
         : [];
-      
+
       const nuevasExclusiones = Array.from(
         new Set([...excluirActual, ...codigosEliminados])
       ).join(', ');
 
+      // Build precio_overrides array from editOverrides state
+      const precio_overrides = Object.entries(editOverrides).map(([codigo, precio]) => ({
+        codigo,
+        precio,
+      }));
+
       const res = await fetch(`/api/catalogos/${editingCatalog.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ palabras_excluir: nuevasExclusiones, margen_precio: editMargen }),
+        body: JSON.stringify({
+          palabras_excluir: nuevasExclusiones,
+          margen_precio: editMargen,
+          precio_overrides,
+        }),
       });
       if (res.ok) {
         toast.success('Catálogo actualizado');
         setEditingCatalog(null);
         setEditItems([]);
         setEditMargen(0);
+        setEditOverrides({});
         editItemsOriginalRef.current = [];
         fetchCatalogos();
       } else {
@@ -291,7 +323,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
       />
 
       {/* Modal edición de productos */}
-      <Dialog open={!!editingCatalog} onOpenChange={(open) => { if (!open) { setEditingCatalog(null); setEditItems([]); setEditMargen(0); } }}>
+      <Dialog open={!!editingCatalog} onOpenChange={(open) => { if (!open) { setEditingCatalog(null); setEditItems([]); setEditMargen(0); setEditOverrides({}); } }}>
         <DialogContent className="w-full h-full sm:h-auto sm:max-w-lg sm:max-h-[90vh] sm:mx-4 overflow-y-auto p-5 rounded-none sm:rounded-xl">
           <DialogHeader>
             <DialogTitle>Editar catálogo: {editingCatalog?.titulo}</DialogTitle>
@@ -343,6 +375,18 @@ export function CatalogoAdminClient({ session }: { session: any }) {
                         <p className="text-xs text-zinc-500 mt-0.5">${item.precio_catalogo}</p>
                       )}
                     </div>
+                    {editingCatalog?.mostrar_precio && (
+                      <input
+                        type="number"
+                        min={0}
+                        step={0.01}
+                        aria-label={`Precio individual ${item.codigo}`}
+                        placeholder={item.precio_catalogo != null ? `$${item.precio_catalogo}` : 'Precio'}
+                        value={editOverrides[item.codigo] ?? ''}
+                        onChange={e => handleOverrideChange(item.codigo, e.target.value)}
+                        className="w-20 h-8 rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 text-xs text-right focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                      />
+                    )}
                     <button
                       aria-label="Eliminar producto"
                       onClick={() => handleRemoveItem(item.codigo)}
@@ -357,7 +401,7 @@ export function CatalogoAdminClient({ session }: { session: any }) {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setEditingCatalog(null); setEditItems([]); }} disabled={editSaving}>
+            <Button variant="outline" onClick={() => { setEditingCatalog(null); setEditItems([]); setEditMargen(0); setEditOverrides({}); }} disabled={editSaving}>
               Cancelar
             </Button>
             <Button onClick={handleSaveEdit} disabled={editSaving || editLoading}>

@@ -18,7 +18,7 @@ const CATALOGO_BASE = {
   solo_stock: false, solo_nuevo: false,
   palabras_incluir: '', palabras_excluir: '',
   ambas_empresas: true, empresa_id: 2, categoria: null,
-  empresa_slug: 'vida-digital',
+  empresa_slug: 'vida-digital', solo_nuevo_top_n: 1,
 };
 
 const PRODUCTOS = [
@@ -45,7 +45,8 @@ describe('GET /api/catalogos/public/[slug] — filtros solo_stock / solo_nuevo',
   test('1 — sin filtros activos retorna todos los productos (3)', async () => {
     sql
       .mockResolvedValueOnce([CATALOGO_BASE])
-      .mockResolvedValueOnce(PRODUCTOS);
+      .mockResolvedValueOnce(PRODUCTOS)
+      .mockResolvedValueOnce([]); // overrides vacíos
 
     const res = await GET(makeReq('test'), { params: { slug: 'test' } });
     expect(res.status).toBe(200);
@@ -56,7 +57,8 @@ describe('GET /api/catalogos/public/[slug] — filtros solo_stock / solo_nuevo',
   test('2 — solo_stock=true retorna solo productos con saldo > 0 (2)', async () => {
     sql
       .mockResolvedValueOnce([{ ...CATALOGO_BASE, solo_stock: true }])
-      .mockResolvedValueOnce(PRODUCTOS);
+      .mockResolvedValueOnce(PRODUCTOS)
+      .mockResolvedValueOnce([]); // overrides vacíos
 
     const res = await GET(makeReq('test'), { params: { slug: 'test' } });
     expect(res.status).toBe(200);
@@ -66,11 +68,14 @@ describe('GET /api/catalogos/public/[slug] — filtros solo_stock / solo_nuevo',
   });
 
   test('3 — solo_nuevo=true retorna solo productos del último ingreso prefijo 101', async () => {
+    // getLatestIngresoRealCodigos hace 3 queries: anio → folio → codigo
     sql
-      .mockResolvedValueOnce([{ ...CATALOGO_BASE, solo_nuevo: true }])
-      .mockResolvedValueOnce(PRODUCTOS)
-      .mockResolvedValueOnce([{ anio: '26', folio: '000001' }])
-      .mockResolvedValueOnce([{ codigo: 'A3' }]);
+      .mockResolvedValueOnce([{ ...CATALOGO_BASE, solo_nuevo: true }])  // catalog
+      .mockResolvedValueOnce(PRODUCTOS)                                   // productos
+      .mockResolvedValueOnce([{ anio: '26' }])                            // anio
+      .mockResolvedValueOnce([{ folio: '000001' }])                       // folio
+      .mockResolvedValueOnce([{ codigo: 'A3' }])                          // codigo
+      .mockResolvedValueOnce([]);                                         // overrides
 
     const res = await GET(makeReq('test'), { params: { slug: 'test' } });
     expect(res.status).toBe(200);

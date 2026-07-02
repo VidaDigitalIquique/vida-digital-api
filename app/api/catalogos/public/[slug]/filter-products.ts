@@ -1,6 +1,7 @@
 export type CatalogoProducto = {
   codigo: string;
   detalle?: string | null;
+  precio_override?: number | null;
 };
 
 export function filterBySoloNuevo(

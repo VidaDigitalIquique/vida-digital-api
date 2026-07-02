@@ -13,7 +13,7 @@ function parseCSVField(value: unknown): string[] {
   return String(value).split(',').map((s) => s.trim()).filter(Boolean);
 }
 
-async function getCatalogData(slug: string) {
+export async function getCatalogData(slug: string) {
   try {
     const cats = await sql`
       SELECT c.*, e.slug as empresa_slug
@@ -96,15 +96,31 @@ async function getCatalogData(slug: string) {
       productos = productos.filter((p: any) => latestCodigos.has(p.codigo.toUpperCase()));
     }
 
-    productos = productos.map((p: any) => ({
-      ...p,
-      saldo: parseInt(p.saldo),
-      costo: parseFloat(p.costo),
-      cantcaja: parseInt(p.cantcaja),
-      precio_catalogo: mostrarPrecio
+    // Fetch individual price overrides for this catalog
+    const overrides = await sql`
+      SELECT codigo, precio FROM catalogo_precio_override
+      WHERE catalogo_id = ${cat.id}
+    `;
+    const overridesMap = new Map<string, number>(
+      overrides.map((o: any) => [o.codigo.toUpperCase(), parseFloat(o.precio)])
+    );
+
+    productos = productos.map((p: any) => {
+      const precioBase = mostrarPrecio
         ? Math.ceil(parseFloat(p.costo) * (1 + margen / 100) * 10) / 10
-        : null,
-    }));
+        : null;
+      const precioOverride = mostrarPrecio
+        ? (overridesMap.get(p.codigo.toUpperCase()) ?? null)
+        : null;
+      return {
+        ...p,
+        saldo: parseInt(p.saldo),
+        costo: parseFloat(p.costo),
+        cantcaja: parseInt(p.cantcaja),
+        precio_catalogo: precioOverride ?? precioBase,
+        precio_override: precioOverride,
+      };
+    });
 
     return {
       status: 200,

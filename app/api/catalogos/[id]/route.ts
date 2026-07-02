@@ -11,7 +11,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   const { id } = params;
 
   try {
-    const { titulo, descripcion, activo, items, palabras_excluir, margen_precio } = await request.json();
+    const { titulo, descripcion, activo, items, palabras_excluir, margen_precio, precio_overrides } = await request.json();
 
     // Verify ownership
     const existing = await sql`SELECT empresa_id, user_id FROM catalogos WHERE id = ${id}`;
@@ -32,6 +32,31 @@ export async function PUT(request: Request, { params }: { params: { id: string }
         updated_at = NOW()
       WHERE id = ${id}
     `;
+
+    // Process precio_overrides — full replacement strategy
+    if (precio_overrides && Array.isArray(precio_overrides)) {
+      // Validate each override entry
+      for (const po of precio_overrides) {
+        if (!po.codigo || typeof po.codigo !== 'string' || !po.codigo.trim()) {
+          return NextResponse.json({ error: 'precio_overrides: cada entrada requiere codigo (string no vacío)' }, { status: 400 });
+        }
+        if (po.precio != null) {
+          if (typeof po.precio !== 'number' || isNaN(po.precio) || po.precio <= 0) {
+            return NextResponse.json({ error: `precio_overrides: precio inválido para código ${po.codigo} (debe ser número > 0)` }, { status: 400 });
+          }
+        }
+      }
+      await sql`DELETE FROM catalogo_precio_override WHERE catalogo_id = ${id}`;
+      const valid = precio_overrides.filter((po: any) => po.precio != null);
+      if (valid.length > 0) {
+        const codigos = valid.map((po: any) => po.codigo);
+        const precios = valid.map((po: any) => po.precio);
+        await sql`
+          INSERT INTO catalogo_precio_override (catalogo_id, codigo, precio)
+          SELECT ${id}, unnest(${codigos}::text[]), unnest(${precios}::numeric[])
+        `;
+      }
+    }
 
     // Process items if provided
     // This is a simple full-replacement strategy for ease of admin UI via drag-and-drop

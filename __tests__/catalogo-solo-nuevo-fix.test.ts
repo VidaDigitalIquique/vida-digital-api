@@ -14,7 +14,7 @@ const CATALOGO_BASE = {
   solo_stock: false, solo_nuevo: true,
   palabras_incluir: '', palabras_excluir: '',
   ambas_empresas: true, empresa_id: 2, categoria: null,
-  empresa_slug: 'vida-digital',
+  empresa_slug: 'vida-digital', solo_nuevo_top_n: 1,
 };
 
 const PRODUCTOS = [
@@ -39,14 +39,14 @@ describe('GET /api/catalogos/public/[slug] — solo_nuevo con prefijo 101', () =
     new Request(`http://localhost/api/catalogos/public/${slug}`);
 
   test('usa prefijo 101, año mas alto y folio mas alto — no fecha_ingreso', async () => {
-    // 1. Catalogo query
-    sql.mockResolvedValueOnce([CATALOGO_BASE]);
-    // 2. Productos query
-    sql.mockResolvedValueOnce(PRODUCTOS);
-    // 3. Ultimo ingreso real (prefijo 101, max anio, max folio)
-    sql.mockResolvedValueOnce([{ anio: '26', folio: '027541' }]);
-    // 4. Codigos de ese contenedor
-    sql.mockResolvedValueOnce([{ codigo: 'SKU-CONT-A' }, { codigo: 'SKU-CONT-B' }]);
+    // getLatestIngresoRealCodigos: anio → folio → codigo (3 queries)
+    sql
+      .mockResolvedValueOnce([CATALOGO_BASE])                               // catalog
+      .mockResolvedValueOnce(PRODUCTOS)                                      // productos
+      .mockResolvedValueOnce([{ anio: '26' }])                               // anio
+      .mockResolvedValueOnce([{ folio: '027541' }])                          // folio
+      .mockResolvedValueOnce([{ codigo: 'SKU-CONT-A' }, { codigo: 'SKU-CONT-B' }]) // codigo
+      .mockResolvedValueOnce([]);                                            // overrides
 
     const res = await GET(makeReq('test'), { params: { slug: 'test' } });
     expect(res.status).toBe(200);
@@ -59,10 +59,11 @@ describe('GET /api/catalogos/public/[slug] — solo_nuevo con prefijo 101', () =
   });
 
   test('ignora prefijo 103 aunque tenga folio mayor', async () => {
-    sql.mockResolvedValueOnce([CATALOGO_BASE]);
-    sql.mockResolvedValueOnce(PRODUCTOS);
-    // Solo hay ingresos 103, sin 101
-    sql.mockResolvedValueOnce([]);
+    sql
+      .mockResolvedValueOnce([CATALOGO_BASE])   // catalog
+      .mockResolvedValueOnce(PRODUCTOS)          // productos
+      .mockResolvedValueOnce([])                 // anio (vacío → early return)
+      .mockResolvedValueOnce([]);                // overrides
 
     const res = await GET(makeReq('test'), { params: { slug: 'test' } });
     const body = await res.json();
@@ -72,10 +73,11 @@ describe('GET /api/catalogos/public/[slug] — solo_nuevo con prefijo 101', () =
   });
 
   test('sin ingresos reales retorna vacío', async () => {
-    sql.mockResolvedValueOnce([CATALOGO_BASE]);
-    sql.mockResolvedValueOnce(PRODUCTOS);
-    // Sin ningún ingreso 101
-    sql.mockResolvedValueOnce([]);
+    sql
+      .mockResolvedValueOnce([CATALOGO_BASE])   // catalog
+      .mockResolvedValueOnce(PRODUCTOS)          // productos
+      .mockResolvedValueOnce([])                 // anio (vacío → early return)
+      .mockResolvedValueOnce([]);                // overrides
 
     const res = await GET(makeReq('test'), { params: { slug: 'test' } });
     const body = await res.json();
