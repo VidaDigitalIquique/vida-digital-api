@@ -7,8 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export function parseKeywords(raw: string): string[] {
   if (!raw || !raw.trim()) return [];
-  const sep = raw.includes(',') ? ',' : ' ';
-  return raw.split(sep).map(s => s.trim()).filter(Boolean);
+  return raw.split(',').map(s => s.trim().replace(/\s+/g, ' ')).filter(Boolean);
 }
 
 export async function GET(request: Request, { params }: { params: { slug: string } }) {

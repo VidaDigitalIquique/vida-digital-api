@@ -28,12 +28,16 @@ describe('parseKeywords — retrocompatibilidad', () => {
     expect(parseKeywords('vidrio, tv')).toEqual(['vidrio', 'tv']);
   });
 
-  it('string sin coma → split por espacio', () => {
-    expect(parseKeywords('vidrio tv')).toEqual(['vidrio', 'tv']);
+  it('string sin coma → se trata como frase completa', () => {
+    expect(parseKeywords('vidrio tv')).toEqual(['vidrio tv']);
   });
 
-  it('string sin coma con espacios extra → trim cada token', () => {
-    expect(parseKeywords('  vidrio  tv  ')).toEqual(['vidrio', 'tv']);
+  it('frase sin coma con espacios extra → un solo token trimmed', () => {
+    expect(parseKeywords('  vidrio  tv  ')).toEqual(['vidrio tv']);
+  });
+
+  it('frase multi-palabra sin coma → se preserva completa', () => {
+    expect(parseKeywords('Hervidor de Agua')).toEqual(['Hervidor de Agua']);
   });
 
   it('una sola palabra sin coma → array de un elemento', () => {
