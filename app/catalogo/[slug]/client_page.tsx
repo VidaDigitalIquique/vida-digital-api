@@ -78,7 +78,7 @@ export function PublicCatalogoClient({ data }: { data: any }) {
       <div className="catalogo-footer text-center py-12 text-zinc-400 text-sm px-4">
         <a href="https://www.serviciosdigitalespbt.site/" target="_blank" rel="noopener noreferrer">
           <span className="block">
-            Tú buscas productos para vender. Nosotros construimos herramientas para ayudarte a venderlos.
+            Tú buscas productos para vender. Servicios Digitales PBT construye herramientas para ayudarte a venderlos.
           </span>
           <span className="block mt-2">
             Este catálogo es solo una de las cosas que podemos hacer por un negocio. ¿Qué podríamos hacer por el tuyo? Descúbrelo →
