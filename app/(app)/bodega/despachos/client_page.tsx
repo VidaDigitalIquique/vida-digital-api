@@ -8,6 +8,7 @@ import { Search, Camera, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Image from 'next/image';
+import flags from '@/config/feature-flags.json';
 
 type Despacho = {
   id: number;
@@ -35,19 +36,50 @@ export function DespachosClient({
   const queueRef = useRef<File[]>([]);
   const processingRef = useRef(false);
   const [queueCount, setQueueCount] = useState(0);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editFolio, setEditFolio] = useState('');
 
-  const handleBuscar = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (folio.trim().length < 2) return;
+  const buscar = useCallback(async (folioStr: string) => {
     setBuscando(true);
     try {
-      const res = await fetch(`/api/despachos/buscar?folio=${encodeURIComponent(folio.trim())}`);
+      const res = await fetch(`/api/despachos/buscar?folio=${encodeURIComponent(folioStr.trim())}`);
       const { data } = await res.json();
       setResultados(data || []);
     } catch {
       toast.error('Error al buscar');
     } finally {
       setBuscando(false);
+    }
+  }, []);
+
+  const handleBuscar = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (folio.trim().length < 2) return;
+    await buscar(folio);
+  };
+
+  const handleGuardarFolio = async (despacho: Despacho) => {
+    const folioNuevo = editFolio.trim();
+    if (!/^\d+$/.test(folioNuevo)) {
+      toast.error('Folio inválido: solo dígitos');
+      return;
+    }
+    try {
+      const res = await fetch(`/api/bodega/despachos/${despacho.id}/folio`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folio_nuevo: folioNuevo }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        toast.error(body?.error || 'Error al corregir folio');
+        return;
+      }
+      toast.success(`✅ Folio corregido a ${body.folio_nuevo}`);
+      setEditId(null);
+      await buscar(folio); // refrescar resultados
+    } catch {
+      toast.error('Error al corregir folio');
     }
   };
 
@@ -182,6 +214,28 @@ export function DespachosClient({
                       <MessageCircle className="w-4 h-4" />
                       Compartir imagen
                     </button>
+
+                    {puedeSubir && flags['bodega_despachos_editar_folio'] && (
+                      editId === d.id ? (
+                        <div className="flex gap-2 mt-2">
+                          <Input
+                            value={editFolio}
+                            onChange={e => setEditFolio(e.target.value)}
+                            placeholder="Folio correcto"
+                            className="font-mono"
+                          />
+                          <Button onClick={() => handleGuardarFolio(d)}>Guardar</Button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => { setEditId(d.id); setEditFolio(d.folio); }}
+                          className="mt-2 w-full text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 py-1 transition-colors"
+                        >
+                          Corregir folio
+                        </button>
+                      )
+                    )}
                   </div>
                 </div>
               ))}

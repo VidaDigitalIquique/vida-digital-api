@@ -23,5 +23,6 @@
   "catalogo-ingreso-top-n-slice3": true,
   "seguimientos": true,
   "garantias-mejoras-slice1": false,
-  "sync-post-process-unificado": false
+  "sync-post-process-unificado": false,
+  "bodega_despachos_editar_folio": false
 }

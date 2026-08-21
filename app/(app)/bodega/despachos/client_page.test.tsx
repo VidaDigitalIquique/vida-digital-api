@@ -16,6 +16,10 @@ jest.mock('sonner', () => ({
   },
 }));
 
+jest.mock('@/config/feature-flags.json', () => ({
+  bodega_despachos_editar_folio: true,
+}));
+
 global.fetch = jest.fn();
 global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
 global.URL.revokeObjectURL = jest.fn();
@@ -143,6 +147,53 @@ describe('DespachosClient', () => {
     await waitFor(() => {
       expect(toast.success).toHaveBeenCalledWith(
         expect.stringContaining('99887')
+      );
+    });
+  });
+
+  it('permite corregir folio desde una tarjeta de resultado', async () => {
+    (global.fetch as jest.Mock)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          data: [{
+            id: 1,
+            folio: '123',
+            imagen_url: 'https://res.cloudinary.com/test/image.jpg',
+            empresa_nombre: 'SANJH',
+            created_at: '2026-08-21T10:00:00Z',
+            subido_por: 'bodeguero1',
+          }],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 1,
+          folio_anterior: '123',
+          folio_nuevo: '999',
+          corregido_por: 'bodeguero1',
+          corregido_en: '2026-08-21T10:01:00Z',
+        }),
+      });
+
+    render(<DespachosClient session={mockSession} empresaId={1} />);
+    fireEvent.change(screen.getByPlaceholderText(/número de nota/i), {
+      target: { value: '123' },
+    });
+    fireEvent.submit(screen.getByRole('form'));
+
+    const corregirBtn = await screen.findByRole('button', { name: /corregir folio/i });
+    fireEvent.click(corregirBtn);
+
+    const input = screen.getByPlaceholderText('Folio correcto');
+    fireEvent.change(input, { target: { value: '999' } });
+    fireEvent.click(screen.getByRole('button', { name: /guardar/i }));
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/bodega/despachos/1/folio'),
+        expect.objectContaining({ method: 'PATCH' })
       );
     });
   });
