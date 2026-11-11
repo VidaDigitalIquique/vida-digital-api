@@ -47,7 +47,7 @@ describe('Catalogos user scoping', () => {
 
   test('GET /api/catalogos filters by user_id', async () => {
     (getServerSession as jest.Mock).mockResolvedValue({
-      user: { id: '123', empresas: [1] },
+      user: { id: '123', rol: 'admin', empresas: [1] },
     });
 
     const req = new Request('http://localhost/api/catalogos?empresa=1');
@@ -59,7 +59,7 @@ describe('Catalogos user scoping', () => {
 
   test('GET /api/catalogos/[id] checks user_id ownership', async () => {
     (getServerSession as jest.Mock).mockResolvedValue({
-      user: { id: '123', empresas: [1] },
+      user: { id: '123', rol: 'admin', empresas: [1] },
     });
 
     const req = new Request('http://localhost/api/catalogos/10');
@@ -71,7 +71,7 @@ describe('Catalogos user scoping', () => {
 
   test('POST /api/catalogos persists user_id', async () => {
     (getServerSession as jest.Mock).mockResolvedValue({
-      user: { id: '123', empresas: [1] },
+      user: { id: '123', rol: 'admin', empresas: [1] },
     });
 
     const req = new Request('http://localhost/api/catalogos', {

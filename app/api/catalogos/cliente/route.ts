@@ -3,12 +3,14 @@ import { authOptions } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import { NextResponse } from 'next/server';
 import { generateSlug } from '@/lib/utils';
+import { puedeGestionarCatalogos } from '@/lib/roles';
 
 const TIPO_PRECIO_VALIDOS = ['max', 'min', 'ultimo', 'costo_mas_margen', 'sin_precio'] as const;
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  if (!puedeGestionarCatalogos((session.user as any).rol)) return NextResponse.json({ error: 'Rol no autorizado' }, { status: 403 });
   const userId = (session.user as any).id;
 
   try {
@@ -26,6 +28,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  if (!puedeGestionarCatalogos((session.user as any).rol)) return NextResponse.json({ error: 'Rol no autorizado' }, { status: 403 });
   const userId = (session.user as any).id;
 
   try {

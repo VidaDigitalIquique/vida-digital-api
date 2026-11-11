@@ -17,6 +17,7 @@ Metodo pBravoT. Programador: escribe codigo solo en ciclos pBravoT (ver ~/.claud
 - Los tests NUNCA deben tocar la base de produccion: usar mocks o `TEST_DATABASE_URL`.
 
 ## Documentos
+- BACKLOG-DEBUGGING.md: bugs detectados por el humo de produccion (2026-11-11); se resuelven ANTES de los modulos nuevos.
 - PRD de cada modulo nuevo: `PRD.md` (seccion "Flujos criticos y criterios de aceptacion" con bloques
   `### R<n> — <flujo> (riesgo: x)` + Rol/Dado/Cuando/Entonces: son la base de QA). Historico: `PRD_Caja_Mayor.md`.
 - Bugs: `BUGS.md`. Registro de slices: `AUTO-LOG.md`. QA: `QA-REGISTRO.md` (lo escribe el tooling).
@@ -35,7 +36,7 @@ en deep.ps1, verificar.ps1, qa-ciclo.ps1 y qa-prod.ps1 (si no, los logs se mezcl
 - URL de pruebas: http://localhost:3124 (`npm run dev -- -p 3124`). Config: `.pbravot/qa-entorno.json`.
 - Base de pruebas: rama Neon aparte, en `.env` como `TEST_DATABASE_URL` (las guardas no arrancan sin ella ni si
   apunta a produccion).
-- Cuentas sinteticas por rol: `qa-admin`, `qa-vendedor`, `qa-bodeguero` (las crea `.pbravot/qa-preparar.mjs` en la
+- Cuentas sinteticas por rol: RUT `99.999.991-1` admin, `99.999.992-2` vendedor, `99.999.993-3` bodeguero (el login aplica formatRut: un id con letras llega vacio). Las crea `.pbravot/qa-preparar.mjs` en la
   base de pruebas con contrasena nueva en cada corrida; quedan en `_dt-vida-digital\qa\cuentas.json`).
 - Reglas de datos: `.pbravot/qa-datos.md`. Barrido de toda la UI: `.pbravot/qa-barrido.md` (cuando exista).
 - Humo en produccion despues de cada deploy: `qa-prod.ps1 -Repo <este repo> -DtDir C:\Users\pablo\Documents\_dt-vida-digital -EsperarDeploy -Detach`

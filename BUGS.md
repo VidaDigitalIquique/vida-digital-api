@@ -52,3 +52,14 @@
 
 **Verificación:** T9 reproduce el escenario (escribir "0" → guardar → verificar que el código NO aparece en `precio_overrides`). Suite completa 15/15 verde.
 
+
+---
+
+## [2026-11-11] — D1: el rol bodeguero entra a /catalogo/admin y puede usar las APIs de catalogos
+
+- Tipo: A (visual / permisos de pantalla) + control de acceso en API
+- Causa raiz: `middleware.ts` excluye del matcher todo lo que empieza con `catalogo` (para que los catalogos publicos `/catalogo/[slug]` abran sin login), asi que `/catalogo/admin` y `/catalogo/clientes` no pasan por RUTAS_POR_ROL. `app/(app)/catalogo/admin/page.tsx` solo exigia sesion. Ademas las APIs privadas de catalogos (`/api/catalogos` GET/POST, `/api/catalogos/[id]` GET/PUT/DELETE, `/api/catalogos/cliente` GET/POST) validaban sesion y empresa pero no rol: un bodeguero podia crear/borrar catalogos llamando la API directo.
+- Fix aplicado: `lib/roles.ts` (`ROLES_CATALOGO` = admin, vendedor; `puedeGestionarCatalogos`). La page de admin redirige a /login sin sesion y a /dashboard con rol no permitido (el middleware lleva al bodeguero a /bodega). Los 7 handlers responden 403 "Rol no autorizado" tras el chequeo de sesion. Tests: lib/roles.test.ts, page.test.tsx y route.test.ts de las 3 rutas (bodeguero 403 sin tocar la base; admin/vendedor siguen; sin sesion 401). Middleware sin cambios.
+- Verificacion: jest sin suites nuevas en falla vs 0d997ec (43 preexistentes en ambos); tsc y lint sin errores nuevos en archivos tocados; Fase E bug-d1b PASA 5/5; el Director reprodujo en navegador: bodeguero /catalogo/admin -> /bodega, POST/GET /api/catalogos y GET /api/catalogos/cliente -> 403.
+- Zona fragil: cualquier pantalla privada nueva bajo `/catalogo` NO pasa por el middleware: debe validar el rol en la page y en sus APIs (usar `lib/roles.ts`). No ampliar la exclusion `catalogo` del matcher sin revisar esto.
+- Commit: el de "fix: D1 bodeguero entra a /catalogo/admin" (ver git log)

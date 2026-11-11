@@ -19,7 +19,7 @@ import { sql } from '@/lib/db';
 jest.mock('next-auth', () => ({
   getServerSession: jest.fn().mockImplementation(() =>
     Promise.resolve({
-      user: { id: testUserId, empresas: [1, 2] },
+      user: { id: testUserId, rol: 'admin', empresas: [1, 2] },
     })
   ),
 }));

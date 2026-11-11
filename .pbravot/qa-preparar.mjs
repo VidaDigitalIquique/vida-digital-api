@@ -1,6 +1,6 @@
 // qa-preparar.mjs - Prepara la base de PRUEBAS para la Fase E (Metodo pBravoT).
 // Lo ejecuta qa-entorno.ps1 con DATABASE_URL ya apuntando a TEST_DATABASE_URL.
-// Crea/actualiza cuentas sinteticas qa-admin, qa-vendedor y qa-bodeguero (idempotente), las asocia a
+// Crea/actualiza cuentas sinteticas (RUT 99.999.991-1 admin, 99.999.992-2 vendedor, 99.999.993-3 bodeguero; el login aplica formatRut, que borra letras, por eso no sirven nombres tipo qa-admin) (idempotente), las asocia a
 // todas las empresas y las escribe en %PBRAVOT_QA_DIR%\cuentas.json.
 // Se niega a correr si DATABASE_URL es la de produccion.
 import fs from "node:fs";
@@ -34,7 +34,7 @@ if (host(actual) !== host(orig.TEST_DATABASE_URL)) throw new Error("ABORTA: DATA
 
 const sql = neon(actual);
 const cuentas = {};
-for (const [rut, rol, nombre] of [["qa-admin", "admin", "QA Admin"], ["qa-vendedor", "vendedor", "QA Vendedor"], ["qa-bodeguero", "bodeguero", "QA Bodeguero"]]) {
+for (const [rut, rol, nombre] of [["99.999.991-1", "admin", "QA Admin"], ["99.999.992-2", "vendedor", "QA Vendedor"], ["99.999.993-3", "bodeguero", "QA Bodeguero"]]) {
   const password = "QA-" + crypto.randomBytes(9).toString("base64url");
   const hash = await bcrypt.hash(password, 10);
   const [u] = await sql`INSERT INTO usuarios (rut, nombre, rol, password, activo) VALUES (${rut}, ${nombre}, ${rol}, ${hash}, true)
