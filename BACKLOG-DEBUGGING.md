@@ -54,4 +54,4 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 - Criterio de cierre: /favicon.ico 200 en dev y prod (dejar un solo archivo).
 
 ## D8 (MEDIA) - Warning "Function components cannot be given refs" en consola de dev
-- Detectado en Fase E bug-d1b (consola). Sin componente identificado. Reproducir en dev con el stack completo del warning antes de cualquier hipotesis.
+- Detectado en Fase E bug-d1b (consola). Pista de la Fase E bug-d2 (EXP-3, sin verificar): "Check the render method of `BodegaClient`", en `components/ui/input.tsx` (Input sin forwardRef). Verificar en el codigo antes de cualquier hipotesis.

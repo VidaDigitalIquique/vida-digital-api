@@ -10,7 +10,7 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - [ ] P-20261111-1030-1 (media) CONSOLA: JS: Minified React error #425; visit https://react.dev/errors/425 for the full message or use the non-minified dev environment for full errors and additional helpful warnings. (/admin/caja-config)
 - [ ] P-20261111-1030-2 (media) CONSOLA: JS: Minified React error #418; visit https://react.dev/errors/418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings. (/admin/caja-config)
 - [ ] P-20261111-1030-3 (media) CONSOLA: JS: Minified React error #423; visit https://react.dev/errors/423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings. (/admin/caja-config)
-- [ ] P-20261111-1030-4 (media) CONSOLA: Manifest: Line: 1, column: 1, Syntax error. (/manifest.json)
+- [x] P-20261111-1030-4 (media) CONSOLA: Manifest: Line: 1, column: 1, Syntax error. (/manifest.json) -> ARREGLADO commit "fix: D2 manifest e iconos redirigian al login" (Fase E bug-d2 PASA 5/5)
 - [ ] P-20261111-1030-5 (media) CONSOLA: JS: Minified React error #329; visit https://react.dev/errors/329 for the full message or use the non-minified dev environment for full errors and additional helpful warnings. (/admin/categorias)
 - [ ] P-20261111-1030-6 (media) CONSOLA: JS: Minified React error #329; visit https://react.dev/errors/329 for the full message or use the non-minified dev environment for full errors and additional helpful warnings. (/admin/deudas)
 - [ ] P-20261111-1030-7 (media) CONSOLA: JS: Minified React error #329; visit https://react.dev/errors/329 for the full message or use the non-minified dev environment for full errors and additional helpful warnings. (/admin/importar)
@@ -119,3 +119,12 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - [ ] P-20261111-1156-4 (baja) CONSOLA: Failed to load resource: the server responded with a status of 401 (Unauthorized) (/api/alertas-stock)
 - [ ] P-20261111-1156-5 (baja) CONSOLA: Failed to load resource: the server responded with a status of 403 (Forbidden) (/api/seguimientos/alertas)
 - [ ] P-20261111-1156-6 (baja) CONSOLA: Failed to load resource: the server responded with a status of 401 (Unauthorized) (/api/deseados/alertas)
+
+## 2026-11-11 12:11 - bug-d2 - commit 56d361b - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\bug-d2
+- [x] P-20261111-1211-1 (media) HALLAZGO: EXP-1 — /favicon.ico responde 500 -> BACKLOG D7 (mismo 500 de favicon solo en dev)
+- [x] P-20261111-1211-2 (baja) HALLAZGO: EXP-2 — /robots.txt aborta la navegación -> DESCARTADO no existe public/robots.txt; responde 404 (verificado por el Director); antes del fix D2 redirigia al login
+- [x] P-20261111-1211-3 (baja) HALLAZGO: EXP-3 — Advertencia de React en /bodega -> BACKLOG D8 (BodegaClient pasa ref a components/ui/input.tsx)
+- [x] P-20261111-1211-4 (baja) HALLAZGO: EXP-4 — Respuestas 401 y 403 en la consola del bodeguero -> BACKLOG D5
+- [x] P-20261111-1211-5 (media) CONSOLA: Warning: Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()? -> BACKLOG D8
+- [x] P-20261111-1211-6 (media) CONSOLA: Failed to load resource: the server responded with a status of 404 (Not Found) (/admin/usuarios.json) -> DESCARTADO /admin/usuarios.json es una ruta inventada por la exploracion; 404 esperado
