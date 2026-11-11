@@ -1,6 +1,6 @@
 # PRD — Actualización "Detalle de ventas registradas" + Módulo VENDEDORES
 
-Versión 1 · 2026-11-11 · Product Owner: Pablo · Director Técnico: Claude
+Versión 2 · 2026-11-11 (correcciones de Pablo 17:06 y 17:18) · Product Owner: Pablo · Director Técnico: Claude
 Base: repo `vida-digital-api` en commit `88e8d83` (release D1-D5 desplegado en `2ac571c`).
 Todas las definiciones de datos de este documento están **verificadas** contra la base de pruebas (copia de producción del
 2026-11-11) y respondidas por Pablo. Lo que no está aquí no se asume: es gate humano.
@@ -33,22 +33,23 @@ Fuente: réplica de WinFac en Neon, esquemas `vida` (Vida Digital, empresa_id 2)
 |----------|-----------|-----------|
 | Nota de venta | `movidcto` con `tipomovi='V'` y `id_tdocu IN ('203','551','554')` | Mismo criterio que `app/api/seguimientos/route.ts` |
 | Fecha de la venta | `movidcto.fechanvt` | Sin nulos en notas |
-| Fecha de facturación | `movidcto.fechadoc` | 0 facturadas sin fechadoc (vida 2378, sanjh 3232) |
+| Fecha de facturación = fecha de visación | `movidcto.fechadoc` | 0 facturadas sin fechadoc (vida 2378, sanjh 3232); nota 002514: venta 09-11, visación 10-11 |
 | Facturada (traspaso hecho) | `pestadot='3'` y `visaadua` no vacío | visaadua/visacpdd siempre juntos: llenos con pestadot 3, vacíos con pestadot 1 |
 | Pendiente de facturar | `pestadot='1'` y `visaadua` vacío | Ídem |
 | Número de visación (el que se muestra) | `movidcto.visaadua` (ej. 431033) | Pablo, pregunta 2 |
-| Cliente de la nota de venta | `movidcto.cliente` (texto) | Pablo: en la nota SANJH 003816 es "DILIP MAYANI" = `movidcto.cliente` (no `factura` ni `clientes(kcodclie)`) |
+| Cliente de la nota de venta ("Cliente Comprador") | `movidcto.cliente` (texto) = nombre de `clientes(kcodcli2)` | Pablo (6 ejemplos reales, 17:18) + nota impresa 002499: "Cliente Comprador JOHN HUARACHI" |
+| Cliente factura | `movidcto.factura` (texto) = nombre de `clientes(kcodclie)` (empresas SPA) | Nota impresa 002499: "Cliente Factura IMPORT EXPORT ADEEL SPA" |
 | Vendedor | `movidcto.vendedor` (texto WinFac) | Valores 2026: PRAVIN, JOSEPH LEVANO, ANGELA, ANIL CHANDNANI, PABLO BRAVO; histórico además EMPRESA y vacío |
 | Vendedores excluidos del módulo | `PABLO BRAVO`, `EMPRESA` y vacío/NULL: no aparecen en ninguna parte del módulo | Pablo |
-| Total de la nota (base de comisión) | `movidcto.val_rea` (valor real WinFac) | Pablo: "usar el total de la nota de WinFac". `val_doc` es el valor documento (≈ la mitad en 35% de las notas; ej. vida 002514 val_rea 825 / val_doc 412,50) |
-| Líneas de la nota | `itemdcto` por `knumfoli` (mismo esquema) | Todas las facturadas tienen líneas; 33 pendientes no |
-| Precio de venta unitario | `itemdcto.precread` (real) | Igual que el drawer actual. `precdocd` (documento) puede quedar bajo el costo: no se usa |
+| Total de la nota (base de comisión) | `movidcto.val_rea` (valor **real**) | Pablo (17:18): la comisión va sobre el valor real; a MILENKA se le facturó $825 en la nota 002514 (val_rea 825, val_doc 412,50). El valor documento suele ir a la mitad por el transporte del comprador: **no se usa en ninguna parte del módulo** |
+| Líneas de la nota | `itemdcto` por `knumfoli` (mismo esquema) | Todas las facturadas tienen líneas; 33 pendientes no. Ojo: en ~5% de las notas la réplica trae líneas que NO están en la nota real (ver Riesgos y BACKLOG D13) |
+| Precio de venta unitario | `itemdcto.precread` (real) | Igual que el drawer actual y que "Prc.Real Unitario" de la nota impresa. `precdocd` no se usa |
 | Costo unitario | `itemdcto.cosunita` (costo al momento de la venta) | Sin ceros en 2026; coincide con `productos.costo` en las muestras |
 | Cajas | `itemdcto.tcancaja` (cajas) · `cantxcaja` (unid/caja) · `cantsali` (unidades) | Igual que Seguimientos |
 | Ganancia de la línea (USD) | `(precread - cosunita) * cantsali` | — |
 | % sobre el costo | `(precread - cosunita) / cosunita * 100` | — |
 | Imagen | `public.productos.imagen_url` por `codigo = itemdcto.codunico` y `empresa_id` | `productos` tiene **una fila por ingreso**: unir por código multiplica filas (ver Riesgos) |
-| Moneda | Notas facturadas 2026: todas `monedaaa='13'` (USD) | 6 notas históricas de SANJH con `monedaaa='200'` (ver Preguntas abiertas) |
+| Moneda | USD siempre | Pablo: en Zofri todo se factura en dólares (notas facturadas 2026: todas `monedaaa='13'`) |
 | Fechas futuras | Notas con `fechanvt` posterior a hoy (hora de Chile) **no existen** para el módulo: son errores de digitación que WinFac no deja borrar | Pablo, pregunta 3. Hoy: 18 pendientes con fechas 2027-2125 |
 | Pendientes sin líneas | No se muestran | Pablo, pregunta 4 |
 
@@ -74,12 +75,13 @@ B3. Filtros:
     - Vendedor (lista de vendedores válidos de las notas, sin los excluidos; incluye a los que también son admin).
     - Fecha o rango de fechas de la venta (`fechanvt`), con atajos Hoy / Esta semana / Este mes; **por defecto: mes en curso**
       (hora de Chile).
+    - Fecha o rango de fechas de visación (`fechadoc`), opcional (vacío por defecto); al usarlo solo quedan notas facturadas.
     - Estado: Todas / Pendientes de facturar / Facturadas (traspaso hecho).
     - Empresa: Todas / Vida Digital / SANJH (la columna Empresa es pedido de Pablo; el filtro es comodidad).
 B4. **Filtros persistentes por usuario:** se guardan por usuario (en la base, no solo en el navegador) y se restauran al volver a
     la pantalla, desde cualquier equipo.
-B5. Clic en una venta (pendiente o facturada) → **modal** con cabecera (Empresa, nota, cliente, vendedor, fecha, estado, visación,
-    total) y tabla de líneas: **IMAGEN | CÓDIGO | COSTO | % SOBRE EL COSTO | CANTIDAD (cajas) | PRECIO DE VENTA | GANANCIA USD**,
+B5. Clic en una venta (pendiente o facturada) → **modal** con cabecera (Empresa, nota, cliente comprador, cliente factura, vendedor,
+    fecha de venta, estado, visación y fecha de visación, total real) y tabla de líneas: **IMAGEN | CÓDIGO | COSTO | % SOBRE EL COSTO | CANTIDAD (cajas) | PRECIO DE VENTA | GANANCIA USD**,
     con total de ganancia al pie.
 B6. **Informe de comisiones mensual:** por mes de **facturación** (`fechadoc`), una fila por vendedor válido: N° de notas
     facturadas, total vendido (suma de `val_rea`), % de comisión, comisión (USD) = total vendido × %. Solo notas facturadas.
@@ -144,12 +146,14 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
   Facturada) y el número de visación en las facturadas; no aparecen ventas de PABLO BRAVO, EMPRESA ni sin vendedor, ni notas con
   fecha posterior a hoy
 
-### R5 — Filtros por vendedor, fecha y estado (riesgo: medio)
+### R5 — Filtros por vendedor, fecha, fecha de visación y estado (riesgo: medio)
 - Rol: admin
 - Dado: la tabla de VENDEDORES
-- Cuando: elige un vendedor, un rango de fechas y "Pendientes de facturar" (y luego "Facturadas")
+- Cuando: elige un vendedor, un rango de fechas y "Pendientes de facturar" (y luego "Facturadas"); después limpia la fecha de venta y
+  elige un rango de fecha de visación
 - Entonces: la tabla muestra solo notas de ese vendedor, dentro del rango, con el estado elegido; con "Facturadas" todas tienen
-  número de visación y con "Pendientes" ninguna lo tiene
+  número de visación y con "Pendientes" ninguna lo tiene; con el rango de visación solo aparecen facturadas cuya fecha de visación
+  está en ese rango
 
 ### R6 — Filtros persistentes por usuario (riesgo: medio)
 - Rol: admin
@@ -159,11 +163,11 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
 
 ### R7 — Detalle de una venta en modal (riesgo: medio)
 - Rol: admin
-- Dado: una nota facturada en la tabla (y luego una pendiente con productos)
+- Dado: una nota facturada en la tabla (y luego una pendiente con productos; y luego la nota de Vida Digital 002499)
 - Cuando: hace clic en la fila
 - Entonces: se abre un modal con la empresa, la nota, el cliente, el vendedor y una tabla con IMAGEN, CÓDIGO, COSTO, % SOBRE EL
   COSTO, CANTIDAD (cajas), PRECIO DE VENTA y GANANCIA USD por línea, y el total de ganancia; el % y la ganancia coinciden con
-  (precio − costo) de cada línea
+  (precio − costo) de cada línea; en la 002499 se ve el aviso de que las líneas no suman al total de WinFac (total 2.550)
 
 ### R8 — Informe de comisiones del mes (riesgo: alto)
 - Rol: admin
@@ -197,9 +201,12 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
 - **Multiplicación de filas al unir `productos`:** tiene una fila por ingreso y código; unir por `codigo` duplica líneas
   (verificado: una nota de 6 líneas devolvió líneas repetidas al unir). La imagen se obtiene con subconsulta/`DISTINCT ON`
   (una sola fila por código y empresa).
-- **Líneas duplicadas en WinFac:** en 2026, 75 notas de vida y 6 de sanjh tienen `sum(itemdcto.totalrea) > val_rea`. Por decisión
-  de Pablo la comisión usa `val_rea`. El modal muestra las líneas tal como vienen y, si su suma no cuadra con el total de la
-  nota, muestra un aviso visible ("las líneas no cuadran con el total de la nota").
+- **Líneas que no están en la nota real:** en 2026, 75 notas de vida y 6 de sanjh tienen `sum(itemdcto.totalrea) > val_rea`. Caso
+  verificado con la nota impresa 002499 (JOHN HUARACHI): la nota real tiene HS-30 y HS-30C (total 2.550); la réplica agrega 303,
+  BKJ-61 y BJ-96 (181,50). No hay regla en los datos que las separe (probado: cruzar por `id_tdocu` y por `knumdocu`; no generaliza).
+  Decisión: la comisión usa `val_rea` (correcto según la nota impresa). El modal muestra las líneas de la réplica y, si su suma no
+  cuadra con el total, un aviso visible: "Esta nota tiene líneas en el sistema que no suman al total de WinFac (diferencia USD X):
+  la ganancia por línea puede incluir productos que no son parte de la venta". Causa raíz por investigar: BACKLOG D13.
 - **Fechas futuras y de facturación anteriores a la venta:** 27 (vida) y 18 (sanjh) facturadas tienen `fechadoc < fechanvt`; el
   informe va por `fechadoc` (Pablo, pregunta 6), la tabla por `fechanvt`.
 - **Dos esquemas idénticos:** consultas a `vida` y `sanjh` unidas con columna empresa; evitar duplicar SQL (Fase A propone).
@@ -214,9 +221,8 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
 5. **S5 — Comisiones:** configuración del % (tabla `public`) + informe mensual (R8, R9).
 6. **S6 — Exportar .xlsx** (R10).
 
-## Preguntas abiertas (gate humano si aparecen)
-- Notas facturadas en moneda distinta de USD (`monedaaa<>'13'`): en 2026 no hay ninguna. Si aparece alguna en el rango, el módulo
-  la muestra marcada como "otra moneda" y la excluye de la comisión hasta que Pablo defina.
+## Preguntas abiertas
+Ninguna. Cualquier caso no cubierto por este PRD es gate humano.
 
 ## Zonas de riesgo conocidas
 

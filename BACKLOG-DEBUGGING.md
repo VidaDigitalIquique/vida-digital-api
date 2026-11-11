@@ -74,4 +74,11 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 ## D12 (MEDIA) - Seguimientos muestra el cliente de la nota y el de la factura al reves
 - Detectado 2026-11-11 al armar el PRD de VENDEDORES. Pablo confirmo que el cliente de la nota de venta es `movidcto.cliente` (ej. nota SANJH 003816: "DILIP MAYANI").
 - `app/api/seguimientos/route.ts` toma como cliente `clientes(kcodclie).nombress` ("IMPORT EXPORT VED SPA" en esa nota) y como `factura_nombre` `clientes(kcodcli2)` ("DILIP MAYANI"). Datos: `movidcto.cliente` coincide con el nombre de `kcodcli2` en el 98% de las notas.
-- Por confirmar con Pablo en la pantalla de Seguimientos antes de tocar (hipotesis, no verificada en UI).
+- CONFIRMADO por Pablo (2026-11-11 17:18, 6 ejemplos reales): el cliente real (comprador) es ``movidcto.cliente`` = ``clientes(kcodcli2)``; el de factura es ``clientes(kcodclie)``. Seguimientos los tiene invertidos. Criterio de cierre: en Seguimientos, nota SANJH 003816 muestra cliente "DILIP MAYANI" y factura "IMPORT EXPORT VED SPA".
+
+## D13 (MEDIA, datos) - La replica trae lineas de nota que no estan en la nota real de WinFac
+- Detectado 2026-11-11 (PRD VENDEDORES). Nota Vida 002499 impresa (JOHN HUARACHI): solo HS-30 y HS-30C, total 2.550. En `vida.itemdcto` la nota tiene ademas 303, BKJ-61 y BJ-96 (181,50, `knumdocu` vacio).
+- Alcance 2026: 75 notas vida y 6 sanjh con suma de lineas > `val_rea`. Sin regla en los datos que las separe (cruzar por id_tdocu o knumdocu no generaliza).
+- Hipotesis (no verificada): el sync Python WinFac -> Neon inserta/actualiza lineas pero no borra las que se quitaron de la nota en WinFac.
+- Impacto: el conteo "ventas registradas" del drawer y las lineas del modal de VENDEDORES pueden incluir productos que no se vendieron. Comision no afectada (usa val_rea).
+- Siguiente paso: revisar el script de sync y comparar una nota con el DBF de WinFac.
