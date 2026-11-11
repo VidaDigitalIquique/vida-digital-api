@@ -313,3 +313,8 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - [x] P-20261111-1818-2 (baja) HALLAZGO: EXP-3 — Peticiones a la API con fechas parciales dan 400 en consola -> BACKLOG S3 (no consultar con fechas incompletas o invertidas)
 - [x] P-20261111-1818-3 (media) HALLAZGO: EXP-4 — Ancho móvil (390 px): sin defectos -> DESCARTADO: no es defecto (el propio agente lo informa sin defectos)
 - [x] P-20261111-1818-4 (media) CONSOLA: Failed to load resource: the server responded with a status of 400 (Bad Request) (/api/vendedores/notas) -> BACKLOG S3 (es la misma causa que EXP-1/EXP-3)
+
+## 2026-11-11 18:33 - s3 - commit 181ee59 - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s3
+- [x] P-20261111-1833-1 (baja) HALLAZGO: EXP-1 — Un filtro cambiado y recargado de inmediato no se guarda -> BACKLOG S4b (guardar pendiente al salir de la pagina con fetch keepalive; mismo archivo)
+- [x] P-20261111-1833-2 (media) HALLAZGO: EXP-3 — Cambios rápidos seguidos y recarga tras 3 s -> DESCARTADO: el propio agente lo informa consistente (la regla de visacion fuerza Facturadas, por diseno R5)

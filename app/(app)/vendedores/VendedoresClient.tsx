@@ -2,11 +2,43 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { fechaDiaCL, hoyCL, lunesSemanaCL, primerDiaMesCL } from '@/lib/fechas';
+import { fechaFiltroValida, type FiltrosGuardados } from '@/lib/filtros-validacion';
 import { formatUSD } from '@/lib/utils';
 import type { NotaVenta } from '@/lib/vendedores-notas';
 
 type EstadoFiltro = 'todas' | 'pendientes' | 'facturadas';
 type EmpresaFiltro = 'todas' | 'vida' | 'sanjh';
+
+// Mismo orden de claves al restaurar y al guardar: permite comparar con JSON.stringify.
+function canonizar(f: FiltrosGuardados): string {
+  return JSON.stringify({
+    vendedor: f.vendedor,
+    desde: f.desde,
+    hasta: f.hasta,
+    visaDesde: f.visaDesde,
+    visaHasta: f.visaHasta,
+    estado: f.estado,
+    empresa: f.empresa,
+  });
+}
+
+// D3: fechas calculadas solo dentro de efectos/eventos. Sin rango de visacion,
+// las fechas de venta nunca quedan vacias (decision S3 #2): se ve el mes en curso.
+function filtrosIniciales(f: FiltrosGuardados | null): FiltrosGuardados {
+  const filtros: FiltrosGuardados = {
+    vendedor: f?.vendedor ?? '',
+    desde: f?.desde ?? '',
+    hasta: f?.hasta ?? '',
+    visaDesde: f?.visaDesde ?? '',
+    visaHasta: f?.visaHasta ?? '',
+    estado: f?.estado || 'todas',
+    empresa: f?.empresa || 'todas',
+  };
+  if (!filtros.visaDesde && !filtros.visaHasta && !filtros.desde && !filtros.hasta) {
+    return { ...filtros, desde: primerDiaMesCL(), hasta: hoyCL() };
+  }
+  return filtros;
+}
 
 interface Respuesta {
   notas: NotaVenta[];
@@ -39,11 +71,53 @@ export function VendedoresClient() {
   const [data, setData] = useState<Respuesta | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(false);
+  const [inicializando, setInicializando] = useState(true);
+  const [avisoGuardado, setAvisoGuardado] = useState(false);
 
   const pedido = useRef(0);
+  const guardado = useRef('');
   const hayVisacion = Boolean(visaDesde || visaHasta);
 
+  // EXP-1/EXP-3: solo se consulta (y se guarda) con fechas completas y rangos validos.
+  const fechasCompletas = [desde, hasta, visaDesde, visaHasta].every(fechaFiltroValida);
+  const errorFechas = !fechasCompletas
+    ? 'Hay una fecha incompleta o inválida.'
+    : desde && hasta && desde > hasta
+      ? 'La fecha desde es posterior a la fecha hasta'
+      : visaDesde && visaHasta && visaDesde > visaHasta
+        ? 'La fecha de visación desde es posterior a la fecha de visación hasta'
+        : '';
+
+  // R6: restaurar ANTES de pedir notas (una sola consulta inicial).
   useEffect(() => {
+    let vivo = true;
+    const aplicar = (f: FiltrosGuardados | null) => {
+      if (!vivo) return;
+      const filtros = filtrosIniciales(f);
+      setVendedor(filtros.vendedor);
+      setDesde(filtros.desde);
+      setHasta(filtros.hasta);
+      setVisaDesde(filtros.visaDesde);
+      setVisaHasta(filtros.visaHasta);
+      setEstado(filtros.estado);
+      setEmpresa(filtros.empresa);
+      guardado.current = canonizar(filtros);
+      setInicializando(false);
+    };
+    fetch('/api/vendedores/filtros')
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((json: { filtros: FiltrosGuardados | null }) => aplicar(json?.filtros ?? null))
+      .catch(() => aplicar(null)); // sin guardado se arranca igual con el default
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (inicializando || errorFechas) return;
     const id = ++pedido.current;
     const params = new URLSearchParams();
     if (vendedor) params.set('vendedor', vendedor);
@@ -72,12 +146,56 @@ export function VendedoresClient() {
         setError(true);
         setCargando(false);
       });
-  }, [vendedor, desde, hasta, visaDesde, visaHasta, estado, empresa]);
+  }, [inicializando, errorFechas, vendedor, desde, hasta, visaDesde, visaHasta, estado, empresa]);
+
+  // R6: guardar con debounce. Un fallo no rompe la pantalla: solo avisa.
+  useEffect(() => {
+    if (inicializando || errorFechas) return;
+    const json = canonizar({ vendedor, desde, hasta, visaDesde, visaHasta, estado, empresa });
+    if (json === guardado.current) return;
+    const t = setTimeout(() => {
+      fetch('/api/vendedores/filtros', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: json,
+      })
+        .then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          guardado.current = json;
+          setAvisoGuardado(false);
+        })
+        .catch(() => setAvisoGuardado(true));
+    }, 500);
+    return () => clearTimeout(t);
+  }, [inicializando, errorFechas, vendedor, desde, hasta, visaDesde, visaHasta, estado, empresa]);
 
   // D3: la fecha de hoy se calcula en el click, nunca durante el render.
   const atajo = (d: string, h: string) => {
     setDesde(d);
     setHasta(h);
+  };
+
+  // Decision S3 #2: vaciar las fechas de venta sin visacion vuelve al mes en curso.
+  const limpiarFechasVenta = () => {
+    if (visaDesde || visaHasta) {
+      setDesde('');
+      setHasta('');
+      return;
+    }
+    setDesde(primerDiaMesCL());
+    setHasta(hoyCL());
+  };
+
+  const cambiarFechaVenta = (valor: string, cual: 'desde' | 'hasta') => {
+    const nuevoDesde = cual === 'desde' ? valor : desde;
+    const nuevoHasta = cual === 'hasta' ? valor : hasta;
+    if (!nuevoDesde && !nuevoHasta && !visaDesde && !visaHasta) {
+      setDesde(primerDiaMesCL());
+      setHasta(hoyCL());
+      return;
+    }
+    if (cual === 'desde') setDesde(valor);
+    else setHasta(valor);
   };
 
   const cambiarVisa = (valor: string, cual: 'desde' | 'hasta') => {
@@ -114,7 +232,7 @@ export function VendedoresClient() {
             aria-label="Fecha de venta desde"
             type="date"
             value={desde}
-            onChange={(e) => setDesde(e.target.value)}
+            onChange={(e) => cambiarFechaVenta(e.target.value, 'desde')}
             className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 py-1.5 text-sm"
           />
         </label>
@@ -125,7 +243,7 @@ export function VendedoresClient() {
             aria-label="Fecha de venta hasta"
             type="date"
             value={hasta}
-            onChange={(e) => setHasta(e.target.value)}
+            onChange={(e) => cambiarFechaVenta(e.target.value, 'hasta')}
             className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 py-1.5 text-sm"
           />
         </label>
@@ -140,7 +258,7 @@ export function VendedoresClient() {
           <button type="button" onClick={() => atajo(primerDiaMesCL(), hoyCL())} className="rounded-md border px-2 py-1.5 text-xs">
             Este mes
           </button>
-          <button type="button" onClick={() => atajo('', '')} className="rounded-md border px-2 py-1.5 text-xs">
+          <button type="button" onClick={limpiarFechasVenta} className="rounded-md border px-2 py-1.5 text-xs">
             Limpiar fechas de venta
           </button>
         </div>
@@ -201,11 +319,15 @@ export function VendedoresClient() {
       {hayVisacion && (
         <p className="text-xs text-zinc-500">Con rango de visación solo se muestran notas facturadas.</p>
       )}
+      {avisoGuardado && <p className="text-xs text-amber-600">No se pudieron guardar los filtros.</p>}
 
-      {cargando && <p className="py-8 text-center text-zinc-400">Cargando...</p>}
-      {!cargando && error && <p className="py-8 text-center text-red-600">Error al cargar las notas.</p>}
+      {errorFechas && <p className="py-8 text-center text-amber-600">{errorFechas}</p>}
+      {!errorFechas && cargando && <p className="py-8 text-center text-zinc-400">Cargando...</p>}
+      {!errorFechas && !cargando && error && (
+        <p className="py-8 text-center text-red-600">Error al cargar las notas.</p>
+      )}
 
-      {!cargando && !error && data && (
+      {!errorFechas && !cargando && !error && data && (
         <>
           {data.total > data.notas.length && (
             <p className="text-sm text-amber-600">

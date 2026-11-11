@@ -2,6 +2,7 @@
  * @jest-environment jsdom
  *
  * S2b — Fase B (T15/T17): comportamiento de VendedoresClient.
+ * S3 — Fase B: restauracion/guardado de filtros (R6), EXP-1 y EXP-3.
  */
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
@@ -38,25 +39,52 @@ function respuesta(notas: unknown[] = [], total = notas.length): Respuesta {
   return { notas, vendedores: ['PRAVIN'], total, limit: 300 };
 }
 
-function fetchOk(r: Respuesta) {
-  const fn = jest.fn(() => Promise.resolve({ ok: true, json: async () => r }));
+const esFiltros = (url: string) => url.startsWith('/api/vendedores/filtros');
+
+/** Mock de fetch que separa GET/PUT de filtros de la consulta de notas. */
+function fetchMock(opts: { guardados?: unknown; notas?: Respuesta; putOk?: boolean } = {}) {
+  const fn = jest.fn((url: string, init?: RequestInit) => {
+    if (esFiltros(String(url))) {
+      if (init?.method === 'PUT') {
+        const ok = opts.putOk !== false;
+        return Promise.resolve({ ok, status: ok ? 200 : 500, json: async () => ({ filtros: {} }) });
+      }
+      return Promise.resolve({ ok: true, status: 200, json: async () => ({ filtros: opts.guardados ?? null }) });
+    }
+    return Promise.resolve({ ok: true, status: 200, json: async () => opts.notas ?? respuesta() });
+  });
   global.fetch = fn as unknown as typeof fetch;
   return fn;
 }
 
-function ultima(fn: jest.Mock) {
-  return String(fn.mock.calls[fn.mock.calls.length - 1]?.[0]);
+const notasCalls = (fn: jest.Mock) => fn.mock.calls.filter((c) => !esFiltros(String(c[0])));
+const putCalls = (fn: jest.Mock) =>
+  fn.mock.calls.filter(
+    (c) => esFiltros(String(c[0])) && (c[1] as RequestInit | undefined)?.method === 'PUT'
+  );
+const ultimaNotas = (fn: jest.Mock) => String(notasCalls(fn)[notasCalls(fn).length - 1]?.[0] ?? '');
+
+/** Monta y espera la primera consulta de notas (ya restaurados los filtros). */
+async function montar(fn: jest.Mock) {
+  render(<VendedoresClient />);
+  await waitFor(() => expect(notasCalls(fn)).toHaveLength(1));
 }
+
+const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 afterEach(cleanup);
 
 describe('tabla', () => {
-  it('carga al montar sin filtros y muestra las 9 columnas', async () => {
-    const fn = fetchOk(respuesta([fila('002514')]));
+  it('carga al montar con el mes en curso y muestra las 9 columnas', async () => {
+    const fn = fetchMock({ notas: respuesta([fila('002514')]) });
     render(<VendedoresClient />);
 
     await screen.findByText('002514');
-    expect((fn.mock.calls[0] as unknown[])[0]).toBe('/api/vendedores/notas');
+    expect(esFiltros(String((fn.mock.calls[0] as unknown[])[0]))).toBe(true);
+    expect(ultimaNotas(fn)).toContain(`desde=${primerDiaMesCL()}`);
+    expect(ultimaNotas(fn)).toContain(`hasta=${hoyCL()}`);
+    expect((screen.getByLabelText('Fecha de venta desde') as HTMLInputElement).value).toBe(primerDiaMesCL());
+    expect((screen.getByLabelText('Fecha de venta hasta') as HTMLInputElement).value).toBe(hoyCL());
     for (const h of [
       'Empresa',
       'Fecha venta',
@@ -74,11 +102,11 @@ describe('tabla', () => {
   });
 
   it('pinta — en visacion y facturacion nulas', async () => {
-    fetchOk(
-      respuesta([
+    fetchMock({
+      notas: respuesta([
         fila('003817', { empresa: 'sanjh', empresa_nombre: 'SANJH', estado: 'pendiente', visacion: null, fecha_facturacion: null }),
-      ])
-    );
+      ]),
+    });
     render(<VendedoresClient />);
 
     const tr = (await screen.findByText('003817')).closest('tr');
@@ -86,13 +114,13 @@ describe('tabla', () => {
   });
 
   it('avisa cuando hay mas filas que el limite', async () => {
-    fetchOk(respuesta([fila('002514')], 400));
+    fetchMock({ notas: respuesta([fila('002514')], 400) });
     render(<VendedoresClient />);
     expect(await screen.findByText('Mostrando los primeros 1 de 400')).toBeInTheDocument();
   });
 
   it('sin datos -> mensaje de vacio', async () => {
-    fetchOk(respuesta([]));
+    fetchMock({ notas: respuesta([]) });
     render(<VendedoresClient />);
     expect(await screen.findByText('No hay notas para los filtros elegidos.')).toBeInTheDocument();
   });
@@ -105,24 +133,49 @@ describe('tabla', () => {
 });
 
 describe('fechas de venta', () => {
-  it('limpiar las fechas deja de mandar desde/hasta', async () => {
-    const fn = fetchOk(respuesta());
-    render(<VendedoresClient />);
-    await waitFor(() => expect(fn).toHaveBeenCalled());
+  it('limpiar sin visacion vuelve al mes en curso', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
 
-    const desde = screen.getByLabelText('Fecha de venta desde') as HTMLInputElement;
-    fireEvent.change(desde, { target: { value: '2026-11-01' } });
-    await waitFor(() => expect(ultima(fn)).toContain('desde=2026-11-01'));
+    fireEvent.click(screen.getByRole('button', { name: 'Hoy' }));
+    await waitFor(() => expect(ultimaNotas(fn)).toContain(`desde=${hoyCL()}`));
 
     fireEvent.click(screen.getByRole('button', { name: 'Limpiar fechas de venta' }));
-    await waitFor(() => expect(ultima(fn)).not.toContain('desde='));
-    expect(ultima(fn)).not.toContain('hasta=');
-    expect(desde.value).toBe('');
+    await waitFor(() => expect(ultimaNotas(fn)).toContain(`desde=${primerDiaMesCL()}`));
+    expect((screen.getByLabelText('Fecha de venta desde') as HTMLInputElement).value).toBe(primerDiaMesCL());
+    expect((screen.getByLabelText('Fecha de venta hasta') as HTMLInputElement).value).toBe(hoyCL());
+  });
+
+  it('vaciar ambos campos sin visacion vuelve al mes en curso', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+    const desde = screen.getByLabelText('Fecha de venta desde') as HTMLInputElement;
+    const hasta = screen.getByLabelText('Fecha de venta hasta') as HTMLInputElement;
+
+    fireEvent.change(desde, { target: { value: '' } });
+    fireEvent.change(hasta, { target: { value: '' } });
+
+    await waitFor(() => expect(desde.value).toBe(primerDiaMesCL()));
+    expect(hasta.value).toBe(hoyCL());
+  });
+
+  it('limpiar con rango de visacion deja las fechas de venta vacias', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+
+    fireEvent.change(screen.getByLabelText('Fecha de visación desde'), { target: { value: '2026-11-01' } });
+    await waitFor(() => expect(ultimaNotas(fn)).toContain('visaDesde=2026-11-01'));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar fechas de venta' }));
+    await waitFor(() => expect(ultimaNotas(fn)).not.toContain('desde='));
+    expect(ultimaNotas(fn)).not.toContain('hasta=');
+    expect((screen.getByLabelText('Fecha de venta desde') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('Fecha de venta hasta') as HTMLInputElement).value).toBe('');
   });
 
   it('los atajos Hoy / Esta semana / Este mes escriben las fechas de Chile', async () => {
-    fetchOk(respuesta());
-    render(<VendedoresClient />);
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
     const desde = screen.getByLabelText('Fecha de venta desde') as HTMLInputElement;
     const hasta = screen.getByLabelText('Fecha de venta hasta') as HTMLInputElement;
 
@@ -142,9 +195,8 @@ describe('fechas de venta', () => {
 
 describe('visacion', () => {
   it('una fecha de visacion fuerza Facturadas, deshabilita Pendientes y se envia a la API', async () => {
-    const fn = fetchOk(respuesta());
-    render(<VendedoresClient />);
-    await waitFor(() => expect(fn).toHaveBeenCalled());
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
 
     const visa = screen.getByLabelText('Fecha de visación desde');
     fireEvent.change(visa, { target: { value: '2026-11-01' } });
@@ -153,8 +205,8 @@ describe('visacion', () => {
     await waitFor(() => expect(estado.value).toBe('facturadas'));
     expect((screen.getByRole('option', { name: 'Pendientes' }) as HTMLOptionElement).disabled).toBe(true);
 
-    await waitFor(() => expect(ultima(fn)).toContain('visaDesde=2026-11-01'));
-    expect(ultima(fn)).toContain('estado=facturadas');
+    await waitFor(() => expect(ultimaNotas(fn)).toContain('visaDesde=2026-11-01'));
+    expect(ultimaNotas(fn)).toContain('estado=facturadas');
 
     fireEvent.change(visa, { target: { value: '' } });
     await waitFor(() =>
@@ -163,24 +215,137 @@ describe('visacion', () => {
   });
 });
 
+describe('filtros guardados (R6)', () => {
+  it('restaura los filtros antes de pedir notas: una sola consulta', async () => {
+    const guardados = {
+      vendedor: 'ANGELA',
+      desde: '2026-10-01',
+      hasta: '2026-10-31',
+      visaDesde: '',
+      visaHasta: '',
+      estado: 'facturadas',
+      empresa: 'sanjh',
+    };
+    const fn = fetchMock({ guardados, notas: { ...respuesta(), vendedores: ['ANGELA'] } });
+    render(<VendedoresClient />);
+
+    await waitFor(() =>
+      expect((screen.getByLabelText('Vendedor') as HTMLSelectElement).value).toBe('ANGELA')
+    );
+    expect(notasCalls(fn)).toHaveLength(1);
+    const url = ultimaNotas(fn);
+    expect(url).toContain('vendedor=ANGELA');
+    expect(url).toContain('desde=2026-10-01');
+    expect(url).toContain('hasta=2026-10-31');
+    expect(url).toContain('estado=facturadas');
+    expect(url).toContain('empresa=sanjh');
+
+    await esperar(700);
+    expect(notasCalls(fn)).toHaveLength(1);
+    expect(putCalls(fn)).toHaveLength(0);
+  });
+
+  it('guarda con debounce: varios cambios rapidos = un solo PUT con el estado final', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+    await screen.findByRole('option', { name: 'PRAVIN' });
+
+    fireEvent.change(screen.getByLabelText('Vendedor'), { target: { value: 'PRAVIN' } });
+    fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'pendientes' } });
+    fireEvent.change(screen.getByLabelText('Empresa'), { target: { value: 'sanjh' } });
+
+    await waitFor(() => expect(putCalls(fn)).toHaveLength(1), { timeout: 2000 });
+    const body = JSON.parse(String((putCalls(fn)[0][1] as RequestInit).body));
+    expect(body).toMatchObject({ vendedor: 'PRAVIN', estado: 'pendientes', empresa: 'sanjh' });
+
+    await esperar(700);
+    expect(putCalls(fn)).toHaveLength(1);
+  });
+
+  it('un fallo al guardar no rompe la pantalla y muestra un aviso discreto', async () => {
+    const fn = fetchMock({ putOk: false, notas: respuesta([fila('002514')]) });
+    await montar(fn);
+
+    fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'facturadas' } });
+
+    expect(await screen.findByText('No se pudieron guardar los filtros.')).toBeInTheDocument();
+    expect(screen.getByText('002514')).toBeInTheDocument();
+  });
+});
+
+describe('validacion de fechas en el cliente (EXP-1, EXP-3)', () => {
+  it('rango de venta invertido: mensaje claro y no consulta', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+
+    fireEvent.change(screen.getByLabelText('Fecha de venta desde'), { target: { value: '2026-11-10' } });
+    await waitFor(() => expect(ultimaNotas(fn)).toContain('desde=2026-11-10'));
+    const llamadas = notasCalls(fn).length;
+
+    fireEvent.change(screen.getByLabelText('Fecha de venta hasta'), { target: { value: '2026-11-01' } });
+
+    expect(await screen.findByText('La fecha desde es posterior a la fecha hasta')).toBeInTheDocument();
+    await esperar(300);
+    expect(notasCalls(fn)).toHaveLength(llamadas);
+  });
+
+  it('rango de visacion invertido: mensaje claro y no consulta ni guarda', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+
+    fireEvent.change(screen.getByLabelText('Fecha de visación desde'), { target: { value: '2026-11-10' } });
+    await waitFor(() => expect(ultimaNotas(fn)).toContain('visaDesde=2026-11-10'));
+    const llamadas = notasCalls(fn).length;
+
+    fireEvent.change(screen.getByLabelText('Fecha de visación hasta'), { target: { value: '2026-11-01' } });
+
+    expect(
+      await screen.findByText('La fecha de visación desde es posterior a la fecha de visación hasta')
+    ).toBeInTheDocument();
+    await esperar(700);
+    expect(notasCalls(fn)).toHaveLength(llamadas);
+    expect(putCalls(fn)).toHaveLength(0);
+  });
+
+  it('fecha parcial o fuera de rango (0002-11-11): no consulta ni guarda', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+    const llamadas = notasCalls(fn).length;
+
+    fireEvent.change(screen.getByLabelText('Fecha de venta hasta'), { target: { value: '0002-11-11' } });
+
+    expect(await screen.findByText('Hay una fecha incompleta o inválida.')).toBeInTheDocument();
+    await esperar(700);
+    expect(notasCalls(fn)).toHaveLength(llamadas);
+    expect(putCalls(fn)).toHaveLength(0);
+  });
+});
+
 describe('carrera de respuestas', () => {
   it('ignora la respuesta que llega fuera de orden', async () => {
-    const pendientes: Array<(v: unknown) => void> = [];
+    const pendientes: Array<{ url: string; resolver: (v: unknown) => void }> = [];
     global.fetch = jest.fn(
-      () => new Promise((resolve) => pendientes.push(resolve))
+      (url: string) =>
+        new Promise((resolver) => pendientes.push({ url: String(url), resolver }))
     ) as unknown as typeof fetch;
 
     render(<VendedoresClient />);
     await waitFor(() => expect(pendientes).toHaveLength(1));
+    expect(esFiltros(pendientes[0].url)).toBe(true);
+    await act(async () => {
+      pendientes[0].resolver({ ok: true, json: async () => ({ filtros: null }) });
+    });
 
-    fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'facturadas' } });
     await waitFor(() => expect(pendientes).toHaveLength(2));
 
+    fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'facturadas' } });
+    await waitFor(() => expect(pendientes).toHaveLength(3));
+
     await act(async () => {
-      pendientes[1]({ ok: true, json: async () => respuesta([fila('SEGUNDA')]) });
+      pendientes[2].resolver({ ok: true, json: async () => respuesta([fila('SEGUNDA')]) });
     });
     await act(async () => {
-      pendientes[0]({ ok: true, json: async () => respuesta([fila('PRIMERA')]) });
+      pendientes[1].resolver({ ok: true, json: async () => respuesta([fila('PRIMERA')]) });
     });
 
     expect(screen.getByText('SEGUNDA')).toBeInTheDocument();
@@ -190,9 +355,7 @@ describe('carrera de respuestas', () => {
 
 describe('hidratacion', () => {
   it('el primer render no calcula fechas y no rompe la hidratacion', async () => {
-    global.fetch = jest.fn(() =>
-      Promise.resolve({ ok: true, json: async () => respuesta() })
-    ) as unknown as typeof fetch;
+    fetchMock();
 
     const html = renderToString(<VendedoresClient />);
     expect(html).toContain('VENDEDORES');
