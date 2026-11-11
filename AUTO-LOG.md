@@ -34,3 +34,12 @@
 - D4: reproducido (#329 en 9 pantallas, build de produccion de 0d997ec) y resuelto por D3 (0 en el build actual): cerrado como misma causa
 - Desvios del Programador: en D3b omitio daysInRange aunque estaba en la evidencia citada (corregido con -Resume)
 - QA metricas: FP 0, ESC 0, ACIERTOS 0, costo QA 1.17 USD (2 intentos); mejoras de QA aplicadas: semilla d9f1a58 (MQ-S2) y MQ-S3 (conocidos en el encargo)
+## 2026-11-11 - Slice: debugging D5 (alertas por rol, BAJA)
+- Programador: deep (deepseek-flash, effort low), bug-d5-1, 128 s, 0.68 USD
+- Contrato: hipotesis del Director (AlertasProvider sin control de rol) -> condicionar cada fetch al rol de la sesion
+- Tests: alertas-context-rol.test.tsx VERDE (ROJO previo); lib/roles.test.ts sigue verde
+- Commit: "fix: D5 alertas por rol" (ver git log)
+- Gates disparados: ninguno
+- QA (Fase E): bug-d5 PASA 3/3, 0 pendientes nuevos; Director verifico la red con bodeguero
+- Desvios del Programador: ninguno
+- QA metricas: FP 0, ESC 0, ACIERTOS 0, costo QA 0.49 USD; mejoras de QA aplicadas: semilla 96a0c8e (MQ-S3: el agente uso 1 de 10 acciones y no re-reporto conocidos)

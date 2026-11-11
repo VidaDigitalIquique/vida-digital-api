@@ -103,9 +103,9 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 ## 2026-11-11 11:10 - humo-4roles-bodeguero - commit 0d997ec - PRODUCCION FALLA
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\humo-4roles-bodeguero
 - [x] P-20261111-1110-1 (critica) FALLA: /catalogo/admin (oculta): termino en /catalogo/admin (status 200) -> ARREGLADO commit "fix: D1 bodeguero entra a /catalogo/admin" (page + APIs de catalogos validan rol; Fase E bug-d1b PASA 5/5)
-- [ ] P-20261111-1110-2 (baja) CONSOLA: Failed to load resource: the server responded with a status of 401 () (/api/deseados/alertas)
-- [ ] P-20261111-1110-3 (baja) CONSOLA: Failed to load resource: the server responded with a status of 401 () (/api/alertas-stock)
-- [ ] P-20261111-1110-4 (baja) CONSOLA: Failed to load resource: the server responded with a status of 403 () (/api/seguimientos/alertas)
+- [x] P-20261111-1110-2 (baja) CONSOLA: Failed to load resource: the server responded with a status of 401 () (/api/deseados/alertas) -> ARREGLADO commit "fix: D5 alertas por rol" (AlertasProvider no llama APIs que el rol no puede usar; Fase E bug-d5 PASA 3/3)
+- [x] P-20261111-1110-3 (baja) CONSOLA: Failed to load resource: the server responded with a status of 401 () (/api/alertas-stock) -> ARREGLADO commit "fix: D5 alertas por rol" (AlertasProvider no llama APIs que el rol no puede usar; Fase E bug-d5 PASA 3/3)
+- [x] P-20261111-1110-4 (baja) CONSOLA: Failed to load resource: the server responded with a status of 403 () (/api/seguimientos/alertas) -> ARREGLADO commit "fix: D5 alertas por rol" (AlertasProvider no llama APIs que el rol no puede usar; Fase E bug-d5 PASA 3/3)
 
 ## 2026-11-11 11:53 - bug-d1 - commit 0d997ec - BLOQUEADO
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\bug-d1
@@ -116,9 +116,9 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - [x] P-20261111-1156-1 (media) HALLAZGO: EXP-1 — Sin sesión, las pantallas de catálogo piden login -> DESCARTADO comportamiento esperado (el propio agente lo marco informativo)
 - [x] P-20261111-1156-2 (baja) HALLAZGO: EXP-2 — Error 500 en /favicon.ico -> BACKLOG D7 (solo dev: app/favicon.ico y public/favicon.ico en conflicto; prod responde 200)
 - [x] P-20261111-1156-3 (media) CONSOLA: Warning: Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()? -> BACKLOG D8 (warning de dev, componente sin identificar; preexistente)
-- [ ] P-20261111-1156-4 (baja) CONSOLA: Failed to load resource: the server responded with a status of 401 (Unauthorized) (/api/alertas-stock)
-- [ ] P-20261111-1156-5 (baja) CONSOLA: Failed to load resource: the server responded with a status of 403 (Forbidden) (/api/seguimientos/alertas)
-- [ ] P-20261111-1156-6 (baja) CONSOLA: Failed to load resource: the server responded with a status of 401 (Unauthorized) (/api/deseados/alertas)
+- [x] P-20261111-1156-4 (baja) CONSOLA: Failed to load resource: the server responded with a status of 401 (Unauthorized) (/api/alertas-stock) -> ARREGLADO commit "fix: D5 alertas por rol" (AlertasProvider no llama APIs que el rol no puede usar; Fase E bug-d5 PASA 3/3)
+- [x] P-20261111-1156-5 (baja) CONSOLA: Failed to load resource: the server responded with a status of 403 (Forbidden) (/api/seguimientos/alertas) -> ARREGLADO commit "fix: D5 alertas por rol" (AlertasProvider no llama APIs que el rol no puede usar; Fase E bug-d5 PASA 3/3)
+- [x] P-20261111-1156-6 (baja) CONSOLA: Failed to load resource: the server responded with a status of 401 (Unauthorized) (/api/deseados/alertas) -> ARREGLADO commit "fix: D5 alertas por rol" (AlertasProvider no llama APIs que el rol no puede usar; Fase E bug-d5 PASA 3/3)
 
 ## 2026-11-11 12:11 - bug-d2 - commit 56d361b - PASA
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\bug-d2
@@ -133,3 +133,7 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\bug-d3
 - [x] P-20261111-1254-1 (baja) HALLAZGO: EXP-4 — Errores 401/403 en consola con la cuenta bodeguero -> BACKLOG D5
 - [x] P-20261111-1254-2 (media) CONSOLA: Warning: Function components cannot be given refs. Attempts to access this ref will fail. Did you mean to use React.forwardRef()? -> BACKLOG D8
+
+## 2026-11-11 15:25 - bug-d5 - commit 5b84c84 - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\bug-d5
+- Sin pendientes nuevos.

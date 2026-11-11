@@ -9,7 +9,7 @@ Orden sugerido: D1 -> D2 -> D3 -> D4 -> D5.
 
 ---
 
-## D1 (CRITICA) — El bodeguero puede entrar a /catalogo/admin
+## D1 (CRITICA) — El bodeguero puede entrar a /catalogo/admin  [RESUELTO 2026-11-11, ver BUGS.md]
 - Pendiente: P-20261111-1110-1. El hook pre-commit bloquea commits mientras siga abierto.
 - Evidencia: QA-BOD12.png — el bodeguero (menu solo BODEGA y DEUDAS) ve "Catalogos Personalizados" con el boton "Nuevo Catalogo".
 - Causa VERIFICADA en el codigo:
@@ -19,7 +19,7 @@ Orden sugerido: D1 -> D2 -> D3 -> D4 -> D5.
 - Roles permitidos segun RUTAS_POR_ROL: admin y vendedor (`/catalogo`).
 - Criterio de cierre: humo bodeguero QA-BOD12 PASA, admin y vendedor siguen entrando, catalogos publicos siguen abriendo sin login.
 
-## D2 (MEDIA) — /manifest.json devuelve una redireccion en vez del manifest
+## D2 (MEDIA) — /manifest.json devuelve una redireccion en vez del manifest  [RESUELTO 2026-11-11, ver BUGS.md]
 - Evidencia: consola "Manifest: Line: 1, column: 1, Syntax error. (/manifest.json)".
 - Causa VERIFICADA: `GET https://vidadigital-inventario-v2.vercel.app/manifest.json` sin sesion -> 307 a `/api/auth/signin?callbackUrl=%2Fmanifest.json`. El matcher del middleware no excluye `manifest.json` (ni otros archivos de `public/`); con sesion, la ruta no esta en RUTAS_POR_ROL y redirige a la primera ruta del rol. `public/manifest.json` existe y `app/layout.tsx` lo declara.
 - Revisar tambien los iconos y cualquier archivo de `public/` que la app pida (efecto probable: la app no es instalable como PWA).
@@ -34,7 +34,7 @@ Orden sugerido: D1 -> D2 -> D3 -> D4 -> D5.
 ## D4 (MEDIA) — Error de React #329 en /admin/categorias, /bodega, /deudas  [RESUELTO 2026-11-11 por D3: misma falla de hidratacion, ver BUGS.md]
 - Sin causa identificada todavia. Reproducir en dev (mensaje completo, no minificado) antes de cualquier hipotesis.
 
-## D5 (BAJA) — Con rol bodeguero la app llama a APIs de alertas que no le corresponden
+## D5 (BAJA) — Con rol bodeguero la app llama a APIs de alertas que no le corresponden  [RESUELTO 2026-11-11, ver BUGS.md]
 - Pendientes: P-20261111-1110-2..4. Consola: 401 en /api/deseados/alertas y /api/alertas-stock; 403 en /api/seguimientos/alertas.
 - Probable: un componente compartido (TopNav u otro) pide las alertas sin mirar el rol. Verificar en el codigo.
 - Criterio de cierre: con bodeguero no se hacen esas llamadas (o no generan error).

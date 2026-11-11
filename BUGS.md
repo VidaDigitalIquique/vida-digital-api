@@ -84,3 +84,13 @@
 - Verificacion: tests de hidratacion (renderToString + hydrateRoot con horas distintas), de fechas en 3 zonas horarias y de dias; barrido Playwright del Director con el servidor en Asia/Tokyo (dev y build de produccion): 26/26 admin, 15/15 vendedor, 4/4 bodeguero sin errores; Fase E bug-d3 PASA 5/5.
 - Zona fragil: NO formatear fechas/horas ni usar `new Date()` / `Date.now()` durante el render de un client component; usar `lib/fechas.ts` (hora de Chile fija) o calcular en `useEffect`. Prueba rapida: levantar el entorno de pruebas con `TZ=Asia/Tokyo` y correr `_dt-vida-digital\hidratacion-barrido.cjs`.
 - Commits: "fix: D3 saludo de TopNav ..." y "fix: D3b fechas en hora de Chile ..." (ver git log)
+---
+
+## [2026-11-11] — D5: con rol bodeguero la app llamaba a APIs de alertas que no le corresponden (401/403 en consola)
+
+- Tipo: A (consola) / permisos en cliente
+- Causa raiz: `contexts/AlertasContext.tsx` (`AlertasProvider`, montado en `AppShell` para todos los roles) llamaba en `useEffect` a `/api/deseados/alertas`, `/api/alertas-stock` (admin/supervisor/vendedor) y `/api/seguimientos/alertas` (admin/vendedor) sin mirar el rol.
+- Fix aplicado: el provider lee la sesion con `useSession` y solo llama a cada API si la sesion esta autenticada y el rol esta en la misma lista que valida esa API; con sesion cargando o sin rol no llama.
+- Verificacion: __tests__/alertas-context-rol.test.tsx (bodeguero 0 llamadas, admin/vendedor 3, loading->admin); Fase E bug-d5 PASA 3/3; Director: red del navegador con bodeguero sin llamadas a alertas.
+- Zona fragil: si cambian los roles de una API de alertas, actualizar ROLES_ALERTAS / ROLES_SEGUIMIENTOS en AlertasContext.tsx. `AlertasProvider` debe seguir dentro de `SessionProvider` (useSession).
+- Commit: el de "fix: D5 alertas por rol" (ver git log)
