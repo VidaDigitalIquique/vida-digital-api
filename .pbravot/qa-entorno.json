@@ -233,7 +233,8 @@
       "usuario_empresa",
       "empresas",
       "catalogos",
-      "vendedores_filtros"
+      "vendedores_filtros",
+      "vendedores_config"
     ]
   }
 }

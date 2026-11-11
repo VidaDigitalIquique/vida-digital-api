@@ -46,5 +46,9 @@ for (const [rut, rol, nombre] of [["99.999.991-1", "admin", "QA Admin"], ["99.99
 // Estado conocido en cada corrida: las cuentas QA arrancan sin filtros guardados.
 await sql`DELETE FROM public.vendedores_filtros
           WHERE usuario_id IN (SELECT id FROM usuarios WHERE rut LIKE '99.999.99%')`;
+// S5: el % de comision de pruebas arranca siempre en el valor por defecto (0,50).
+await sql`UPDATE public.vendedores_config
+          SET comision_pct = 0.50, updated_at = now(), updated_by = NULL
+          WHERE id = 1`;
 fs.writeFileSync(path.join(qaDir, "cuentas.json"), JSON.stringify(cuentas, null, 2));
 console.log("cuentas qa listas en base de pruebas:", host(actual));
