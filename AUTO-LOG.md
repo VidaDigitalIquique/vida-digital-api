@@ -78,3 +78,15 @@
 - QA (Fase E): s2 PASA 6/6, 1.22 USD. Hallazgos: EXP-1 rango invertido con error generico y EXP-3 consultas con fechas a medio teclear (400) -> se corrigen en S3 (mismo archivo); EXP-4 no es defecto
 - Desvios del Programador: ninguno (reporto el exceso de lineas sin recortar)
 - QA metricas: FP 0, ESC 0, ACIERTOS 2 (EXP-1, EXP-3), costo QA 1.22 USD; mejoras de QA: ninguna nueva
+
+## 2026-11-11 - Slice: S3 filtros persistentes por usuario (R6) + EXP-1/EXP-3 de S2
+- Programador: deep (deepseek-flash, effort low): s3-A 1.3 USD aprox; s3-BCD 378 s 4.49 USD
+- Contrato: migracion 010 public.vendedores_filtros (PK usuario_id, UPSERT), GET/PUT /api/vendedores/filtros (usuario_id solo de la sesion, claves desconocidas 400, validacion reutiliza parsearFiltros), restauracion con una sola consulta inicial, debounce 500 ms, fechas de venta vacias sin visacion vuelven al mes (decision del Director), rango invertido con mensaje claro y sin consultar con fechas parciales
+- Lineas: 314 netas -> commiteado en S3a (migracion+lib+API, ~182) y S3b (cliente, ~129)
+- Tests: 131/131 VERDE en los archivos del slice (ROJO previo); jest completo: solo fallas preexistentes; build OK
+- Verificacion propia: migracion 010 aplicada en la base de pruebas (Director); filas de vendedores_filtros separadas por usuario tras la Fase E (99.999.991-1 y 99.999.994-4 con filtros distintos)
+- Commits: 4a8e5e5 (S3a), 44e372d (S3b)
+- Gates disparados: ninguno. Pendiente para el deploy: aplicar migrations/010 en produccion (Senal 3)
+- QA (Fase E): s3 PASA 6/6, 1.04 USD. EXP-1 (recargar antes de 500 ms pierde el ultimo cambio) -> se corrige en S4b con fetch keepalive; EXP-3 descartado (consistente)
+- Desvios del Programador: el validador del servidor tambien exige anio 2000-2100 (declarado, aceptado)
+- QA metricas: FP 0, ESC 0, ACIERTOS 1 (EXP-1), costo QA 1.04 USD
