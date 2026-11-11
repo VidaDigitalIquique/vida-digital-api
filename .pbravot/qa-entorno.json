@@ -1,0 +1,208 @@
+{
+  "url": "http://localhost:3124",
+  "comando": "npm run dev -- -p 3124",
+  "envArchivos": [
+    ".env"
+  ],
+  "envDesde": {
+    "DATABASE_URL": "TEST_DATABASE_URL"
+  },
+  "env": {
+    "NEXTAUTH_URL": "http://localhost:3124"
+  },
+  "guardas": [
+    {
+      "var": "DATABASE_URL",
+      "distintoDe": "DATABASE_URL"
+    }
+  ],
+  "produccion": [
+    "vidadigital-inventario-v2.vercel.app"
+  ],
+  "preview": [],
+  "preparar": "node .pbravot/qa-preparar.mjs",
+  "restaurar": [
+    "next-env.d.ts"
+  ],
+  "timeoutSeg": 180,
+  "humoProd": {
+    "url": "https://vidadigital-inventario-v2.vercel.app",
+    "login": "/login",
+    "roles": {
+      "admin": {},
+      "vendedor": {},
+      "bodeguero": {}
+    },
+    "publicas": [
+      {
+        "ruta": "/login",
+        "debeVerse": [
+          "App Vida Digital",
+          "RUT"
+        ]
+      }
+    ],
+    "privadas": [
+      {
+        "ruta": "/admin/caja-config",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "ruta": "/admin/categorias",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "ruta": "/admin/deudas",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "ruta": "/admin/importar",
+        "roles": [
+          "admin",
+          "vendedor"
+        ]
+      },
+      {
+        "ruta": "/admin/kardex-exclusiones",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "ruta": "/admin/subir-imagenes",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "ruta": "/admin/usuarios",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "ruta": "/bodega"
+      },
+      {
+        "ruta": "/bodega/despachos"
+      },
+      {
+        "ruta": "/bodega/registro-notas"
+      },
+      {
+        "ruta": "/caja-mayor",
+        "roles": [
+          "admin",
+          "vendedor"
+        ]
+      },
+      {
+        "ruta": "/catalogo/admin",
+        "roles": [
+          "admin",
+          "vendedor"
+        ]
+      },
+      {
+        "ruta": "/catalogo/clientes",
+        "roles": [
+          "admin",
+          "vendedor"
+        ]
+      },
+      {
+        "ruta": "/clientes-nuevos",
+        "roles": [
+          "admin",
+          "vendedor"
+        ]
+      },
+      {
+        "ruta": "/dashboard",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "ruta": "/deseados",
+        "roles": [
+          "admin",
+          "vendedor"
+        ]
+      },
+      {
+        "ruta": "/despachos",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "ruta": "/deudas"
+      },
+      {
+        "ruta": "/garantias",
+        "roles": [
+          "admin",
+          "vendedor"
+        ]
+      },
+      {
+        "ruta": "/inventario",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "ruta": "/pettycash",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "ruta": "/precios",
+        "roles": [
+          "admin",
+          "vendedor"
+        ]
+      },
+      {
+        "ruta": "/prenotas",
+        "roles": [
+          "admin",
+          "vendedor"
+        ]
+      },
+      {
+        "ruta": "/seguimientos",
+        "roles": [
+          "admin",
+          "vendedor"
+        ]
+      },
+      {
+        "ruta": "/sueldos",
+        "roles": [
+          "admin"
+        ]
+      },
+      {
+        "ruta": "/ventas/kardex",
+        "roles": [
+          "admin",
+          "vendedor"
+        ]
+      }
+    ],
+    "excluir": "^(/|/catalog\\-image)$",
+    "sesionUrl": "/api/auth/session",
+    "rolCampo": "user.rol",
+    "enlacesExtra": 8,
+    "esperaSeg": 240
+  }
+}
