@@ -67,3 +67,7 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 - middleware.ts: MATCHER_PATTERN existe solo para un test de identidad (se puede simplificar). Regla a escribir en CLAUDE.md: toda pagina privada con segmento dinamico valida rol en la page (el matcher excluye rutas con extension).
 - Fechas con new Date()/toLocale* en garantias, seguimientos, admin/deudas, prenotas, caja-mayor, sueldos: el audit dice que causan hidratacion, pero el barrido del Director (servidor TZ=Asia/Tokyo, dev y build de produccion, 45 pantallas x roles) no mostro errores: se renderizan con datos cargados en el cliente. Riesgo latente: si pasan a renderizarse en el servidor, usar lib/fechas.ts.
 - 9 errores de tsc preexistentes en tests ocultos por typescript.ignoreBuildErrors.
+## D11 (MEDIA, datos) - Imagenes de productos que no existen en Cloudinary (404)
+- Detectado 2026-11-11 en el humo de produccion con IA (prod-2ac571c-1552-admin-ia): 156 URLs distintas `res.cloudinary.com/dxkidwxjl/image/upload/productos/<codigo>.jpg` responden 404 (pendientes P-20261111-1600-*, cerrados como BACKLOG D11).
+- Preexistente: la UI pide la imagen por codigo de producto aunque no se haya subido. No lo introdujo el release D1-D5.
+- Por revisar: que pantalla las pide (listados de productos), si conviene mostrar un placeholder sin pedir la URL (o usar un fallback de Cloudinary) y/o subir las imagenes faltantes (/admin/subir-imagenes). Decision de producto: como mostrar productos sin imagen.

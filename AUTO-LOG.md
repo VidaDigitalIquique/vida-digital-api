@@ -55,4 +55,4 @@
 - UAT de Pablo: aprobado (15:51). Push 8e74470..2ac571c a main (Vercel).
 - Humo qa-prod.ps1 -EsperarDeploy -ConIA: PASA en 7 pasadas (anon 27 casos; admin, vendedor, bodeguero 26 cada uno, sin IA y con IA), 0 errores de consola sin contar favicon. Costo 2.84 USD.
 - Confirmado en produccion: D1 (QA-BOD12 /catalogo/admin -> /bodega), D2 (/manifest.json 200), D3/D4 (0 errores React #418/#423/#425/#329 en las 3 cuentas), D5 (bodeguero sin 401/403).
-- Pendientes: D6 (test que escribia en prod: mitigado por la semilla), D7, D8, D10 (deuda), D9 EN PAUSA (repo publico + .env).
+- Pendientes: D6 (test que escribia en prod: mitigado por la semilla), D7, D8, D10 (deuda), D9 EN PAUSA (repo publico + .env).- Humo con IA registro 156 pendientes "404 de imagen de producto en Cloudinary" (uno por imagen): agrupados como D11 (BACKLOG); mejora de QA anotada (agrupar 404 de un mismo host/carpeta).
