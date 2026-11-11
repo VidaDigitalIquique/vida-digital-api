@@ -4,8 +4,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { formatMonto, saldoColor, buildWhatsAppText, formatFecha } from './pettycash-utils';
+import { formatMonto, saldoColor, buildWhatsAppText, formatFecha, daysInRange } from './pettycash-utils';
 import { useNumericInput } from '@/hooks/useNumericInput';
+import { hoyCL as today, primerDiaMesCL as firstDayOfMonth, ultimoDiaMesCL as lastDayOfMonth, horaCL } from '@/lib/fechas';
 
 type Movimiento = {
   id: number;
@@ -16,29 +17,6 @@ type Movimiento = {
   monto: number;
   creado_por: string;
 };
-
-const today = () => new Date().toISOString().slice(0, 10);
-
-function firstDayOfMonth(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
-}
-
-function lastDayOfMonth(): string {
-  const d = new Date();
-  return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10);
-}
-
-function daysInRange(desde: string, hasta: string): string[] {
-  const days: string[] = [];
-  const d = new Date(desde + 'T00:00:00');
-  const end = new Date(hasta + 'T00:00:00');
-  while (d <= end) {
-    days.push(d.toISOString().slice(0, 10));
-    d.setDate(d.getDate() + 1);
-  }
-  return days.reverse();
-}
 
 export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
@@ -195,7 +173,7 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
             {movimientos.map(m => (
               <tr key={m.id} className="border-b border-zinc-100">
                 <td className="py-1 pr-3">{formatFecha(m.fecha)}</td>
-                <td className="py-1 pr-3">{m.created_at ? new Date(m.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                <td className="py-1 pr-3">{m.created_at ? horaCL(m.created_at) : '—'}</td>
                 <td className="py-1 pr-3">{m.tipo === 'egreso' ? 'Gasto' : 'Ingreso'}</td>
                 <td className="py-1 pr-3">{m.concepto}</td>
                 <td className={`py-1 text-right ${m.tipo === 'ingreso' ? 'text-emerald-700' : 'text-red-700'}`}>
@@ -321,7 +299,7 @@ export function PettycashClient({ isAdmin = false }: { isAdmin?: boolean }) {
                     ) : (
                       dayMovs.map(m => (
                         <tr key={m.id} className={`transition-colors ${m.tipo === 'ingreso' ? 'bg-emerald-50/60 hover:bg-emerald-100/60 dark:bg-emerald-900/10 dark:hover:bg-emerald-900/20' : 'bg-red-50/60 hover:bg-red-100/60 dark:bg-red-900/10 dark:hover:bg-red-900/20'}`}>
-                          <td className="px-4 py-2 text-zinc-500">{m.created_at ? new Date(m.created_at).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '—'}</td>
+                          <td className="px-4 py-2 text-zinc-500">{m.created_at ? horaCL(m.created_at) : '—'}</td>
                           <td className="px-4 py-2">
                             <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
                               m.tipo === 'ingreso'

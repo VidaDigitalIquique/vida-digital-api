@@ -204,5 +204,14 @@
     "rolCampo": "user.rol",
     "enlacesExtra": 8,
     "esperaSeg": 240
+  },
+  "esquemaMinimo": {
+    "var": "DATABASE_URL",
+    "tablas": [
+      "usuarios",
+      "usuario_empresa",
+      "empresas",
+      "catalogos"
+    ]
   }
 }

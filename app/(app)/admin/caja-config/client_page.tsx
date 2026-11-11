@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { fechaHoraLargaCL, hoyCL } from "@/lib/fechas";
 import {
   Dialog,
   DialogContent,
@@ -128,7 +129,7 @@ export function CajaConfigClient({
   const [saldoModalOpen, setSaldoModalOpen] = useState(false);
   const [editingSaldo, setEditingSaldo] = useState<SaldoInicial | null>(null);
   const [saldoFormCuentaId, setSaldoFormCuentaId] = useState("");
-  const [saldoFormFecha, setSaldoFormFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [saldoFormFecha, setSaldoFormFecha] = useState(hoyCL());
   const [saldoFormSaldo, setSaldoFormSaldo] = useState("");
   const [saldoFormObs, setSaldoFormObs] = useState("");
   const [saldoFormSaving, setSaldoFormSaving] = useState(false);
@@ -136,7 +137,7 @@ export function CajaConfigClient({
   const openSaldoCreate = () => {
     setEditingSaldo(null);
     setSaldoFormCuentaId("");
-    setSaldoFormFecha(new Date().toISOString().slice(0, 10));
+    setSaldoFormFecha(hoyCL());
     setSaldoFormSaldo("");
     setSaldoFormObs("");
     setSaldoModalOpen(true);
@@ -366,7 +367,7 @@ export function CajaConfigClient({
         {dolarInfo.updated_at && (
           <p className="text-xs text-zinc-400">
             Última actualización:{" "}
-            {new Date(dolarInfo.updated_at).toLocaleString("es-CL")} por{" "}
+            {fechaHoraLargaCL(dolarInfo.updated_at)} por{" "}
             {dolarInfo.updated_por}
           </p>
         )}

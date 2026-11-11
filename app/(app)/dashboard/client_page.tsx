@@ -5,8 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Package, CheckCircle2, AlertTriangle, Clock, Truck, PlusCircle } from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { fechaHoraCL } from '@/lib/fechas';
 
 type ColumnaDespachos = {
   fecha: string;
@@ -194,7 +193,7 @@ export function DashboardClient({ stats, stockCompare, columnas }: {
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm font-bold">
-                    {s.lastImport ? format(new Date(s.lastImport), "dd MMM yyyy, HH:mm", { locale: es }) : 'Nunca'}
+                    {s.lastImport ? fechaHoraCL(new Date(s.lastImport)) : 'Nunca'}
                   </div>
                 </CardContent>
               </Card>

@@ -5,11 +5,6 @@ import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { DashboardClient } from '@/app/(app)/dashboard/client_page';
 
-jest.mock('date-fns', () => ({
-  format: (date: Date) => (date instanceof Date ? date.toISOString() : String(date)),
-}));
-jest.mock('date-fns/locale', () => ({ es: {} }));
-
 const stats = {};
 const stockCompare: any[] = [];
 

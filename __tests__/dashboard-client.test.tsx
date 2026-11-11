@@ -13,14 +13,6 @@ jest.mock('next-auth/react', () => ({
   useSession: () => ({ data: null }),
 }));
 
-jest.mock('date-fns', () => ({
-  format: (date: Date) => (date instanceof Date ? date.toISOString() : String(date)),
-}));
-
-jest.mock('date-fns/locale', () => ({
-  es: {},
-}));
-
 const stats = {
   1: {
     totalProds: 100,
@@ -72,8 +64,9 @@ describe('DashboardClient (Slice 5)', () => {
 
   test('Muestra fecha de última importación por cada empresa', () => {
     render(<DashboardClient stats={stats} stockCompare={stockCompare} columnas={[]} />);
-    expect(screen.getByText('2024-01-01T10:00:00.000Z')).toBeInTheDocument();
-    expect(screen.getByText('2024-01-02T12:00:00.000Z')).toBeInTheDocument();
+    // fechaHoraCL: dd MMM yyyy, HH:mm en America/Santiago (UTC-3 en enero).
+    expect(screen.getByText('01 ene 2024, 07:00')).toBeInTheDocument();
+    expect(screen.getByText('02 ene 2024, 09:00')).toBeInTheDocument();
   });
 
   test('No retorna null cuando no hay localStorage', () => {

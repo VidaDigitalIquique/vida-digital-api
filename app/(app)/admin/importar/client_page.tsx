@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { fechaHoraCL } from '@/lib/fechas';
 import * as XLSX from 'xlsx';
 import { Button } from '@/components/ui/button';
 import { UploadCloud, CheckCircle2, AlertTriangle, FileSpreadsheet, Loader2 } from 'lucide-react';
@@ -202,7 +201,7 @@ export function ImportarClient({
                     <p className="text-sm font-bold text-emerald-700">{syncResult.sanjh} productos actualizados</p>
                   ) : (
                     <p className="text-sm text-zinc-500">
-                      Última sync: {lastSyncSanjh ? format(new Date(lastSyncSanjh), "dd MMM yyyy, HH:mm", { locale: es }) : 'Sin datos'}
+                      Última sync: {lastSyncSanjh ? fechaHoraCL(new Date(lastSyncSanjh)) : 'Sin datos'}
                     </p>
                   )}
                 </div>
@@ -212,7 +211,7 @@ export function ImportarClient({
                     <p className="text-sm font-bold text-emerald-700">{syncResult.vida} productos actualizados</p>
                   ) : (
                     <p className="text-sm text-zinc-500">
-                      Última sync: {lastSyncVida ? format(new Date(lastSyncVida), "dd MMM yyyy, HH:mm", { locale: es }) : 'Sin datos'}
+                      Última sync: {lastSyncVida ? fechaHoraCL(new Date(lastSyncVida)) : 'Sin datos'}
                     </p>
                   )}
                 </div>

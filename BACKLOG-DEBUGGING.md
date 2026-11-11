@@ -25,13 +25,13 @@ Orden sugerido: D1 -> D2 -> D3 -> D4 -> D5.
 - Revisar tambien los iconos y cualquier archivo de `public/` que la app pida (efecto probable: la app no es instalable como PWA).
 - Criterio de cierre: /manifest.json responde 200 application/json con y sin sesion; sin el error en consola.
 
-## D3 (MEDIA) — Errores de hidratacion de React #425/#418/#423 en casi todas las pantallas
+## D3 (MEDIA) — Errores de hidratacion de React #425/#418/#423 en casi todas las pantallas  [RESUELTO 2026-11-11: TopNav + fechas en render, ver BUGS.md]
 - Pendientes: P-20261111-1108-* (registradas por pantalla; son el mismo problema repetido).
 - Pantallas: /dashboard, /precios, /ventas/kardex, /bodega, /bodega/despachos, /bodega/registro-notas, /inventario, /despachos, /deseados, /clientes-nuevos, /prenotas, /pettycash, /sueldos, /deudas, /seguimientos, /garantias, /caja-mayor, /catalogo/admin, /catalogo/clientes, /admin/caja-config, /admin/deudas, /admin/importar, /admin/kardex-exclusiones, /admin/subir-imagenes, /admin/usuarios.
 - HIPOTESIS (no verificada, debe confirmarse con evidencia antes de tocar): componente compartido `components/TopNav.tsx` ('use client'), lineas 45-48 y 233: `getSaludo()` usa `new Date().getHours()` durante el render. En Vercel el render del servidor corre en UTC y el navegador en Chile (UTC-3): entre ~09:00 y 12:00 / ~17:00 y 20:00 hora Chile el servidor dice un saludo y el navegador otro -> #425 (texto distinto) -> #418 -> #423. Encaja con que aparezca en todas las pantallas con TopNav. Puede haber otras fechas formateadas en render.
 - Criterio de cierre: humo admin/vendedor/bodeguero sin errores #418/#423/#425 en consola, probado en un horario donde el saludo difiera entre UTC y Chile.
 
-## D4 (MEDIA) — Error de React #329 en /admin/categorias, /bodega, /deudas
+## D4 (MEDIA) — Error de React #329 en /admin/categorias, /bodega, /deudas  [RESUELTO 2026-11-11 por D3: misma falla de hidratacion, ver BUGS.md]
 - Sin causa identificada todavia. Reproducir en dev (mensaje completo, no minificado) antes de cualquier hipotesis.
 
 ## D5 (BAJA) — Con rol bodeguero la app llama a APIs de alertas que no le corresponden

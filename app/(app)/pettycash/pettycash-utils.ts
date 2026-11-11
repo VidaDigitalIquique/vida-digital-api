@@ -21,6 +21,18 @@ export function formatFecha(fecha: string): string {
 
 type MovimientoLike = { fecha: string; tipo: string; concepto: string; monto: string | number };
 
+/** Dias 'yyyy-mm-dd' entre desde y hasta, descendente. Aritmetica UTC pura: no depende de la zona del proceso. */
+export function daysInRange(desde: string, hasta: string): string[] {
+  const [y1, m1, d1] = desde.split('-').map(Number);
+  const [y2, m2, d2] = hasta.split('-').map(Number);
+  const fin = Date.UTC(y2, m2 - 1, d2);
+  const days: string[] = [];
+  for (let t = Date.UTC(y1, m1 - 1, d1); t <= fin; t += 86400000) {
+    days.push(new Date(t).toISOString().slice(0, 10));
+  }
+  return days.reverse();
+}
+
 export function buildWhatsAppText(
   movimientos: MovimientoLike[],
   saldo: number,

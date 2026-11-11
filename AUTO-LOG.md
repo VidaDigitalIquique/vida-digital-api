@@ -24,3 +24,13 @@
 - QA (Fase E): bug-d2 PASA 5/5; Director reprodujo sin sesion y con bodeguero, y probo rutas dinamicas privadas con .json (siguen protegidas por la page)
 - Desvios del Programador: ninguno (corrio npm run build con el .env normal antes de instalar MQ-S1; solo lectura)
 - QA metricas: FP 0, ESC 0, ACIERTOS 1 (EXP-3 apunto al componente del warning D8), costo QA 0.35 USD; mejoras de QA aplicadas: semilla ddf3889 (MQ-S1: consola agrupada, tests con base de pruebas)
+## 2026-11-11 - Slice: debugging D3 + D4 (hidratacion, MEDIA)
+- Programador: deep (deepseek-flash, low): bug-d3-1 (TopNav, 194 s, 1.01 USD), bug-d3b-1 + bug-d3b-2 (fechas, ~5 min + 5 min, 3.17 USD acumulado de la sesion)
+- Contrato: hipotesis 1 del Director (saludo de TopNav) confirmada con experimento TZ=Asia/Tokyo ("Server: Buenas noches / Client: Buenas tardes"); el barrido posterior revelo 4 fuentes mas (fechas en render) -> D3b; ajuste por espacio U+00A0 de ICU y daysInRange
+- Tests: topnav-saludo-hidratacion, saludo-por-hora, fechas-cl, pettycash-dias en VERDE (ROJO previo con evidencia); jest completo contra la base de pruebas sin fallas nuevas
+- Commits: "fix: D3 saludo de TopNav ..." y "fix: D3b fechas en hora de Chile ..." (ver git log)
+- Gates disparados: ninguno
+- QA (Fase E): bug-d3 intento1 INVALIDO (falto una captura; QA-D3-04 BLOQUEADO por caso mal redactado por el Director: pedia la hora del navegador), intento2 PASA 5/5. Director: barridos Playwright en dev y build de produccion con servidor desfasado, 45 pantallas sin errores
+- D4: reproducido (#329 en 9 pantallas, build de produccion de 0d997ec) y resuelto por D3 (0 en el build actual): cerrado como misma causa
+- Desvios del Programador: en D3b omitio daysInRange aunque estaba en la evidencia citada (corregido con -Resume)
+- QA metricas: FP 0, ESC 0, ACIERTOS 0, costo QA 1.17 USD (2 intentos); mejoras de QA aplicadas: semilla d9f1a58 (MQ-S2) y MQ-S3 (conocidos en el encargo)

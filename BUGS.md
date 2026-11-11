@@ -73,3 +73,14 @@
 - Verificacion: Fase E bug-d2 PASA 5/5; Director: sin sesion manifest/iconos 200, privadas 307 al login, /robots.txt 404; con bodeguero /prenotas/1.json y /seguimientos/1/2.json terminan en /bodega.
 - Zona fragil: una URL que termina en esas extensiones NO pasa por el middleware (sin control de rol). Toda pagina privada con segmento dinamico (hoy `/prenotas/[id]` y `/seguimientos/[empresa]/[folio]`) debe validar sesion y rol en la propia page; el layout `(app)` solo exige sesion. No crear rutas de app con esas extensiones.
 - Commit: el de "fix: D2 manifest e iconos redirigian al login" (ver git log)
+---
+
+## [2026-11-11] — D3 y D4: errores de hidratacion React #425/#418/#423 (y #329) en casi todas las pantallas
+
+- Tipo: A (hidratacion) dependiente de zona horaria (en produccion: servidor Vercel en UTC, usuarios en Chile)
+- Causa raiz: client components que tambien se renderizan en el servidor calculaban texto con la hora del proceso durante el render: (1) `components/TopNav.tsx` `getSaludo()` con `new Date().getHours()` (todas las pantallas); (2) fechas formateadas con la zona del proceso en `DashboardClient`, `ImportarClient`, `CajaConfigClient` (`toLocaleString`, ademas Node y Chrome difieren en el espacio antes de "a. m.") y `PettycashClient` (`toISOString` sobre fechas locales en today/fin de mes/`daysInRange`). React descartaba la hidratacion de toda la raiz.
+- D4 (#329 "Unknown root exit status"): misma falla; en build de produccion React a veces la reporta como #329 en vez de #425/#418/#423. Reproducido en build de produccion local de 0d997ec con el servidor desfasado (9 pantallas con #329) y desaparecido con el fix (0 en 45 pantallas x 3 roles).
+- Fix aplicado: saludo calculado solo en el cliente tras montar (`lib/saludo.ts`); `lib/fechas.ts` con formateo fijo en America/Santiago armado a mano (independiente del ICU de cada motor) y `daysInRange` con aritmetica UTC (`pettycash-utils.ts`). Ademas corrige que `today()` de caja chica proponia la fecha de manana despues de las 21:00 hora Chile.
+- Verificacion: tests de hidratacion (renderToString + hydrateRoot con horas distintas), de fechas en 3 zonas horarias y de dias; barrido Playwright del Director con el servidor en Asia/Tokyo (dev y build de produccion): 26/26 admin, 15/15 vendedor, 4/4 bodeguero sin errores; Fase E bug-d3 PASA 5/5.
+- Zona fragil: NO formatear fechas/horas ni usar `new Date()` / `Date.now()` durante el render de un client component; usar `lib/fechas.ts` (hora de Chile fija) o calcular en `useEffect`. Prueba rapida: levantar el entorno de pruebas con `TZ=Asia/Tokyo` y correr `_dt-vida-digital\hidratacion-barrido.cjs`.
+- Commits: "fix: D3 saludo de TopNav ..." y "fix: D3b fechas en hora de Chile ..." (ver git log)
