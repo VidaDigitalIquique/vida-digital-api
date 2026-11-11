@@ -51,3 +51,8 @@
 - Fase E release-20261111 (regresion de D1, D2, D3, D5): 18/18 PASA en 2 intentos; veredicto de auditoria INVALIDO solo por nombres de captura (MQ-S4). Costo 2.55 USD. EXP-1 descartado (por diseno).
 - Hueco declarado: no hay PRD.md ni qa-barrido.md: no se pudo correr -Requisitos todos -Barrido.
 - Pendiente: UAT de Pablo (gate humano), luego push a main y humo de produccion 4 roles.
+## 2026-11-11 - Deploy release D1-D5 (2ac571c) + humo de produccion
+- UAT de Pablo: aprobado (15:51). Push 8e74470..2ac571c a main (Vercel).
+- Humo qa-prod.ps1 -EsperarDeploy -ConIA: PASA en 7 pasadas (anon 27 casos; admin, vendedor, bodeguero 26 cada uno, sin IA y con IA), 0 errores de consola sin contar favicon. Costo 2.84 USD.
+- Confirmado en produccion: D1 (QA-BOD12 /catalogo/admin -> /bodega), D2 (/manifest.json 200), D3/D4 (0 errores React #418/#423/#425/#329 en las 3 cuentas), D5 (bodeguero sin 401/403).
+- Pendientes: D6 (test que escribia en prod: mitigado por la semilla), D7, D8, D10 (deuda), D9 EN PAUSA (repo publico + .env).
