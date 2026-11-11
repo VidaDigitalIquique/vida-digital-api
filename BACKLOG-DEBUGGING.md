@@ -55,3 +55,15 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 
 ## D8 (MEDIA) - Warning "Function components cannot be given refs" en consola de dev
 - Detectado en Fase E bug-d1b (consola). Pista de la Fase E bug-d2 (EXP-3, sin verificar): "Check the render method of `BodegaClient`", en `components/ui/input.tsx` (Input sin forwardRef). Verificar en el codigo antes de cualquier hipotesis.
+## D9 (CRITICA, seguridad) - Repo publico con .env versionado (secretos de produccion expuestos)  [EN PAUSA por decision de Pablo, 2026-11-11 15:33]
+- EN PAUSA: Pablo decidio hacerlo AL FINAL, cuando todo este entregado y funcionando. Habia una razon por la que el repo es publico que Pablo no recuerda: averiguarla antes de cambiar la visibilidad. No bloquea el deploy de D1-D5 (ningun commit toca .env).
+- Detectado 2026-11-11 por /ponytail-audit (Senal 3) y verificado por el Director: `gh repo view` -> PUBLIC; `git ls-files .env` -> versionado (ultimo commit b0529d4); .gitignore solo excluye `.env*.local`.
+- Expuestos en el historial: DATABASE_URL (Neon prod), NEXTAUTH_SECRET, CLOUDINARY_API_SECRET, OPENROUTER_API_KEY, VAPID_PRIVATE_KEY, BCENTRAL_USER/PASS, entre otros.
+- Gate humano (credenciales e infraestructura): repo a privado, rotacion de todas las claves y carga en Vercel. Luego slice: `git rm --cached .env` + .gitignore, SOLO despues de confirmar que Vercel tiene todas las variables en su panel.
+- Criterio de cierre: repo privado (o sin secretos en el historial), claves rotadas y probadas en produccion (humo 4 roles PASA), .env fuera del indice.
+
+## D10 (BAJA, deuda) - Items no criticos del /ponytail-audit de la Senal 3 (2026-11-11)
+- AlertasContext: al cerrar sesion los contadores no vuelven a 0 hasta recargar; ROLES_ALERTAS/ROLES_SEGUIMIENTOS duplican las listas de las APIs (mover a lib/roles.ts).
+- middleware.ts: MATCHER_PATTERN existe solo para un test de identidad (se puede simplificar). Regla a escribir en CLAUDE.md: toda pagina privada con segmento dinamico valida rol en la page (el matcher excluye rutas con extension).
+- Fechas con new Date()/toLocale* en garantias, seguimientos, admin/deudas, prenotas, caja-mayor, sueldos: el audit dice que causan hidratacion, pero el barrido del Director (servidor TZ=Asia/Tokyo, dev y build de produccion, 45 pantallas x roles) no mostro errores: se renderizan con datos cargados en el cliente. Riesgo latente: si pasan a renderizarse en el servidor, usar lib/fechas.ts.
+- 9 errores de tsc preexistentes en tests ocultos por typescript.ignoreBuildErrors.

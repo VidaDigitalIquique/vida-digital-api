@@ -137,3 +137,7 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 ## 2026-11-11 15:25 - bug-d5 - commit 5b84c84 - PASA
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\bug-d5
 - Sin pendientes nuevos.
+
+## 2026-11-11 15:42 - release-20261111 - commit 77baef1 - INVALIDO (Director: PASA 18/18 en ambos intentos; INVALIDO solo por nombres de captura, ver MEJORAS-QA MQ-S4)
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\release-20261111
+- [x] P-20261111-1542-1 (media) HALLAZGO: EXP-1 — El vendedor abre /admin/importar y ve "Sincronizar ahora" -> DESCARTADO por diseno: RUTAS_POR_ROL da /admin/importar al vendedor, el menu Ventas le muestra "Sincronizar WinFac" y humoProd lo declara para admin y vendedor

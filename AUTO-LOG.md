@@ -43,3 +43,11 @@
 - QA (Fase E): bug-d5 PASA 3/3, 0 pendientes nuevos; Director verifico la red con bodeguero
 - Desvios del Programador: ninguno
 - QA metricas: FP 0, ESC 0, ACIERTOS 0, costo QA 0.49 USD; mejoras de QA aplicadas: semilla 96a0c8e (MQ-S3: el agente uso 1 de 10 acciones y no re-reporto conocidos)
+## 2026-11-11 - Senal 3 (release D1-D5, commits 56d361b..77baef1)
+- /ponytail-audit: VERDE para el diff; AMARILLO global por D9 (repo publico con .env versionado, EN PAUSA por decision de Pablo) y deuda D10.
+- Build de produccion: compila sin errores ni warnings (84 paginas); lint omitido por config (preexistente).
+- Variables de entorno: ninguna nueva en el diff.
+- Barrido mecanico (Playwright, build de produccion, servidor TZ=Asia/Tokyo): 45/45 pantallas x rol sin errores de pagina ni hidratacion.
+- Fase E release-20261111 (regresion de D1, D2, D3, D5): 18/18 PASA en 2 intentos; veredicto de auditoria INVALIDO solo por nombres de captura (MQ-S4). Costo 2.55 USD. EXP-1 descartado (por diseno).
+- Hueco declarado: no hay PRD.md ni qa-barrido.md: no se pudo correr -Requisitos todos -Barrido.
+- Pendiente: UAT de Pablo (gate humano), luego push a main y humo de produccion 4 roles.
