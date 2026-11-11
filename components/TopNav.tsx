@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -30,6 +30,7 @@ import {
   Landmark
 } from 'lucide-react';
 import { useAlertas } from '@/contexts/AlertasContext';
+import { saludoPorHora } from '@/lib/saludo';
 
 export function TopNav() {
   const pathname = usePathname();
@@ -42,12 +43,12 @@ export function TopNav() {
   const searchParams = useSearchParams();
   const modoChina = searchParams.get('modo') === 'china';
 
-  const getSaludo = () => {
-    const hora = new Date().getHours();
-    if (hora >= 5 && hora < 12) return 'Buenos días';
-    if (hora >= 12 && hora < 20) return 'Buenas tardes';
-    return 'Buenas noches';
-  };
+  // El saludo depende de la hora del navegador: se fija tras montar para que el
+  // primer render (servidor y cliente) sea identico y no rompa la hidratacion.
+  const [saludo, setSaludo] = useState<string | null>(null);
+  useEffect(() => {
+    setSaludo(saludoPorHora(new Date().getHours()));
+  }, []);
 
   const primerNombre = ((session?.user as any)?.nombre as string)?.split(' ')[0] ?? '';
 
@@ -230,7 +231,7 @@ export function TopNav() {
         <div className="flex items-center gap-4">
           {primerNombre && (
             <span className="text-sm text-blue-400 dark:text-blue-400 hidden lg:block">
-              {getSaludo()}, <span className="font-semibold text-zinc-700 dark:text-zinc-300">{primerNombre}</span>
+              {saludo ? `${saludo}, ` : ''}<span className="font-semibold text-zinc-700 dark:text-zinc-300">{primerNombre}</span>
             </span>
           )}
           <button onClick={() => signOut()} className="p-2 text-zinc-500 hover:text-red-500 transition-colors" title="Cerrar sesión">
