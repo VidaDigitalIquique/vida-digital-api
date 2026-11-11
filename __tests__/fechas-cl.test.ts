@@ -1,6 +1,7 @@
 import path from 'path';
 import { execFileSync } from 'child_process';
 import {
+  fechaDiaCL,
   fechaHoraCL,
   fechaHoraLargaCL,
   horaCL,
@@ -32,6 +33,7 @@ function enProcesoConTZ(tz: string) {
       larga: f.fechaHoraLargaCL(inst),
       largaPm: f.fechaHoraLargaCL(new Date('2026-11-11T23:05:07Z')),
       hora: f.horaCL(inst),
+      fechaDia: f.fechaDiaCL('2026-11-09'),
       hoy: f.hoyCL(tardeNoche),
       primerDia: f.primerDiaMesCL(tardeNoche),
       ultimoDiaNov: f.ultimoDiaMesCL(new Date('2026-11-30T20:00:00Z')),
@@ -82,6 +84,17 @@ describe('lib/fechas — texto fijo en America/Santiago', () => {
     }
   });
 
+  it('fechaDiaCL: reordena YYYY-MM-DD a DD-MM-YYYY sin Date', () => {
+    expect(fechaDiaCL('2026-11-09')).toBe('09-11-2026');
+    expect(fechaDiaCL('1999-01-31')).toBe('31-01-1999');
+  });
+
+  it('fechaDiaCL: una entrada que no es YYYY-MM-DD se devuelve tal cual', () => {
+    expect(fechaDiaCL('')).toBe('');
+    expect(fechaDiaCL('2026-11-09T00:00:00Z')).toBe('2026-11-09T00:00:00Z');
+    expect(fechaDiaCL('09/11/2026')).toBe('09/11/2026');
+  });
+
   it('horaCL: HH:mm', () => {
     expect(horaCL(INSTANTE)).toBe('10:30');
     expect(horaCL('2026-01-01T03:05:00Z')).toBe('00:05');
@@ -103,6 +116,7 @@ describe('lib/fechas — texto fijo en America/Santiago', () => {
       larga: '11-11-2026, 10:30:00 a. m.',
       largaPm: '11-11-2026, 8:05:07 p. m.',
       hora: '10:30',
+      fechaDia: '09-11-2026',
       hoy: '2026-11-11',
       primerDia: '2026-11-01',
       ultimoDiaNov: '2026-11-30',

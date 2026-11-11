@@ -232,4 +232,5 @@ Ninguna. Cualquier caso no cubierto por este PRD es gate humano.
 | `components/TopNav.tsx` | Medio | BUGS.md D3: nada dependiente de la hora en el render |
 | `lib/fechas.ts` | Medio | Formato fijo en America/Santiago; no depende del ICU |
 | `app/api/kardex/route.ts` | Medio | El conteo "ventas registradas" debe seguir igual al detalle |
+| `lib/ventas-producto.ts` (S1) | Medio | Fuente unica del conteo "ventas registradas" (/api/kardex) y del detalle (/api/kardex/ventas): no duplicar la consulta en otro lado |
 | (se completa durante el desarrollo) | | |

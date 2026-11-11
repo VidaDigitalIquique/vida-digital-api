@@ -9,6 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { ImageWithFallback } from './ImageWithFallback';
 import { formatUSD } from '@/lib/utils';
+import { fechaDiaCL } from '@/lib/fechas';
+import type { VentaProducto } from '@/lib/ventas-producto';
+import flags from '@/config/feature-flags.json';
 import { toast } from 'sonner';
 import { ClipboardList, Share2 } from 'lucide-react';
 import { useShareImage } from '@/hooks/useShareImage';
@@ -53,6 +56,11 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
     clientes_excluidos: number;
   } | null>(null);
   const [kardexLoading, setKardexLoading] = useState(false);
+  const [ventasAbiertas, setVentasAbiertas] = useState(false);
+  const [ventas, setVentas] = useState<VentaProducto[] | null>(null);
+  const [ventasLoading, setVentasLoading] = useState(false);
+  const [ventasError, setVentasError] = useState(false);
+  const ventasReq = useRef(0);
   const [ingresos, setIngresos] = useState<Array<{
     nroingreso: string;
     costo: number;
@@ -103,6 +111,11 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
 
   useEffect(() => {
     if (open && producto) {
+      ventasReq.current++;
+      setVentasAbiertas(false);
+      setVentas(null);
+      setVentasError(false);
+      setVentasLoading(false);
       setKardexLoading(true);
       setKardex(null);
       fetch(`/api/kardex?codigo=${encodeURIComponent(producto.codigo)}&empresaSlug=${encodeURIComponent(empresaSlug)}`)
@@ -120,6 +133,11 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
         .finally(() => setIngresosLoading(false));
     }
     if (!open) {
+      ventasReq.current++;
+      setVentasAbiertas(false);
+      setVentas(null);
+      setVentasError(false);
+      setVentasLoading(false);
       setKardex(null);
       setKardexLoading(false);
       setIngresos([]);
@@ -202,6 +220,35 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const handleToggleVentas = () => {
+    if (!producto || ventasLoading) return;
+    if (ventasAbiertas) {
+      setVentasAbiertas(false);
+      return;
+    }
+    setVentasAbiertas(true);
+    if (ventas !== null) return;
+
+    const req = ++ventasReq.current;
+    setVentasLoading(true);
+    setVentasError(false);
+    fetch(`/api/kardex/ventas?codigo=${encodeURIComponent(producto.codigo)}&empresaSlug=${encodeURIComponent(empresaSlug)}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Error cargando ventas');
+        return res.json();
+      })
+      .then(data => {
+        if (ventasReq.current !== req) return;
+        setVentas(Array.isArray(data?.ventas) ? data.ventas : []);
+      })
+      .catch(() => {
+        if (ventasReq.current === req) setVentasError(true);
+      })
+      .finally(() => {
+        if (ventasReq.current === req) setVentasLoading(false);
+      });
   };
 
   const handleSavePrices = async () => {
@@ -409,11 +456,44 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
             </div>
             {kardex && kardex.total_ventas > 0 && (
               <div className="text-xs text-zinc-400 space-y-0.5 mt-2">
-                <div>{kardex.total_ventas} ventas registradas</div>
+                {flags['drawer-ventas-detalle'] ? (
+                  <button
+                    type="button"
+                    onClick={handleToggleVentas}
+                    aria-expanded={ventasAbiertas}
+                    className="underline underline-offset-2 hover:text-blue-600 dark:hover:text-blue-400"
+                  >
+                    {kardex.total_ventas} ventas registradas
+                  </button>
+                ) : (
+                  <div>{kardex.total_ventas} ventas registradas</div>
+                )}
                 {kardex.precio_medio_status === 'sin_variacion' && <div>Siempre se ha vendido al mismo precio</div>}
                 {kardex.precio_medio_status === 'solo_dos' && <div>Solo se ha vendido a dos precios distintos</div>}
                 {kardex.precio_medio_status === 'empate' && <div>No existe un precio medio único</div>}
                 {kardex.clientes_excluidos > 0 && <div>{kardex.clientes_excluidos} {kardex.clientes_excluidos === 1 ? 'cliente excluido' : 'clientes excluidos'}</div>}
+                {flags['drawer-ventas-detalle'] && ventasAbiertas && (
+                  <div className="mt-2 border rounded-lg max-h-[45vh] overflow-y-auto divide-y text-zinc-500">
+                    {ventasLoading && <div className="p-3 text-zinc-400 animate-pulse">Cargando ventas...</div>}
+                    {ventasError && <div className="p-3 text-red-500">No se pudieron cargar las ventas.</div>}
+                    {!ventasLoading && !ventasError && ventas && ventas.length === 0 && (
+                      <div className="p-3 text-zinc-400">No hay ventas para mostrar.</div>
+                    )}
+                    {!ventasLoading && !ventasError && ventas?.map((v, idx) => (
+                      <div key={`${v.nota}-${idx}`} className="p-2.5 flex flex-col gap-0.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="font-medium text-zinc-700 dark:text-zinc-200 truncate" title={v.cliente ?? ''}>
+                            {v.cliente || '—'}
+                          </span>
+                          <span className="font-semibold text-zinc-700 dark:text-zinc-200 shrink-0">{formatUSD(v.precio)}</span>
+                        </div>
+                        <div className="text-[11px] text-zinc-400">
+                          {fechaDiaCL(v.fecha)} · Nota {v.nota} · {v.vendedor || '—'} · {v.cajas > 0 ? `${v.cajas} cj · ` : ''}{v.unidades} uds
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {isEditing && (

@@ -11,6 +11,12 @@ function partes(d: Date | string, opts: Intl.DateTimeFormatOptions): Record<stri
   return p;
 }
 
+/** "09-11-2026" desde el texto YYYY-MM-DD. Puro: no usa Date ni depende de zona horaria. */
+export function fechaDiaCL(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : iso;
+}
+
 /** "11 nov 2026, 10:30" = format(d, "dd MMM yyyy, HH:mm", { locale: es }) en Chile. */
 export function fechaHoraCL(d: Date | string): string {
   const p = partes(d, { day: '2-digit', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });

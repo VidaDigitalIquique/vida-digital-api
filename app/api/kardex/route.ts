@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
-import { sql } from "@/lib/db";
+import { ventasDeProducto, type EmpresaVentas } from "@/lib/ventas-producto";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -15,58 +15,28 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Faltan parametros (codigo, empresaSlug)" }, { status: 400 });
   }
 
-  const schema = empresaSlug === "sanjh" ? "sanjh" : "vida";
+  // Se conserva el comportamiento historico: todo lo que no sea sanjh usa vida
+  // (lo consumen ProductCard y /ventas/kardex con empresaSlug=vida).
+  const schema: EmpresaVentas = empresaSlug === "sanjh" ? "sanjh" : "vida";
 
   try {
-    // Get exclusion patterns for this empresa
-    const exclusiones = schema === 'sanjh'
-      ? await sql`SELECT patron_nombre FROM kardex_clientes_excluidos WHERE empresa_id = 1 AND activo = true`
-      : await sql`SELECT patron_nombre FROM kardex_clientes_excluidos WHERE empresa_id = 2 AND activo = true`;
-    const patrones = exclusiones.map((e: any) => e.patron_nombre as string);
+    const { ventas, patronesExcluidos } = await ventasDeProducto(schema, codigo);
 
-    // Fetch all sales for this product
-    const allRows = schema === 'sanjh'
-      ? await sql`
-          SELECT i.precread, m.cliente
-          FROM sanjh.itemdcto i
-          INNER JOIN sanjh.movidcto m ON i.knumfoli = m.knumfoli
-          WHERE m.tipomovi = 'V'
-            AND i.precread > 0
-            AND i.cantsali > 0
-            AND i.codunico = ${codigo}
-        `
-      : await sql`
-          SELECT i.precread, m.cliente
-          FROM vida.itemdcto i
-          INNER JOIN vida.movidcto m ON i.knumfoli = m.knumfoli
-          WHERE m.tipomovi = 'V'
-            AND i.precread > 0
-            AND i.cantsali > 0
-            AND i.codunico = ${codigo}
-        `;
-
-    // Filter excluded clients in JS
-    const filteredRows = patrones.length > 0
-      ? allRows.filter((r: any) =>
-          !patrones.some(p => r.cliente?.toUpperCase().includes(p.toUpperCase()))
-        )
-      : allRows;
-
-    if (filteredRows.length === 0) {
+    if (ventas.length === 0) {
       return NextResponse.json({
         precio_minimo: null,
         precio_maximo: null,
         precio_medio: null,
         precio_medio_status: 'sin_ventas',
         total_ventas: 0,
-        clientes_excluidos: patrones.length,
+        clientes_excluidos: patronesExcluidos,
       });
     }
 
-    const precios = filteredRows.map((r: any) => Number(r.precread));
+    const precios = ventas.map(v => v.precio);
     const precioMin = Math.min(...precios);
     const precioMax = Math.max(...precios);
-    const totalVentas = filteredRows.length;
+    const totalVentas = ventas.length;
 
     // Precio medio logic
     let precioMedio: number | null = null;
@@ -104,10 +74,10 @@ export async function GET(request: Request) {
       precio_medio: precioMedio,
       precio_medio_status: precioMedioStatus,
       total_ventas: totalVentas,
-      clientes_excluidos: patrones.length,
+      clientes_excluidos: patronesExcluidos,
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("GET /api/kardex error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : String(error) }, { status: 500 });
   }
 }

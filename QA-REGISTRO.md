@@ -300,3 +300,9 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - [x] P-20261111-1600-154 (media) CONSOLA: Failed to load resource: the server responded with a status of 404 () (/dxkidwxjl/image/upload/productos/YS0089.jpg) -> BACKLOG D11
 - [x] P-20261111-1600-155 (media) CONSOLA: Failed to load resource: the server responded with a status of 404 () (/dxkidwxjl/image/upload/productos/25332.jpg) -> BACKLOG D11
 - [x] P-20261111-1600-156 (media) CONSOLA: Failed to load resource: the server responded with a status of 404 () (/dxkidwxjl/image/upload/productos/25120.jpg) -> BACKLOG D11
+
+## 2026-11-11 17:52 - s1 - commit 6c430c0 - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s1
+- [x] P-20261111-1752-1 (media) HALLAZGO: EXP-1 — HL-81: filas de venta idénticas repetidas en la lista -> BACKLOG D14 (datos: itemdcto duplicado por kdocitem con espacios; el conteo previo ya las contaba)
+- [x] P-20261111-1752-2 (media) HALLAZGO: EXP-2 — SANJH 1030A: el mismo patrón de filas repetidas -> BACKLOG D14
+- [x] P-20261111-1752-3 (media) HALLAZGO: Consola (evidencia auxiliar) -> BACKLOG D7 (favicon 500 solo dev) y D8 (forwardRef)
