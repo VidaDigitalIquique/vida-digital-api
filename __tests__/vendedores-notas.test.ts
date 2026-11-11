@@ -93,6 +93,23 @@ describe('parsearFiltros', () => {
     expect(r.filtros.visaHasta).toBe('2026-11-30');
   });
 
+  it('solo visacion, sin fechas de venta -> sin restriccion por fecha de venta', () => {
+    const r = parsearFiltros(new URLSearchParams('visaDesde=2026-11-01'), HOY);
+    expect('error' in r).toBe(false);
+    if ('error' in r) return;
+    expect(r.filtros.desde).toBeNull();
+    expect(r.filtros.hasta).toBeNull();
+    expect(r.filtros.estado).toBe('facturada');
+  });
+
+  it('visacion con una fecha de venta conserva el default de la otra', () => {
+    const r = parsearFiltros(new URLSearchParams('visaHasta=2026-11-30&desde=2026-10-01'), HOY);
+    expect('error' in r).toBe(false);
+    if ('error' in r) return;
+    expect(r.filtros.desde).toBe('2026-10-01');
+    expect(r.filtros.hasta).toBe(HOY);
+  });
+
   it('rango de visacion + pendientes -> error', () => {
     const r = parsearFiltros(new URLSearchParams('visaDesde=2026-11-01&estado=pendientes'), HOY);
     expect('error' in r).toBe(true);
@@ -151,6 +168,18 @@ describe('construirConsulta', () => {
     const { text, params } = consulta(['vida']);
     expect(text).toContain('m.fechanvt <= $1::date');
     expect(params[0]).toBe(HOY);
+  });
+
+  it('desde/hasta null no restringen la venta pero las futuras siguen fuera', () => {
+    const { text, params } = consulta(
+      ['vida'],
+      filtros({ desde: null, hasta: null, visaDesde: '2026-11-01', estado: 'facturada' })
+    );
+    expect(text).toContain('($2::date IS NULL OR m.fechanvt >= $2::date)');
+    expect(text).toContain('($3::date IS NULL OR m.fechanvt <= $3::date)');
+    expect(text).toContain('m.fechanvt <= $1::date');
+    expect(params[1]).toBeNull();
+    expect(params[2]).toBeNull();
   });
 
   it('excluye PABLO BRAVO, EMPRESA, NULL y vacio', () => {

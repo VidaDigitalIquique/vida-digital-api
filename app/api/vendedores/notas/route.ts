@@ -27,7 +27,8 @@ export async function GET(request: Request) {
   try {
     const data = await fetchNotas(empresas, parsed.filtros);
     return NextResponse.json({ ...data, limit: parsed.filtros.limit });
-  } catch {
+  } catch (error) {
+    console.error('GET /api/vendedores/notas error:', error);
     return NextResponse.json({ error: 'Error al consultar notas' }, { status: 500 });
   }
 }

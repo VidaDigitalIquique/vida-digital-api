@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import flags from '@/config/feature-flags.json';
 import { signOut, useSession } from 'next-auth/react';
 import {
   DropdownMenu,
@@ -224,6 +225,14 @@ export function TopNav() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+            )}
+
+            {/* VENDEDORES — solo admin y con el flag encendido */}
+            {isAdmin && flags['vendedores-modulo'] && (
+              <Link href="/vendedores" className={navLink(pathname.startsWith('/vendedores'))}>
+                <Users className="w-4 h-4" />
+                VENDEDORES
+              </Link>
             )}
 
           </nav>

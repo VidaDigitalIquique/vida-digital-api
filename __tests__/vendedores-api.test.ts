@@ -157,6 +157,16 @@ describe('consulta', () => {
     expect(params[6]).toBe('facturada');
   });
 
+  it('solo visacion: no manda desde/hasta (null) y sigue cortando futuras', async () => {
+    await GET(req('visaDesde=2026-11-01'));
+    const [text, params] = queryMock.mock.calls[0] as [string, unknown[]];
+    expect(typeof params[0]).toBe('string');
+    expect(params[1]).toBeNull();
+    expect(params[2]).toBeNull();
+    expect(String(text)).toContain('m.fechanvt <= $1::date');
+    expect(String(text)).toContain('$2::date IS NULL');
+  });
+
   it('limit 999 se acota a 500 y se informa en la respuesta', async () => {
     const res = await GET(req('limit=999'));
     const [, params] = queryMock.mock.calls[0] as [string, unknown[]];
@@ -195,10 +205,13 @@ describe('respuesta con datos', () => {
     });
   });
 
-  it('500 si la base falla, sin exponer el error', async () => {
+  it('500 si la base falla: loguea el error y no lo expone', async () => {
+    const spy = jest.spyOn(console, 'error').mockImplementation(() => {});
     queryMock.mockRejectedValue(new Error('boom secreto'));
     const res = await GET(req());
     expect(res.status).toBe(500);
     await expect(res.json()).resolves.toEqual({ error: 'Error al consultar notas' });
+    expect(spy).toHaveBeenCalledWith('GET /api/vendedores/notas error:', expect.any(Error));
+    spy.mockRestore();
   });
 });

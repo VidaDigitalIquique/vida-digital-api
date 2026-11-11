@@ -269,6 +269,12 @@ export function BottomNav() {
                       className="flex items-center gap-3 py-3 font-medium border-b border-zinc-100 dark:border-zinc-800">
                       <Banknote className="w-4 h-4 text-zinc-400" /> Deudas
                     </Link>
+                    {flags['vendedores-modulo'] && (
+                      <Link href="/vendedores" onClick={() => setAdminOpen(false)}
+                        className="flex items-center gap-3 py-3 font-medium border-b border-zinc-100 dark:border-zinc-800">
+                        <Users className="w-4 h-4 text-zinc-400" /> VENDEDORES
+                      </Link>
+                    )}
                   </div>
                   <Button variant="destructive" onClick={() => signOut()} className="w-full">
                     Cerrar sesión

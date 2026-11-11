@@ -6,8 +6,8 @@ export type EstadoNota = 'facturada' | 'pendiente';
 
 export interface FiltrosNotas {
   hoy: string; // YYYY-MM-DD en hora de Chile: corta las notas futuras
-  desde: string;
-  hasta: string;
+  desde: string | null; // null = sin limite inferior (solo hay filtro de visacion)
+  hasta: string | null; // null = sin limite superior (solo hay filtro de visacion)
   vendedor: string | null;
   visaDesde: string | null;
   visaHasta: string | null;
@@ -68,11 +68,15 @@ export function parsearFiltros(
     if (!fechaValida(valor)) return { error: `fecha ${nombre} inválida` };
   }
 
-  const desde = desdeRaw || `${hoy.slice(0, 7)}-01`;
-  const hasta = hastaRaw || hoy;
+  // Sin fechas de venta pero con rango de visacion: no se restringe la venta
+  // (solo se cortan las futuras con hoy). Con cualquier fecha de venta se
+  // completa el default de mes que ya existia.
+  const soloVisacion = !desdeRaw && !hastaRaw && Boolean(visaDesdeRaw || visaHastaRaw);
+  const desde = soloVisacion ? null : desdeRaw || `${hoy.slice(0, 7)}-01`;
+  const hasta = soloVisacion ? null : hastaRaw || hoy;
   const visaDesde = visaDesdeRaw || null;
   const visaHasta = visaHastaRaw || null;
-  if (desde > hasta) return { error: 'rango de fecha de venta inválido' };
+  if (desde && hasta && desde > hasta) return { error: 'rango de fecha de venta inválido' };
   if (visaDesde && visaHasta && visaDesde > visaHasta) {
     return { error: 'rango de fecha de visación inválido' };
   }
@@ -118,8 +122,8 @@ function bloqueNotas(esquema: EmpresaSlug): string {
   WHERE m.tipomovi='V'
     AND m.id_tdocu IN ('203','551','554')
     AND m.fechanvt <= $1::date
-    AND m.fechanvt >= $2::date
-    AND m.fechanvt <= $3::date
+    AND ($2::date IS NULL OR m.fechanvt >= $2::date)
+    AND ($3::date IS NULL OR m.fechanvt <= $3::date)
     AND btrim(COALESCE(m.vendedor,'')) <> ''
     AND btrim(upper(COALESCE(m.vendedor,''))) NOT IN ('PABLO BRAVO','EMPRESA')
     AND ((m.pestadot='3' AND btrim(COALESCE(m.visaadua,'')) <> '')

@@ -42,6 +42,17 @@ export function hoyCL(d: Date = new Date()): string {
   return `${p.year}-${p.month}-${p.day}`;
 }
 
+function restarDiasISO(iso: string, dias: number): string {
+  return new Date(Date.parse(`${iso}T00:00:00Z`) - dias * 86400000).toISOString().slice(0, 10);
+}
+
+/** yyyy-mm-dd del lunes de la semana (hora Chile) de d; un lunes devuelve el mismo dia. */
+export function lunesSemanaCL(d: Date = new Date()): string {
+  const hoy = hoyCL(d);
+  const diaSemana = new Date(`${hoy}T00:00:00Z`).getUTCDay(); // 0 = domingo
+  return restarDiasISO(hoy, (diaSemana + 6) % 7);
+}
+
 export function primerDiaMesCL(d: Date = new Date()): string {
   return `${hoyCL(d).slice(0, 7)}-01`;
 }

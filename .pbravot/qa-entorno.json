@@ -29,9 +29,21 @@
     "url": "https://vidadigital-inventario-v2.vercel.app",
     "login": "/login",
     "roles": {
-      "admin": {},
-      "vendedor": {},
-      "bodeguero": {}
+      "admin": {
+        "debeVer": [
+          "VENDEDORES"
+        ]
+      },
+      "vendedor": {
+        "noDebeVer": [
+          "VENDEDORES"
+        ]
+      },
+      "bodeguero": {
+        "noDebeVer": [
+          "VENDEDORES"
+        ]
+      }
     },
     "publicas": [
       {
@@ -189,6 +201,15 @@
         "ruta": "/sueldos",
         "roles": [
           "admin"
+        ]
+      },
+      {
+        "ruta": "/vendedores",
+        "roles": [
+          "admin"
+        ],
+        "debeVerse": [
+          "VENDEDORES"
         ]
       },
       {

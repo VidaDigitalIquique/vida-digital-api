@@ -8,6 +8,7 @@ import {
   hoyCL,
   primerDiaMesCL,
   ultimoDiaMesCL,
+  lunesSemanaCL,
 } from '@/lib/fechas';
 
 // 2026-11-11T13:30:00Z = 10:30 en Chile (UTC-3, horario de verano).
@@ -36,6 +37,7 @@ function enProcesoConTZ(tz: string) {
       fechaDia: f.fechaDiaCL('2026-11-09'),
       hoy: f.hoyCL(tardeNoche),
       primerDia: f.primerDiaMesCL(tardeNoche),
+      lunes: f.lunesSemanaCL(tardeNoche),
       ultimoDiaNov: f.ultimoDiaMesCL(new Date('2026-11-30T20:00:00Z')),
       paridadNov: f.fechaHoraCL(inst) === format(inst, 'dd MMM yyyy, HH:mm', { locale: es }),
       paridadSep: f.fechaHoraCL(sep) === format(sep, 'dd MMM yyyy, HH:mm', { locale: es }),
@@ -110,6 +112,16 @@ describe('lib/fechas — texto fijo en America/Santiago', () => {
     expect(ultimoDiaMesCL(new Date('2026-02-10T12:00:00Z'))).toBe('2026-02-28');
   });
 
+  it('lunesSemanaCL: lunes -> el mismo dia; domingo -> el lunes anterior', () => {
+    expect(lunesSemanaCL(new Date('2026-11-09T13:00:00Z'))).toBe('2026-11-09'); // lunes
+    expect(lunesSemanaCL(new Date('2026-11-11T13:30:00Z'))).toBe('2026-11-09'); // miercoles
+    expect(lunesSemanaCL(new Date('2026-11-15T13:00:00Z'))).toBe('2026-11-09'); // domingo
+    expect(lunesSemanaCL(new Date('2026-11-01T13:00:00Z'))).toBe('2026-10-26'); // cruce de mes
+    expect(lunesSemanaCL(new Date('2027-01-01T13:00:00Z'))).toBe('2026-12-28'); // cruce de ano
+    // 22:30 en Chile del 11: ya es 12 en UTC, pero el lunes sigue siendo el 9.
+    expect(lunesSemanaCL(new Date('2026-11-12T01:30:00Z'))).toBe('2026-11-09');
+  });
+
   it('mismo texto con el proceso en UTC, Asia/Tokyo o America/Santiago', () => {
     const esperado = {
       fechaHora: '11 nov 2026, 10:30',
@@ -119,6 +131,7 @@ describe('lib/fechas — texto fijo en America/Santiago', () => {
       fechaDia: '09-11-2026',
       hoy: '2026-11-11',
       primerDia: '2026-11-01',
+      lunes: '2026-11-09',
       ultimoDiaNov: '2026-11-30',
     };
     for (const tz of ['UTC', 'Asia/Tokyo', 'America/Santiago']) {

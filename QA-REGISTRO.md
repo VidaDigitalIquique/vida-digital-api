@@ -306,3 +306,10 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - [x] P-20261111-1752-1 (media) HALLAZGO: EXP-1 — HL-81: filas de venta idénticas repetidas en la lista -> BACKLOG D14 (datos: itemdcto duplicado por kdocitem con espacios; el conteo previo ya las contaba)
 - [x] P-20261111-1752-2 (media) HALLAZGO: EXP-2 — SANJH 1030A: el mismo patrón de filas repetidas -> BACKLOG D14
 - [x] P-20261111-1752-3 (media) HALLAZGO: Consola (evidencia auxiliar) -> BACKLOG D7 (favicon 500 solo dev) y D8 (forwardRef)
+
+## 2026-11-11 18:18 - s2 - commit 7449d37 - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s2
+- [x] P-20261111-1818-1 (baja) HALLAZGO: EXP-1 — Rango de venta invertido muestra un error genérico -> BACKLOG S3 (mismo archivo VendedoresClient; se corrige en el slice siguiente: mensaje de rango invertido)
+- [x] P-20261111-1818-2 (baja) HALLAZGO: EXP-3 — Peticiones a la API con fechas parciales dan 400 en consola -> BACKLOG S3 (no consultar con fechas incompletas o invertidas)
+- [x] P-20261111-1818-3 (media) HALLAZGO: EXP-4 — Ancho móvil (390 px): sin defectos -> DESCARTADO: no es defecto (el propio agente lo informa sin defectos)
+- [x] P-20261111-1818-4 (media) CONSOLA: Failed to load resource: the server responded with a status of 400 (Bad Request) (/api/vendedores/notas) -> BACKLOG S3 (es la misma causa que EXP-1/EXP-3)
