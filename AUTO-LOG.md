@@ -56,3 +56,13 @@
 - Humo qa-prod.ps1 -EsperarDeploy -ConIA: PASA en 7 pasadas (anon 27 casos; admin, vendedor, bodeguero 26 cada uno, sin IA y con IA), 0 errores de consola sin contar favicon. Costo 2.84 USD.
 - Confirmado en produccion: D1 (QA-BOD12 /catalogo/admin -> /bodega), D2 (/manifest.json 200), D3/D4 (0 errores React #418/#423/#425/#329 en las 3 cuentas), D5 (bodeguero sin 401/403).
 - Pendientes: D6 (test que escribia en prod: mitigado por la semilla), D7, D8, D10 (deuda), D9 EN PAUSA (repo publico + .env).- Humo con IA registro 156 pendientes "404 de imagen de producto en Cloudinary" (uno por imagen): agrupados como D11 (BACKLOG); mejora de QA anotada (agrupar 404 de un mismo host/carpeta).
+## 2026-11-11 - Slice: S1 drawer "N ventas registradas" clickeable (PRD v2, R1/R2/R11)
+- Programador: deep (deepseek-flash, effort low): s1-A 135 s 1.03 USD; s1-BCD 419 s 3.57 USD
+- Contrato: lib/ventas-producto.ts como fuente unica del conteo (/api/kardex, JSON sin cambios) y del detalle (GET /api/kardex/ventas, admin+vendedor); boton con carga perezosa en ProductDrawer; fechaDiaCL; flag drawer-ventas-detalle=false. Produccion 185 lineas netas.
+- Tests: 43/43 VERDE en los 5 archivos del slice (ROJO previo con evidencia); jest completo contra la base de pruebas: 3 suites rojas preexistentes (categorias, sync-from-winfac, ventas/clientes kardex), mismas en HEAD sin el slice (Director con stash); tsc/lint sin errores en archivos del slice; build OK sin neondatabase en chunks del cliente
+- Commit: 1cf3d60
+- Gates disparados: ninguno
+- QA (Fase E): s1 PASA 6/6 (flag encendido solo durante QA). Director: paridad /api/kardex vs /api/kardex/ventas en HL-81 (106=106), 1030A, HJH-16, 1020-12V; bodeguero 403, vendedor 200, empresaSlug inyectado 400; flag apagado: el texto sigue como DIV sin boton
+- Hallazgos: EXP-1/EXP-2 lineas repetidas -> causa verificada en datos (kdocitem con espacios duplicado) -> D14 BACKLOG; consola favicon/forwardRef -> D7/D8
+- Desvios del Programador: ninguno
+- QA metricas: FP 0, ESC 0, ACIERTOS 1 (EXP-1/2 destaparon D14), costo QA 1.14 USD; mejoras de QA: FRIC anotada (qa-ciclo no tiene parametro para encender un flag solo durante la Fase E; el Director lo edita a mano y lo revierte)
