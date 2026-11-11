@@ -66,3 +66,15 @@
 - Hallazgos: EXP-1/EXP-2 lineas repetidas -> causa verificada en datos (kdocitem con espacios duplicado) -> D14 BACKLOG; consola favicon/forwardRef -> D7/D8
 - Desvios del Programador: ninguno
 - QA metricas: FP 0, ESC 0, ACIERTOS 1 (EXP-1/2 destaparon D14), costo QA 1.14 USD; mejoras de QA: FRIC anotada (qa-ciclo no tiene parametro para encender un flag solo durante la Fase E; el Director lo edita a mano y lo revierte)
+
+## 2026-11-11 - Slice: S2 modulo VENDEDORES base (S2a API + S2b pantalla/menu; R3/R4/R5/R11)
+- Programador: deep (deepseek-flash, effort low): s2-A 1.29 USD; s2a-BCD 310 s 4.19 USD; s2b-BCD 478 s 7.43 USD
+- Contrato: lib/vendedores-notas.ts (SQL por esquema desde mapa fijo, parametros posicionales, exclusiones del PRD), GET /api/vendedores/notas (401/403/404 flag/400), /vendedores admin con menu (TopNav + BottomNav), RUTAS_POR_ROL.admin, humoProd. Decisiones del Director: semana = lunes a hoy; limit 300 (max 500) con aviso; visacion fuerza Facturadas; solo rango de visacion = sin limite de fecha de venta (correccion del Director a S2a por R5)
+- Lineas: S2a 255 (commiteado en 2 partes); S2b ~303, VendedoresClient 255: excede 200, aceptado por el Director (partir dejaba una pantalla sin filtros). Desvio de la regla 4 declarado
+- Tests: 103/103 VERDE en los archivos del slice (ROJO previo); jest completo: solo fallas preexistentes (sync-from-winfac, ventas/clientes kardex); build OK
+- Verificacion propia: consulta SQL independiente del Director = API real (nov 2026: 86 notas, vida 42F+13P, sanjh 18F+13P; ANGELA oct-nov 4P/54F; visacion 1-11 nov sin fecha de venta 72, 14 vendidas antes); vendedor 403, sin sesion 401, empresa invalida 400, pendientes+visacion 400; captura QA-S2-01 (bodeguero termina en /bodega)
+- Commits: 5cd404c, 7449d37 (S2a), 181ee59 (S2b)
+- Gates disparados: ninguno
+- QA (Fase E): s2 PASA 6/6, 1.22 USD. Hallazgos: EXP-1 rango invertido con error generico y EXP-3 consultas con fechas a medio teclear (400) -> se corrigen en S3 (mismo archivo); EXP-4 no es defecto
+- Desvios del Programador: ninguno (reporto el exceso de lineas sin recortar)
+- QA metricas: FP 0, ESC 0, ACIERTOS 2 (EXP-1, EXP-3), costo QA 1.22 USD; mejoras de QA: ninguna nueva
