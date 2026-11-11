@@ -26,6 +26,9 @@ jest.mock("@/lib/auth", () => ({
   authOptions: {},
 }));
 
+jest.mock("@/config/feature-flags.json", () => ({ "drawer-ventas-detalle": true }));
+const FLAG = jest.requireMock("@/config/feature-flags.json") as Record<string, boolean>;
+
 function sesion(rol: string | null) {
   (getServerSession as jest.Mock).mockResolvedValue(
     rol ? { user: { rol, empresas: [1] } } : null
@@ -71,6 +74,7 @@ describe("GET /api/kardex/ventas", () => {
 
   beforeEach(() => {
     sqlMock.mockReset();
+    FLAG["drawer-ventas-detalle"] = true;
     sesion("admin");
   });
 
@@ -102,6 +106,24 @@ describe("GET /api/kardex/ventas", () => {
       req("/api/kardex/ventas?codigo=HL-81&empresaSlug=vida%3BDROP%20SCHEMA%20public")
     );
     expect(res.status).toBe(400);
+    expect(sqlMock).not.toHaveBeenCalled();
+  });
+
+  it("404 con el flag apagado, sin tocar la base (admin y vendedor)", async () => {
+    FLAG["drawer-ventas-detalle"] = false;
+    for (const rol of ["admin", "vendedor"]) {
+      sesion(rol);
+      const res = await GET_VENTAS(req(URL_OK));
+      expect(res.status).toBe(404);
+      await expect(res.json()).resolves.toEqual({ error: "No encontrado" });
+    }
+    expect(sqlMock).not.toHaveBeenCalled();
+  });
+
+  it("el 403 del bodeguero gana al flag apagado", async () => {
+    FLAG["drawer-ventas-detalle"] = false;
+    sesion("bodeguero");
+    expect((await GET_VENTAS(req(URL_OK))).status).toBe(403);
     expect(sqlMock).not.toHaveBeenCalled();
   });
 

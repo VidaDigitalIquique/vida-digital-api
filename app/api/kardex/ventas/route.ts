@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+import flags from "@/config/feature-flags.json";
 import { schemaDeEmpresa, ventasDeProducto } from "@/lib/ventas-producto";
 
 export async function GET(request: Request) {
@@ -10,6 +11,10 @@ export async function GET(request: Request) {
   const rol = (session.user as { rol?: string }).rol;
   if (rol !== "admin" && rol !== "vendedor") {
     return NextResponse.json({ error: "Rol no autorizado" }, { status: 403 });
+  }
+
+  if (!flags["drawer-ventas-detalle"]) {
+    return NextResponse.json({ error: "No encontrado" }, { status: 404 });
   }
 
   const { searchParams } = new URL(request.url);
