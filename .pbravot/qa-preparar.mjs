@@ -34,7 +34,7 @@ if (host(actual) !== host(orig.TEST_DATABASE_URL)) throw new Error("ABORTA: DATA
 
 const sql = neon(actual);
 const cuentas = {};
-for (const [rut, rol, nombre] of [["99.999.991-1", "admin", "QA Admin"], ["99.999.992-2", "vendedor", "QA Vendedor"], ["99.999.993-3", "bodeguero", "QA Bodeguero"]]) {
+for (const [rut, rol, nombre] of [["99.999.991-1", "admin", "QA Admin"], ["99.999.992-2", "vendedor", "QA Vendedor"], ["99.999.993-3", "bodeguero", "QA Bodeguero"], ["99.999.994-4", "admin", "QA Admin 2"]]) {
   const password = "QA-" + crypto.randomBytes(9).toString("base64url");
   const hash = await bcrypt.hash(password, 10);
   const [u] = await sql`INSERT INTO usuarios (rut, nombre, rol, password, activo) VALUES (${rut}, ${nombre}, ${rol}, ${hash}, true)
@@ -43,5 +43,8 @@ for (const [rut, rol, nombre] of [["99.999.991-1", "admin", "QA Admin"], ["99.99
   await sql`INSERT INTO usuario_empresa (usuario_id, empresa_id) SELECT ${u.id}, id FROM empresas ON CONFLICT DO NOTHING`;
   cuentas[rut] = { role: rol, password };
 }
+// Estado conocido en cada corrida: las cuentas QA arrancan sin filtros guardados.
+await sql`DELETE FROM public.vendedores_filtros
+          WHERE usuario_id IN (SELECT id FROM usuarios WHERE rut LIKE '99.999.99%')`;
 fs.writeFileSync(path.join(qaDir, "cuentas.json"), JSON.stringify(cuentas, null, 2));
 console.log("cuentas qa listas en base de pruebas:", host(actual));

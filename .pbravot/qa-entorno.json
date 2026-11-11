@@ -232,7 +232,8 @@
       "usuarios",
       "usuario_empresa",
       "empresas",
-      "catalogos"
+      "catalogos",
+      "vendedores_filtros"
     ]
   }
 }

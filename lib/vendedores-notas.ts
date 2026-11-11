@@ -1,5 +1,15 @@
 import { sql } from '@/lib/db';
 import { schemaDeEmpresa } from '@/lib/ventas-producto';
+import {
+  CLAVES_FILTROS,
+  fechaFiltroValida,
+  fechaValida,
+  parsearEstado,
+  type FiltrosGuardados,
+} from '@/lib/filtros-validacion';
+
+export { fechaFiltroValida, fechaValida, parsearEstado } from '@/lib/filtros-validacion';
+export type { FiltrosGuardados } from '@/lib/filtros-validacion';
 
 export type EmpresaSlug = 'vida' | 'sanjh';
 export type EstadoNota = 'facturada' | 'pendiente';
@@ -43,13 +53,6 @@ export function empresasDe(valor: string | null): EmpresaSlug[] | null {
   return esquema ? [esquema] : null;
 }
 
-export function fechaValida(valor: string | null): boolean {
-  if (valor === null) return true;
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(valor)) return false;
-  const t = Date.parse(`${valor}T00:00:00Z`);
-  return !Number.isNaN(t) && new Date(t).toISOString().slice(0, 10) === valor;
-}
-
 export function parsearFiltros(
   searchParams: URLSearchParams,
   hoy: string
@@ -81,12 +84,9 @@ export function parsearFiltros(
     return { error: 'rango de fecha de visación inválido' };
   }
 
-  const estadoParam = searchParams.get('estado') ?? 'todas';
-  let estado: EstadoNota | null;
-  if (estadoParam === 'todas') estado = null;
-  else if (estadoParam === 'pendientes') estado = 'pendiente';
-  else if (estadoParam === 'facturadas') estado = 'facturada';
-  else return { error: 'estado inválido' };
+  const estadoParam = parsearEstado(searchParams.get('estado') ?? 'todas');
+  if (!estadoParam) return { error: 'estado inválido' };
+  let estado: EstadoNota | null = estadoParam === 'todas' ? null : estadoParam === 'pendientes' ? 'pendiente' : 'facturada';
 
   if ((visaDesde || visaHasta) && estado === 'pendiente') {
     return { error: 'el rango de visación solo aplica a notas facturadas' };
@@ -103,6 +103,61 @@ export function parsearFiltros(
 
   return {
     filtros: { hoy, desde, hasta, vendedor: searchParams.get('vendedor')?.trim() || null, visaDesde, visaHasta, estado, limit },
+  };
+}
+
+/**
+ * Valida y normaliza el JSON guardado por usuario. Reutiliza la validacion de
+ * parsearFiltros (fechas, rangos, estado, visacion) sin aplicarle los defaults
+ * de mes: lo guardado son las fechas tal como estan en los campos ('' = vacio).
+ */
+export function validarFiltrosGuardados(
+  raw: unknown,
+  hoy: string
+): { filtros: FiltrosGuardados } | { error: string } {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { error: 'filtros inválidos' };
+  const obj = raw as Record<string, unknown>;
+  for (const clave of Object.keys(obj)) {
+    if (!(CLAVES_FILTROS as readonly string[]).includes(clave)) {
+      return { error: `clave desconocida: ${clave}` };
+    }
+  }
+
+  const campos = {} as Record<(typeof CLAVES_FILTROS)[number], string>;
+  for (const clave of CLAVES_FILTROS) {
+    const valor = obj[clave] ?? '';
+    if (typeof valor !== 'string') return { error: `${clave} inválido` };
+    campos[clave] = valor.trim();
+  }
+  if (campos.vendedor.length > 100) return { error: 'vendedor inválido' };
+  for (const clave of ['desde', 'hasta', 'visaDesde', 'visaHasta'] as const) {
+    if (!fechaFiltroValida(campos[clave])) return { error: `fecha ${clave} inválida` };
+  }
+  const empresa = empresasDe(campos.empresa)
+    ? ((campos.empresa || 'todas') as FiltrosGuardados['empresa'])
+    : null;
+  if (!empresa) return { error: 'empresa inválida' };
+  const estado = parsearEstado(campos.estado || 'todas');
+  if (!estado) return { error: 'estado inválido' };
+
+  const sp = new URLSearchParams();
+  for (const clave of ['vendedor', 'desde', 'hasta', 'visaDesde', 'visaHasta'] as const) {
+    if (campos[clave]) sp.set(clave, campos[clave]);
+  }
+  if (campos.estado) sp.set('estado', campos.estado);
+  const parsed = parsearFiltros(sp, hoy);
+  if ('error' in parsed) return parsed;
+
+  return {
+    filtros: {
+      vendedor: campos.vendedor,
+      desde: campos.desde,
+      hasta: campos.hasta,
+      visaDesde: campos.visaDesde,
+      visaHasta: campos.visaHasta,
+      estado,
+      empresa,
+    },
   };
 }
 

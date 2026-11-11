@@ -5,6 +5,8 @@
 import {
   empresasDe,
   fechaValida,
+  fechaFiltroValida,
+  validarFiltrosGuardados,
   parsearFiltros,
   construirConsulta,
   consultaVendedores,
@@ -65,6 +67,90 @@ describe('fechaValida', () => {
       expect(fechaValida(f)).toBe(false);
     }
   );
+});
+
+describe('fechaFiltroValida (campos del cliente)', () => {
+  it.each(['', '2026-11-11', '2000-01-01', '2100-12-31'])('acepta %p', (f) => {
+    expect(fechaFiltroValida(f)).toBe(true);
+  });
+
+  it.each(['0002-11-11', '102026-02-11', '2026-13-01', '2026-1-1', '1999-12-31', '2101-01-01'])(
+    'rechaza %p',
+    (f) => {
+      expect(fechaFiltroValida(f)).toBe(false);
+    }
+  );
+});
+
+describe('validarFiltrosGuardados', () => {
+  const GUARDADOS = {
+    vendedor: ' PRAVIN ',
+    desde: '2026-11-01',
+    hasta: '2026-11-11',
+    visaDesde: '',
+    visaHasta: '',
+    estado: 'todas',
+    empresa: 'todas',
+  };
+
+  it('normaliza: recorta y conserva las fechas vacias', () => {
+    const r = validarFiltrosGuardados(GUARDADOS, HOY);
+    expect('error' in r).toBe(false);
+    if ('error' in r) return;
+    expect(r.filtros).toEqual({
+      vendedor: 'PRAVIN',
+      desde: '2026-11-01',
+      hasta: '2026-11-11',
+      visaDesde: '',
+      visaHasta: '',
+      estado: 'todas',
+      empresa: 'todas',
+    });
+  });
+
+  it('claves ausentes quedan como "sin filtro"', () => {
+    const r = validarFiltrosGuardados({}, HOY);
+    expect('error' in r).toBe(false);
+    if ('error' in r) return;
+    expect(r.filtros).toEqual({
+      vendedor: '',
+      desde: '',
+      hasta: '',
+      visaDesde: '',
+      visaHasta: '',
+      estado: 'todas',
+      empresa: 'todas',
+    });
+  });
+
+  it('estado y empresa vacios caen a "todas"; visacion fuerza facturadas al consultar', () => {
+    const r = validarFiltrosGuardados({ ...GUARDADOS, estado: '', empresa: '', visaDesde: '2026-11-01' }, HOY);
+    expect('error' in r).toBe(false);
+    if ('error' in r) return;
+    expect(r.filtros.estado).toBe('todas');
+    expect(r.filtros.empresa).toBe('todas');
+    expect(r.filtros.visaDesde).toBe('2026-11-01');
+  });
+
+  it.each([
+    ['null', null],
+    ['array', []],
+    ['texto', 'PRAVIN'],
+    ['clave desconocida', { ...GUARDADOS, usuario_id: 999 }],
+    ['clave limit', { ...GUARDADOS, limit: 10 }],
+    ['valor no string', { ...GUARDADOS, desde: 20261101 }],
+    ['vendedor no string', { ...GUARDADOS, vendedor: { x: 1 } }],
+    ['vendedor demasiado largo', { ...GUARDADOS, vendedor: 'X'.repeat(101) }],
+    ['fecha invalida', { ...GUARDADOS, desde: '2026-02-30' }],
+    ['fecha parcial', { ...GUARDADOS, hasta: '0002-11-11' }],
+    ['rango invertido', { ...GUARDADOS, desde: '2026-11-10', hasta: '2026-11-01' }],
+    ['visacion invertida', { ...GUARDADOS, visaDesde: '2026-11-10', visaHasta: '2026-11-01' }],
+    ['visacion + pendientes', { ...GUARDADOS, visaDesde: '2026-11-01', estado: 'pendientes' }],
+    ['estado invalido', { ...GUARDADOS, estado: 'facturado' }],
+    ['empresa invalida', { ...GUARDADOS, empresa: 'vida; DROP TABLE usuarios' }],
+  ])('rechaza %s', (_nombre, raw) => {
+    expect('error' in validarFiltrosGuardados(raw, HOY)).toBe(true);
+  });
 });
 
 describe('parsearFiltros', () => {
