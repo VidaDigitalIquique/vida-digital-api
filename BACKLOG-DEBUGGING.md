@@ -81,4 +81,5 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 - Alcance 2026: 75 notas vida y 6 sanjh con suma de lineas > `val_rea`. Sin regla en los datos que las separe (cruzar por id_tdocu o knumdocu no generaliza).
 - Hipotesis (no verificada): el sync Python WinFac -> Neon inserta/actualiza lineas pero no borra las que se quitaron de la nota en WinFac.
 - Impacto: el conteo "ventas registradas" del drawer y las lineas del modal de VENDEDORES pueden incluir productos que no se vendieron. Comision no afectada (usa val_rea).
-- Siguiente paso: revisar el script de sync y comparar una nota con el DBF de WinFac.
+- Siguiente paso: revisar el script de sync y comparar una nota con el DBF de WinFac.- 2026-11-11 17:24 (Chile): Pablo sincronizo (sync_requests id 59, completado en 36 s). La nota 002499 sigue en produccion con las 5 lineas y val_rea 2550; notas 2026 con lineas de mas: 75 (igual). Sincronizar no lo corrige.
+- Hipotesis a verificar en el script de sync (fuera de este repo, ubicacion pendiente de Pablo): (1) el sync hace upsert de lineas y nunca borra; (2) los DBF de WinFac conservan las lineas eliminadas con marca de borrado hasta compactar y el lector no la filtra.
