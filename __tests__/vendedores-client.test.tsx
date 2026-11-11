@@ -353,6 +353,112 @@ describe('carrera de respuestas', () => {
   });
 });
 
+describe('EXP-1: un cambio pendiente no se pierde al salir', () => {
+  it('al desmontar antes del debounce envia un PUT keepalive con el ultimo estado', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    const { unmount } = render(<VendedoresClient />);
+    await waitFor(() => expect(notasCalls(fn)).toHaveLength(1));
+
+    fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'facturadas' } });
+    unmount();
+
+    expect(putCalls(fn)).toHaveLength(1);
+    const init = putCalls(fn)[0][1] as RequestInit;
+    expect(init.keepalive).toBe(true);
+    expect(JSON.parse(String(init.body))).toMatchObject({ estado: 'facturadas' });
+
+    await esperar(700);
+    expect(putCalls(fn)).toHaveLength(1);
+  });
+
+  it('sin cambios pendientes al desmontar no envia nada', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    const { unmount } = render(<VendedoresClient />);
+    await waitFor(() => expect(notasCalls(fn)).toHaveLength(1));
+
+    unmount();
+    expect(putCalls(fn)).toHaveLength(0);
+  });
+
+  it('pagehide envia el cambio pendiente con keepalive y no lo repite', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    render(<VendedoresClient />);
+    await waitFor(() => expect(notasCalls(fn)).toHaveLength(1));
+
+    fireEvent.change(screen.getByLabelText('Empresa'), { target: { value: 'sanjh' } });
+    fireEvent(window, new Event('pagehide'));
+
+    expect(putCalls(fn)).toHaveLength(1);
+    const init = putCalls(fn)[0][1] as RequestInit;
+    expect(init.keepalive).toBe(true);
+    expect(JSON.parse(String(init.body))).toMatchObject({ empresa: 'sanjh' });
+
+    await esperar(700);
+    expect(putCalls(fn)).toHaveLength(1);
+  });
+});
+
+describe('fila clickeable (R7)', () => {
+  const DETALLE = {
+    empresa: 'vida',
+    empresa_nombre: 'Vida Digital',
+    nota: '002514',
+    fecha_venta: '2026-11-09',
+    cliente: 'MILENKA',
+    cliente_factura: 'MILENKA SPA',
+    vendedor: 'PRAVIN',
+    total_usd: 825,
+    estado: 'facturada',
+    visacion: '431033',
+    fecha_visacion: '2026-11-10',
+    lineas: [],
+    diferencia_usd: null,
+  };
+
+  function fetchConDetalle(notas: Respuesta) {
+    const fn = jest.fn((url: string, init?: RequestInit) => {
+      if (esFiltros(String(url))) {
+        if (init?.method === 'PUT') return Promise.resolve({ ok: true, status: 200, json: async () => ({}) });
+        return Promise.resolve({ ok: true, status: 200, json: async () => ({ filtros: null }) });
+      }
+      if (String(url).startsWith('/api/vendedores/notas/')) {
+        return Promise.resolve({ ok: true, status: 200, json: async () => DETALLE });
+      }
+      return Promise.resolve({ ok: true, status: 200, json: async () => notas });
+    });
+    global.fetch = fn as unknown as typeof fetch;
+    return fn;
+  }
+
+  it('click en la fila abre el modal con empresa y nota de esa fila', async () => {
+    const fn = fetchConDetalle(respuesta([fila('002514')]));
+    render(<VendedoresClient />);
+
+    fireEvent.click((await screen.findByText('002514')).closest('tr') as HTMLElement);
+
+    expect(await screen.findByText('Detalle de nota 002514')).toBeInTheDocument();
+    expect(fn.mock.calls.some((c) => String(c[0]) === '/api/vendedores/notas/vida/002514')).toBe(true);
+
+    fireEvent.click(screen.getByText('Close'));
+    await waitFor(() => expect(screen.queryByText('Detalle de nota 002514')).toBeNull());
+  });
+
+  it('la fila es accesible: tabIndex y Enter/Espacio abren el detalle', async () => {
+    const fn = fetchConDetalle(
+      respuesta([fila('003817', { empresa: 'sanjh', empresa_nombre: 'SANJH' })])
+    );
+    render(<VendedoresClient />);
+
+    const tr = (await screen.findByText('003817')).closest('tr') as HTMLElement;
+    expect(tr.tabIndex).toBe(0);
+
+    fireEvent.keyDown(tr, { key: 'Enter' });
+    await waitFor(() =>
+      expect(fn.mock.calls.some((c) => String(c[0]) === '/api/vendedores/notas/sanjh/003817')).toBe(true)
+    );
+  });
+});
+
 describe('hidratacion', () => {
   it('el primer render no calcula fechas y no rompe la hidratacion', async () => {
     fetchMock();

@@ -5,6 +5,7 @@ import { fechaDiaCL, hoyCL, lunesSemanaCL, primerDiaMesCL } from '@/lib/fechas';
 import { fechaFiltroValida, type FiltrosGuardados } from '@/lib/filtros-validacion';
 import { formatUSD } from '@/lib/utils';
 import type { NotaVenta } from '@/lib/vendedores-notas';
+import { NotaDetalleModal } from './NotaDetalleModal';
 
 type EstadoFiltro = 'todas' | 'pendientes' | 'facturadas';
 type EmpresaFiltro = 'todas' | 'vida' | 'sanjh';
@@ -76,7 +77,36 @@ export function VendedoresClient() {
 
   const pedido = useRef(0);
   const guardado = useRef('');
+  const pendiente = useRef<string | null>(null);
+  const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [seleccion, setSeleccion] = useState<{ empresa: 'vida' | 'sanjh'; nota: string } | null>(null);
   const hayVisacion = Boolean(visaDesde || visaHasta);
+
+  // EXP-1: si se sale antes del debounce, el ultimo cambio se guarda igual.
+  useEffect(() => {
+    const guardarYa = () => {
+      const json = pendiente.current;
+      if (!json) return;
+      pendiente.current = null;
+      if (temporizador.current) clearTimeout(temporizador.current);
+      fetch('/api/vendedores/filtros', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: json,
+        keepalive: true,
+      })
+        .then((r) => {
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          guardado.current = json;
+        })
+        .catch(() => {});
+    };
+    window.addEventListener('pagehide', guardarYa);
+    return () => {
+      window.removeEventListener('pagehide', guardarYa);
+      guardarYa();
+    };
+  }, []);
 
   // EXP-1/EXP-3: solo se consulta (y se guarda) con fechas completas y rangos validos.
   const fechasCompletas = [desde, hasta, visaDesde, visaHasta].every(fechaFiltroValida);
@@ -152,8 +182,14 @@ export function VendedoresClient() {
   useEffect(() => {
     if (inicializando || errorFechas) return;
     const json = canonizar({ vendedor, desde, hasta, visaDesde, visaHasta, estado, empresa });
-    if (json === guardado.current) return;
+    if (json === guardado.current) {
+      pendiente.current = null;
+      return;
+    }
+    pendiente.current = json;
     const t = setTimeout(() => {
+      pendiente.current = null;
+      temporizador.current = null;
       fetch('/api/vendedores/filtros', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -166,6 +202,7 @@ export function VendedoresClient() {
         })
         .catch(() => setAvisoGuardado(true));
     }, 500);
+    temporizador.current = t;
     return () => clearTimeout(t);
   }, [inicializando, errorFechas, vendedor, desde, hasta, visaDesde, visaHasta, estado, empresa]);
 
@@ -350,7 +387,18 @@ export function VendedoresClient() {
                 </thead>
                 <tbody>
                   {data.notas.map((n) => (
-                    <tr key={`${n.empresa}-${n.nota}`} className="border-t border-zinc-100 dark:border-zinc-800">
+                    <tr
+                      key={`${n.empresa}-${n.nota}`}
+                      tabIndex={0}
+                      onClick={() => setSeleccion({ empresa: n.empresa, nota: n.nota })}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          setSeleccion({ empresa: n.empresa, nota: n.nota });
+                        }
+                      }}
+                      className="cursor-pointer border-t border-zinc-100 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+                    >
                       <td className="whitespace-nowrap px-3 py-2">{n.empresa_nombre}</td>
                       <td className="whitespace-nowrap px-3 py-2">{fechaDiaCL(n.fecha_venta)}</td>
                       <td className="whitespace-nowrap px-3 py-2 font-mono">{n.nota}</td>
@@ -371,6 +419,14 @@ export function VendedoresClient() {
             </div>
           )}
         </>
+      )}
+
+      {seleccion && (
+        <NotaDetalleModal
+          empresa={seleccion.empresa}
+          nota={seleccion.nota}
+          onClose={() => setSeleccion(null)}
+        />
       )}
     </div>
   );

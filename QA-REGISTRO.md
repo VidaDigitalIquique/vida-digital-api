@@ -318,3 +318,9 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s3
 - [x] P-20261111-1833-1 (baja) HALLAZGO: EXP-1 — Un filtro cambiado y recargado de inmediato no se guarda -> BACKLOG S4b (guardar pendiente al salir de la pagina con fetch keepalive; mismo archivo)
 - [x] P-20261111-1833-2 (media) HALLAZGO: EXP-3 — Cambios rápidos seguidos y recarga tras 3 s -> DESCARTADO: el propio agente lo informa consistente (la regla de visacion fuerza Facturadas, por diseno R5)
+
+## 2026-11-11 18:49 - s4 - commit 8671aa2 - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s4
+- [x] P-20261111-1849-1 (baja) HALLAZGO: EXP-1 — En ancho móvil (375 px) la tabla del modal queda cortada -> ARREGLADO S4b (min-w-0 + overflow-x-auto; test)
+- [x] P-20261111-1849-2 (baja) HALLAZGO: EXP-2 — Errores de consola -> ARREGLADO S4b (warning next/image) / BACKLOG D7 (favicon) y D8 (ref DialogClose)
+- [x] P-20261111-1849-3 (media) HALLAZGO: EXP-3 — Escape y Enter funcionan; falta de imagen se maneja bien -> DESCARTADO: no es defecto

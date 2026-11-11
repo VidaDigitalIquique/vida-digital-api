@@ -90,3 +90,15 @@
 - QA (Fase E): s3 PASA 6/6, 1.04 USD. EXP-1 (recargar antes de 500 ms pierde el ultimo cambio) -> se corrige en S4b con fetch keepalive; EXP-3 descartado (consistente)
 - Desvios del Programador: el validador del servidor tambien exige anio 2000-2100 (declarado, aceptado)
 - QA metricas: FP 0, ESC 0, ACIERTOS 1 (EXP-1), costo QA 1.04 USD
+
+## 2026-11-11 - Slice: S4 modal de detalle de nota (R7) (S4a datos+API, S4b modal) + EXP-1 de S3
+- Programador: deep (deepseek-flash, effort low): s4-A; s4a-BCD 296 s 4.70 USD; s4b-BCD 451 s 7.68 USD; s4b-fix ~0.8 USD (sesion acumulada 8.44)
+- Contrato: reglasModulo compartido (tabla, detalle y luego comisiones); GET /api/vendedores/notas/[empresa]/[nota] (whitelist, nota numerica, 404 fuera del modulo); imagen por LATERAL LIMIT 1; diferencia sum(totalrea) vs val_rea (correccion del Director: el Programador creia que totalrea no existia, verificado en la base); modal con 7 columnas, total de ganancia y aviso D13/D14; flush de filtros con fetch keepalive en pagehide/desmontaje (EXP-1 de S3)
+- Lineas: S4a 194, S4b 198 (dentro del limite)
+- Tests: S4a 121/121, S4b 54/54 + fix 37/37 VERDE (ROJO previo)
+- Verificacion propia (API real, base de pruebas): sanjh 003816 2 lineas sin diferencia; vida 002499 5 lineas diferencia 181,50; nota inexistente/otra empresa 404; empresa invalida e inyeccion 400; carga inicial sin filtros guardados muestra 01-11 a 11-11 y 86 notas (no se reprodujo la observacion del agente de fechas vacias)
+- Commits: 195db64 (S4a) y el de S4b
+- Gates disparados: ninguno
+- QA (Fase E): s4 PASA 4/4 (valores de % y ganancia por linea fijados por el Director, incluido margen negativo), 0.60 USD. EXP-1 tabla del modal cortada en movil -> ARREGLADO antes del commit; warning next/image -> ARREGLADO; ref DialogClose -> D8
+- Desvios del Programador: ninguno
+- QA metricas: FP 0, ESC 0, ACIERTOS 1 (EXP-1 movil), costo QA 0.60 USD
