@@ -2,7 +2,7 @@
  * D1 — control de acceso a catalogos.
  * Estado inicial: ROJO (lib/roles.ts aun no existe).
  */
-import { ROLES_CATALOGO, puedeGestionarCatalogos } from './roles';
+import { ROLES_CATALOGO, puedeGestionarCatalogos, puedeVerVendedores } from './roles';
 
 describe('puedeGestionarCatalogos', () => {
   it('ROLES_CATALOGO contiene admin y vendedor', () => {
@@ -23,5 +23,22 @@ describe('puedeGestionarCatalogos', () => {
 
   it.each([undefined, null, 123, true, {}, []])('%p (no string) -> false', (rol) => {
     expect(puedeGestionarCatalogos(rol)).toBe(false);
+  });
+});
+
+describe('puedeVerVendedores', () => {
+  it('admin -> true', () => {
+    expect(puedeVerVendedores('admin')).toBe(true);
+  });
+
+  it.each(['vendedor', 'bodeguero', 'supervisor', '', 'Admin', 'ADMIN', 'root'])(
+    '%p -> false',
+    (rol) => {
+      expect(puedeVerVendedores(rol)).toBe(false);
+    }
+  );
+
+  it.each([undefined, null, 123, true, {}, []])('%p (no string) -> false', (rol) => {
+    expect(puedeVerVendedores(rol)).toBe(false);
   });
 });
