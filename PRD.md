@@ -163,11 +163,11 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
 
 ### R7 — Detalle de una venta en modal (riesgo: medio)
 - Rol: admin
-- Dado: una nota facturada en la tabla (y luego una pendiente con productos; y luego la nota de Vida Digital 002499)
+- Dado: una nota facturada en la tabla (y luego una pendiente con productos; y luego, si existe en el rango, una nota cuyas líneas no suman al total de WinFac)
 - Cuando: hace clic en la fila
 - Entonces: se abre un modal con la empresa, la nota, el cliente, el vendedor y una tabla con IMAGEN, CÓDIGO, COSTO, % SOBRE EL
   COSTO, CANTIDAD (cajas), PRECIO DE VENTA y GANANCIA USD por línea, y el total de ganancia; el % y la ganancia coinciden con
-  (precio − costo) de cada línea; en la 002499 se ve el aviso de que las líneas no suman al total de WinFac (total 2.550)
+  (precio − costo) de cada línea; en la nota cuyas líneas no suman al total se ve el aviso con la diferencia (el caso no depende de una nota fija: tras corregir D13 puede no existir ninguna)
 
 ### R8 — Informe de comisiones del mes (riesgo: alto)
 - Rol: admin
