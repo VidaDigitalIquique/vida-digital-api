@@ -17,7 +17,10 @@ jest.mock('next/navigation', () => ({
   },
 }));
 jest.mock('@/app/(app)/vendedores/VendedoresClient', () => ({
-  VendedoresClient: () => 'tabla-vendedores',
+  VendedoresClient: () => <div>tabla-vendedores</div>,
+}));
+jest.mock('@/app/(app)/vendedores/ComisionesPanel', () => ({
+  ComisionesPanel: () => <div>panel-comisiones</div>,
 }));
 
 import { getServerSession } from 'next-auth';
@@ -52,8 +55,9 @@ describe('/vendedores', () => {
     await expect(VendedoresPage()).rejects.toThrow('NOT_FOUND');
   });
 
-  it('admin con el flag encendido -> renderiza la tabla', async () => {
+  it('admin con el flag encendido -> renderiza la tabla y el panel de comisiones', async () => {
     render(await VendedoresPage());
     expect(screen.getByText('tabla-vendedores')).toBeInTheDocument();
+    expect(screen.getByText('panel-comisiones')).toBeInTheDocument();
   });
 });

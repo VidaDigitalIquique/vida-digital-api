@@ -209,7 +209,8 @@
           "admin"
         ],
         "debeVerse": [
-          "VENDEDORES"
+          "VENDEDORES",
+          "Comisiones"
         ]
       },
       {

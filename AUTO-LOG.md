@@ -102,3 +102,15 @@
 - QA (Fase E): s4 PASA 4/4 (valores de % y ganancia por linea fijados por el Director, incluido margen negativo), 0.60 USD. EXP-1 tabla del modal cortada en movil -> ARREGLADO antes del commit; warning next/image -> ARREGLADO; ref DialogClose -> D8
 - Desvios del Programador: ninguno
 - QA metricas: FP 0, ESC 0, ACIERTOS 1 (EXP-1 movil), costo QA 0.60 USD
+
+## 2026-11-11 - Slice: S5 comisiones (S5a informe GET + migracion 011, S5b PUT del % + panel) (R8, R9)
+- Programador: deep (deepseek-flash, effort low): s5-A; s5a-BCD 252 s 4.18 USD; s5b-BCD 313 s 7.08 USD
+- Contrato: informe por mes de facturacion (fechadoc), solo facturadas, reglasModulo (futuras fuera), una fila por vendedor valido aunque tenga 0, comision por fila half-up y total = suma de filas; public.vendedores_config (fila unica id=1, 0,50 por defecto); PUT valida 0-100 con 2 decimales y devuelve el informe recalculado; ComisionesPanel debajo de la tabla, la UI no recalcula
+- Lineas: S5a 193, S5b 197
+- Tests: S5a 132/132, S5b 104/104 VERDE (ROJO previo)
+- Verificacion propia: consulta independiente del Director = API = pantalla (2026-11: 72 / 157.103,40 / 785,52; 2026-10: 154 / 406.242,30 / 2.031,21; con 1 %: 1.571,03). Migracion 011 aplicada en pruebas por el Director (identica al archivo)
+- Commits: 8671aa2 (S5a) y el de S5b
+- Gates disparados: ninguno. Pendiente para el deploy: aplicar migrations/010 y 011 en produccion (Senal 3)
+- QA (Fase E): s5 PASA 6/6, 0.67 USD. EXP-A (cambiar mes y % a la vez pierde el %) -> se corrige en S6; EXP-B formato $ de la app -> descartado
+- Desvios del Programador: ninguno
+- QA metricas: FP 0, ESC 0, ACIERTOS 1 (EXP-A), costo QA 0.67 USD

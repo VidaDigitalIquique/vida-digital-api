@@ -324,3 +324,9 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - [x] P-20261111-1849-1 (baja) HALLAZGO: EXP-1 — En ancho móvil (375 px) la tabla del modal queda cortada -> ARREGLADO S4b (min-w-0 + overflow-x-auto; test)
 - [x] P-20261111-1849-2 (baja) HALLAZGO: EXP-2 — Errores de consola -> ARREGLADO S4b (warning next/image) / BACKLOG D7 (favicon) y D8 (ref DialogClose)
 - [x] P-20261111-1849-3 (media) HALLAZGO: EXP-3 — Escape y Enter funcionan; falta de imagen se maneja bien -> DESCARTADO: no es defecto
+
+## 2026-11-11 20:38 - s5 - commit 1764271 - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s5
+- [x] P-20261111-2038-1 (baja) HALLAZGO: EXP-A — Un valor del % escrito junto con un cambio de mes se perdió -> BACKLOG S6 (mismo archivo ComisionesPanel: al cambiar de mes no pisar un % que el usuario esta editando)
+- [x] P-20261111-2038-2 (baja) HALLAZGO: EXP-B — Formato numérico -> DESCARTADO: formatUSD es el formato de toda la app ($10,980.10); el encargo usaba otro formato de escritura
+- [x] P-20261111-2038-3 (media) HALLAZGO: Probado sin incidencias -> DESCARTADO: no es defecto

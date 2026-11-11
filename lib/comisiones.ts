@@ -77,3 +77,17 @@ export async function leerComisionPct(): Promise<number> {
   const pct = Number(filas?.[0]?.pct);
   return Number.isFinite(pct) ? pct : 0.5;
 }
+
+/** Guarda el % en la fila unica (id fijo 1: no puede duplicarse) y lo devuelve. */
+export async function guardarComisionPct(pct: number, usuarioId: number): Promise<number> {
+  const filas = (await sql.query(
+    `INSERT INTO public.vendedores_config (id, comision_pct, updated_at, updated_by)
+     VALUES (1, $1, now(), $2)
+     ON CONFLICT (id) DO UPDATE
+       SET comision_pct = EXCLUDED.comision_pct, updated_at = now(), updated_by = EXCLUDED.updated_by
+     RETURNING comision_pct::float8 AS pct`,
+    [pct, usuarioId]
+  )) as unknown as Array<{ pct: unknown }>;
+  const guardado = Number(filas?.[0]?.pct);
+  return Number.isFinite(guardado) ? guardado : pct;
+}

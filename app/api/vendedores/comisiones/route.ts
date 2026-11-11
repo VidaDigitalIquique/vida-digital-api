@@ -4,8 +4,8 @@ import { authOptions } from '@/lib/auth';
 import flags from '@/config/feature-flags.json';
 import { hoyCL } from '@/lib/fechas';
 import { puedeVerVendedores } from '@/lib/roles';
-import { fetchComisiones, leerComisionPct } from '@/lib/comisiones';
-import { mesDeHoy, mesValido } from '@/lib/comisiones-utils';
+import { fetchComisiones, guardarComisionPct, leerComisionPct } from '@/lib/comisiones';
+import { mesDeHoy, mesValido, validarPct } from '@/lib/comisiones-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,5 +43,39 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('GET /api/vendedores/comisiones error:', error);
     return NextResponse.json({ error: 'Error al consultar las comisiones' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  const auth = await autorizar();
+  if ('error' in auth) return auth.error;
+
+  let raw: unknown;
+  try {
+    raw = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
+  }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return NextResponse.json({ error: 'datos inválidos' }, { status: 400 });
+  }
+  const obj = raw as Record<string, unknown>;
+  const hoy = hoyCL();
+  const mes = obj.mes === undefined || obj.mes === null
+    ? mesDeHoy(hoy)
+    : typeof obj.mes === 'string'
+      ? mesValido(obj.mes)
+      : null;
+  if (!mes) return NextResponse.json({ error: 'mes inválido' }, { status: 400 });
+
+  const comisionPct = validarPct(obj.comision_pct);
+  if (comisionPct === null) return NextResponse.json({ error: 'porcentaje inválido' }, { status: 400 });
+
+  try {
+    const guardado = await guardarComisionPct(comisionPct, auth.usuarioId);
+    return NextResponse.json(await fetchComisiones(mes, hoy, guardado));
+  } catch (error) {
+    console.error('PUT /api/vendedores/comisiones error:', error);
+    return NextResponse.json({ error: 'Error al guardar las comisiones' }, { status: 500 });
   }
 }

@@ -4,6 +4,7 @@ import { notFound, redirect } from 'next/navigation';
 import flags from '@/config/feature-flags.json';
 import { puedeVerVendedores } from '@/lib/roles';
 import { VendedoresClient } from './VendedoresClient';
+import { ComisionesPanel } from './ComisionesPanel';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,7 @@ export default async function VendedoresPage() {
   return (
     <div className="container max-w-7xl mx-auto px-4 py-6">
       <VendedoresClient />
+      <ComisionesPanel />
     </div>
   );
 }
