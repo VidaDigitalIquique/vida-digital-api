@@ -5,6 +5,7 @@ import flags from '@/config/feature-flags.json';
 import { hoyCL } from '@/lib/fechas';
 import { puedeVerVendedores } from '@/lib/roles';
 import { fetchComisiones, guardarComisionPct, leerComisionPct } from '@/lib/comisiones';
+import { generarComisionesXlsx } from '@/lib/comisiones-xlsx';
 import { mesDeHoy, mesValido, validarPct } from '@/lib/comisiones-utils';
 
 export const dynamic = 'force-dynamic';
@@ -37,9 +38,25 @@ export async function GET(request: Request) {
   const mes = mesParam === null ? mesDeHoy(hoy) : mesValido(mesParam);
   if (!mes) return NextResponse.json({ error: 'mes inválido' }, { status: 400 });
 
+  const formato = searchParams.get('formato');
+  if (formato !== null && formato !== 'xlsx') {
+    return NextResponse.json({ error: 'formato inválido' }, { status: 400 });
+  }
+
   try {
     const comisionPct = await leerComisionPct();
-    return NextResponse.json(await fetchComisiones(mes, hoy, comisionPct));
+    const informe = await fetchComisiones(mes, hoy, comisionPct);
+    if (formato === 'xlsx') {
+      return new NextResponse(new Uint8Array(generarComisionesXlsx(informe)), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Disposition': `attachment; filename="comisiones-${informe.mes}.xlsx"`,
+          'Cache-Control': 'no-store',
+        },
+      });
+    }
+    return NextResponse.json(informe);
   } catch (error) {
     console.error('GET /api/vendedores/comisiones error:', error);
     return NextResponse.json({ error: 'Error al consultar las comisiones' }, { status: 500 });

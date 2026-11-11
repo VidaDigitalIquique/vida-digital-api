@@ -21,6 +21,9 @@ export function ComisionesPanel() {
   const [avisoPct, setAvisoPct] = useState(false);
   const pedido = useRef(0);
   const guardandoRef = useRef(false);
+  // EXP-A (S5): si el usuario esta editando el %, cambiar de mes no debe pisarlo.
+  const pctServidor = useRef('');
+  const pctSucio = useRef(false);
 
   // Coma o punto desde el teclado; la API recibe un numero.
   const normalizado = pct.trim().replace(',', '.');
@@ -41,9 +44,11 @@ export function ComisionesPanel() {
       .then(leer)
       .then((json: InformeComisiones) => {
         if (id !== pedido.current) return; // respuesta vieja
+        const texto = json.comision_pct.toFixed(2);
+        pctServidor.current = texto;
         setData(json);
         setMes(json.mes);
-        setPct(json.comision_pct.toFixed(2));
+        if (!pctSucio.current) setPct(texto);
         setCargando(false);
       })
       .catch(() => {
@@ -75,9 +80,12 @@ export function ComisionesPanel() {
     })
       .then(leer)
       .then((json: InformeComisiones) => {
+        const texto = json.comision_pct.toFixed(2);
+        pctServidor.current = texto;
+        pctSucio.current = false;
         setData(json);
         setMes(json.mes);
-        setPct(json.comision_pct.toFixed(2));
+        setPct(texto);
       })
       .catch(() => setAvisoPct(true))
       .finally(() => {
@@ -96,11 +104,16 @@ export function ComisionesPanel() {
         </label>
         <label className="flex flex-col gap-1 text-xs text-zinc-500">
           % de comisión
-          <input aria-label="% de comisión" type="text" inputMode="decimal" value={pct} onChange={(e) => setPct(e.target.value)} className={`w-28 ${CAMPO}`} />
+          <input aria-label="% de comisión" type="text" inputMode="decimal" value={pct} onChange={(e) => { pctSucio.current = e.target.value !== pctServidor.current; setPct(e.target.value); }} className={`w-28 ${CAMPO}`} />
         </label>
         <button type="button" onClick={guardar} disabled={pctNum === null || guardando || cargando} className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50">
           Guardar
         </button>
+        {mes && (
+          <a href={`/api/vendedores/comisiones?mes=${encodeURIComponent(mes)}&formato=xlsx`} className="rounded-md border px-3 py-1.5 text-sm">
+            Exportar
+          </a>
+        )}
         {data && <span className="text-sm text-zinc-500">Informe de {data.mes_etiqueta}</span>}
       </div>
 

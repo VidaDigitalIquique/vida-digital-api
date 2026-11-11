@@ -330,3 +330,8 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - [x] P-20261111-2038-1 (baja) HALLAZGO: EXP-A — Un valor del % escrito junto con un cambio de mes se perdió -> BACKLOG S6 (mismo archivo ComisionesPanel: al cambiar de mes no pisar un % que el usuario esta editando)
 - [x] P-20261111-2038-2 (baja) HALLAZGO: EXP-B — Formato numérico -> DESCARTADO: formatUSD es el formato de toda la app ($10,980.10); el encargo usaba otro formato de escritura
 - [x] P-20261111-2038-3 (media) HALLAZGO: Probado sin incidencias -> DESCARTADO: no es defecto
+
+## 2026-11-11 20:48 - s6 - commit 5097549 - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s6
+- [x] P-20261111-2048-1 (media) HALLAZGO: EXP-1 - `Exportar` descargó `comisiones-2020-01.xlsx`. La pantalla mostró el informe con 4 vendedores en 0 notas, $0.00 y total $0.00, sin errores. No pude abrir el contenido del archivo. Evidencia: EXP-1.png. -> DESCARTADO: no es defecto; el Director abrio comisiones-2020-01.xlsx: 4 vendedores en 0 y TOTAL 0
+- [x] P-20261111-2048-2 (media) HALLAZGO: EXP-2 - en `/vendedores`, la sección Comisiones muestra solo las columnas Vendedor y Notas facturadas. El resto de columnas queda fuera de pantalla y no vi indicación de desplazamiento. No pude comprobar si la tabla se desplaza lateralmente. Severidad: baja. Evidencia: EXP-2.png. -> DESCARTADO: la tabla tiene overflow-x-auto y el scroll horizontal en 375 px se verifico en la Fase E de S5

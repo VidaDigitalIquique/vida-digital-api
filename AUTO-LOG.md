@@ -114,3 +114,14 @@
 - QA (Fase E): s5 PASA 6/6, 0.67 USD. EXP-A (cambiar mes y % a la vez pierde el %) -> se corrige en S6; EXP-B formato $ de la app -> descartado
 - Desvios del Programador: ninguno
 - QA metricas: FP 0, ESC 0, ACIERTOS 1 (EXP-A), costo QA 0.67 USD
+
+## 2026-11-11 - Slice: S6 exportar comisiones a .xlsx (R10) + EXP-A de S5
+- Programador: deep (deepseek-flash, effort low): s6-A; s6-BCD 349 s 5.20 USD
+- Contrato: `?formato=xlsx` en GET /api/vendedores/comisiones (mismas guardas, formato invalido 400), lib/comisiones-xlsx.ts puro con SheetJS (ya en el repo), hoja = mes, filename comisiones-YYYY-MM.xlsx, numeros con formato "$"#,##0.00 y 0.00"%", fila TOTAL literal de la API; ancla Exportar en ComisionesPanel; EXP-A: cambiar de mes no pisa el % que se esta editando
+- Lineas: 70
+- Tests: 67/67 VERDE (ROJO previo)
+- Verificacion propia: el Director abrio los .xlsx descargados por el agente: octubre 2026 = pantalla (154 / 406.242,30 / 2.031,21), celdas numericas con formato $ y %, hoja "octubre 2026"; enero 2020 en 0
+- Gates disparados: ninguno
+- QA (Fase E): s6 PASA 3/3, 0.58 USD; hallazgos descartados con verificacion
+- Desvios del Programador: la fila TOTAL lleva el % (igual que la pantalla): aceptado (R10). Informo una falsa alarma de "TEST_DATABASE_URL = DATABASE_URL": verificado por el Director, en .env son hosts distintos (el script veia el entorno del proceso ya redirigido a pruebas)
+- QA metricas: FP 0, ESC 0, ACIERTOS 0, costo QA 0.58 USD

@@ -116,6 +116,46 @@ describe('carga del informe', () => {
   });
 });
 
+describe('EXP-A: el % escrito no se pierde al cambiar de mes', () => {
+  it('cambiar de mes con un % sin guardar conserva lo que el usuario escribio', async () => {
+    await montar();
+    fireEvent.change(inputPct(), { target: { value: '1' } });
+    fireEvent.change(inputMes(), { target: { value: '2026-10' } });
+    expect(await screen.findByText(/octubre 2026/)).toBeInTheDocument();
+    expect(inputPct().value).toBe('1');
+  });
+
+  it('tras guardar, el campo vuelve a seguir al valor del servidor al cambiar de mes', async () => {
+    const fn = await montar();
+    fireEvent.change(inputPct(), { target: { value: '1' } });
+    fireEvent.click(boton());
+    await waitFor(() => expect(puts(fn)).toHaveLength(1));
+    fireEvent.change(inputMes(), { target: { value: '2026-10' } });
+    expect(await screen.findByText(/octubre 2026/)).toBeInTheDocument();
+    expect(inputPct().value).toBe('0.50');
+  });
+});
+
+describe('exportar el informe a Excel (R10)', () => {
+  it('el enlace Exportar descarga el mes que se esta mirando', async () => {
+    await montar();
+    expect(screen.getByRole('link', { name: 'Exportar' })).toHaveAttribute(
+      'href',
+      '/api/vendedores/comisiones?mes=2026-11&formato=xlsx'
+    );
+  });
+
+  it('al cambiar de mes el enlace apunta al mes nuevo', async () => {
+    await montar();
+    fireEvent.change(inputMes(), { target: { value: '2026-10' } });
+    expect(await screen.findByText(/octubre 2026/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Exportar' })).toHaveAttribute(
+      'href',
+      '/api/vendedores/comisiones?mes=2026-10&formato=xlsx'
+    );
+  });
+});
+
 describe('guardar el % (R9)', () => {
   it('manda {mes, comision_pct} y pinta el informe recalculado que devuelve la API', async () => {
     const fn = await montar();
