@@ -1,6 +1,12 @@
 import { sql } from '@/lib/db';
 import { schemaDeEmpresa } from '@/lib/ventas-producto';
 import {
+  diferenciaNota,
+  sumaLineas,
+  type DetalleNota,
+  type LineaDetalle,
+} from '@/lib/vendedores-detalle';
+import {
   CLAVES_FILTROS,
   fechaFiltroValida,
   fechaValida,
@@ -161,6 +167,18 @@ export function validarFiltrosGuardados(
   };
 }
 
+/** Reglas del modulo (PRD B9), comunes a la tabla y al detalle. $1 = hoy. */
+export function reglasModulo(esquema: EmpresaSlug): string {
+  return `m.tipomovi='V'
+    AND m.id_tdocu IN ('203','551','554')
+    AND m.fechanvt <= $1::date
+    AND btrim(COALESCE(m.vendedor,'')) <> ''
+    AND btrim(upper(COALESCE(m.vendedor,''))) NOT IN ('PABLO BRAVO','EMPRESA')
+    AND ((m.pestadot='3' AND btrim(COALESCE(m.visaadua,'')) <> '')
+      OR (m.pestadot='1' AND btrim(COALESCE(m.visaadua,'')) = ''))
+    AND EXISTS (SELECT 1 FROM ${esquema}.itemdcto i WHERE i.knumfoli = m.knumfoli)`;
+}
+
 function bloqueNotas(esquema: EmpresaSlug): string {
   return `
   SELECT '${esquema}' AS empresa,
@@ -174,16 +192,9 @@ function bloqueNotas(esquema: EmpresaSlug): string {
          NULLIF(btrim(COALESCE(m.visaadua,'')),'') AS visacion,
          to_char(m.fechadoc, 'YYYY-MM-DD') AS fecha_facturacion
   FROM ${esquema}.movidcto m
-  WHERE m.tipomovi='V'
-    AND m.id_tdocu IN ('203','551','554')
-    AND m.fechanvt <= $1::date
+  WHERE ${reglasModulo(esquema)}
     AND ($2::date IS NULL OR m.fechanvt >= $2::date)
     AND ($3::date IS NULL OR m.fechanvt <= $3::date)
-    AND btrim(COALESCE(m.vendedor,'')) <> ''
-    AND btrim(upper(COALESCE(m.vendedor,''))) NOT IN ('PABLO BRAVO','EMPRESA')
-    AND ((m.pestadot='3' AND btrim(COALESCE(m.visaadua,'')) <> '')
-      OR (m.pestadot='1' AND btrim(COALESCE(m.visaadua,'')) = ''))
-    AND EXISTS (SELECT 1 FROM ${esquema}.itemdcto i WHERE i.knumfoli = m.knumfoli)
     AND ($4::text IS NULL OR btrim(upper(m.vendedor)) = btrim(upper($4)))
     AND ($5::date IS NULL OR m.fechadoc >= $5::date)
     AND ($6::date IS NULL OR m.fechadoc <= $6::date)
@@ -272,4 +283,86 @@ export async function fetchNotas(
   const vendedores = Array.from(new Set(listas.flat().map((v) => v.vendedor).filter(Boolean))).sort();
 
   return { notas, vendedores, total: Number(filas[0]?.total ?? 0) };
+}
+
+type FilaDetalle = {
+  nota: string; fecha_venta: string; estado: string; total_usd: unknown;
+  cliente: string | null; cliente_factura: string | null; vendedor: string | null;
+  visacion: string | null; fecha_visacion: string | null;
+};
+
+type FilaLineaDetalle = {
+  codigo: string | null; costo: unknown; precio: unknown; unidades: unknown;
+  cajas: unknown; total_linea: unknown; imagen_url: string | null;
+};
+
+export function construirConsultaDetalle(esquema: EmpresaSlug): { cabecera: string; lineas: string } {
+  const empresaId = esquema === 'sanjh' ? 1 : 2; // vida=2, sanjh=1
+  return {
+    cabecera: `SELECT m.knumfoli::text AS nota,
+       to_char(m.fechanvt, 'YYYY-MM-DD') AS fecha_venta,
+       COALESCE(m.cliente,'') AS cliente,
+       COALESCE(m.factura,'') AS cliente_factura,
+       btrim(COALESCE(m.vendedor,'')) AS vendedor,
+       COALESCE(m.val_rea,0)::float8 AS total_usd,
+       CASE WHEN m.pestadot='3' AND btrim(COALESCE(m.visaadua,'')) <> ''
+            THEN 'facturada' ELSE 'pendiente' END AS estado,
+       NULLIF(btrim(COALESCE(m.visaadua,'')),'') AS visacion,
+       to_char(m.fechadoc, 'YYYY-MM-DD') AS fecha_visacion
+FROM ${esquema}.movidcto m
+WHERE ${reglasModulo(esquema)}
+  AND m.knumfoli = $2
+LIMIT 1`,
+    // La imagen se trae con LATERAL + LIMIT 1: productos tiene una fila por
+    // ingreso y un JOIN normal multiplicaria las lineas.
+    lineas: `SELECT COALESCE(btrim(i.codunico),'') AS codigo,
+       COALESCE(i.cosunita,0)::float8 AS costo,
+       COALESCE(i.precread,0)::float8 AS precio,
+       COALESCE(i.cantsali,0)::float8 AS unidades,
+       COALESCE(i.tcancaja,0)::float8 AS cajas,
+       COALESCE(i.totalrea, i.precread*i.cantsali)::float8 AS total_linea,
+       img.imagen_url AS imagen_url
+FROM ${esquema}.itemdcto i
+LEFT JOIN LATERAL (
+  SELECT p.imagen_url
+  FROM public.productos p
+  WHERE p.codigo = i.codunico
+    AND p.empresa_id = ${empresaId}
+    AND p.imagen_url IS NOT NULL
+  ORDER BY p.fecha_ingreso DESC NULLS LAST, p.id DESC
+  LIMIT 1
+) img ON true
+WHERE i.knumfoli = $1
+ORDER BY i.kdocitem, i.codunico`,
+  };
+}
+
+/** Detalle de una nota del modulo. null = no existe para el modulo (404). */
+export async function fetchDetalleNota(
+  esquema: EmpresaSlug,
+  nota: string,
+  hoy: string
+): Promise<DetalleNota | null> {
+  const { cabecera, lineas } = construirConsultaDetalle(esquema);
+  const filas = (await sql.query(cabecera, [hoy, nota])) as unknown as FilaDetalle[];
+  const cab = filas?.[0];
+  if (!cab) return null;
+
+  const filasLineas = (await sql.query(lineas, [nota])) as unknown as FilaLineaDetalle[];
+  const lineasMapeadas: LineaDetalle[] = (filasLineas ?? []).map((r) => ({
+    codigo: r.codigo ?? '', costo: Number(r.costo) || 0, precio: Number(r.precio) || 0,
+    cajas: Number(r.cajas) || 0, unidades: Number(r.unidades) || 0,
+    total_linea: Number(r.total_linea) || 0, imagen_url: r.imagen_url ?? null,
+  }));
+
+  const total = Number(cab.total_usd) || 0;
+  return {
+    empresa: esquema, empresa_nombre: NOMBRE_EMPRESA[esquema],
+    nota: String(cab.nota), fecha_venta: String(cab.fecha_venta),
+    cliente: cab.cliente ?? '', cliente_factura: cab.cliente_factura ?? '',
+    vendedor: cab.vendedor ?? '', total_usd: total,
+    estado: cab.estado === 'facturada' ? 'facturada' : 'pendiente',
+    visacion: cab.visacion ?? null, fecha_visacion: cab.fecha_visacion ?? null,
+    lineas: lineasMapeadas, diferencia_usd: diferenciaNota(total, sumaLineas(lineasMapeadas)),
+  };
 }
