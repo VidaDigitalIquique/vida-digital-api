@@ -125,3 +125,13 @@
 - QA (Fase E): s6 PASA 3/3, 0.58 USD; hallazgos descartados con verificacion
 - Desvios del Programador: la fila TOTAL lleva el % (igual que la pantalla): aceptado (R10). Informo una falsa alarma de "TEST_DATABASE_URL = DATABASE_URL": verificado por el Director, en .env son hosts distintos (el script veia el entorno del proceso ya redirigido a pruebas)
 - QA metricas: FP 0, ESC 0, ACIERTOS 0, costo QA 0.58 USD
+
+## 2026-11-11 - Senal 3 (modulo VENDEDORES + drawer, commits 2ac571c..HEAD, S1-S6)
+- /ponytail-audit: AMARILLO. C1 (humoProd exige VENDEDORES con flags apagados) -> se resuelve encendiendo ambos flags en el commit de deploy, decision de Pablo en la UAT. C2 (/api/kardex/ventas no respetaba su flag) -> ARREGLADO 828eba4 con test. Deuda no critica anotada en logs/senal3-vendedores.md (autorizar() copiado en 4 rutas, tipos duplicados, VendedoresClient grande, bloque de ventas del drawer).
+- Build de produccion: compila sin errores (warnings solo del lint preexistente). Variables de entorno: ninguna nueva en el diff.
+- Zonas de riesgo con test: middleware (middleware-matcher), TopNav (topnav-saludo-hidratacion, vendedores-menu), lib/fechas (fechas-cl), /api/kardex (kardex-api reescrito), lib/ventas-producto (kardex-ventas).
+- Fase E release-vendedores (R1-R10, flags encendidos solo en pruebas): 10/10 PASA en el 2o intento (1o incompleto por turnos); veredicto de auditoria INVALIDO solo por no incluir el barrido. R11 (flags apagados) verificado por el Director en cada slice y cubierto por tests.
+- Barrido: 2 intentos, 0 ROTO en lo cubierto (login, dashboard, /vendedores completo, drawer de /precios, menu movil), pero el agente corta y lo declara BLOQUEADO -> no encadena continuaciones (FRIC en MEJORAS-QA). Hueco declarado: barrido total de las pantallas no tocadas no completado.
+- Hallazgos del release: D14 (lineas duplicadas, ya en backlog), D11 (37 imagenes 404 de Cloudinary), EXP-2 limpiar fechas (por diseno). QA-REGISTRO sin pendientes abiertos.
+- Pendiente (gate humano): UAT de Pablo; decidir encender drawer-ventas-detalle y vendedores-modulo en el deploy; aplicar migrations/010 y 011 en la base de PRODUCCION (crean 2 tablas en public, idempotentes); luego push a main, humo qa-prod -ConIA.
+- Costo QA del release: ~3.6 USD (release 2 intentos + barrido 2 intentos).
