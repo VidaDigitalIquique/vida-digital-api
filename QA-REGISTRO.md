@@ -381,3 +381,12 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 ## 2026-11-11 21:04 - barrido-vendedores - commit 828eba4 - INVALIDO
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\barrido-vendedores
 - Sin pendientes nuevos.
+
+## 2026-11-11 22:21 - prod-b750775-2212-admin-ia - commit b750775 - PRODUCCION PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\prod-b750775-2212-admin-ia
+- [x] P-20261111-2221-1 (baja) HALLAZGO: EXP-1 — /deseados?modo=china: 18 errores de consola por imágenes 404 -> BACKLOG D11 (imagenes de productos en Cloudinary; preexistente, /deseados no lo toco este release; incluye codigos con & en el nombre del archivo)
+- [x] P-20261111-2221-2 (media) CONSOLA: Failed to load resource: the server responded with a status of 400 () (2 recursos en /dxkidwxjl/image/upload/productos/: V-001PRO&V-977.jpg, V-977&V-377.jpg) -> BACKLOG D11 (imagenes de productos en Cloudinary; preexistente, /deseados no lo toco este release; incluye codigos con & en el nombre del archivo)
+
+## 2026-11-11 22:24 - prod-b750775-2212-vendedor-ia - commit b750775 - PRODUCCION PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\prod-b750775-2212-vendedor-ia
+- [x] P-20261111-2224-1 (media) HALLAZGO: EXP-1 — `/deseados?modo=china` registra 14 errores de consola -> BACKLOG D11 (imagenes de productos en Cloudinary; preexistente, /deseados no lo toco este release; incluye codigos con & en el nombre del archivo)

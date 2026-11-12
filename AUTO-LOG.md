@@ -135,3 +135,11 @@
 - Hallazgos del release: D14 (lineas duplicadas, ya en backlog), D11 (37 imagenes 404 de Cloudinary), EXP-2 limpiar fechas (por diseno). QA-REGISTRO sin pendientes abiertos.
 - Pendiente (gate humano): UAT de Pablo; decidir encender drawer-ventas-detalle y vendedores-modulo en el deploy; aplicar migrations/010 y 011 en la base de PRODUCCION (crean 2 tablas en public, idempotentes); luego push a main, humo qa-prod -ConIA.
 - Costo QA del release: ~3.6 USD (release 2 intentos + barrido 2 intentos).
+
+## 2026-11-11 - Deploy modulo VENDEDORES + drawer (b750775) + humo de produccion
+- UAT de Pablo: aprobada (22:11). Decisiones de Pablo: encender drawer-ventas-detalle y vendedores-modulo; autorizo migraciones en produccion; Comisiones abre siempre en el mes en curso (ya era asi: el mes no se guarda, verificado en el codigo y en la Fase E de S5).
+- Migraciones 010 y 011 aplicadas en la base de PRODUCCION antes del push (tablas no existian; quedaron creadas; vendedores_config id=1 en 0,50).
+- Push 2ac571c..b750775 a main (Vercel).
+- Humo qa-prod.ps1 -EsperarDeploy -ConIA: PASA en 7 pasadas (anon; admin, vendedor, bodeguero sin IA y con IA). Costo 3.09 USD.
+- Pendientes nuevos del humo: imagenes 404/400 de Cloudinary en /deseados?modo=china -> BACKLOG D11 (preexistente).
+- Abierto: D13 + D14 (sync WinFac, manana en el PC de Pravin), D9 EN PAUSA, D6/D7/D8/D10/D11/D12 en backlog, deuda del ponytail (logs/senal3-vendedores.md), mejoras de QA PENDIENTES en MEJORAS-QA.md.
