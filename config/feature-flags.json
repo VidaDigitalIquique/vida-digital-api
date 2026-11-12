@@ -25,6 +25,6 @@
   "garantias-mejoras-slice1": false,
   "sync-post-process-unificado": false,
   "bodega_despachos_editar_folio": true,
-  "drawer-ventas-detalle": false,
-  "vendedores-modulo": false
+  "drawer-ventas-detalle": true,
+  "vendedores-modulo": true
 }
