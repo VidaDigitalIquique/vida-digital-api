@@ -1,6 +1,5 @@
 import { sql } from '@/lib/db';
 import { fechaDiaCL } from '@/lib/fechas';
-import { redondearCentavos } from '@/lib/comisiones-utils';
 import { reglasModulo, type EmpresaSlug } from '@/lib/vendedores-notas';
 import type { Agrupacion, EstadoGanancia, FilaGanancia, InformeGanancia } from '@/lib/vendedores-ganancia-tipos';
 
@@ -55,10 +54,10 @@ export function consultaGanancia(
   hoy: string
 ): { text: string; params: unknown[] } {
   const text = `SELECT ${EXPR[agrupacion]} AS periodo,
-       COALESCE(SUM(g.ganancia), 0)::float8 AS total_usd
+       COALESCE(SUM(g.ganancia), 0)::text AS total_usd
 FROM (
   SELECT m.knumfoli, m.fechanvt,
-         SUM((COALESCE(i.precread,0) - COALESCE(i.cosunita,0)) * COALESCE(i.cantsali,0)) AS ganancia
+         ROUND(SUM((COALESCE(i.precread,0) - COALESCE(i.cosunita,0)) * COALESCE(i.cantsali,0))::numeric, 2) AS ganancia
   FROM ${esquema}.movidcto m
   JOIN ${esquema}.itemdcto i ON i.knumfoli = m.knumfoli
   WHERE ${reglasModulo(esquema)}
@@ -75,7 +74,13 @@ GROUP BY 1`;
 
 type FilaPeriodo = { periodo: string; total_usd: unknown };
 
-/** Informe del rango: una query por empresa en paralelo, mezcla y redondeo por moneda. */
+/** Centavos enteros: el SQL ya entrega 2 decimales por nota, asi la suma es exacta. */
+function aCentavos(valor: unknown): number {
+  const n = Number(valor);
+  return Number.isFinite(n) ? Math.round(n * 100) : 0;
+}
+
+/** Informe del rango: una query por empresa en paralelo, mezcla en centavos y division final. */
 export async function fetchGanancia(
   agrupacion: Agrupacion,
   desde: string,
@@ -90,31 +95,31 @@ export async function fetchGanancia(
     })
   );
 
+  // Acumulado en CENTAVOS ENTEROS: sumar floats redondeados por fila movia centavos.
   const acumulado = new Map<string, { vida: number; sanjh: number }>();
   EMPRESAS.forEach((empresa, idx) => {
     for (const r of (resultados[idx] ?? []) as unknown as FilaPeriodo[]) {
       const periodo = String(r.periodo);
       const fila = acumulado.get(periodo) ?? { vida: 0, sanjh: 0 };
-      fila[empresa] += Number(r.total_usd) || 0; // null/NaN -> 0
+      fila[empresa] += aCentavos(r.total_usd); // null/vacio/NaN -> 0
       acumulado.set(periodo, fila);
     }
   });
 
   const periodos = Array.from(acumulado.keys()).sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
   const truncado = periodos.length > MAX_PERIODOS;
-  const filas: FilaGanancia[] = periodos.slice(0, MAX_PERIODOS).map((periodo) => {
+  const centavos = periodos.slice(0, MAX_PERIODOS).map((periodo) => {
     const { vida, sanjh } = acumulado.get(periodo)!;
-    const vidaUsd = redondearCentavos(vida);
-    const sanjhUsd = redondearCentavos(sanjh);
-    return {
-      periodo,
-      etiqueta: etiquetaPeriodo(agrupacion, periodo),
-      vida_usd: vidaUsd,
-      sanjh_usd: sanjhUsd,
-      total_usd: redondearCentavos(vidaUsd + sanjhUsd), // Vida + SANJH = Total fila por fila
-    };
+    return { periodo, vida, sanjh, total: vida + sanjh }; // Vida + SANJH = Total fila por fila
   });
-  const suma = (campo: 'vida_usd' | 'sanjh_usd' | 'total_usd') => filas.reduce((s, f) => s + f[campo], 0);
+  const filas: FilaGanancia[] = centavos.map(({ periodo, vida, sanjh, total }) => ({
+    periodo,
+    etiqueta: etiquetaPeriodo(agrupacion, periodo),
+    vida_usd: vida / 100,
+    sanjh_usd: sanjh / 100,
+    total_usd: total / 100,
+  }));
+  const sumar = (campo: 'vida' | 'sanjh' | 'total') => centavos.reduce((s, f) => s + f[campo], 0);
 
   return {
     agrupacion,
@@ -122,10 +127,11 @@ export async function fetchGanancia(
     hasta,
     estado,
     filas,
+    // Totales = suma exacta de las filas mostradas (con truncado, las mostradas).
     totales: {
-      vida_usd: redondearCentavos(suma('vida_usd')),
-      sanjh_usd: redondearCentavos(suma('sanjh_usd')),
-      total_usd: redondearCentavos(suma('total_usd')),
+      vida_usd: sumar('vida') / 100,
+      sanjh_usd: sumar('sanjh') / 100,
+      total_usd: sumar('total') / 100,
     },
     truncado,
   };

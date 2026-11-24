@@ -121,13 +121,20 @@ describe('contrato', () => {
       agrupacion: 'dia',
       desde: '2026-11-01',
       hasta: '2026-11-24',
-      estado: 'todas',
+      estado: 'facturadas', // S8: el estado por defecto es Facturadas
       filas: [],
       truncado: false,
     });
     expect(queryMock).toHaveBeenCalledTimes(2);
     const esquemas = queryMock.mock.calls.map(([text]) => (String(text).includes('vida.movidcto') ? 'vida' : 'sanjh'));
     expect(esquemas.sort()).toEqual(['sanjh', 'vida']);
+    for (const [, params] of queryMock.mock.calls) expect(params[3]).toBe('facturada');
+  });
+
+  it('S8 sin ?estado= el SQL recibe facturada, no NULL', async () => {
+    await GET(pedir('?agrupar=mes'));
+    expect(queryMock.mock.calls.length).toBe(2);
+    for (const [, params] of queryMock.mock.calls) expect(params[3]).toBe('facturada');
   });
 
   it('B18 estado facturadas viaja como facturada en $4 y las fechas en $2/$3', async () => {

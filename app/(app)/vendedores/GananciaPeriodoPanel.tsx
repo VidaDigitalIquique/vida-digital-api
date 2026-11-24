@@ -34,7 +34,7 @@ function validarRango(desde: string, hasta: string): string | null {
 export function GananciaPeriodoPanel() {
   const [data, setData] = useState<InformeGanancia | null>(null);
   const [agrupacion, setAgrupacion] = useState<Agrupacion>('dia');
-  const [estado, setEstado] = useState<EstadoGanancia>('todas');
+  const [estado, setEstado] = useState<EstadoGanancia>('facturadas');
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
   const [cargando, setCargando] = useState(true);

@@ -162,3 +162,90 @@ describe('B9 — rango gigante', () => {
     expect(informe.filas[0].periodo).toBe(periodos[periodos.length - 1]);
   });
 });
+
+describe('S8 — totales exactos en centavos, sin diferencias entre agrupaciones', () => {
+  const cent = (n: number) => Math.round(n * 100);
+  const consulta = (agrupacion: 'dia' | 'semana' | 'mes' | 'anio', desde: string, hasta: string) =>
+    fetchGanancia(agrupacion, desde, hasta, 'facturadas', '2026-11-24');
+
+  it('la fila de Año es EXACTAMENTE la suma de sus meses', async () => {
+    responder(
+      [
+        { periodo: '2026-01', total_usd: '33.33' },
+        { periodo: '2026-02', total_usd: '33.33' },
+        { periodo: '2026-03', total_usd: '33.33' },
+      ],
+      []
+    );
+    const meses = await consulta('mes', '2026-01-01', '2026-12-31');
+    expect(meses.totales.vida_usd).toBe(99.99);
+
+    responder([{ periodo: '2026', total_usd: '99.99' }], []);
+    const anio = await consulta('anio', '2026-01-01', '2026-12-31');
+
+    expect(cent(anio.filas[0].total_usd)).toBe(
+      meses.filas.reduce((s, f) => s + cent(f.total_usd), 0)
+    );
+    expect(anio.filas[0].total_usd).toBe(99.99);
+  });
+
+  it('0.10 + 0.20 = 30 centavos exactos (sin residuo float)', async () => {
+    responder(
+      [
+        { periodo: '2026-11-01', total_usd: '0.10' },
+        { periodo: '2026-11-02', total_usd: '0.20' },
+      ],
+      []
+    );
+    const informe = await consulta('dia', '2026-11-01', '2026-11-02');
+    expect(informe.totales.vida_usd).toBe(0.3);
+    expect(informe.totales.total_usd).toBe(0.3);
+    expect(cent(informe.totales.total_usd)).toBe(30);
+  });
+
+  it('vida + sanjh = total fila a fila y los totales suman las filas exacto', async () => {
+    responder(
+      [
+        { periodo: '2026-11-01', total_usd: '0.10' },
+        { periodo: '2026-11-02', total_usd: '1234.56' },
+      ],
+      [
+        { periodo: '2026-11-01', total_usd: '0.20' },
+        { periodo: '2026-11-02', total_usd: '0.01' },
+      ]
+    );
+    const informe = await consulta('dia', '2026-11-01', '2026-11-02');
+    for (const f of informe.filas) {
+      expect(cent(f.total_usd)).toBe(cent(f.vida_usd) + cent(f.sanjh_usd));
+    }
+    const suma = (campo: 'vida_usd' | 'sanjh_usd' | 'total_usd') =>
+      informe.filas.reduce((s, f) => s + cent(f[campo]), 0);
+    expect(cent(informe.totales.vida_usd)).toBe(suma('vida_usd'));
+    expect(cent(informe.totales.sanjh_usd)).toBe(suma('sanjh_usd'));
+    expect(cent(informe.totales.total_usd)).toBe(suma('total_usd'));
+  });
+
+  it('numeric como string, null y vacio -> 0, nunca NaN', async () => {
+    responder(
+      [
+        { periodo: '2026-11-01', total_usd: '1234.56' },
+        { periodo: '2026-11-02', total_usd: null },
+        { periodo: '2026-11-03', total_usd: '' },
+      ],
+      []
+    );
+    const informe = await consulta('dia', '2026-11-01', '2026-11-03');
+    expect(informe.filas.find((f) => f.periodo === '2026-11-01')!.vida_usd).toBe(1234.56);
+    expect(informe.totales.vida_usd).toBe(1234.56);
+    for (const f of informe.filas) expect(Number.isFinite(f.vida_usd)).toBe(true);
+  });
+
+  it('el SQL redondea por nota con numeric(2) y no usa float8 para ganancia', () => {
+    const { text } = consultaGanancia('vida', 'mes', 'facturadas', '2026-01-01', '2026-12-31', '2026-11-24');
+    expect(text).toContain(
+      'ROUND(SUM((COALESCE(i.precread,0) - COALESCE(i.cosunita,0)) * COALESCE(i.cantsali,0))::numeric, 2)'
+    );
+    expect(text).toContain('SUM(g.ganancia)');
+    expect(text).not.toContain('::float8');
+  });
+});

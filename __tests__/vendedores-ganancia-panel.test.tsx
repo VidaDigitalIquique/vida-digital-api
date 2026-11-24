@@ -13,7 +13,7 @@ const DIA: InformeGanancia = {
   agrupacion: 'dia',
   desde: '2026-11-01',
   hasta: '2026-11-24',
-  estado: 'todas',
+  estado: 'facturadas',
   filas: [
     { periodo: '2026-11-24', etiqueta: '24-11-2026', vida_usd: 100.5, sanjh_usd: 20.25, total_usd: 120.75 },
     { periodo: '2026-11-23', etiqueta: '23-11-2026', vida_usd: 40, sanjh_usd: 0, total_usd: 40 },
@@ -26,7 +26,7 @@ const SEMANA: InformeGanancia = {
   agrupacion: 'semana',
   desde: '2026-01-01',
   hasta: '2026-11-24',
-  estado: 'todas',
+  estado: 'facturadas',
   filas: [
     { periodo: '2026-11-23', etiqueta: 'Sem. 23-11-2026 (lun)', vida_usd: 500, sanjh_usd: 50, total_usd: 550 },
   ],
@@ -72,7 +72,7 @@ describe('flujo principal (QA-S7c-01)', () => {
     expect(screen.getByRole('button', { name: 'Semana' })).toHaveAttribute('aria-pressed', 'false');
     expect(screen.getByLabelText('Desde')).toHaveValue('2026-11-01');
     expect(screen.getByLabelText('Hasta')).toHaveValue('2026-11-24');
-    expect(screen.getByLabelText('Estado')).toHaveValue('todas');
+    expect(screen.getByLabelText('Estado')).toHaveValue('facturadas');
 
     expect(screen.getByText('Vida Digital USD')).toBeInTheDocument();
     expect(screen.getByText('SANJH USD')).toBeInTheDocument();
@@ -107,20 +107,26 @@ describe('controles', () => {
   it('cambiar estado o fecha manda los 5 parametros actuales', async () => {
     const fn = await montar();
 
-    fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'facturadas' } });
+    fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'pendientes' } });
     await waitFor(() => expect(fn).toHaveBeenCalledTimes(2));
     let p = params(fn.mock.calls[1][0]);
     expect(p.get('agrupar')).toBe('dia');
     expect(p.get('desde')).toBe('2026-11-01');
     expect(p.get('hasta')).toBe('2026-11-24');
-    expect(p.get('estado')).toBe('facturadas');
+    expect(p.get('estado')).toBe('pendientes');
 
     fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2026-11-05' } });
     await waitFor(() => expect(fn).toHaveBeenCalledTimes(3));
     p = params(fn.mock.calls[2][0]);
     expect(p.get('desde')).toBe('2026-11-05');
     expect(p.get('hasta')).toBe('2026-11-24');
-    expect(p.get('estado')).toBe('facturadas');
+    expect(p.get('estado')).toBe('pendientes');
+  });
+
+  it('S8 el estado inicial del control es Facturadas antes de que responda la API', () => {
+    global.fetch = jest.fn(() => new Promise(() => {})) as unknown as typeof fetch;
+    render(<GananciaPeriodoPanel />);
+    expect(screen.getByLabelText('Estado')).toHaveValue('facturadas');
   });
 });
 

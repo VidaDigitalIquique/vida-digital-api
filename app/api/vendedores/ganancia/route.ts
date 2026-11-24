@@ -25,7 +25,7 @@ export async function GET(request: Request) {
   const agrupacion = parsearAgrupacion(searchParams.get('agrupar') ?? 'dia');
   if (!agrupacion) return NextResponse.json({ error: 'agrupar inválido' }, { status: 400 });
 
-  const estado = parsearEstado(searchParams.get('estado') ?? 'todas');
+  const estado = parsearEstado(searchParams.get('estado') ?? 'facturadas');
   if (!estado) return NextResponse.json({ error: 'estado inválido' }, { status: 400 });
 
   const hoy = hoyCL();
