@@ -13,27 +13,30 @@ function guard(session: any) {
 }
 
 function fmt(rows: any[]) {
-  return rows.map(r => ({
-    empresa: r.empresa,
-    knumfoli: r.knumfoli,
-    fechanvt: r.fechanvt,
-    id_tdocu: r.id_tdocu,
-    vendedor: r.vendedor,
-    cliente_comprador: { kcodclie: r.kcodclie, nombress: r.nombress, celular: r.celular, email01: r.email01, ciudad: r.ciudad },
-    cliente_factura: r.kcodcli2 ? { kcodclie: r.kcodcli2, nombress: r.factura_nombre } : null,
-    items: r.items ?? [],
-    seguimiento: r.seg_id ? { id: r.seg_id, estado: r.estado, ultima_interaccion: r.ultima_interaccion, proximo_contacto: r.proximo_contacto, ultima_observacion: r.ultima_observacion } : null,
-  }));
+  return rows.map(r => {
+    const distinta = r.kcodcli2 != null && r.kcodcli2 !== r.kcodclie;
+    return {
+      empresa: r.empresa,
+      knumfoli: r.knumfoli,
+      fechanvt: r.fechanvt,
+      id_tdocu: r.id_tdocu,
+      vendedor: r.vendedor,
+      cliente_comprador: { kcodclie: r.kcodcli2, nombress: r.comprador_nombre ?? '', celular: r.celular, email01: r.email01, ciudad: r.ciudad },
+      cliente_factura: distinta ? { kcodclie: r.kcodclie, nombress: r.factura_nombre } : null,
+      items: r.items ?? [],
+      seguimiento: r.seg_id ? { id: r.seg_id, estado: r.estado, ultima_interaccion: r.ultima_interaccion, proximo_contacto: r.proximo_contacto, ultima_observacion: r.ultima_observacion } : null,
+    };
+  });
 }
 
 async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knumfoli: string | null, mes: number | null, anio: number | null) {
   const rows = schema === 'vida'
     ? await sql`
         SELECT 'vida' empresa, m.knumfoli, m.fechanvt::text, m.id_tdocu, m.vendedor,
-          m.kcodclie::text kcodclie, c1.nombress, COALESCE(c1.celular,'') celular,
-          COALESCE(c1.email01,'') email01, COALESCE(c1.ciudad,'') ciudad,
-          CASE WHEN m.kcodcli2 IS NOT NULL AND m.kcodcli2 != m.kcodclie THEN m.kcodcli2::text END kcodcli2,
-          CASE WHEN m.kcodcli2 IS NOT NULL AND m.kcodcli2 != m.kcodclie THEN c2.nombress END factura_nombre,
+          m.kcodclie::text kcodclie, c1.nombress factura_nombre,
+          m.kcodcli2::text kcodcli2,
+          COALESCE(NULLIF(btrim(m.cliente),''), c2.nombress) comprador_nombre,
+          COALESCE(c2.celular,'') celular, COALESCE(c2.email01,'') email01, COALESCE(c2.ciudad,'') ciudad,
           (SELECT json_agg(json_build_object('descrip',i.descrip,'precdocd',i.precdocd,
              'codigo',i.codigo,'tcancaja',i.tcancaja,'cantxcaja',i.cantxcaja,
              'precread',i.precread,'totaldoc',i.totaldoc))
@@ -50,7 +53,7 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
           (SELECT si.resultado FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) ultima_observacion
         FROM vida.movidcto m
         JOIN vida.clientes c1 ON c1.kcodclie=m.kcodclie
-        LEFT JOIN vida.clientes c2 ON m.kcodcli2 IS NOT NULL AND m.kcodcli2!=m.kcodclie AND c2.kcodclie=m.kcodcli2
+        LEFT JOIN vida.clientes c2 ON m.kcodcli2 IS NOT NULL AND c2.kcodclie=m.kcodcli2
         LEFT JOIN public.seguimientos s ON s.empresa='vida' AND s.knumfoli=m.knumfoli
         WHERE m.pestadot='1' AND m.id_tdocu IN ('203','551','554')
           AND (m.visaadua IS NULL OR TRIM(m.visaadua)='')
@@ -60,10 +63,10 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
           AND (${anio}::integer IS NULL OR EXTRACT(YEAR FROM m.fechanvt) = ${anio})`
     : await sql`
         SELECT 'sanjh' empresa, m.knumfoli, m.fechanvt::text, m.id_tdocu, m.vendedor,
-          m.kcodclie::text kcodclie, c1.nombress, COALESCE(c1.celular,'') celular,
-          COALESCE(c1.email01,'') email01, COALESCE(c1.ciudad,'') ciudad,
-          CASE WHEN m.kcodcli2 IS NOT NULL AND m.kcodcli2 != m.kcodclie THEN m.kcodcli2::text END kcodcli2,
-          CASE WHEN m.kcodcli2 IS NOT NULL AND m.kcodcli2 != m.kcodclie THEN c2.nombress END factura_nombre,
+          m.kcodclie::text kcodclie, c1.nombress factura_nombre,
+          m.kcodcli2::text kcodcli2,
+          COALESCE(NULLIF(btrim(m.cliente),''), c2.nombress) comprador_nombre,
+          COALESCE(c2.celular,'') celular, COALESCE(c2.email01,'') email01, COALESCE(c2.ciudad,'') ciudad,
           (SELECT json_agg(json_build_object('descrip',i.descrip,'precdocd',i.precdocd,
              'codigo',i.codigo,'tcancaja',i.tcancaja,'cantxcaja',i.cantxcaja,
              'precread',i.precread,'totaldoc',i.totaldoc))
@@ -80,7 +83,7 @@ async function queryNotas(schema: 'vida' | 'sanjh', vendedor: string | null, knu
           (SELECT si.resultado FROM public.seguimiento_interacciones si WHERE si.seguimiento_id=s.id ORDER BY si.created_at DESC LIMIT 1) ultima_observacion
         FROM sanjh.movidcto m
         JOIN sanjh.clientes c1 ON c1.kcodclie=m.kcodclie
-        LEFT JOIN sanjh.clientes c2 ON m.kcodcli2 IS NOT NULL AND m.kcodcli2!=m.kcodclie AND c2.kcodclie=m.kcodcli2
+        LEFT JOIN sanjh.clientes c2 ON m.kcodcli2 IS NOT NULL AND c2.kcodclie=m.kcodcli2
         LEFT JOIN public.seguimientos s ON s.empresa='sanjh' AND s.knumfoli=m.knumfoli
         WHERE m.pestadot='1' AND m.id_tdocu IN ('203','551','554')
           AND (m.visaadua IS NULL OR TRIM(m.visaadua)='')
