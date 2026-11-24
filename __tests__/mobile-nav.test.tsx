@@ -78,6 +78,33 @@ test('toque interior conserva y exterior cierra', () => {
   expect(screen.getByRole('navigation')).toBeInTheDocument();
   fireEvent.pointerDown(document.body); expect(screen.queryByRole('navigation')).toBeNull();
 });
+
+test('QA-12: tocar la franja del header fuera del logo cierra', () => {
+  render(<MobileNav rol="admin" />);
+  fireEvent.pointerDown(screen.getByRole('banner'));
+  expect(screen.queryByRole('navigation')).toBeNull();
+  expect(logo()).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('QA-12: pointerdown y click del logo alternan una sola vez; el panel conserva', () => {
+  render(<MobileNav rol="admin" />);
+  fireEvent.pointerDown(screen.getByRole('navigation'));
+  expect(logo()).toHaveAttribute('aria-expanded', 'true');
+  fireEvent.pointerDown(logo());
+  expect(screen.getByRole('navigation')).toBeInTheDocument();
+  fireEvent.click(logo());
+  expect(screen.queryByRole('navigation')).toBeNull();
+  fireEvent.pointerDown(logo());
+  fireEvent.click(logo());
+  expect(screen.getByRole('navigation')).toBeInTheDocument();
+});
+
+test('EXP-1: panel por encima de sticky z-40, flotantes z-50 y tooltip zIndex 9999', () => {
+  mockPath = '/precios'; render(<MobileNav rol="vendedor" />);
+  const layer = screen.getByRole('navigation').className.match(/(?:^|\s)z-(?:\[(\d+)\]|(\d+))(?=\s|$)/);
+  const zIndex = Number(layer?.[1] ?? layer?.[2]);
+  expect(zIndex).toBeGreaterThan(9999);
+});
 test('alertas actualizadas 0/1/99/100 no cierran ni duplican badges', () => {
   const view = render(<MobileNav rol="admin" />);
   for (const count of [0, 1, 99, 100]) {
@@ -96,6 +123,6 @@ test('query distingue China y Deseados; panel accesible y desplazable', () => {
   const panel = screen.getByRole('navigation');
   expect(logo()).toHaveAttribute('aria-controls', panel.id);
   expect(logo()).toHaveClass('min-h-[44px]');
-  expect(panel).toHaveClass('fixed', 'top-16', 'z-40', 'overflow-y-auto', 'overscroll-contain', 'max-h-[calc(100dvh-4rem)]', 'md:hidden');
+  expect(panel).toHaveClass('fixed', 'top-16', 'overflow-y-auto', 'overscroll-contain', 'max-h-[calc(100dvh-4rem)]', 'md:hidden');
   screen.getAllByRole('link').forEach(a => expect(a).toHaveClass('min-h-[44px]'));
 });
