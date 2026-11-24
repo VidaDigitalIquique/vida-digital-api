@@ -35,11 +35,8 @@ export default withAuth(
 );
 
 // Archivos de public/ (manifest, iconos, etc.) no deben pasar por withAuth.
-// ponytail: literal duplicado a proposito; next build exige config.matcher estatico.
-// __tests__/middleware-matcher.test.ts verifica que sea identico a MATCHER_PATTERN.
-export const MATCHER_PATTERN =
-  '/((?!api/|login|catalogo|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|json|txt|xml|webmanifest|js|map)$).*)';
-
+// ponytail: literal inline a proposito; next build exige config.matcher estatico.
+// __tests__/middleware-matcher.test.ts extrae el literal del fuente y prueba el comportamiento.
 export const config = {
   matcher: [
     '/((?!api/|login|catalogo|_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|svg|webp|ico|json|txt|xml|webmanifest|js|map)$).*)',

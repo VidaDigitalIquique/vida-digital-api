@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sql } from '@/lib/db';
+import { ROLES_CATALOGO } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 import { callGeminiImage } from '@/lib/gemini';
 import { uploadImage } from '@/lib/cloudinary';
@@ -82,7 +83,7 @@ export async function POST(request: Request) {
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
   const rol = (session.user as any).rol;
-  if (!['admin', 'vendedor'].includes(rol)) {
+  if (!ROLES_CATALOGO.includes(rol)) {
     return NextResponse.json({ error: 'Permisos insuficientes' }, { status: 403 });
   }
 

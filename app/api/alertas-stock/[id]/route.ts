@@ -1,12 +1,13 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sql } from '@/lib/db';
+import { ROLES_ALERTAS } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
   const rol = (session?.user as any)?.rol;
-  if (!session || !['admin', 'supervisor', 'vendedor'].includes(rol)) {
+  if (!session || !ROLES_ALERTAS.includes(rol)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 

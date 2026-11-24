@@ -1,11 +1,12 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sql } from '@/lib/db';
+import { ROLES_OPERATIVOS } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 
 export async function POST() {
   const session = await getServerSession(authOptions);
-  if (!session || !['admin', 'supervisor', 'vendedor'].includes((session.user as any).rol)) {
+  if (!session || !ROLES_OPERATIVOS.includes((session.user as any).rol)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 
