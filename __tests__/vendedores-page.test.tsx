@@ -22,6 +22,9 @@ jest.mock('@/app/(app)/vendedores/VendedoresClient', () => ({
 jest.mock('@/app/(app)/vendedores/ComisionesPanel', () => ({
   ComisionesPanel: () => <div>panel-comisiones</div>,
 }));
+jest.mock('@/app/(app)/vendedores/GananciaPeriodoPanel', () => ({
+  GananciaPeriodoPanel: () => <div>panel-ganancia</div>,
+}));
 
 import { getServerSession } from 'next-auth';
 import VendedoresPage from '@/app/(app)/vendedores/page';
@@ -59,5 +62,23 @@ describe('/vendedores', () => {
     render(await VendedoresPage());
     expect(screen.getByText('tabla-vendedores')).toBeInTheDocument();
     expect(screen.getByText('panel-comisiones')).toBeInTheDocument();
+  });
+});
+
+describe('/vendedores — seccion Ganancia por periodo (S7c-2)', () => {
+  it('con el flag apagado la seccion no se monta', async () => {
+    mockFlags['vendedores-ganancia-periodo'] = false;
+    render(await VendedoresPage());
+    expect(screen.queryByText('panel-ganancia')).not.toBeInTheDocument();
+  });
+
+  it('con el flag encendido la seccion se monta entre la tabla y comisiones', async () => {
+    mockFlags['vendedores-ganancia-periodo'] = true;
+    render(await VendedoresPage());
+    const tabla = screen.getByText('tabla-vendedores');
+    const ganancia = screen.getByText('panel-ganancia');
+    const comisiones = screen.getByText('panel-comisiones');
+    expect(tabla.compareDocumentPosition(ganancia) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(ganancia.compareDocumentPosition(comisiones) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
