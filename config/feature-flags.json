@@ -28,5 +28,6 @@
   "drawer-ventas-detalle": true,
   "vendedores-modulo": true,
   "vendedores-ganancia-periodo": true,
-  "menu-movil-v2": true
+  "menu-movil-v2": true,
+  "fix-d11-imagen-producto": false
 }
