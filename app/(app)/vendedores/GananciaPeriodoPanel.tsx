@@ -23,6 +23,13 @@ const TD = 'whitespace-nowrap px-3 py-2';
 const TDR = 'whitespace-nowrap px-3 py-2 text-right tabular-nums';
 const leer = (r: Response) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)));
 
+// Se valida en el cliente para no gastar la API en un rango imposible (EXP-2).
+function validarRango(desde: string, hasta: string): string | null {
+  if (!desde || !hasta) return 'Indica las fechas Desde y Hasta.';
+  if (desde > hasta) return 'La fecha Desde no puede ser posterior a Hasta.';
+  return null;
+}
+
 // La UI no recalcula: pinta filas y totales tal como los devuelve la API (misma regla que Comisiones).
 export function GananciaPeriodoPanel() {
   const [data, setData] = useState<InformeGanancia | null>(null);
@@ -32,10 +39,23 @@ export function GananciaPeriodoPanel() {
   const [hasta, setHasta] = useState('');
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(false);
+  const [aviso, setAviso] = useState<string | null>(null);
   const pedido = useRef(0);
 
   const cargar = useCallback((params: URLSearchParams) => {
-    const id = ++pedido.current;
+    const id = ++pedido.current; // tambien descarta respuestas en vuelo si el rango es invalido
+    const avisoRango =
+      params.has('desde') || params.has('hasta')
+        ? validarRango(params.get('desde') ?? '', params.get('hasta') ?? '')
+        : null;
+    if (avisoRango) {
+      setAviso(avisoRango);
+      setError(false);
+      setData(null);
+      setCargando(false);
+      return;
+    }
+    setAviso(null);
     setCargando(true);
     setError(false);
     const qs = params.toString();
@@ -127,7 +147,8 @@ export function GananciaPeriodoPanel() {
       </div>
 
       {cargando && <p className="py-8 text-center text-zinc-400">Cargando...</p>}
-      {!cargando && error && <p className="py-8 text-center text-red-600">No se pudo cargar la ganancia.</p>}
+      {!cargando && aviso && <p role="alert" className="py-8 text-center text-red-600">{aviso}</p>}
+      {!cargando && !aviso && error && <p className="py-8 text-center text-red-600">No se pudo cargar la ganancia.</p>}
 
       {!cargando && !error && data && (
         <div className="rounded-md border border-zinc-200 dark:border-zinc-800 p-3">
