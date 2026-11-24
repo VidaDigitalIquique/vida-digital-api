@@ -9,6 +9,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
+    include: ['**/*.vitest.ts'],
     env: {
       // D6: nunca la URL de produccion; sin rama de pruebas, falla cerrado.
       DATABASE_URL:

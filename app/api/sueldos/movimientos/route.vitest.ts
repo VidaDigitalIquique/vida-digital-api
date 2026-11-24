@@ -34,7 +34,9 @@ describe('GET /api/sueldos/movimientos', () => {
 
   it('retorna movimientos y total_descuentos', async () => {
     mockSession.mockResolvedValue(adminSession as any);
-    mockSql.mockResolvedValueOnce(movs as any);
+    mockSql
+      .mockResolvedValueOnce(movs as any)
+      .mockResolvedValueOnce([]); // segunda query: sueldo del mes
     const res = await GET(new Request('http://localhost/api/sueldos/movimientos?usuario_id=3&mes=5&anio=2026') as any);
     const body = await res.json();
     expect(res.status).toBe(200);
@@ -44,7 +46,9 @@ describe('GET /api/sueldos/movimientos', () => {
 
   it('usa mes y anio actual si no se pasan', async () => {
     mockSession.mockResolvedValue(adminSession as any);
-    mockSql.mockResolvedValueOnce([] as any);
+    mockSql
+      .mockResolvedValueOnce([] as any)
+      .mockResolvedValueOnce([]); // segunda query: sueldo del mes
     const res = await GET(new Request('http://localhost/api/sueldos/movimientos?usuario_id=3') as any);
     expect(res.status).toBe(200);
   });

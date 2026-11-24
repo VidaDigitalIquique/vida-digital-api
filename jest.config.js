@@ -10,6 +10,9 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
+  // Solo tests de jest. Los .vitest.ts los corre vitest; docs/specs/*.spec.ts son modulos, no tests.
+  testMatch: ['<rootDir>/**/*.test.ts', '<rootDir>/**/*.test.tsx'],
+  testPathIgnorePatterns: ['/node_modules/', '/tests/integration/'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },

@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "jest",
+    "test": "npm run test:jest && npm run test:vitest",
+    "test:jest": "jest",
+    "test:vitest": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "seed": "tsx --env-file=.env scripts/seed.ts"
   },
   "dependencies": {
