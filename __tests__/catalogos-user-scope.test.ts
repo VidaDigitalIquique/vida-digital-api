@@ -89,3 +89,6 @@ describe('Catalogos user scoping', () => {
     expect(values).toContain('123');
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

@@ -80,3 +80,6 @@ describe('GET /api/admin/productos-lista — filtro categoriaFiltro', () => {
     expect(fullTemplate).toContain('is null');
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

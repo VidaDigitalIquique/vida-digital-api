@@ -58,8 +58,7 @@ describe('GET /api/categorias', () => {
       { id: 1, nombre: 'Belleza', created_at: '2026-01-01', total_productos: 5 },
     ]);
 
-    const req = {} as Request;
-    const res = await GET(req);
+    const res = await GET();
 
     expect(res.status).toBe(200);
     const body = await res.json();
@@ -157,3 +156,6 @@ describe('DELETE /api/categorias/[id]', () => {
     expect(res.status).toBe(403);
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

@@ -176,3 +176,6 @@ describe('catalogos — soporte de campo categoria', () => {
     expect(codigos).not.toContain('B1');
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

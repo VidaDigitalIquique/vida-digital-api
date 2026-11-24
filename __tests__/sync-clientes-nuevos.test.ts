@@ -154,3 +154,6 @@ describe('syncClientesNuevos — smoke test', () => {
     expect(typeof result.sugerencias).toBe('number');
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

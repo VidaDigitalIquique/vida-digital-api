@@ -205,3 +205,6 @@ describe('syncClientRatings — smoke test retorno', () => {
     expect(result.updated).toBe(0);
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

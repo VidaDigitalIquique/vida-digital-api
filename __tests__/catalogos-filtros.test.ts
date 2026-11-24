@@ -84,3 +84,6 @@ describe('GET /api/catalogos/public/[slug] — filtros solo_stock / solo_nuevo',
     expect(body.data.productos[0].codigo).toBe('A3');
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

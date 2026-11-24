@@ -142,7 +142,7 @@ export async function GET(request: Request, { params }: RouteContext) {
       });
     }
 
-    const codigosUnicos = Array.from(new Set(compras.map((compra: CompraRow) => compra.codigo)));
+    const codigosUnicos = Array.from(new Set((compras as CompraRow[]).map((compra) => compra.codigo)));
 
     const saldosZofri = await sql`
       SELECT

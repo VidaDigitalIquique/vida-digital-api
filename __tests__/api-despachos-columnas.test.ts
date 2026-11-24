@@ -87,3 +87,6 @@ describe('GET /api/dashboard/despachos', () => {
     expect(hoy.despachos.map((d: any) => d.folio)).toEqual(['F2', 'F1']);
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

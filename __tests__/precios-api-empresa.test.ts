@@ -74,3 +74,6 @@ describe('GET /api/productos (Slice 2)', () => {
     expect(res.status).toBe(401);
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

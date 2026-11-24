@@ -112,3 +112,6 @@ describe('PUT /api/productos/[id] — campo categoria', () => {
     expect(res.status).toBe(403);
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

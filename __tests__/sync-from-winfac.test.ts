@@ -112,3 +112,6 @@ describe('POST /api/admin/sync-from-winfac', () => {
     expect(body.vida_count).toBe(8);
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};
