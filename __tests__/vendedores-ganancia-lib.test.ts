@@ -16,6 +16,7 @@ import {
   parsearAgrupacion,
   rangoPorDefecto,
 } from '@/lib/vendedores-ganancia';
+import { periodosEnRango } from '@/lib/vendedores-ganancia-tipos';
 
 type Fila = { periodo: string; total_usd: unknown };
 
@@ -147,6 +148,23 @@ describe('B8 — SQL no inyectable', () => {
   it('todas viaja como null', () => {
     const { params } = consultaGanancia('sanjh', 'dia', 'todas', '2026-11-01', '2026-11-24', '2026-11-24');
     expect(params[3]).toBeNull();
+  });
+});
+
+describe('B-s10a-8 — periodosEnRango (cota previa a consultar)', () => {
+  it('cuenta el periodo que contiene cada extremo (inclusive)', () => {
+    expect(periodosEnRango('dia', '2026-11-01', '2026-11-24')).toBe(24);
+    expect(periodosEnRango('dia', '2024-02-28', '2024-03-01')).toBe(3);
+    expect(periodosEnRango('semana', '2026-11-01', '2026-11-24')).toBe(4);
+    expect(periodosEnRango('mes', '2026-01-01', '2026-11-24')).toBe(11);
+    expect(periodosEnRango('anio', '2026-01-01', '2026-11-24')).toBe(1);
+    expect(periodosEnRango('anio', '2020-01-01', '2026-11-24')).toBe(7);
+  });
+
+  it('el mismo dia es 1 periodo; un rango gigante supera el tope', () => {
+    expect(periodosEnRango('dia', '2026-11-24', '2026-11-24')).toBe(1);
+    expect(periodosEnRango('dia', '2020-01-01', '2026-11-24')).toBeGreaterThan(MAX_PERIODOS);
+    expect(periodosEnRango('anio', '2020-01-01', '2026-11-24')).toBeLessThanOrEqual(MAX_PERIODOS);
   });
 });
 

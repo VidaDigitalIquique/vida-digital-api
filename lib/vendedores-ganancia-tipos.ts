@@ -20,3 +20,14 @@ export interface InformeGanancia {
   totales: { vida_usd: number; sanjh_usd: number; total_usd: number };
   truncado: boolean;
 }
+
+// Cuenta los periodos que toca el rango (ambos extremos inclusive) sin consultar
+// la base: cota previa para el tope de 400 (S10a).
+export function periodosEnRango(agrupacion: Agrupacion, desde: string, hasta: string): number {
+  const [a1, m1, d1] = desde.split('-').map(Number);
+  const [a2, m2, d2] = hasta.split('-').map(Number);
+  if (agrupacion === 'dia') return Math.round((Date.UTC(a2, m2 - 1, d2) - Date.UTC(a1, m1 - 1, d1)) / 86400000) + 1;
+  if (agrupacion === 'semana') return Math.floor((Date.UTC(a2, m2 - 1, d2) - Date.UTC(a1, m1 - 1, d1)) / 604800000) + 1;
+  if (agrupacion === 'mes') return (a2 - a1) * 12 + (m2 - m1) + 1;
+  return a2 - a1 + 1;
+}

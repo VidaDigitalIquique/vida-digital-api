@@ -21,7 +21,13 @@ const TH = 'whitespace-nowrap px-3 py-2 text-left font-medium text-zinc-500';
 const THR = 'whitespace-nowrap px-3 py-2 text-right font-medium text-zinc-500';
 const TD = 'whitespace-nowrap px-3 py-2';
 const TDR = 'whitespace-nowrap px-3 py-2 text-right tabular-nums';
-const leer = (r: Response) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)));
+// EXP-2: un 400 de la API trae el motivo real (p. ej. tope de 400 periodos):
+// se propaga tal cual en vez de un mensaje generico.
+async function leer(r: Response) {
+  const cuerpo = await r.json().catch(() => null);
+  if (!r.ok) throw new Error(cuerpo?.error || 'No se pudo cargar la ganancia.');
+  return cuerpo;
+}
 
 // Se valida en el cliente para no gastar la API en un rango imposible (EXP-2).
 function validarRango(desde: string, hasta: string): string | null {
@@ -38,7 +44,7 @@ export function GananciaPeriodoPanel() {
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
   const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const pedido = useRef(0);
 
@@ -50,14 +56,14 @@ export function GananciaPeriodoPanel() {
         : null;
     if (avisoRango) {
       setAviso(avisoRango);
-      setError(false);
+      setError(null);
       setData(null);
       setCargando(false);
       return;
     }
     setAviso(null);
     setCargando(true);
-    setError(false);
+    setError(null);
     const qs = params.toString();
     fetch(`/api/vendedores/ganancia${qs ? `?${qs}` : ''}`)
       .then(leer)
@@ -70,9 +76,9 @@ export function GananciaPeriodoPanel() {
         setEstado(json.estado);
         setCargando(false);
       })
-      .catch(() => {
+      .catch((e: unknown) => {
         if (id !== pedido.current) return;
-        setError(true);
+        setError(e instanceof Error ? e.message : 'No se pudo cargar la ganancia.');
         setCargando(false);
       });
   }, []);
@@ -82,10 +88,16 @@ export function GananciaPeriodoPanel() {
     cargar(new URLSearchParams());
   }, [cargar]);
 
+  // B-s10a-6: conserva estado y fechas elegidas al cambiar la agrupacion.
   const cambiarAgrupacion = (valor: Agrupacion) => {
     if (valor === agrupacion) return;
+    const params = new URLSearchParams({ agrupar: valor, estado });
+    if (desde && hasta) {
+      params.set('desde', desde);
+      params.set('hasta', hasta);
+    }
     setAgrupacion(valor);
-    cargar(new URLSearchParams({ agrupar: valor }));
+    cargar(params);
   };
 
   const cambiarEstado = (valor: EstadoGanancia) => {
@@ -148,7 +160,7 @@ export function GananciaPeriodoPanel() {
 
       {cargando && <p className="py-8 text-center text-zinc-400">Cargando...</p>}
       {!cargando && aviso && <p role="alert" className="py-8 text-center text-red-600">{aviso}</p>}
-      {!cargando && !aviso && error && <p className="py-8 text-center text-red-600">No se pudo cargar la ganancia.</p>}
+      {!cargando && !aviso && error && <p className="py-8 text-center text-red-600">{error}</p>}
 
       {!cargando && !error && data && (
         <div className="rounded-md border border-zinc-200 dark:border-zinc-800 p-3">

@@ -5,7 +5,13 @@ import flags from '@/config/feature-flags.json';
 import { hoyCL } from '@/lib/fechas';
 import { puedeVerVendedores } from '@/lib/roles';
 import { fechaValida, parsearEstado } from '@/lib/filtros-validacion';
-import { fetchGanancia, parsearAgrupacion, rangoPorDefecto } from '@/lib/vendedores-ganancia';
+import {
+  MAX_PERIODOS,
+  fetchGanancia,
+  parsearAgrupacion,
+  rangoPorDefecto,
+} from '@/lib/vendedores-ganancia';
+import { periodosEnRango } from '@/lib/vendedores-ganancia-tipos';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +42,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'fecha inválida' }, { status: 400 });
   }
   if (desde > hasta) return NextResponse.json({ error: 'rango inválido' }, { status: 400 });
+  // Tope de periodos ANTES de consultar: el mismo mensaje que muestra el panel.
+  if (periodosEnRango(agrupacion, desde, hasta) > MAX_PERIODOS) {
+    return NextResponse.json(
+      { error: 'El rango supera los 400 periodos para esta agrupación. Acota las fechas.' },
+      { status: 400 }
+    );
+  }
 
   try {
     return NextResponse.json(await fetchGanancia(agrupacion, desde, hasta, estado, hoy));

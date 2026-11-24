@@ -74,15 +74,13 @@ export function parsearFiltros(
     ['visaDesde', visaDesdeRaw],
     ['visaHasta', visaHastaRaw],
   ] as const) {
-    if (!fechaValida(valor)) return { error: `fecha ${nombre} inválida` };
+    if (valor && !fechaValida(valor)) return { error: `fecha ${nombre} inválida` };
   }
 
-  // Sin fechas de venta pero con rango de visacion: no se restringe la venta
-  // (solo se cortan las futuras con hoy). Con cualquier fecha de venta se
-  // completa el default de mes que ya existia.
-  const soloVisacion = !desdeRaw && !hastaRaw && Boolean(visaDesdeRaw || visaHastaRaw);
-  const desde = soloVisacion ? null : desdeRaw || `${hoy.slice(0, 7)}-01`;
-  const hasta = soloVisacion ? null : hastaRaw || hoy;
+  // EXP-1: vacio = sin limite. El default de mes en curso lo decide el cliente
+  // (filtrosIniciales) y se envia explicito, para que "limpiar fechas" sea posible.
+  const desde = desdeRaw || null;
+  const hasta = hastaRaw || null;
   const visaDesde = visaDesdeRaw || null;
   const visaHasta = visaHastaRaw || null;
   if (desde && hasta && desde > hasta) return { error: 'rango de fecha de venta inválido' };

@@ -86,7 +86,7 @@ describe('flujo principal (QA-S7c-01)', () => {
 });
 
 describe('controles', () => {
-  it('cambiar de agrupacion pide solo ?agrupar=semana y pinta las etiquetas de semana', async () => {
+  it('B-s10a-6: cambiar de agrupacion conserva estado y fechas elegidas', async () => {
     const fn = await montar();
     global.fetch = jest.fn((url: string) => {
       void url;
@@ -98,10 +98,22 @@ describe('controles', () => {
     expect(await screen.findByText('Sem. 23-11-2026 (lun)')).toBeInTheDocument();
     const ultima = params((global.fetch as jest.Mock).mock.calls[0][0]);
     expect(ultima.get('agrupar')).toBe('semana');
-    expect(ultima.has('desde')).toBe(false);
-    expect(ultima.has('hasta')).toBe(false);
+    expect(ultima.get('estado')).toBe('facturadas');
+    expect(ultima.get('desde')).toBe('2026-11-01');
+    expect(ultima.get('hasta')).toBe('2026-11-24');
     expect(screen.getByRole('button', { name: 'Semana' })).toHaveAttribute('aria-pressed', 'true');
     expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it('B-s10a-7: el rango excedido muestra el mensaje exacto de la API', async () => {
+    const error = 'El rango supera los 400 periodos para esta agrupación. Acota las fechas.';
+    global.fetch = jest.fn(() =>
+      Promise.resolve({ ok: false, status: 400, json: async () => ({ error }) })
+    ) as unknown as typeof fetch;
+    render(<GananciaPeriodoPanel />);
+
+    expect(await screen.findByText(error)).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
   it('cambiar estado o fecha manda los 5 parametros actuales', async () => {

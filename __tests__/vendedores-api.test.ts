@@ -121,7 +121,7 @@ describe('validacion', () => {
 });
 
 describe('defaults en hora de Chile', () => {
-  it('sin parametros usa el mes en curso y hoy de Chile, no la fecha del proceso', async () => {
+  it('sin parametros manda hoy de Chile y fechas de venta null (sin default de mes)', async () => {
     jest.useFakeTimers();
     jest.setSystemTime(new Date('2026-11-12T02:00:00Z')); // en Chile aun es 2026-11-11
 
@@ -129,8 +129,8 @@ describe('defaults en hora de Chile', () => {
 
     const [, params] = queryMock.mock.calls[0] as [string, unknown[]];
     expect(params[0]).toBe('2026-11-11');
-    expect(params[1]).toBe('2026-11-01');
-    expect(params[2]).toBe('2026-11-11');
+    expect(params[1]).toBeNull();
+    expect(params[2]).toBeNull();
   });
 });
 
