@@ -1,10 +1,14 @@
-import { describe, expect, it, beforeAll } from 'vitest';
+// Integración real contra Neon: requiere TEST_DATABASE_URL (rama de pruebas).
+// Sin ella se salta por completo (skipIf) para que `npm test` no toque produccion ni falle
+// por falta de rama; con la rama definida corre entero.
+import { describe, expect, it } from 'vitest';
 import { sql } from '@/lib/db';
 
-// syncPostProcess aún no existe — este import DEBE fallar en Fase B
 import { syncPostProcess } from '@/lib/services/sync-post-process';
 
-describe('syncPostProcess — integración real contra Neon', () => {
+const hasTestDb = !!process.env.TEST_DATABASE_URL;
+
+describe.skipIf(!hasTestDb)('syncPostProcess — integración real contra Neon', () => {
   it('retorna objeto con las 7 claves esperadas', async () => {
     const result = await syncPostProcess(sql);
 
@@ -50,7 +54,7 @@ describe('syncPostProcess — integración real contra Neon', () => {
   });
 });
 
-describe('POST /api/cron/sync-inventar — smoke E2E', () => {
+describe.skipIf(!hasTestDb)('POST /api/cron/sync-inventar — smoke E2E', () => {
   it('responde 200 e incluye las claves nuevas en el body', async () => {
     const { POST } = await import('@/app/api/cron/sync-inventar/route');
 
@@ -81,7 +85,7 @@ describe('POST /api/cron/sync-inventar — smoke E2E', () => {
     expect(body).toHaveProperty('sanjh_count');
     expect(body).toHaveProperty('vida_count');
 
-    // Claves NUEVAS que el cron NO retorna hoy — estas DEBEN fallar en Fase B
+    // Claves del post-proceso que el cron debe exponer
     expect(body).toHaveProperty('alertas_generadas');
     expect(body).toHaveProperty('alertas_stock_bajo');
     expect(body).toHaveProperty('client_ratings_updated');

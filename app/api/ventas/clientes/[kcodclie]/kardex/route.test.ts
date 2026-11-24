@@ -67,13 +67,20 @@ describe('GET /api/ventas/clientes/[kcodclie]/kardex', () => {
           precio: 5.8,
         },
       ])
+      .mockResolvedValueOnce([]) // segunda empresa sin compras
       .mockResolvedValueOnce([
         {
           codigo: 'VD-DC-30HE',
           imagen_url: null,
+          costo: 3.1,
           saldo_zofri: 10,
-          saldo_bodega: null,
           cantcaja: 9,
+        },
+      ])
+      .mockResolvedValueOnce([
+        {
+          codigo: 'VD-DC-30HE',
+          saldo_bodega: 4,
         },
       ]);
 

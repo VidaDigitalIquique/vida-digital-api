@@ -135,15 +135,27 @@ describe('DELETE /api/categorias/[id]', () => {
     expect(res.status).toBe(200);
   });
 
-  test('retorna 400 si la categoría tiene productos asignados', async () => {
+  test('desasigna productos (categoria=NULL) y responde 200 — comportamiento intencional', async () => {
     getServerSession.mockResolvedValue({
       user: { rol: 'admin', empresas: [2] },
     });
-    sqlMock.mockResolvedValueOnce([{ total: 3 }]); // COUNT productos
+    sqlMock
+      .mockResolvedValueOnce([{ total: 3 }]) // COUNT productos
+      .mockResolvedValueOnce([])             // UPDATE productos SET categoria = NULL
+      .mockResolvedValueOnce([]);            // DELETE categorias
 
     const req = {} as Request;
     const res = await DELETE(req, { params: { id: '1' } });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(200);
+
+    const body = await res.json();
+    expect(body.productos_desasignados).toBe(3);
+
+    // Orden intencional: COUNT -> UPDATE productos -> DELETE categoria
+    const sqlText = sqlMock.mock.calls.map((call) => (call[0] as string[]).join(' '));
+    expect(sqlText[0]).toContain('COUNT');
+    expect(sqlText[1]).toContain('UPDATE productos SET categoria = NULL');
+    expect(sqlText[2]).toContain('DELETE FROM categorias');
   });
 
   test('retorna 403 si rol es supervisor', async () => {

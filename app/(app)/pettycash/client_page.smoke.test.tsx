@@ -4,12 +4,13 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { PettycashClient } from './client_page';
+import { hoyCL } from '@/lib/fechas';
 
 jest.mock('sonner', () => ({ toast: { error: jest.fn(), success: jest.fn() } }));
 
 const mov = {
   id: 1,
-  fecha: '2026-05-06',
+  fecha: `${hoyCL().slice(0, 7)}-15`,
   tipo: 'ingreso' as const,
   concepto: 'Venta',
   monto: 10000,

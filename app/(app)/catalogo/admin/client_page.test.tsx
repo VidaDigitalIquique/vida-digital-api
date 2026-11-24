@@ -32,21 +32,21 @@ const MOCK_CATALOGO = {
   user_id: 'user-1',
 };
 
-const MOCK_ITEMS = [
-  { producto_id: 'p-1', tipo: 'producto', producto_detalle: 'Producto A', producto_imagen_url: null, prcventa: 100, hide_price: false, url_media: null },
-  { producto_id: 'p-2', tipo: 'producto', producto_detalle: 'Producto B', producto_imagen_url: null, prcventa: 200, hide_price: false, url_media: null },
+const MOCK_PRODUCTOS = [
+  { codigo: 'P1', detalle: 'Producto A', precio_catalogo: 100 },
+  { codigo: 'P2', detalle: 'Producto B', precio_catalogo: 200 },
 ];
 
-// Fetch mock base: lista catálogos + detalle con items
-function mockFetch(overrides: Record<string, any> = {}) {
+// Fetch mock base: lista catálogos + catálogo público por slug + PUT
+function mockFetch() {
   global.fetch = jest.fn().mockImplementation((url: string, opts: any) => {
     // GET lista
-    if (url.includes('/api/catalogos?')) {
+    if (url.includes('/api/catalogos?empresa=')) {
       return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: [MOCK_CATALOGO] }) });
     }
-    // GET detalle con items
-    if (url.match(/\/api\/catalogos\/cat-1$/) && (!opts || opts.method === 'GET' || !opts.method)) {
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: { ...MOCK_CATALOGO, items: MOCK_ITEMS } }) });
+    // GET catálogo público por slug (productos keyed por codigo)
+    if (url.match(/\/api\/catalogos\/public\/catalogo-test$/)) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ data: { productos: MOCK_PRODUCTOS } }) });
     }
     // PUT guardar
     if (url.match(/\/api\/catalogos\/cat-1$/) && opts?.method === 'PUT') {
@@ -106,7 +106,7 @@ describe('Modal de edición — eliminar producto', () => {
 });
 
 describe('Modal de edición — guardar cambios', () => {
-  it('llama PUT con los items restantes al guardar y cierra el modal', async () => {
+  it('llama PUT con palabras_excluir al guardar y cierra el modal', async () => {
     mockFetch();
     render(<CatalogoAdminClient session={SESSION_OWNER} />);
     await waitFor(() => screen.getByText('Catálogo Test'));
@@ -126,9 +126,11 @@ describe('Modal de edición — guardar cambios', () => {
       );
       expect(putCall).toBeDefined();
       const body = JSON.parse(putCall[1].body);
-      // Solo debe quedar Producto B
-      expect(body.items).toHaveLength(1);
-      expect(body.items[0].producto_id).toBe('p-2');
+      // El código eliminado queda excluido (contrato actual del endpoint)
+      expect(body.palabras_excluir).toContain('P1');
+      expect(body.palabras_excluir).not.toContain('P2');
+      expect(body).toHaveProperty('margen_precio');
+      expect(body).toHaveProperty('precio_overrides');
       // Modal cerrado
       expect(screen.queryByText('Producto A')).not.toBeInTheDocument();
       expect(screen.queryByText('Producto B')).not.toBeInTheDocument();

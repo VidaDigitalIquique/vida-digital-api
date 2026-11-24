@@ -1,4 +1,7 @@
-import { describe, expect, it, vi, beforeAll } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+// Sin DB real: el handler solo consulta ingresos y devuelve las filas.
+vi.mock('@/lib/db', () => ({ sql: vi.fn(async () => []) }));
 
 // Mock next-auth antes de importar el handler
 vi.mock('next-auth', () => ({

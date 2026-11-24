@@ -16,6 +16,16 @@ jest.mock('@/lib/services/product-service', () => ({
   recalculateNuevoFlags: jest.fn(async () => 0),
 }));
 
+// El post-proceso toca la DB real; el foco de este test es el endpoint de sync.
+jest.mock('@/lib/services/sync-post-process', () => ({
+  syncPostProcess: jest.fn(async () => ({
+    alertas_generadas: 0,
+    alertas_stock_bajo: 0,
+    client_ratings: { updated: 0 },
+    clientes_nuevos: { nuevos: 0, sugerencias: 0 },
+  })),
+}));
+
 describe('POST /api/admin/sync-from-winfac', () => {
   beforeEach(() => {
     getServerSession.mockReset();

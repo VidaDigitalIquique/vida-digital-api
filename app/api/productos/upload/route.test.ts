@@ -40,15 +40,17 @@ describe("POST /api/productos/upload", () => {
      (getServerSession as jest.Mock).mockResolvedValue({
        user: { id: 1, rol: 'admin', empresas: [1] }
      });
+     (uploadImage as jest.Mock).mockResolvedValue({
+       secure_url: "https://res.cloudinary.com/demo/image/upload/productos/VD-DC-30HE.png",
+       public_id: "productos/VD-DC-30HE",
+     });
 
-     // Mock implementation should return a success message eventually.
-     // Currently this will FAIL because POST is not exported or the file doesn't exist.
      const request = new Request("http://localhost/api/productos/upload", {
        method: "POST",
-       body: JSON.stringify({ 
-         productoId: 1, 
+       body: JSON.stringify({
+         productoId: 1,
          imageBase64: "data:image/png;base64,fake-data",
-         filename: "test.png" 
+         codigo: "VD-DC-30HE",
        })
      });
 
@@ -57,5 +59,8 @@ describe("POST /api/productos/upload", () => {
      const body = await response.json();
      expect(body).toHaveProperty("imagen_url");
      expect(body).toHaveProperty("public_id");
+     // UPDATE por codigo: sql`... WHERE codigo = ${codigo}`
+     expect(sql).toHaveBeenCalledTimes(1);
+     expect((sql as unknown as jest.Mock).mock.calls[0][3]).toBe("VD-DC-30HE");
   });
 });

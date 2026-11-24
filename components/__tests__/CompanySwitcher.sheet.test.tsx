@@ -1,16 +1,26 @@
+import { useState } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { CompanySwitcher } from '../CompanySwitcher';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 
+// El Sheet es controlado por el padre; el harness reproduce ese contrato real.
+function Harness({ onSwitch }: { onSwitch: (id: number) => void }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetContent>
+        <CompanySwitcher
+          activeEmpresaId={1}
+          onSwitch={(id) => { onSwitch(id); setOpen(false); }}
+        />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
 describe('CompanySwitcher within Sheet', () => {
   test('clicking trigger keeps Sheet open and opens dropdown', async () => {
-    render(
-      <Sheet open onOpenChange={() => {}}>
-        <SheetContent>
-          <CompanySwitcher activeEmpresaId={1} onSwitch={() => {}} />
-        </SheetContent>
-      </Sheet>
-    );
+    render(<Harness onSwitch={() => {}} />);
 
     fireEvent.click(screen.getByText('SANJH'));
     expect(await screen.findByText('VIDA DIGITAL')).toBeInTheDocument();
@@ -19,13 +29,7 @@ describe('CompanySwitcher within Sheet', () => {
 
   test('clicking item calls onSwitch and closes Sheet', async () => {
     const onSwitch = jest.fn();
-    render(
-      <Sheet open onOpenChange={() => {}}>
-        <SheetContent>
-          <CompanySwitcher activeEmpresaId={1} onSwitch={onSwitch} />
-        </SheetContent>
-      </Sheet>
-    );
+    render(<Harness onSwitch={onSwitch} />);
 
     fireEvent.click(screen.getByText('SANJH'));
     const item = await screen.findByText('VIDA DIGITAL');
