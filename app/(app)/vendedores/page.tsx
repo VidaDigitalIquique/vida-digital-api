@@ -5,6 +5,7 @@ import flags from '@/config/feature-flags.json';
 import { puedeVerVendedores } from '@/lib/roles';
 import { VendedoresClient } from './VendedoresClient';
 import { ComisionesPanel } from './ComisionesPanel';
+import { GananciaPeriodoPanel } from './GananciaPeriodoPanel';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +18,7 @@ export default async function VendedoresPage() {
   return (
     <div className="container max-w-7xl mx-auto px-4 py-6">
       <VendedoresClient />
+      {flags['vendedores-ganancia-periodo'] && <GananciaPeriodoPanel />}
       <ComisionesPanel />
     </div>
   );

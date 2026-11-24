@@ -143,3 +143,21 @@
 - Humo qa-prod.ps1 -EsperarDeploy -ConIA: PASA en 7 pasadas (anon; admin, vendedor, bodeguero sin IA y con IA). Costo 3.09 USD.
 - Pendientes nuevos del humo: imagenes 404/400 de Cloudinary en /deseados?modo=china -> BACKLOG D11 (preexistente).
 - Abierto: D13 + D14 (sync WinFac, manana en el PC de Pravin), D9 EN PAUSA, D6/D7/D8/D10/D11/D12 en backlog, deuda del ponytail (logs/senal3-vendedores.md), mejoras de QA PENDIENTES en MEJORAS-QA.md.
+
+## 2026-11-24 - Slice: S7 (a-d) mejoras de /vendedores y menu movil (modal, tabla, ganancia por periodo, menu movil v2)
+- Programador: 4 slices EN PARALELO en worktrees aislados (`_dt-vida-digital\wt-s7a..d`, ramas feat/s7a..d, integracion en feat/vendedores-ui-v2): S7a y S7c deep (deepseek-flash), S7b y S7d codex; S7c partido en S7c-1 (backend) y S7c-2 (UI) por el limite de 200 lineas
+- Contrato: S7a modal (imagen 56x56 cuadrada, modal 95vw/sm:max-w-7xl, % total de ganancia de la nota = ganancia / sum(costo x unidades)); S7b tabla (Estado Facturada verde / Pendiente rojo, paginacion cliente 25/50/100); S7c-1/2 ganancia Vida+SANJH por dia/semana/mes/anio (`/api/vendedores/ganancia`, panel "Ganancia por periodo", flag `vendedores-ganancia-periodo`); S7d menu movil superior desplegable desde el logo (flag `menu-movil-v2`, "Cerrar sesion" para todos los roles)
+- Lineas de produccion: S7a +11, S7b 74, S7c-1 200, S7c-2 187, S7d ~130
+- Tests: jest por archivo (--runInBand) VERDE en cada slice con ROJO previo; tsc = 55 errores preexistentes, identicos a la base (0 nuevos)
+- Verificacion propia: diff leido por slice contra el contrato; ganancia de 2026-11 recalculada por el Director con una consulta independiente linea a linea (Vida 23.385,62 / SANJH 23.807,19) = API = pantalla; build de la rama integrada compila
+- Commits: ver `git log feat/vendedores-ui-v2` (a741cd8, c88de00, 1530e98, da385ba->7bb461f, 6d697c5->dc4252a + merges). NO esta en main ni desplegado
+- Gates disparados: ninguno. Pendiente (gate humano): UAT de Pablo, encender `vendedores-ganancia-periodo` y `menu-movil-v2` en el deploy, Senal 3 (ponytail-audit, humoProd debe exigir "Ganancia por periodo" en /vendedores)
+- QA (Fase E): UNA corrida agrupada de UI s7 (15 casos, desktop+movil, flags solo en pruebas): 14 PASA, 1 FALLA (QA-12 tocar fuera del menu movil), reproducida en la re-prueba; hallazgos EXP-1 (buscador de /precios tapaba el menu) y EXP-2 (mensaje de rango invertido) corregidos; EXP-3 y EXP-4 descartados. Segunda corrida acotada s7b (5 casos): PASA 5/5. Costo QA ~3.58 USD
+- Desvios del Programador: S7a justifico width/height por un "warning de sizes" que no aplica (ImageWithFallback usa unoptimized): las miniaturas apaisadas no eran cuadradas; corregido volviendo a `fill` (S7a fix). Ningun otro
+- QA metricas: FP 0, ESC 0, ACIERTOS 2 (EXP-1, EXP-2) + 1 falla real (QA-12), costo QA 3.58 USD
+- Hallazgo ajeno al slice: `.env` esta VERSIONADO en git (tracked, no ignorado) y modificado: contiene secretos; fuera de alcance, se informa a Pablo
+## 2026-11-24 - S8/S9 + release vendedores-ui-v2
+- S8: ganancia por periodo exacta (redondeo por nota en SQL, centavos enteros) y estado por defecto Facturadas. Verificacion independiente SQL/JS coincide con API.
+- S9: enlace Dashboard (solo admin) en menu movil, 45/45 tests, tsc 55 errores preexistentes sin cambio.
+- Senal 3: ponytail-audit VERDE, QA regresion 12/13 PASA + R10 verificado por Director, flags vendedores-ganancia-periodo y menu-movil-v2 = true, sin variables de entorno ni migraciones nuevas.
+- BACKLOG: EXP-1/2/3 de QA s8, rango personalizado se pierde al cambiar agrupacion, .env versionado (diferido por Pablo).

@@ -4,6 +4,7 @@
  */
 import {
   porcentajeSobreCosto,
+  porcentajeGananciaNota,
   gananciaLinea,
   sumaLineas,
   totalGanancia,
@@ -74,6 +75,38 @@ describe('ganancia y sumas', () => {
     const lineas = [linea(), linea({ precio: 100, costo: 80, unidades: 2 })];
     expect(totalGanancia(lineas)).toBeCloseTo(97 + 40, 10);
     expect(totalGanancia([])).toBe(0);
+  });
+});
+
+describe('porcentajeGananciaNota (S7a: % total de la nota)', () => {
+  it('totalGanancia / (suma costo x unidades) * 100, sin redondear', () => {
+    // (150-100)*17 + (20-10)*9.075 = 940.75 ; costo 100*17 + 10*9.075 = 1790.75
+    const lineas = [
+      linea({ codigo: 'HS-30', costo: 100, precio: 150, unidades: 17 }),
+      linea({ codigo: '303', costo: 10, precio: 20, unidades: 9.075 }),
+    ];
+    expect(porcentajeGananciaNota(lineas)).toBeCloseTo((940.75 / 1790.75) * 100, 10);
+  });
+
+  it('costo total 0 -> null (no divide por cero)', () => {
+    expect(porcentajeGananciaNota([linea({ costo: 0, precio: 10, unidades: 1 })])).toBeNull();
+  });
+
+  it('sin lineas -> null', () => {
+    expect(porcentajeGananciaNota([])).toBeNull();
+  });
+
+  it('margen negativo es valido (no null)', () => {
+    expect(porcentajeGananciaNota([linea({ costo: 100, precio: 40, unidades: 2 })])).toBeCloseTo(-60, 10);
+  });
+
+  it('costo no finito -> null (nunca NaN/Infinity)', () => {
+    expect(porcentajeGananciaNota([linea({ costo: Number.NaN, precio: 10, unidades: 1 })])).toBeNull();
+    expect(porcentajeGananciaNota([linea({ costo: Number.POSITIVE_INFINITY, precio: 10, unidades: 1 })])).toBeNull();
+  });
+
+  it('costo total negativo -> null', () => {
+    expect(porcentajeGananciaNota([linea({ costo: -5, precio: 10, unidades: 2 })])).toBeNull();
   });
 });
 

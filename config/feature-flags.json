@@ -26,5 +26,7 @@
   "sync-post-process-unificado": false,
   "bodega_despachos_editar_folio": true,
   "drawer-ventas-detalle": true,
-  "vendedores-modulo": true
+  "vendedores-modulo": true,
+  "vendedores-ganancia-periodo": true,
+  "menu-movil-v2": true
 }

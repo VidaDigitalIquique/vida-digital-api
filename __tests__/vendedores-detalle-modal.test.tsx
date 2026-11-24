@@ -79,10 +79,11 @@ describe('cabecera y tabla', () => {
     }
   });
 
-  it('pinta las 7 columnas, las lineas y el total de ganancia', async () => {
+  it('pinta las 7 columnas, las lineas y el total de ganancia con %', async () => {
     montar();
     await screen.findByText('Detalle de nota 002499');
-    expect(await screen.findByText('Total ganancia: $940.75')).toBeInTheDocument();
+    // 940.75 / (100*17 + 10*9.075) * 100 = 52.533...
+    expect(await screen.findByText('Total ganancia: $940.75 (52.53 %)')).toBeInTheDocument();
 
     for (const h of [
       'IMAGEN',
@@ -124,8 +125,29 @@ describe('cabecera y tabla', () => {
     const tr = (await screen.findAllByText('ZERO'))[0].closest('tr') as HTMLElement;
     expect(tr.textContent).toContain('—');
     expect(tr.textContent).not.toMatch(/NaN|Infinity/);
+    // el total tambien cae en "—" (costo total 0)
+    expect(screen.getByText('Total ganancia: $10.00 (—)')).toBeInTheDocument();
     expect(document.body.textContent).not.toMatch(/NaN|Infinity/);
     expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it('nota sin lineas: total $0.00 (—) y tabla vacia', async () => {
+    montar({ ...DETALLE, lineas: [], diferencia_usd: null });
+    await screen.findByText('Detalle de nota 002499');
+
+    expect(await screen.findByText('Total ganancia: $0.00 (—)')).toBeInTheDocument();
+    expect(screen.getByRole('table').querySelectorAll('tbody tr')).toHaveLength(0);
+    expect(document.body.textContent).not.toMatch(/NaN|Infinity/);
+  });
+
+  it('margen negativo: el % total es negativo', async () => {
+    montar({
+      ...DETALLE,
+      diferencia_usd: null,
+      lineas: [{ codigo: 'NEG', costo: 100, precio: 40, cajas: 1, unidades: 2, total_linea: 80, imagen_url: null }],
+    });
+    await screen.findByText('Detalle de nota 002499');
+    expect(await screen.findByText('Total ganancia: -$120.00 (-60.00 %)')).toBeInTheDocument();
   });
 });
 
@@ -164,6 +186,72 @@ describe('imagenes', () => {
     expect(imgs.some((i) => i.getAttribute('src')?.includes('SINIMG'))).toBe(false);
     // el codigo sin imagen se ve igual (placeholder con el codigo)
     expect(screen.getAllByText('SINIMG').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('miniatura 56x56 SIEMPRE cuadrada: contenedor h-14 w-14 e imagen con fill recortada', async () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const error = jest.spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      montar({
+        ...DETALLE,
+        diferencia_usd: null,
+        lineas: [
+          { codigo: 'CONIMG', costo: 1, precio: 2, cajas: 1, unidades: 1, total_linea: 2, imagen_url: 'https://res.cloudinary.com/demo/image/upload/a.jpg' },
+        ],
+      });
+      await screen.findByText('Vida Digital');
+
+      const img = document.querySelector('img') as HTMLImageElement;
+      // Sin width/height fijos: una imagen apaisada quedaria de 56x~30 por el preflight de Tailwind.
+      expect(img.getAttribute('width')).toBeNull();
+      expect(img.getAttribute('height')).toBeNull();
+      // fill: next/image posiciona la imagen en absoluto y object-cover la recorta al cuadrado.
+      expect(img.style.position).toBe('absolute');
+      expect(img.className).toContain('object-cover');
+
+      const contenedor = img.closest('span') as HTMLElement;
+      expect(contenedor).toBeTruthy();
+      expect(contenedor).toHaveClass('relative', 'block', 'h-14', 'w-14', 'overflow-hidden', 'rounded-md');
+
+      const mensajes = [...warn.mock.calls, ...error.mock.calls].flat().join(' ');
+      expect(mensajes).not.toMatch(/sizes/);
+    } finally {
+      warn.mockRestore();
+      error.mockRestore();
+    }
+  });
+
+  it('sin imagen_url: recuadro placeholder de 56px con el codigo, sin <img>', async () => {
+    montar({
+      ...DETALLE,
+      diferencia_usd: null,
+      lineas: [{ codigo: 'SINIMG', costo: 1, precio: 2, cajas: 1, unidades: 1, total_linea: 2, imagen_url: null }],
+    });
+    await screen.findByText('Vida Digital');
+
+    expect(document.querySelectorAll('img')).toHaveLength(0);
+    const span = screen.getAllByText('SINIMG').find((el) => el.tagName === 'SPAN' && el.className.includes('h-14')) as HTMLElement;
+    expect(span).toBeTruthy();
+    expect(span).toHaveClass('h-14', 'w-14');
+  });
+});
+
+describe('layout del modal', () => {
+  it('ocupa 95vw/92vh en movil y hasta 7xl en escritorio', async () => {
+    montar();
+    await screen.findByText('Detalle de nota 002499');
+
+    const contenido = document.querySelector('[data-slot="dialog-content"]') as HTMLElement;
+    expect(contenido).toBeTruthy();
+    for (const clase of ['w-[95vw]', 'max-w-[95vw]', 'sm:max-w-7xl', 'max-h-[92vh]']) {
+      expect(contenido.className).toContain(clase);
+    }
+  });
+
+  it('el aviso de diferencia coexiste con el total y su %', async () => {
+    montar();
+    expect(await screen.findByText('Total ganancia: $940.75 (52.53 %)')).toBeInTheDocument();
+    expect(screen.getByText(/\(diferencia USD \$181\.50\)/)).toBeInTheDocument();
   });
 });
 
