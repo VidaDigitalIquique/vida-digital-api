@@ -29,6 +29,7 @@ from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
+import reconciliacion
 
 # ============================================================
 # CONFIGURACION
@@ -243,9 +244,35 @@ def read_dbf(path: str, columnas: list) -> list[dict]:
         return []
 
 
+def _firma_archivo(path: str):
+    """Firma barata del DBF (tamano + mtime) para detectar cambios al leer."""
+    try:
+        st = os.stat(path)
+    except OSError:
+        return None
+    return st.st_size, st.st_mtime_ns
+
+
+def _sync_reconciliado(conn, schema: str, tabla: str, config: dict,
+                       dbf_path: str):
+    """UPSERT + borrado opcional para un destino de la lista cerrada."""
+    cfg = reconciliacion.config_borrado()
+    if cfg.advertencia:
+        log.warning(f"  Configuracion de borrado invalida: {cfg.advertencia}")
+    res = reconciliacion.reconciliar_destino(
+        conn, schema, tabla, config["columnas"],
+        lambda: read_dbf(dbf_path, config["columnas"]),
+        firma_fn=lambda: _firma_archivo(dbf_path),
+        config=cfg, log=log)
+    return res.upsert if res.estado in ("OK", "BORRADO_OMITIDO") else 0
+
+
 def sync_tabla(conn, schema: str, tabla: str, config: dict, dbf_path: str):
     """Sincroniza una tabla DBF con Neon usando UPSERT."""
     log.info(f"Sincronizando {schema}.{tabla}...")
+
+    if reconciliacion.destino_pk(schema, tabla):
+        return _sync_reconciliado(conn, schema, tabla, config, dbf_path)
 
     rows = read_dbf(dbf_path, config["columnas"])
     if not rows:
