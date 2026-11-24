@@ -42,18 +42,18 @@ Orden sugerido: D1 -> D2 -> D3 -> D4 -> D5.
 ---
 
 Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendiente en QA-REGISTRO.md (ARREGLADO/BACKLOG/DESCARTADO) y registrar en AUTO-LOG.md.
-## D6 (ALTA) - Un test de jest escribe en la base de PRODUCCION
+## D6 (ALTA) - Un test de jest escribe en la base de PRODUCCION  [RESUELTO 2026-11-24 s10c: guarda en jest.setup.js y vitest.config.ts]
 - Detectado 2026-11-11 por el Director durante D1 (informe del Programador bug-d1-1).
 - Causa VERIFICADA: `__tests__/catalogo-precio-override.test.ts` no mockea `sql` ("usan BD real"); `next/jest` carga `.env` y `DATABASE_URL` es produccion. En `beforeAll` hace INSERT de 2 catalogos y overrides; `afterAll` los borra. Cualquier `npm test` (incluido verificar.ps1) escribe y borra en produccion.
 - Estado tras la corrida de hoy (consulta de solo lectura): sin catalogos de test residuales ni overrides huerfanos.
 - Mitigacion mientras tanto: el Director corre jest con `--testPathIgnorePatterns catalogo-precio-override`.
 - Criterio de cierre: ningun test puede conectarse a `DATABASE_URL` de produccion (usar `TEST_DATABASE_URL` con guarda, o mocks); `npm test` completo no toca produccion.
 
-## D7 (BAJA, solo dev) - /favicon.ico responde 500 en desarrollo
+## D7 (BAJA, solo dev) - /favicon.ico responde 500 en desarrollo  [RESUELTO 2026-11-24 s10c: un solo favicon en app/]
 - Detectado en Fase E bug-d1b (EXP-2). Causa VERIFICADA: existen `app/favicon.ico` y `public/favicon.ico`; Next dev responde 500 por archivo publico y de app en conflicto. Produccion responde 200 (medido 2026-11-11).
 - Criterio de cierre: /favicon.ico 200 en dev y prod (dejar un solo archivo).
 
-## D8 (MEDIA) - Warning "Function components cannot be given refs" en consola de dev
+## D8 (MEDIA) - Warning "Function components cannot be given refs" en consola de dev  [RESUELTO 2026-11-24 s10c: forwardRef en Button/Input/spell-checker; QA-S10-08 PASA]
 - Detectado en Fase E bug-d1b (consola). Pista de la Fase E bug-d2 (EXP-3, sin verificar): "Check the render method of `BodegaClient`", en `components/ui/input.tsx` (Input sin forwardRef). Verificar en el codigo antes de cualquier hipotesis.
 ## D9 (CRITICA, seguridad) - Repo publico con .env versionado (secretos de produccion expuestos)  [EN PAUSA por decision de Pablo, 2026-11-11 15:33]
 - EN PAUSA: Pablo decidio hacerlo AL FINAL, cuando todo este entregado y funcionando. Habia una razon por la que el repo es publico que Pablo no recuerda: averiguarla antes de cambiar la visibilidad. No bloquea el deploy de D1-D5 (ningun commit toca .env).
@@ -62,21 +62,21 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 - Gate humano (credenciales e infraestructura): repo a privado, rotacion de todas las claves y carga en Vercel. Luego slice: `git rm --cached .env` + .gitignore, SOLO despues de confirmar que Vercel tiene todas las variables en su panel.
 - Criterio de cierre: repo privado (o sin secretos en el historial), claves rotadas y probadas en produccion (humo 4 roles PASA), .env fuera del indice.
 
-## D10 (BAJA, deuda) - Items no criticos del /ponytail-audit de la Senal 3 (2026-11-11)
+## D10 (BAJA, deuda) - Items no criticos del /ponytail-audit de la Senal 3 (2026-11-11)  [RESUELTO 2026-11-24 s10e/s10g: build sin ignoreBuildErrors, tsc 0]
 - AlertasContext: al cerrar sesion los contadores no vuelven a 0 hasta recargar; ROLES_ALERTAS/ROLES_SEGUIMIENTOS duplican las listas de las APIs (mover a lib/roles.ts).
 - middleware.ts: MATCHER_PATTERN existe solo para un test de identidad (se puede simplificar). Regla a escribir en CLAUDE.md: toda pagina privada con segmento dinamico valida rol en la page (el matcher excluye rutas con extension).
 - Fechas con new Date()/toLocale* en garantias, seguimientos, admin/deudas, prenotas, caja-mayor, sueldos: el audit dice que causan hidratacion, pero el barrido del Director (servidor TZ=Asia/Tokyo, dev y build de produccion, 45 pantallas x roles) no mostro errores: se renderizan con datos cargados en el cliente. Riesgo latente: si pasan a renderizarse en el servidor, usar lib/fechas.ts.
 - 9 errores de tsc preexistentes en tests ocultos por typescript.ignoreBuildErrors.
-## D11 (MEDIA, datos) - Imagenes de productos que no existen en Cloudinary (404)
+## D11 (MEDIA, datos) - Imagenes de productos que no existen en Cloudinary (404)  [RESUELTO 2026-11-24 flag fix-d11-imagen-producto + placeholder; QA-S10-09 PASA]
 - Detectado 2026-11-11 en el humo de produccion con IA (prod-2ac571c-1552-admin-ia): 156 URLs distintas `res.cloudinary.com/dxkidwxjl/image/upload/productos/<codigo>.jpg` responden 404 (pendientes P-20261111-1600-*, cerrados como BACKLOG D11).
 - Preexistente: la UI pide la imagen por codigo de producto aunque no se haya subido. No lo introdujo el release D1-D5.
 - Por revisar: que pantalla las pide (listados de productos), si conviene mostrar un placeholder sin pedir la URL (o usar un fallback de Cloudinary) y/o subir las imagenes faltantes (/admin/subir-imagenes). Decision de producto: como mostrar productos sin imagen.
-## D12 (MEDIA) - Seguimientos muestra el cliente de la nota y el de la factura al reves
+## D12 (MEDIA) - Seguimientos muestra el cliente de la nota y el de la factura al reves  [RESUELTO 2026-11-24 s10b; QA-S10-05 PASA]
 - Detectado 2026-11-11 al armar el PRD de VENDEDORES. Pablo confirmo que el cliente de la nota de venta es `movidcto.cliente` (ej. nota SANJH 003816: "DILIP MAYANI").
 - `app/api/seguimientos/route.ts` toma como cliente `clientes(kcodclie).nombress` ("IMPORT EXPORT VED SPA" en esa nota) y como `factura_nombre` `clientes(kcodcli2)` ("DILIP MAYANI"). Datos: `movidcto.cliente` coincide con el nombre de `kcodcli2` en el 98% de las notas.
 - CONFIRMADO por Pablo (2026-11-11 17:18, 6 ejemplos reales): el cliente real (comprador) es ``movidcto.cliente`` = ``clientes(kcodcli2)``; el de factura es ``clientes(kcodclie)``. Seguimientos los tiene invertidos. Criterio de cierre: en Seguimientos, nota SANJH 003816 muestra cliente "DILIP MAYANI" y factura "IMPORT EXPORT VED SPA".
 
-## D13 (MEDIA, datos) - La replica trae lineas de nota que no estan en la nota real de WinFac
+## D13 (MEDIA, datos) - La replica trae lineas de nota que no estan en la nota real de WinFac  [CODIGO LISTO 2026-11-24 s10f; pendiente gate: instalar sync en PC de Pravin y ejecutar limpieza]
 - Detectado 2026-11-11 (PRD VENDEDORES). Nota Vida 002499 impresa (JOHN HUARACHI): solo HS-30 y HS-30C, total 2.550. En `vida.itemdcto` la nota tiene ademas 303, BKJ-61 y BJ-96 (181,50, `knumdocu` vacio).
 - Alcance 2026: 75 notas vida y 6 sanjh con suma de lineas > `val_rea`. Sin regla en los datos que las separe (cruzar por id_tdocu o knumdocu no generaliza).
 - Hipotesis (no verificada): el sync Python WinFac -> Neon inserta/actualiza lineas pero no borra las que se quitaron de la nota en WinFac.
@@ -88,7 +88,7 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 - Correccion propuesta (slice aparte, se instala en el PC de Pravin): tras el UPSERT, borrar en Neon las filas cuya PK ya no esta en el DBF leido, con guarda (si la lectura falla o trae 0 filas, o si se borraria mas de un umbral, no borrar y avisar). Luego una corrida para limpiar lo historico y verificar con la nota 002499 (debe quedar con HS-30 y HS-30C) y con el conteo 2026 de notas con lineas de mas (debe bajar de 75).
 - 2026-11-11 17:31: Pablo confirma que el script del PC de Pravin es igual a la copia del repo y que WinFac no tiene esas lineas (no salen en la nota impresa). Causa confirmada. PENDIENTE para el 2026-11-12 en la Zofri (PC de Pravin): aplicar el fix del sync, limpiar lo historico y verificar. No bloquea VENDEDORES.
 
-## D14 (MEDIA, datos) - itemdcto tiene lineas duplicadas por kdocitem con espacios ("  1" y "1")
+## D14 (MEDIA, datos) - itemdcto tiene lineas duplicadas por kdocitem con espacios ("  1" y "1")  [CODIGO LISTO 2026-11-24 s10f; pendiente gate junto con D13]
 - Detectado 2026-11-11 en la Fase E del slice S1 (EXP-1 HL-81, EXP-2 SANJH 1030A). Verificado por el Director en la base de pruebas (copia de produccion del 2026-11-11).
 - Causa VERIFICADA en los datos: la misma linea existe dos veces con `kdocitem` con y sin espacios a la izquierda (ej. sanjh nota 000812: kdocitem '  1' y '1', mismo codigo, precio y cantidad). La PK del sync (knumfoli, kdocitem) las trata como distintas.
 - Alcance: vida 2.183 filas duplicadas en 572 notas (2025-04-15 a 2025-10-09, 0 en 2026); sanjh 16.766 filas en 3.116 notas (46 filas en 2026).

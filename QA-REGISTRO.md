@@ -409,3 +409,16 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s8
 - Sin pendientes nuevos.
 - Nota del Director: el intento 2 salio INVALIDO por limite de uso del agente de QA. El intento 1 (qa\s8-intento1) fue valido: 12/13 PASA, R10 BLOQUEADO solo por no poder abrir .xlsx; el Director abrio el archivo y coincide con la pantalla (ANGELA 109.80, JOSEPH LEVANO 378.06, PRAVIN 1083.17, TOTAL 1571.03). Exploraciones EXP-1 (Limpiar fechas de venta se deshace al escribir visacion), EXP-2 (cambiar agrupacion reinicia estado), EXP-3 (filtros en blanco mientras carga): BACKLOG, severidad media/baja, no bloquean.
+
+## 2026-11-24 16:28 - s10 - commit 76ce20f - BLOQUEADO
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s10
+- Sin pendientes nuevos.
+
+## 2026-11-24 16:36 - s10 - commit 76ce20f - BLOQUEADO
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s10
+- Sin pendientes nuevos.
+
+## 2026-11-24 17:10 - s10 (release/s10) - veredicto del Director
+- Evidencia valida: qa\s10-intento1 (21 casos: 20 PASA, R10 BLOQUEADO solo por no poder abrir .xlsx). El reintento fue cancelado por el Director (un build compartio .next con el servidor de QA).
+- R10 verificado por el Director abriendo comisiones-2026-11.xlsx: ANGELA 15 notas 109.80, ANIL 0, JOSEPH LEVANO 30 notas 378.06, PRAVIN 27 notas 1083.17, TOTAL 72 notas 157103.40 / comision 1571.03 al 1 % = coincide con la pantalla. R10 = PASA.
+- Exploraciones: EXP-1 (ventas duplicadas en producto 1025: 4 pares identicos, probable dato D14), EXP-2 (500 en /api/deseados/alertas, sin efecto visible), EXP-3 (aviso de hidratacion style en SeguimientosClient), EXP-4 (notas Pendientes con fecha de facturacion, dato de prueba): BACKLOG, severidad media/baja, no bloquean.

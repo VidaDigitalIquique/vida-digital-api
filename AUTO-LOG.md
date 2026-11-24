@@ -161,3 +161,8 @@
 - S9: enlace Dashboard (solo admin) en menu movil, 45/45 tests, tsc 55 errores preexistentes sin cambio.
 - Senal 3: ponytail-audit VERDE, QA regresion 12/13 PASA + R10 verificado por Director, flags vendedores-ganancia-periodo y menu-movil-v2 = true, sin variables de entorno ni migraciones nuevas.
 - BACKLOG: EXP-1/2/3 de QA s8, rango personalizado se pierde al cambiar agrupacion, .env versionado (diferido por Pablo).
+
+## 2026-11-24 - Release s10 (backlog D6-D14 + S11 tests)
+- Slices s10a-g + s11 integrados en release/s10. Verificacion: jest 130/130 suites (1016 tests), vitest 16/16 (81), tsc 0, build OK sin ignoreBuildErrors.
+- QA UI (qa\s10-intento1): 20 PASA + R10 verificado por el Director. EXP-1..4 al backlog.
+- Gates abiertos: D9 (repo publico/.env: privatizar y rotar claves), D13/D14 (instalar sync en PC de Pravin, dry-run y --apply).
