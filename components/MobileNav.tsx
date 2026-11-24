@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { ShoppingCart, Users, RefreshCw, ShieldCheck, Landmark, FileText, UserPlus,
   LayoutList, Tag, Package, Box, Camera, ClipboardList, Heart, Phone, Banknote,
-  ImageIcon, Filter, Wallet, type LucideIcon } from 'lucide-react';
+  ImageIcon, Filter, Wallet, LayoutDashboard, type LucideIcon } from 'lucide-react';
 import flags from '@/config/feature-flags.json';
 import { useAlertas } from '@/contexts/AlertasContext';
 
@@ -50,6 +50,7 @@ export function MobileNav({ rol }: { rol: string | undefined }) {
   const comercial = admin || rol === 'vendedor';
   const almacen = comercial || rol === 'bodeguero';
   const groups: { title: string; items: Option[] }[] = [
+    { title: '', items: admin ? [option('/dashboard', 'Dashboard', LayoutDashboard)] : [] },
     { title: 'Ventas', items: [
       ...(comercial ? [
         option('/precios', 'Sala de Venta', ShoppingCart),

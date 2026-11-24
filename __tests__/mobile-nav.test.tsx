@@ -27,6 +27,7 @@ describe.each(['admin', 'vendedor', 'bodeguero', 'supervisor'])('inventario exac
     render(<MobileNav rol={rol} />); fireEvent.click(logo());
     const comercial = rol === 'admin' || rol === 'vendedor';
     const esperado = [
+      ...(rol === 'admin' ? [['/dashboard', 'Dashboard']] : []),
       ...(comercial ? ventas : rol === 'supervisor' ? ventas.slice(-1) : []),
       ...(comercial ? catalogo : []), ...(rol !== 'supervisor' ? bodega : []),
       ...(comercial ? [['/deseados', 'Deseados']] : []),
@@ -125,4 +126,38 @@ test('query distingue China y Deseados; panel accesible y desplazable', () => {
   expect(logo()).toHaveClass('min-h-[44px]');
   expect(panel).toHaveClass('fixed', 'top-16', 'overflow-y-auto', 'overscroll-contain', 'max-h-[calc(100dvh-4rem)]', 'md:hidden');
   screen.getAllByRole('link').forEach(a => expect(a).toHaveClass('min-h-[44px]'));
+});
+
+describe('S9: opcion Dashboard del admin', () => {
+  test('es el primer enlace, apunta a /dashboard y su grupo no tiene titulo', () => {
+    mockPath = '/secundaria'; render(<MobileNav rol="admin" />); fireEvent.click(logo());
+    const links = screen.getAllByRole('link');
+    expect(links[0]).toHaveAttribute('href', '/dashboard');
+    expect(links[0]).toHaveTextContent('Dashboard');
+    const grupo = links[0].closest('section')!;
+    expect(grupo.querySelector('h2')).toBeNull();
+    expect(grupo.querySelectorAll('a')).toHaveLength(1);
+    expect(grupo.nextElementSibling).toContainElement(screen.getByRole('heading', { name: 'Ventas' }));
+    expect(links[0].querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
+  });
+  test('activo en /dashboard y no en otra ruta', () => {
+    render(<MobileNav rol="admin" />);
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
+    cleanup(); mockPath = '/secundaria'; render(<MobileNav rol="admin" />); fireEvent.click(logo());
+    expect(screen.getByRole('link', { name: 'Dashboard' })).not.toHaveAttribute('aria-current');
+  });
+  test('tocarlo cierra el panel desde el dashboard y desde una pagina secundaria', () => {
+    render(<MobileNav rol="admin" />);
+    fireEvent.click(screen.getByRole('link', { name: 'Dashboard' }));
+    expect(screen.queryByRole('navigation')).toBeNull();
+    cleanup(); mockPath = '/vendedores'; render(<MobileNav rol="admin" />); fireEvent.click(logo());
+    fireEvent.click(screen.getByRole('link', { name: 'Dashboard' }));
+    expect(screen.queryByRole('navigation')).toBeNull();
+  });
+  test.each(['vendedor', 'bodeguero', 'supervisor', undefined])('no aparece para %s', rol => {
+    mockPath = '/secundaria'; render(<MobileNav rol={rol} />);
+    if (!screen.queryByRole('navigation')) fireEvent.click(logo());
+    expect(screen.queryByRole('link', { name: 'Dashboard' })).toBeNull();
+    expect(screen.queryAllByRole('link').some(a => a.getAttribute('href') === '/dashboard')).toBe(false);
+  });
 });
