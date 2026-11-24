@@ -50,8 +50,9 @@ describe('PUT /api/productos/[id] — campo categoria', () => {
     });
 
     sqlMock
-      .mockImplementationOnce(() => [{ empresa_id: 2 }])          // SELECT empresa_id
-      .mockImplementationOnce(() => [{ id: 1, categoria: 'Belleza' }]); // UPDATE RETURNING
+      .mockImplementationOnce(() => [{ nombre: 'Belleza' }])             // SELECT categorias (validación)
+      .mockImplementationOnce(() => [{ empresa_id: 2, codigo: 'X' }])    // SELECT empresa_id
+      .mockImplementationOnce(() => [{ id: 1, categoria: 'Belleza' }]);  // UPDATE RETURNING
 
     const req = {
       json: async () => ({ categoria: 'Belleza' }),
@@ -69,7 +70,7 @@ describe('PUT /api/productos/[id] — campo categoria', () => {
       user: { rol: 'supervisor', empresas: [2] },
     });
 
-    sqlMock.mockImplementationOnce(() => [{ empresa_id: 2 }]); // SELECT empresa_id
+    sqlMock.mockImplementationOnce(() => []); // SELECT categorias (no existe) -> 400
 
     const req = {
       json: async () => ({ categoria: 'Inexistente' }),
@@ -85,8 +86,8 @@ describe('PUT /api/productos/[id] — campo categoria', () => {
     });
 
     sqlMock
-      .mockImplementationOnce(() => [{ empresa_id: 2 }])          // SELECT empresa_id
-      .mockImplementationOnce(() => [{ id: 1, categoria: null }]); // UPDATE RETURNING
+      .mockImplementationOnce(() => [{ empresa_id: 2, codigo: 'X' }]) // SELECT empresa_id
+      .mockImplementationOnce(() => [{ id: 1, categoria: null }]);    // UPDATE RETURNING
 
     const req = {
       json: async () => ({ categoria: null }),

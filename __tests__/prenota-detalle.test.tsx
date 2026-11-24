@@ -164,7 +164,8 @@ describe('PrenotaDetallePage', () => {
 
     render(<PrenotaDetallePage session={{ user: { rol: 'vendedor' } }} params={{ id: '1' }} />);
 
-    fireEvent.change(screen.getByPlaceholderText(/buscar cliente/i), {
+    // La pantalla ahora tiene dos buscadores (cliente y cliente de factura): exacto = el de "Cliente".
+    fireEvent.change(screen.getByPlaceholderText('Buscar cliente...'), {
       target: { value: 'juan' },
     });
 

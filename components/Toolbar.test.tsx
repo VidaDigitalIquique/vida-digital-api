@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { Toolbar } from './Toolbar';
 
+jest.mock('next-auth/react', () => ({
+  useSession: jest.fn(() => ({ data: null })),
+}));
+
 jest.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
   useSearchParams: () => ({ get: () => null }),

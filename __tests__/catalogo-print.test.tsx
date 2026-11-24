@@ -1,6 +1,6 @@
 /** @jest-environment jsdom */
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { PublicCatalogoClient } from '@/app/catalogo/[slug]/client_page';
 
 jest.mock('@/components/ImageWithFallback', () => ({
@@ -14,6 +14,12 @@ jest.mock('@/lib/utils', () => ({
 describe('PublicCatalogoClient print support', () => {
   beforeEach(() => {
     window.print = jest.fn();
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    window.history.pushState({}, '', '/');
   });
 
   const baseData = {
@@ -23,7 +29,8 @@ describe('PublicCatalogoClient print support', () => {
     mostrar_precio: true,
   };
 
-  test('Boton de imprimir existe en el DOM', () => {
+  // El catálogo ya no tiene botón imprimir: auto-imprime 800 ms después si ?print=1.
+  test('sin ?print=1 no llama a window.print()', () => {
     const data = {
       ...baseData,
       productos: [
@@ -32,11 +39,13 @@ describe('PublicCatalogoClient print support', () => {
     };
 
     render(<PublicCatalogoClient data={data} />);
+    act(() => { jest.advanceTimersByTime(1000); });
 
-    expect(screen.getByRole('button', { name: /imprimir|pdf/i })).toBeInTheDocument();
+    expect(window.print).not.toHaveBeenCalled();
   });
 
-  test('Boton llama a window.print()', () => {
+  test('con ?print=1 llama a window.print() tras 800 ms', () => {
+    window.history.pushState({}, '', '/catalogo/demo?print=1');
     const data = {
       ...baseData,
       productos: [
@@ -45,9 +54,7 @@ describe('PublicCatalogoClient print support', () => {
     };
 
     render(<PublicCatalogoClient data={data} />);
-
-    const button = screen.getByRole('button', { name: /imprimir|pdf/i });
-    fireEvent.click(button);
+    act(() => { jest.advanceTimersByTime(800); });
 
     expect(window.print).toHaveBeenCalled();
   });

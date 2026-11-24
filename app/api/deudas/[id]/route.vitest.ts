@@ -12,10 +12,8 @@ const mockSession = vi.mocked(getServerSession);
 
 const adminSession = { user: { id: '1', nombre: 'Admin', rol: 'admin' } };
 const userSession  = { user: { id: '2', nombre: 'Juan',  rol: 'vendedor' } };
-const otherSession = { user: { id: '99', nombre: 'Otro', rol: 'vendedor' } };
 
 const pendiente = { id: 3, user_id: 2, tipo: 'prestamo', monto: '50000', user_nombre: 'Juan', estado: 'pendiente' };
-const aceptada  = { ...pendiente, estado: 'aceptada' };
 const params    = { id: '3' };
 
 describe('PATCH /api/deudas/[id]', () => {
@@ -31,51 +29,47 @@ describe('PATCH /api/deudas/[id]', () => {
     expect(res.status).toBe(401);
   });
 
-  it('admin acepta solicitud pendiente', async () => {
+  // El flujo aceptar/rechazar/confirmar se elimino en 77574e4 (API simplificada).
+  // Estos tests cubren las acciones vigentes: editar y editar_pago.
+  it('admin edita deuda existente', async () => {
     mockSession.mockResolvedValue(adminSession as any);
-    mockSql
-      .mockResolvedValueOnce([pendiente] as any)
-      .mockResolvedValueOnce([{ ...pendiente, estado: 'aceptada' }] as any);
+    mockSql.mockResolvedValueOnce([{ ...pendiente, monto: '60000' }] as any);
     const req = new Request('http://localhost/api/deudas/3', {
       method: 'PATCH',
-      body: JSON.stringify({ accion: 'aceptar' }),
+      body: JSON.stringify({ accion: 'editar', monto: 60000 }),
     });
     const res = await PATCH(req as any, { params });
     expect(res.status).toBe(200);
+    expect(mockSql).toHaveBeenCalledTimes(1);
   });
 
-  it('no-admin no puede aceptar', async () => {
+  it('no-admin no puede editar', async () => {
     mockSession.mockResolvedValue(userSession as any);
-    mockSql.mockResolvedValueOnce([pendiente] as any);
     const req = new Request('http://localhost/api/deudas/3', {
       method: 'PATCH',
-      body: JSON.stringify({ accion: 'aceptar' }),
+      body: JSON.stringify({ accion: 'editar', monto: 60000 }),
     });
     const res = await PATCH(req as any, { params });
     expect(res.status).toBe(403);
+    expect(mockSql).not.toHaveBeenCalled();
   });
 
-  it('owner confirma y genera egreso en pettycash', async () => {
-    mockSession.mockResolvedValue(userSession as any);
-    mockSql
-      .mockResolvedValueOnce([aceptada] as any)
-      .mockResolvedValueOnce([{ ...aceptada, estado: 'confirmada' }] as any)
-      .mockResolvedValueOnce([] as any);
+  it('admin edita un pago existente', async () => {
+    mockSession.mockResolvedValue(adminSession as any);
+    mockSql.mockResolvedValueOnce([{ id: 1, deuda_id: 3, monto: 30000 }] as any);
     const req = new Request('http://localhost/api/deudas/3', {
       method: 'PATCH',
-      body: JSON.stringify({ accion: 'confirmar' }),
+      body: JSON.stringify({ accion: 'editar_pago', pago_id: 1, monto: 30000 }),
     });
     const res = await PATCH(req as any, { params });
     expect(res.status).toBe(200);
-    expect(mockSql).toHaveBeenCalledTimes(3);
   });
 
-  it('no-owner no puede confirmar', async () => {
-    mockSession.mockResolvedValue(otherSession as any);
-    mockSql.mockResolvedValueOnce([aceptada] as any);
+  it('no-admin no puede editar un pago', async () => {
+    mockSession.mockResolvedValue(userSession as any);
     const req = new Request('http://localhost/api/deudas/3', {
       method: 'PATCH',
-      body: JSON.stringify({ accion: 'confirmar' }),
+      body: JSON.stringify({ accion: 'editar_pago', pago_id: 1, monto: 30000 }),
     });
     const res = await PATCH(req as any, { params });
     expect(res.status).toBe(403);

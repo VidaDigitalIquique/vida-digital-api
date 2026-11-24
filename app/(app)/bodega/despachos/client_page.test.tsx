@@ -110,8 +110,8 @@ describe('DespachosClient', () => {
     fireEvent.submit(screen.getByRole('form'));
 
     await waitFor(() => {
-      expect(screen.getByText('12345')).toBeInTheDocument();
-      expect(screen.getByRole('link', { name: /whatsapp/i })).toBeInTheDocument();
+      expect(screen.getByText('12345', { selector: 'p' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /compartir por whatsapp/i })).toBeInTheDocument();
     });
   });
 

@@ -3,7 +3,7 @@ import { SueldoCreateSchema, buildConceptoPettycash } from "../docs/specs/sueldo
 describe("SueldoCreateSchema", () => {
   test("válido completo", () => {
     const result = SueldoCreateSchema.safeParse({
-      trabajador_nombre: "Juan Pérez",
+      usuario_id: 1,
       mes: 5,
       anio: 2026,
       monto_base: 800000,
@@ -14,7 +14,7 @@ describe("SueldoCreateSchema", () => {
 
   test("rechaza mes < 1", () => {
     const result = SueldoCreateSchema.safeParse({
-      trabajador_nombre: "Juan",
+      usuario_id: 1,
       mes: 0,
       anio: 2026,
       monto_base: 800000,
@@ -25,7 +25,7 @@ describe("SueldoCreateSchema", () => {
 
   test("rechaza mes > 12", () => {
     const result = SueldoCreateSchema.safeParse({
-      trabajador_nombre: "Juan",
+      usuario_id: 1,
       mes: 13,
       anio: 2026,
       monto_base: 800000,
@@ -36,7 +36,7 @@ describe("SueldoCreateSchema", () => {
 
   test("rechaza monto_base negativo", () => {
     const result = SueldoCreateSchema.safeParse({
-      trabajador_nombre: "Juan",
+      usuario_id: 1,
       mes: 5,
       anio: 2026,
       monto_base: -1,
@@ -47,7 +47,7 @@ describe("SueldoCreateSchema", () => {
 
   test("rechaza monto_final cero", () => {
     const result = SueldoCreateSchema.safeParse({
-      trabajador_nombre: "Juan",
+      usuario_id: 1,
       mes: 5,
       anio: 2026,
       monto_base: 800000,
@@ -56,9 +56,9 @@ describe("SueldoCreateSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  test("rechaza nombre vacío", () => {
+  test("rechaza usuario_id inválido", () => {
     const result = SueldoCreateSchema.safeParse({
-      trabajador_nombre: "",
+      usuario_id: 0,
       mes: 5,
       anio: 2026,
       monto_base: 800000,
@@ -69,7 +69,7 @@ describe("SueldoCreateSchema", () => {
 
   test("rechaza anio fuera de rango", () => {
     const result = SueldoCreateSchema.safeParse({
-      trabajador_nombre: "Juan",
+      usuario_id: 1,
       mes: 5,
       anio: 1999,
       monto_base: 800000,

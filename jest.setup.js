@@ -35,3 +35,35 @@ process.env.DATABASE_URL_PROD = prodUrl;
 // Sin TEST_DATABASE_URL: host inalcanzable => todo test que consulte la BD falla de inmediato (fail-closed).
 process.env.DATABASE_URL =
   testUrl || 'postgresql://test-guard:test-guard@127.0.0.1:9/test-guard';
+
+/* eslint-disable @typescript-eslint/no-require-imports -- setup de jest: corre en CJS */
+// Polyfills jsdom (G3) — el orden importa: undici se evalua al requerirse y necesita TextEncoder.
+// Nota (R2): el IntersectionObserver avisa isIntersecting:true a proposito; un no-op silencioso
+// romperia los asserts de visibilidad. No ejercita visibilidad real (jsdom no tiene layout).
+const { TextEncoder, TextDecoder } = require('util');
+if (!global.TextEncoder) global.TextEncoder = TextEncoder;
+if (!global.TextDecoder) global.TextDecoder = TextDecoder;
+
+// jsdom no trae Web Streams; undici (Request) las necesita al evaluarse.
+const { ReadableStream, TransformStream, WritableStream } = require('stream/web');
+if (!global.ReadableStream) global.ReadableStream = ReadableStream;
+if (!global.TransformStream) global.TransformStream = TransformStream;
+if (!global.WritableStream) global.WritableStream = WritableStream;
+// Solo MessagePort: undici lo exige al evaluarse. MessageChannel real de worker_threads NO se
+// inyecta: react-dom/scheduler lo usaria para sus tareas y dejaria un MessagePort abierto que
+// impide que jest termine (open handle).
+if (!global.MessagePort) global.MessagePort = class MessagePort {};
+
+const { Request, Response, Headers, fetch } = require('undici'); // CJS verificado (main: index.js)
+if (!global.Request) global.Request = Request;
+if (!global.Response) global.Response = Response; // next/server (NextResponse) lo necesita
+if (!global.Headers) global.Headers = Headers;
+if (!global.fetch) global.fetch = fetch; // jsdom no trae fetch; las cards lo usan al montar
+
+if (!global.IntersectionObserver) {
+  global.IntersectionObserver = class {
+    constructor(cb) { this.cb = cb; }
+    observe(el) { this.cb([{ isIntersecting: true, target: el }], this); }
+    unobserve() {} disconnect() {} takeRecords() { return []; }
+  };
+}

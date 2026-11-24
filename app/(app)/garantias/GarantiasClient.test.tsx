@@ -27,12 +27,29 @@ const mockGarantias = [
 ];
 
 describe('GarantiasClient — tabla principal', () => {
+  const mockLogs = [
+    { id: 1, garantia_id: 1, usuario: 'Pablo', campo: 'creacion', valor_anterior: null, valor_nuevo: 'F001', created_at: '2026-05-10T10:00:00.000Z' },
+  ];
+
   beforeEach(() => {
     jest.clearAllMocks();
     searchParamsData = {};
-    (global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: async () => ({ data: mockGarantias }),
+    // mockReset vacía también la cola de mockResolvedValueOnce (causa real de la fuga entre tests)
+    (global.fetch as jest.Mock).mockReset();
+    (global.fetch as jest.Mock).mockImplementation((url: string, opts?: { method?: string }) => {
+      if (url.includes('/api/garantias/total')) {
+        return Promise.resolve({ ok: true, json: async () => ({ total: 50000 }) });
+      }
+      if (/\/log$/.test(url)) {
+        return Promise.resolve({ ok: true, json: async () => mockLogs });
+      }
+      if (opts?.method === 'PATCH') {
+        return Promise.resolve({ ok: true, json: async () => ({ data: { ...mockGarantias[0], estado: 'devuelto' } }) });
+      }
+      if (opts?.method === 'POST' || opts?.method === 'DELETE') {
+        return Promise.resolve({ ok: true, json: async () => ({ ok: true }) });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ data: mockGarantias }) });
     });
   });
 
@@ -75,10 +92,6 @@ describe('GarantiasClient — tabla principal', () => {
   });
 
   it('cambia estado via PATCH al seleccionar opcion en dropdown', async () => {
-    (global.fetch as jest.Mock)
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: mockGarantias }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { ...mockGarantias[0], estado: 'devuelto' } }) });
-
     render(<GarantiasClient />);
 
     await waitFor(() => expect(screen.getByText('Juan Pérez')).toBeInTheDocument());
@@ -107,11 +120,6 @@ describe('GarantiasClient — tabla principal', () => {
   });
 
   it('crea garantia via POST y actualiza tabla', async () => {
-    (global.fetch as jest.Mock)
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: mockGarantias }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { id: 3 } }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: [...mockGarantias, { id: 3, knumfoli: 'F003', cliente: 'Nuevo Cliente', monto: 0, observaciones: null, estado: 'recibido', created_at: '2026-05-13T10:00:00.000Z', updated_at: '2026-05-13T10:00:00.000Z' }] }) });
-
     render(<GarantiasClient />);
 
     await waitFor(() => expect(screen.getByText('Juan Pérez')).toBeInTheDocument());
@@ -134,10 +142,6 @@ describe('GarantiasClient — tabla principal', () => {
   });
 
   it('edita knumfoli inline via PATCH al hacer clic en el texto', async () => {
-    (global.fetch as jest.Mock)
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: mockGarantias }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: { ...mockGarantias[0], knumfoli: 'F999' } }) });
-
     render(<GarantiasClient />);
 
     await waitFor(() => expect(screen.getByText('F001')).toBeInTheDocument());
@@ -160,12 +164,6 @@ describe('GarantiasClient — tabla principal', () => {
   });
 
   it('abre panel de historial al hacer clic en el boton de la fila', async () => {
-    (global.fetch as jest.Mock)
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ data: mockGarantias }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ([
-        { id: 1, garantia_id: 1, usuario: 'Pablo', campo: 'creacion', valor_anterior: null, valor_nuevo: 'F001', created_at: '2026-05-10T10:00:00.000Z' },
-      ]) });
-
     render(<GarantiasClient />);
 
     await waitFor(() => expect(screen.getByText('Juan Pérez')).toBeInTheDocument());
