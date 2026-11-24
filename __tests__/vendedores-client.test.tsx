@@ -141,7 +141,7 @@ describe('tabla', () => {
 });
 
 describe('fechas de venta', () => {
-  it('limpiar sin visacion vuelve al mes en curso', async () => {
+  it('B-s10a-3: limpiar sin visacion deja ambas fechas vacias y consulta sin desde/hasta', async () => {
     const fn = fetchMock({ notas: respuesta() });
     await montar(fn);
 
@@ -149,12 +149,13 @@ describe('fechas de venta', () => {
     await waitFor(() => expect(ultimaNotas(fn)).toContain(`desde=${hoyCL()}`));
 
     fireEvent.click(screen.getByRole('button', { name: 'Limpiar fechas de venta' }));
-    await waitFor(() => expect(ultimaNotas(fn)).toContain(`desde=${primerDiaMesCL()}`));
-    expect((screen.getByLabelText('Fecha de venta desde') as HTMLInputElement).value).toBe(primerDiaMesCL());
-    expect((screen.getByLabelText('Fecha de venta hasta') as HTMLInputElement).value).toBe(hoyCL());
+    await waitFor(() => expect(ultimaNotas(fn)).not.toContain('desde='));
+    expect(ultimaNotas(fn)).not.toContain('hasta=');
+    expect((screen.getByLabelText('Fecha de venta desde') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('Fecha de venta hasta') as HTMLInputElement).value).toBe('');
   });
 
-  it('vaciar ambos campos sin visacion vuelve al mes en curso', async () => {
+  it('B-s10a-3: vaciar ambos campos deja las fechas vacias (no vuelve al mes)', async () => {
     const fn = fetchMock({ notas: respuesta() });
     await montar(fn);
     const desde = screen.getByLabelText('Fecha de venta desde') as HTMLInputElement;
@@ -163,8 +164,54 @@ describe('fechas de venta', () => {
     fireEvent.change(desde, { target: { value: '' } });
     fireEvent.change(hasta, { target: { value: '' } });
 
-    await waitFor(() => expect(desde.value).toBe(primerDiaMesCL()));
-    expect(hasta.value).toBe(hoyCL());
+    await waitFor(() => expect(ultimaNotas(fn)).not.toContain('desde='));
+    expect(desde.value).toBe('');
+    expect(hasta.value).toBe('');
+  });
+
+  it('B-s10a-3: con las fechas vacias, escribir visacion no las rellena', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Limpiar fechas de venta' }));
+    await waitFor(() => expect(ultimaNotas(fn)).not.toContain('desde='));
+
+    fireEvent.change(screen.getByLabelText('Fecha de visación desde'), { target: { value: '2026-11-01' } });
+    await waitFor(() => expect(ultimaNotas(fn)).toContain('visaDesde=2026-11-01'));
+    expect(ultimaNotas(fn)).not.toContain('desde=');
+    expect(ultimaNotas(fn)).not.toContain('hasta=');
+    expect((screen.getByLabelText('Fecha de venta desde') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('Fecha de venta hasta') as HTMLInputElement).value).toBe('');
+  });
+
+  it('B-s10a-4: los filtros guardados con fechas vacias se muestran vacios', async () => {
+    const fn = fetchMock({
+      guardados: { vendedor: '', desde: '', hasta: '', visaDesde: '', visaHasta: '', estado: 'todas', empresa: 'todas' },
+      notas: respuesta(),
+    });
+    await montar(fn);
+
+    expect((screen.getByLabelText('Fecha de venta desde') as HTMLInputElement).value).toBe('');
+    expect((screen.getByLabelText('Fecha de venta hasta') as HTMLInputElement).value).toBe('');
+    expect(ultimaNotas(fn)).not.toContain('desde=');
+    expect(ultimaNotas(fn)).not.toContain('hasta=');
+  });
+
+  it('B-s10a-5: hasta tener los filtros no pinta inputs de fecha ni la tabla', async () => {
+    let resolver!: (v: { ok: boolean; status: number; json: () => Promise<{ filtros: unknown }> }) => void;
+    global.fetch = jest.fn(
+      () => new Promise((r) => { resolver = r; })
+    ) as unknown as typeof fetch;
+    render(<VendedoresClient />);
+
+    expect(screen.getByText('Cargando filtros...')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Fecha de venta desde')).toBeNull();
+    expect(screen.queryByRole('table')).toBeNull();
+
+    await act(async () => {
+      resolver({ ok: true, status: 200, json: async () => ({ filtros: null }) });
+    });
+    expect(screen.getByLabelText('Fecha de venta desde')).toBeInTheDocument();
   });
 
   it('limpiar con rango de visacion deja las fechas de venta vacias', async () => {

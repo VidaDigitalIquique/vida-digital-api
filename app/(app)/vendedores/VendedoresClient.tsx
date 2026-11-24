@@ -24,8 +24,9 @@ function canonizar(f: FiltrosGuardados): string {
   });
 }
 
-// D3: fechas calculadas solo dentro de efectos/eventos. Sin rango de visacion,
-// las fechas de venta nunca quedan vacias (decision S3 #2): se ve el mes en curso.
+// D3: fechas calculadas solo dentro de efectos/eventos. El default de mes en
+// curso solo aplica si NO hay filtros guardados: un guardado con fechas vacias
+// se respeta tal cual (EXP-1).
 function filtrosIniciales(f: FiltrosGuardados | null): FiltrosGuardados {
   const filtros: FiltrosGuardados = {
     vendedor: f?.vendedor ?? '',
@@ -36,10 +37,8 @@ function filtrosIniciales(f: FiltrosGuardados | null): FiltrosGuardados {
     estado: f?.estado || 'todas',
     empresa: f?.empresa || 'todas',
   };
-  if (!filtros.visaDesde && !filtros.visaHasta && !filtros.desde && !filtros.hasta) {
-    return { ...filtros, desde: primerDiaMesCL(), hasta: hoyCL() };
-  }
-  return filtros;
+  if (f) return filtros;
+  return { ...filtros, desde: primerDiaMesCL(), hasta: hoyCL() };
 }
 
 interface Respuesta {
@@ -229,25 +228,14 @@ export function VendedoresClient() {
     setHasta(h);
   };
 
-  // Decision S3 #2: vaciar las fechas de venta sin visacion vuelve al mes en curso.
+  // EXP-1: limpiar deja las fechas vacias (= sin limite); no vuelve a imponer el mes.
   const limpiarFechasVenta = () => {
-    if (visaDesde || visaHasta) {
-      setDesde('');
-      setHasta('');
-      return;
-    }
-    setDesde(primerDiaMesCL());
-    setHasta(hoyCL());
+    setDesde('');
+    setHasta('');
   };
 
+  // EXP-1: cada campo acepta quedar vacio sin que el otro se rellene por detras.
   const cambiarFechaVenta = (valor: string, cual: 'desde' | 'hasta') => {
-    const nuevoDesde = cual === 'desde' ? valor : desde;
-    const nuevoHasta = cual === 'hasta' ? valor : hasta;
-    if (!nuevoDesde && !nuevoHasta && !visaDesde && !visaHasta) {
-      setDesde(primerDiaMesCL());
-      setHasta(hoyCL());
-      return;
-    }
     if (cual === 'desde') setDesde(valor);
     else setHasta(valor);
   };
@@ -257,6 +245,17 @@ export function VendedoresClient() {
     else setVisaHasta(valor);
     if (valor) setEstado('facturadas');
   };
+
+  // EXP-3: no pintar filtros con valores provisorios antes de restaurar; el
+  // fetch de notas ya espera a inicializando (effects de arriba).
+  if (inicializando) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-bold tracking-tight">VENDEDORES</h1>
+        <p className="py-8 text-center text-zinc-400">Cargando filtros...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

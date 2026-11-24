@@ -154,20 +154,28 @@ describe('validarFiltrosGuardados', () => {
 });
 
 describe('parsearFiltros', () => {
-  it('sin parametros: mes en curso hasta hoy, todas, limit 300', () => {
+  it('sin parametros: sin fechas de venta (null), todas, limit 300', () => {
     const r = parsearFiltros(new URLSearchParams(), HOY);
     expect('error' in r).toBe(false);
     if ('error' in r) return;
     expect(r.filtros).toMatchObject({
       hoy: HOY,
-      desde: '2026-11-01',
-      hasta: HOY,
+      desde: null,
+      hasta: null,
       vendedor: null,
       visaDesde: null,
       visaHasta: null,
       estado: null,
       limit: 300,
     });
+  });
+
+  it('fechas vacias explicitas -> null (no se reinyecta el mes)', () => {
+    const r = parsearFiltros(new URLSearchParams('desde=&hasta='), HOY);
+    expect('error' in r).toBe(false);
+    if ('error' in r) return;
+    expect(r.filtros.desde).toBeNull();
+    expect(r.filtros.hasta).toBeNull();
   });
 
   it('rango de visacion sin estado -> fuerza facturadas', () => {
@@ -188,12 +196,12 @@ describe('parsearFiltros', () => {
     expect(r.filtros.estado).toBe('facturada');
   });
 
-  it('visacion con una fecha de venta conserva el default de la otra', () => {
+  it('visacion con una fecha de venta no inventa la otra', () => {
     const r = parsearFiltros(new URLSearchParams('visaHasta=2026-11-30&desde=2026-10-01'), HOY);
     expect('error' in r).toBe(false);
     if ('error' in r) return;
     expect(r.filtros.desde).toBe('2026-10-01');
-    expect(r.filtros.hasta).toBe(HOY);
+    expect(r.filtros.hasta).toBeNull();
   });
 
   it('rango de visacion + pendientes -> error', () => {

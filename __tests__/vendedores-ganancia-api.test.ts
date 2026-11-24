@@ -110,6 +110,21 @@ describe('validacion de parametros', () => {
     expect(res.status).toBe(400);
     expect(queryMock).not.toHaveBeenCalled();
   });
+
+  it('B-s10a-7 mas de 400 periodos -> 400 con el mensaje exacto y sin base', async () => {
+    const res = await GET(pedir('?agrupar=dia&desde=2020-01-01&hasta=2026-11-24'));
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe(
+      'El rango supera los 400 periodos para esta agrupación. Acota las fechas.'
+    );
+    expect(queryMock).not.toHaveBeenCalled();
+  });
+
+  it('B-s10a-7 el mismo rango agrupado por año no excede el tope', async () => {
+    const res = await GET(pedir('?agrupar=anio&desde=2020-01-01&hasta=2026-11-24'));
+    expect(res.status).toBe(200);
+    expect(queryMock).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('contrato', () => {
