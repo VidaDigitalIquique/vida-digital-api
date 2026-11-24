@@ -274,7 +274,7 @@ export function KardexClientePage({ session, empresasMap }: KardexClientePagePro
   }
 
   async function fetchKardexGenerales(prods: KardexProducto[]) {
-    const codigos = [...new Set(prods.map((p) => p.codigo))];
+    const codigos = Array.from(new Set(prods.map((p) => p.codigo)));
     const results = await Promise.allSettled(
       codigos.map(async (codigo) => {
         const res = await fetch(

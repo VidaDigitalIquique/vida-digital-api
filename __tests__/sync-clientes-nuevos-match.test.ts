@@ -216,3 +216,6 @@ describe('matchClientesNuevos — error en fetch', () => {
     expect(sqlWasCalledWithTable('conversion_sugerencias')).toBe(false);
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

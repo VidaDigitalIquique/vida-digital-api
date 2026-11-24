@@ -16,7 +16,7 @@ describe('GET /api/garantias/total', () => {
   it('401 sin sesión', async () => {
     getServerSession.mockResolvedValue(null);
     const { GET } = await import('@/app/api/garantias/total/route');
-    const res = await GET(new Request('http://localhost/api/garantias/total'));
+    const res = await GET();
     expect(res.status).toBe(401);
   });
 
@@ -24,7 +24,7 @@ describe('GET /api/garantias/total', () => {
     getServerSession.mockResolvedValue(admin);
     sql.mockResolvedValueOnce([{ total: 1500000 }]);
     const { GET } = await import('@/app/api/garantias/total/route');
-    const res = await GET(new Request('http://localhost/api/garantias/total'));
+    const res = await GET();
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.total).toBe(1500000);
@@ -34,7 +34,7 @@ describe('GET /api/garantias/total', () => {
     getServerSession.mockResolvedValue(admin);
     sql.mockResolvedValueOnce([{ total: 0 }]);
     const { GET } = await import('@/app/api/garantias/total/route');
-    const res = await GET(new Request('http://localhost/api/garantias/total'));
+    const res = await GET();
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.total).toBe(0);

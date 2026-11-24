@@ -165,3 +165,6 @@ describe('GET /api/admin/categorizar-productos', () => {
     expect(finEvent.errores).toBeGreaterThanOrEqual(1);
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

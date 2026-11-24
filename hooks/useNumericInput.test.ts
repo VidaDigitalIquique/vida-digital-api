@@ -9,20 +9,20 @@ describe('useNumericInput', () => {
 
   it('muestra vacío al hacer focus con valor 0 (number)', () => {
     const { result } = renderHook(() => useNumericInput(0, jest.fn()));
-    act(() => { result.current.onFocus({} as any); });
+    act(() => { result.current.onFocus(); });
     expect(result.current.value).toBe('');
   });
 
   it('muestra vacío al hacer focus con valor "0" (string)', () => {
     const { result } = renderHook(() => useNumericInput('0', jest.fn()));
-    act(() => { result.current.onFocus({} as any); });
+    act(() => { result.current.onFocus(); });
     expect(result.current.value).toBe('');
   });
 
   it('llama onChange("0") al blur con campo vacío', () => {
     const onChange = jest.fn();
     const { result } = renderHook(() => useNumericInput('0', onChange));
-    act(() => { result.current.onFocus({} as any); });
+    act(() => { result.current.onFocus(); });
     act(() => { result.current.onBlur({ target: { value: '' } } as any); });
     expect(onChange).toHaveBeenCalledWith('0');
   });

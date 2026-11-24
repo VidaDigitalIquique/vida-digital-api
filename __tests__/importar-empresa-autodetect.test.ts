@@ -11,7 +11,7 @@ const getServerSession = jest.fn();
 let sqlCalls: Array<{ text: string; values: unknown[] }> = [];
 let sqlImpl: (text: string, values: unknown[]) => Promise<any[]> = async () => [];
 
-const sql = jest.fn((strings: TemplateStringsArray, ...values: unknown[]) => {
+const sql: jest.Mock = jest.fn((strings: TemplateStringsArray, ...values: unknown[]) => {
   const text = strings.join('');
   sqlCalls.push({ text, values });
   return sqlImpl(text, values);

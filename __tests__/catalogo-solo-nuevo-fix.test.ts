@@ -85,3 +85,6 @@ describe('GET /api/catalogos/public/[slug] — solo_nuevo con prefijo 101', () =
     expect(body.data.productos).toHaveLength(0);
   });
 });
+
+// marca el archivo como módulo: aísla el scope global (tsc TS2451)
+export {};

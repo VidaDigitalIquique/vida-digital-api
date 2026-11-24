@@ -25,7 +25,7 @@ global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
 global.URL.revokeObjectURL = jest.fn();
 HTMLCanvasElement.prototype.getContext = jest.fn(() => ({
   drawImage: jest.fn(),
-}));
+})) as any;
 HTMLCanvasElement.prototype.toDataURL = jest.fn(() => 'data:image/jpeg;base64,mockdata');
 
 const mockImage = {

@@ -27,8 +27,7 @@ describe('GET /api/prenotas', () => {
   test('sin sesión → 401', async () => {
     getServerSession.mockResolvedValue(null);
 
-    const req = new NextRequest('http://localhost/api/prenotas');
-    const res = await GET(req);
+    const res = await GET();
     const body = await res.json();
 
     expect(res.status).toBe(401);
@@ -38,8 +37,7 @@ describe('GET /api/prenotas', () => {
   test('con rol bodeguero → 403', async () => {
     getServerSession.mockResolvedValue({ user: { rol: 'bodeguero' } });
 
-    const req = new NextRequest('http://localhost/api/prenotas');
-    const res = await GET(req);
+    const res = await GET();
     const body = await res.json();
 
     expect(res.status).toBe(403);
@@ -52,8 +50,7 @@ describe('GET /api/prenotas', () => {
       { id: 1, titulo: 'PRE-NOTA JUAN', user_id: 7, kcodclie: 100, nombre_cliente: 'JUAN PEREZ' },
     ]);
 
-    const req = new NextRequest('http://localhost/api/prenotas');
-    const res = await GET(req);
+    const res = await GET();
     const body = await res.json();
 
     expect(res.status).toBe(200);
