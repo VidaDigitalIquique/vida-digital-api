@@ -18,6 +18,10 @@ import {
 } from '@/components/ui/dialog';
 import { AgregarADeseadosModal } from '@/components/AgregarADeseadosModal';
 import { PasoProductoDeseado } from '@/components/PasoProductoDeseado';
+import { ImageWithFallback } from '@/components/ImageWithFallback';
+import flags from '@/config/feature-flags.json';
+
+const FIX_D11 = flags['fix-d11-imagen-producto'] === true;
 
 type Tab = 'pendiente' | 'avisado' | 'descartado';
 
@@ -36,6 +40,7 @@ interface Deseado {
   avisado_at: string | null;
   imagen_url: string | null;
   imagen_public_id: string | null;
+  producto_imagen_url?: string | null;
   es_china: boolean;
   cliente_nombre: string | null;
   cliente_deseado_nombre: string | null;
@@ -78,6 +83,7 @@ interface AlertaStock {
   saldo: number;
   cantcaja: number;
   total_clientes: number;
+  imagen_url?: string | null;
   activa: boolean;
   created_at: string;
   updated_at: string;
@@ -519,12 +525,20 @@ export function DeseadosClient({ session }: { session: any }) {
                 className="bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800 rounded-xl p-3 flex flex-col gap-2"
               >
                 <div className="w-full h-24 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border relative">
-                  <img
-                    src={`https://res.cloudinary.com/${cloudName}/image/upload/productos/${alerta.codigo}.jpg`}
-                    alt={alerta.codigo}
-                    className="w-full h-full object-contain"
-                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
+                  {FIX_D11 ? (
+                    <ImageWithFallback
+                      src={alerta.imagen_url ?? null}
+                      codigo={alerta.codigo}
+                      fill
+                    />
+                  ) : (
+                    <img
+                      src={`https://res.cloudinary.com/${cloudName}/image/upload/productos/${encodeURIComponent(alerta.codigo)}.jpg`}
+                      alt={alerta.codigo}
+                      className="w-full h-full object-contain"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                  )}
                 </div>
                 <div>
                   <span className="font-mono text-[11px] font-semibold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
@@ -645,12 +659,20 @@ export function DeseadosClient({ session }: { session: any }) {
                       {/* Imagen del producto */}
                       {d.codigo && !d.es_china ? (
                         <div className="w-full h-32 rounded-md overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-border mt-1 relative">
-                          <img
-                            src={`https://res.cloudinary.com/${cloudName}/image/upload/productos/${d.codigo}.jpg`}
-                            alt={d.codigo}
-                            className="w-full h-full object-contain"
-                            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                          />
+                          {FIX_D11 ? (
+                            <ImageWithFallback
+                              src={d.producto_imagen_url ?? null}
+                              codigo={d.codigo}
+                              fill
+                            />
+                          ) : (
+                            <img
+                              src={`https://res.cloudinary.com/${cloudName}/image/upload/productos/${encodeURIComponent(d.codigo)}.jpg`}
+                              alt={d.codigo}
+                              className="w-full h-full object-contain"
+                              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                            />
+                          )}
                         </div>
                       ) : d.imagen_url ? (
                         <img

@@ -356,7 +356,30 @@ export async function GET(request: Request) {
           `;
     }
 
-    return NextResponse.json({ data: rows });
+    // Imagen real del catálogo (una consulta extra, solo si hay códigos).
+    type FilaDeseado = { codigo?: string | null };
+    const codigos = Array.from(
+      new Set((rows as FilaDeseado[]).map(r => r.codigo).filter(Boolean))
+    ) as string[];
+    let imgs: Array<{ codigo: string; imagen_url: string }> = [];
+    if (codigos.length > 0) {
+      const imgsRes = await sql`
+        SELECT codigo, MAX(imagen_url) AS imagen_url
+        FROM productos
+        WHERE codigo = ANY(${codigos}) AND imagen_url IS NOT NULL
+        GROUP BY codigo
+      `;
+      imgs = Array.isArray(imgsRes)
+        ? imgsRes.map(i => ({ codigo: i.codigo as string, imagen_url: i.imagen_url as string }))
+        : [];
+    }
+    const porCodigo = new Map(imgs.map(i => [i.codigo, i.imagen_url]));
+    const data = (rows as Array<Record<string, unknown> & FilaDeseado>).map(r => ({
+      ...r,
+      producto_imagen_url: porCodigo.get(r.codigo as string) ?? null,
+    }));
+
+    return NextResponse.json({ data });
   } catch (error: any) {
     console.error('GET /api/deseados error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -46,6 +46,19 @@ describe('GET /api/alertas-stock/lista — modo China', () => {
     expect(clientes).toEqual([...clientes].sort((a, b) => b - a));
   });
 
+  it('selecciona la imagen real del producto (imagen_url de productos)', async () => {
+    sql.mockResolvedValue([
+      { codigo: 'A-618', imagen_url: 'https://res.cloudinary.com/x/A-618.jpg' }
+    ]);
+    const res = await GET();
+    const body = await res.json();
+
+    const query = Object.values(sql.mock.calls[0][0]).join(' ');
+    expect(query).toContain('imagen_url');
+    expect(query).toMatch(/FROM\s+productos\s+p\s+WHERE\s+p\.codigo\s*=\s*a\.codigo/i);
+    expect(body.data[0].imagen_url).toBe('https://res.cloudinary.com/x/A-618.jpg');
+  });
+
   it('retorna 401 si no hay sesión', async () => {
     getServerSession.mockResolvedValue(null);
     const res = await GET();

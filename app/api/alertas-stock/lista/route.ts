@@ -14,6 +14,7 @@ export async function GET() {
     const rows = await sql`
       SELECT
         a.*,
+        (SELECT MAX(p.imagen_url) FROM productos p WHERE p.codigo = a.codigo) AS imagen_url,
         COALESCE(c.total_clientes, 0) as total_clientes
       FROM alertas_stock_bajo a
       LEFT JOIN (
