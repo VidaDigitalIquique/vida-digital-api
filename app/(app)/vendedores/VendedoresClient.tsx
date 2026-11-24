@@ -6,6 +6,7 @@ import { fechaFiltroValida, type FiltrosGuardados } from '@/lib/filtros-validaci
 import { formatUSD } from '@/lib/utils';
 import type { NotaVenta } from '@/lib/vendedores-notas';
 import { NotaDetalleModal } from './NotaDetalleModal';
+import { PaginacionNotas } from './PaginacionNotas';
 
 type EstadoFiltro = 'todas' | 'pendientes' | 'facturadas';
 type EmpresaFiltro = 'todas' | 'vida' | 'sanjh';
@@ -68,6 +69,8 @@ export function VendedoresClient() {
   const [visaHasta, setVisaHasta] = useState('');
   const [estado, setEstado] = useState<EstadoFiltro>('todas');
   const [empresa, setEmpresa] = useState<EmpresaFiltro>('todas');
+  const [pagina, setPagina] = useState(1);
+  const [tamanoPagina, setTamanoPagina] = useState<25 | 50 | 100>(25);
 
   const [data, setData] = useState<Respuesta | null>(null);
   const [cargando, setCargando] = useState(true);
@@ -81,6 +84,19 @@ export function VendedoresClient() {
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [seleccion, setSeleccion] = useState<{ empresa: 'vida' | 'sanjh'; nota: string } | null>(null);
   const hayVisacion = Boolean(visaDesde || visaHasta);
+  const paginas = Math.max(1, Math.ceil((data?.notas.length ?? 0) / tamanoPagina));
+  const paginaEfectiva = Math.max(1, Math.min(pagina, paginas));
+  const notasVisibles = data?.notas.slice((paginaEfectiva - 1) * tamanoPagina, paginaEfectiva * tamanoPagina);
+
+  // Incluso un filtro temporalmente invalido reinicia la navegacion local.
+  useEffect(() => {
+    setPagina(1);
+  }, [vendedor, desde, hasta, visaDesde, visaHasta, estado, empresa]);
+
+  const cambiarTamano = (tamano: 25 | 50 | 100) => {
+    setTamanoPagina(tamano);
+    setPagina(Math.min(paginaEfectiva, Math.max(1, Math.ceil((data?.notas.length ?? 0) / tamano))));
+  };
 
   // EXP-1: si se sale antes del debounce, el ultimo cambio se guarda igual.
   useEffect(() => {
@@ -169,6 +185,7 @@ export function VendedoresClient() {
       .then((json: Respuesta) => {
         if (id !== pedido.current) return; // respuesta vieja: llego fuera de orden
         setData(json);
+        setPagina(1);
         setCargando(false);
       })
       .catch(() => {
@@ -386,7 +403,7 @@ export function VendedoresClient() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.notas.map((n) => (
+                  {notasVisibles?.map((n) => (
                     <tr
                       key={`${n.empresa}-${n.nota}`}
                       tabIndex={0}
@@ -406,7 +423,11 @@ export function VendedoresClient() {
                       <td className="whitespace-nowrap px-3 py-2">{n.vendedor}</td>
                       <td className="whitespace-nowrap px-3 py-2 text-right">{formatUSD(n.total_usd)}</td>
                       <td className="whitespace-nowrap px-3 py-2">
-                        {n.estado === 'facturada' ? 'Facturada' : 'Pendiente'}
+                        <span className={n.estado === 'facturada'
+                          ? 'font-medium text-green-600 dark:text-green-400'
+                          : 'font-medium text-red-600 dark:text-red-400'}>
+                          {n.estado === 'facturada' ? 'Facturada' : 'Pendiente'}
+                        </span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-2">{n.visacion ?? '—'}</td>
                       <td className="whitespace-nowrap px-3 py-2">
@@ -418,6 +439,13 @@ export function VendedoresClient() {
               </table>
             </div>
           )}
+          <PaginacionNotas
+            pagina={paginaEfectiva}
+            tamanoPagina={tamanoPagina}
+            total={data.notas.length}
+            onPaginaChange={setPagina}
+            onTamanoPaginaChange={cambiarTamano}
+          />
         </>
       )}
 
