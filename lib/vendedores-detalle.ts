@@ -48,6 +48,16 @@ export function totalGanancia(lineas: LineaDetalle[]): number {
   return lineas.reduce((s, l) => s + gananciaLinea(l.precio, l.costo, l.unidades), 0);
 }
 
+// % total de ganancia de la nota, misma base "sobre el costo" que la columna:
+// (totalGanancia / costo total) * 100, costo total = suma costo x unidades.
+// Sin redondear (se formatea al mostrar). Costo total <= 0 o no finito -> null.
+export function porcentajeGananciaNota(lineas: LineaDetalle[]): number | null {
+  const costo = lineas.reduce((s, l) => s + l.costo * l.unidades, 0);
+  if (!Number.isFinite(costo) || costo <= 0) return null;
+  const pct = (totalGanancia(lineas) / costo) * 100;
+  return Number.isFinite(pct) ? pct : null;
+}
+
 // Diferencia lineas - val_rea; null si |diferencia| <= 0,01 (tolerancia PRD).
 export function diferenciaNota(totalUsd: number, suma: number): number | null {
   const diferencia = suma - totalUsd;

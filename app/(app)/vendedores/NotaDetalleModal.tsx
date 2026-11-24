@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { ImageWithFallback } from '@/components/ImageWithFallback';
 import { fechaDiaCL } from '@/lib/fechas';
 import { formatUSD } from '@/lib/utils';
-import { gananciaLinea, porcentajeSobreCosto, totalGanancia, type DetalleNota, type LineaDetalle } from '@/lib/vendedores-detalle';
+import { gananciaLinea, porcentajeGananciaNota, porcentajeSobreCosto, totalGanancia, type DetalleNota, type LineaDetalle } from '@/lib/vendedores-detalle';
 
 const COLUMNAS = ['IMAGEN', 'CÓDIGO', 'COSTO', '% SOBRE EL COSTO', 'CANTIDAD (cajas)', 'PRECIO DE VENTA', 'GANANCIA USD'];
 
@@ -28,19 +28,18 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
 function Imagen({ linea, empresa }: { linea: LineaDetalle; empresa: 'vida' | 'sanjh' }) {
   if (!linea.imagen_url) {
     return (
-      <span className="flex h-10 w-10 items-center justify-center rounded-md border border-zinc-200 px-1 text-center text-[10px] text-zinc-400 dark:border-zinc-800">
+      <span className="flex h-14 w-14 items-center justify-center rounded-md border border-zinc-200 px-1 text-center text-[10px] leading-tight text-zinc-400 dark:border-zinc-800">
         {linea.codigo}
       </span>
     );
   }
   return (
-    <span className="relative block h-10 w-10 overflow-hidden rounded-md">
-      <ImageWithFallback src={linea.imagen_url} codigo={linea.codigo} empresaSlug={empresa} fill className="h-10 w-10" />
-    </span>
+    <ImageWithFallback src={linea.imagen_url} codigo={linea.codigo} empresaSlug={empresa} width={56} height={56} className="rounded-md" />
   );
 }
 
 function Contenido({ detalle }: { detalle: DetalleNota }) {
+  const pctNota = porcentajeGananciaNota(detalle.lineas);
   return (
     <>
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -72,17 +71,17 @@ function Contenido({ detalle }: { detalle: DetalleNota }) {
               const pct = porcentajeSobreCosto(l.precio, l.costo);
               return (
                 <tr key={`${l.codigo}-${i}`} className="border-t border-zinc-100 dark:border-zinc-800">
-                  <td className="px-3 py-2">
+                  <td className="px-3 py-1">
                     <Imagen linea={l} empresa={detalle.empresa} />
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 font-mono">{l.codigo}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-right">{formatUSD(l.costo)}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-right">{pct === null ? '—' : `${pct.toFixed(2)} %`}</td>
-                  <td className="whitespace-nowrap px-3 py-2">
+                  <td className="whitespace-nowrap px-3 py-1 font-mono">{l.codigo}</td>
+                  <td className="whitespace-nowrap px-3 py-1 text-right">{formatUSD(l.costo)}</td>
+                  <td className="whitespace-nowrap px-3 py-1 text-right">{pct === null ? '—' : `${pct.toFixed(2)} %`}</td>
+                  <td className="whitespace-nowrap px-3 py-1">
                     {l.cajas} cajas <span className="text-xs text-zinc-400">{l.unidades} u</span>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2 text-right">{formatUSD(l.precio)}</td>
-                  <td className="whitespace-nowrap px-3 py-2 text-right">{formatUSD(gananciaLinea(l.precio, l.costo, l.unidades))}</td>
+                  <td className="whitespace-nowrap px-3 py-1 text-right">{formatUSD(l.precio)}</td>
+                  <td className="whitespace-nowrap px-3 py-1 text-right">{formatUSD(gananciaLinea(l.precio, l.costo, l.unidades))}</td>
                 </tr>
               );
             })}
@@ -90,7 +89,9 @@ function Contenido({ detalle }: { detalle: DetalleNota }) {
         </table>
       </div>
 
-      <p className="text-right text-sm font-medium">Total ganancia: {formatUSD(totalGanancia(detalle.lineas))}</p>
+      <p className="text-right text-sm font-medium">
+        Total ganancia: {formatUSD(totalGanancia(detalle.lineas))} ({pctNota === null ? '—' : `${pctNota.toFixed(2)} %`})
+      </p>
 
       {detalle.diferencia_usd !== null && (
         <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-400">
@@ -127,7 +128,7 @@ export function NotaDetalleModal({ empresa, nota, onClose }: Props) {
 
   return (
     <Dialog open onOpenChange={(abierto) => !abierto && onClose()}>
-      <DialogContent className="max-h-[90vh] w-full overflow-y-auto sm:max-w-5xl">
+      <DialogContent className="max-h-[92vh] w-[95vw] max-w-[95vw] overflow-y-auto sm:max-h-[90vh] sm:max-w-7xl">
         <DialogHeader>
           <DialogTitle>Detalle de nota {nota}</DialogTitle>
         </DialogHeader>
