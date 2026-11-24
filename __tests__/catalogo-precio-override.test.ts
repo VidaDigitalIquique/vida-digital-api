@@ -39,6 +39,14 @@ let testUserId: string;
 // ---------------------------------------------------------------------------
 
 beforeAll(async () => {
+  // D6: este test escribe en la BD; nunca contra produccion.
+  if (!process.env.TEST_DATABASE_URL) {
+    throw new Error('ABORTA: falta TEST_DATABASE_URL; este test no puede usar produccion');
+  }
+  if (process.env.DATABASE_URL !== process.env.TEST_DATABASE_URL) {
+    throw new Error('ABORTA: DATABASE_URL no apunta a TEST_DATABASE_URL (guarda de jest.setup.js)');
+  }
+
   // Obtener user_id y empresa_id reales desde un catálogo existente
   const existingCat = await sql`SELECT user_id, empresa_id FROM catalogos LIMIT 1`;
   if (existingCat.length === 0) {

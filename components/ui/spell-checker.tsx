@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
 
 interface LTMatch {
@@ -11,12 +12,12 @@ interface LTMatch {
 
 type SpellCheckedInputProps = React.ComponentProps<'input'>
 
-export function SpellCheckedInput({
-  value,
-  onChange,
-  className,
-  ...rest
-}: SpellCheckedInputProps) {
+// D8: reenviar el ref al <input> real (el de bodega usa autofocus).
+export const SpellCheckedInput = React.forwardRef<HTMLInputElement, SpellCheckedInputProps>(
+  function SpellCheckedInput(
+    { value, onChange, className, ...rest },
+    forwardedRef
+  ) {
   const [matches, setMatches] = useState<LTMatch[]>([])
   const [tooltipMatch, setTooltipMatch] = useState<LTMatch | null>(null)
   const [internalValue, setInternalValue] = useState<string>(String(value ?? ''))
@@ -24,7 +25,12 @@ export function SpellCheckedInput({
   const tooltipHoveredRef = useRef(false)
   const [tooltipLeft, setTooltipLeft] = useState(0)
 
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const setRef = (node: HTMLInputElement | null) => {
+    inputRef.current = node
+    if (typeof forwardedRef === 'function') forwardedRef(node)
+    else if (forwardedRef) (forwardedRef as React.MutableRefObject<HTMLInputElement | null>).current = node
+  }
   const overlayRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>()
   const hideTooltipRef = useRef<ReturnType<typeof setTimeout>>()
@@ -155,7 +161,7 @@ export function SpellCheckedInput({
 
       {/* INPUT real */}
       <input
-        ref={inputRef}
+        ref={setRef}
         value={internalValue}
         onChange={handleChange}
         onScroll={handleScroll}
@@ -243,4 +249,5 @@ export function SpellCheckedInput({
       )}
     </div>
   )
-}
+  }
+)
