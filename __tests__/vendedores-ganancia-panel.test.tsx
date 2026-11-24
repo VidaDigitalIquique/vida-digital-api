@@ -141,6 +141,38 @@ describe('estados de la carga', () => {
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
+  it('rango invertido: no consulta la API, avisa y no deja la tabla vieja (EXP-2)', async () => {
+    const fn = await montar();
+    fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2026-12-01' } });
+
+    expect(await screen.findByText('La fecha Desde no puede ser posterior a Hasta.')).toBeInTheDocument();
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByText('24-11-2026')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Desde')).toHaveValue('2026-12-01');
+  });
+
+  it('campo vacio: no consulta y pide ambas fechas', async () => {
+    const fn = await montar();
+    fireEvent.change(screen.getByLabelText('Hasta'), { target: { value: '' } });
+
+    expect(await screen.findByText('Indica las fechas Desde y Hasta.')).toBeInTheDocument();
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  it('al corregir el rango vuelve a consultar y pinta los datos', async () => {
+    const fn = await montar();
+    fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2026-12-01' } });
+    await screen.findByText('La fecha Desde no puede ser posterior a Hasta.');
+
+    fireEvent.change(screen.getByLabelText('Desde'), { target: { value: '2026-11-10' } });
+    expect(await screen.findByText('24-11-2026')).toBeInTheDocument();
+    await waitFor(() => expect(fn).toHaveBeenCalledTimes(2));
+    expect(params(fn.mock.calls[1][0]).get('desde')).toBe('2026-11-10');
+    expect(screen.queryByText('La fecha Desde no puede ser posterior a Hasta.')).not.toBeInTheDocument();
+  });
+
   it('respuesta vieja no pisa a la nueva (race condition)', async () => {
     let resolverVieja: (v: unknown) => void = () => {};
     const vieja = new Promise((resolve) => { resolverVieja = resolve; });
