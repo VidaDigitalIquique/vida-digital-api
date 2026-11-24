@@ -21,7 +21,6 @@ export function MobileNav({ rol }: { rol: string | undefined }) {
   const home = rol === 'admin' ? '/dashboard' : rol === 'vendedor' ? '/precios' : rol === 'bodeguero' ? '/bodega' : undefined;
   const [open, setOpen] = useState(() => Boolean(home && pathname === home));
   const previousPath = useRef(pathname);
-  const header = useRef<HTMLElement>(null);
   const panel = useRef<HTMLElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const id = useId();
@@ -37,7 +36,7 @@ export function MobileNav({ rol }: { rol: string | undefined }) {
       if (event.key === 'Escape') { setOpen(false); button.current?.focus(); }
     };
     const outside = (event: PointerEvent) => {
-      if (event.target instanceof Node && !header.current?.contains(event.target) && !panel.current?.contains(event.target)) setOpen(false);
+      if (event.target instanceof Node && !button.current?.contains(event.target) && !panel.current?.contains(event.target)) setOpen(false);
     };
     document.addEventListener('keydown', escape);
     document.addEventListener('pointerdown', outside);
@@ -105,13 +104,14 @@ export function MobileNav({ rol }: { rol: string | undefined }) {
 
   return (
     <>
-      <header ref={header} className="md:hidden fixed top-0 left-0 right-0 z-50 h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center px-4">
+      <header className="md:hidden fixed top-0 left-0 right-0 z-50 h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center px-4">
         <button ref={button} type="button" aria-label="Menú VidaDigital" aria-expanded={open} aria-controls={id}
           onClick={() => setOpen(value => !value)} className="min-h-[44px] font-extrabold text-xl tracking-tight text-blue-600 dark:text-blue-400">
           VidaDigital
         </button>
       </header>
-      {open && <nav ref={panel} id={id} aria-label="Menú móvil" className="md:hidden fixed top-16 left-0 right-0 z-40 bg-white dark:bg-zinc-950 max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain px-4 pb-4 shadow-lg">
+      {/* Above page controls, including the spell-check tooltip (zIndex: 9999). */}
+      {open && <nav ref={panel} id={id} aria-label="Menú móvil" className="md:hidden fixed top-16 left-0 right-0 z-[10000] bg-white dark:bg-zinc-950 max-h-[calc(100dvh-4rem)] overflow-y-auto overscroll-contain px-4 pb-4 shadow-lg">
         {groups.filter(group => group.items.length > 0).map((group, index) => (
           <section key={index}>
             {group.title && <h2 className="pt-4 pb-2 text-xs font-semibold uppercase text-zinc-500">{group.title}</h2>}
