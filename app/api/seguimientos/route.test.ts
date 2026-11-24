@@ -14,8 +14,8 @@ const vendedor = { user: { id: '2', nombre: 'Juan Venta', rol: 'vendedor' } };
 
 const mockRow = {
   empresa: 'vida', knumfoli: 'F001', fechanvt: '2024-01-15', id_tdocu: '203', vendedor: 'Juan',
-  kcodclie: '100', nombress: 'Cliente A', celular: '', email01: '', ciudad: '',
-  kcodcli2: null, factura_nombre: null, items: null,
+  kcodclie: '100', factura_nombre: 'Cliente Factura',
+  kcodcli2: null, comprador_nombre: 'Cliente A', celular: '', email01: '', ciudad: '', items: null,
   seg_id: null, prioridad: null, estado: null, asignado_a: null, notas_internas: null,
   ultima_interaccion: null, proximo_contacto: null,
   ultima_observacion: null,
@@ -71,6 +71,76 @@ describe('GET /api/seguimientos', () => {
     const res = await GET(new Request('http://localhost/api/seguimientos?empresa=vida'));
     const body = await res.json();
     expect(body.data[0].seguimiento.ultima_observacion).toBeNull();
+  });
+
+  // D12: comprador y factura invertidos
+  it('T1: cliente_comprador es el comprador y cliente_factura la factura (caso 003816)', async () => {
+    mockSession.mockResolvedValue(admin as any);
+    mockSql.mockResolvedValue([{
+      ...mockRow,
+      empresa: 'sanjh', knumfoli: '003816',
+      kcodclie: '100', factura_nombre: 'IMPORT EXPORT VED SPA',
+      kcodcli2: '200', comprador_nombre: 'DILIP MAYANI',
+    }] as any);
+    const res = await GET(new Request('http://localhost/api/seguimientos?empresa=sanjh&knumfoli=003816'));
+    const body = await res.json();
+    const n = body.data[0];
+    expect(res.status).toBe(200);
+    expect(n.cliente_comprador.nombress).toBe('DILIP MAYANI');
+    expect(n.cliente_factura.nombress).toBe('IMPORT EXPORT VED SPA');
+    expect(n.cliente_factura.kcodclie).toBe('100');
+  });
+
+  it('T2: ambos esquemas usan comprador_nombre y el join del comprador ya no excluye códigos iguales', async () => {
+    mockSession.mockResolvedValue(admin as any);
+    mockSql.mockResolvedValue([] as any);
+    await GET(new Request('http://localhost/api/seguimientos?empresa=ambas'));
+    expect(mockSql).toHaveBeenCalledTimes(2);
+    for (const call of mockSql.mock.calls) {
+      const q = (call as any[])[0].join('');
+      expect(q).toContain('comprador_nombre');
+      expect(q).toContain('btrim(m.cliente)');
+      expect(q).toContain('c2.kcodclie=m.kcodcli2');
+      expect(q).not.toContain('m.kcodcli2!=m.kcodclie');
+    }
+  });
+
+  it('T3: comprador igual a factura conserva su contacto y no muestra tarjeta de factura', async () => {
+    mockSession.mockResolvedValue(admin as any);
+    mockSql.mockResolvedValue([{
+      ...mockRow,
+      kcodclie: '100', kcodcli2: '100',
+      comprador_nombre: 'ACME', factura_nombre: 'ACME',
+      celular: '555',
+    }] as any);
+    const res = await GET(new Request('http://localhost/api/seguimientos?empresa=vida'));
+    const n = (await res.json()).data[0];
+    expect(n.cliente_factura).toBeNull();
+    expect(n.cliente_comprador.celular).toBe('555');
+  });
+
+  it('T4: kcodcli2 nulo usa el texto de la nota, sin factura y sin error', async () => {
+    mockSession.mockResolvedValue(admin as any);
+    mockSql.mockResolvedValue([{
+      ...mockRow,
+      kcodcli2: null, comprador_nombre: 'Texto de la nota', factura_nombre: null,
+    }] as any);
+    const res = await GET(new Request('http://localhost/api/seguimientos?empresa=vida'));
+    const n = (await res.json()).data[0];
+    expect(res.status).toBe(200);
+    expect(n.cliente_comprador.nombress).toBe('Texto de la nota');
+    expect(n.cliente_factura).toBeNull();
+  });
+
+  it('T5: el contrato JSON conserva las claves de comprador y factura', async () => {
+    mockSession.mockResolvedValue(admin as any);
+    mockSql.mockResolvedValue([{ ...mockRow, kcodcli2: '200' }] as any);
+    const res = await GET(new Request('http://localhost/api/seguimientos?empresa=vida'));
+    const n = (await res.json()).data[0];
+    expect(Object.keys(n.cliente_comprador).sort()).toEqual(
+      ['celular', 'ciudad', 'email01', 'kcodclie', 'nombress'],
+    );
+    expect(Object.keys(n.cliente_factura).sort()).toEqual(['kcodclie', 'nombress']);
   });
 });
 
