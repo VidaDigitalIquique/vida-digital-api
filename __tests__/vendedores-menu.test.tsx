@@ -3,7 +3,8 @@
  *
  * S2b — Fase B (T16): entrada VENDEDORES en el menu, solo admin y con el flag encendido.
  */
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { MobileNav } from '@/components/MobileNav';
 
 const mockEstado: { rol: string } = { rol: 'admin' };
 
@@ -46,6 +47,20 @@ beforeEach(() => {
 });
 
 afterEach(cleanup);
+
+describe('MobileNav', () => {
+  it.each(['admin', 'vendedor', 'bodeguero', 'supervisor'])('VENDEDORES respeta rol %s y flag', rol => {
+    for (const enabled of [false, true]) {
+      mockFlags['vendedores-modulo'] = enabled;
+      render(<MobileNav rol={rol} />);
+      const button = screen.getByRole('button', { name: /menú/i });
+      if (button.getAttribute('aria-expanded') === 'false') fireEvent.click(button);
+      if (rol === 'admin' && enabled) expect(linkVendedores()).toHaveAttribute('href', '/vendedores');
+      else expect(screen.queryByText('VENDEDORES')).toBeNull();
+      cleanup();
+    }
+  });
+});
 
 describe('TopNav', () => {
   it('admin con el flag encendido ve VENDEDORES -> /vendedores', () => {
