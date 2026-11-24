@@ -10,6 +10,14 @@ import { hydrateRoot } from 'react-dom/client';
 import { TextEncoder, TextDecoder } from 'util';
 import { hoyCL, lunesSemanaCL, primerDiaMesCL } from '@/lib/fechas';
 import { VendedoresClient } from '@/app/(app)/vendedores/VendedoresClient';
+import * as Modal from '@/app/(app)/vendedores/NotaDetalleModal';
+
+jest.mock('@/app/(app)/vendedores/NotaDetalleModal', () => {
+  const actual = jest.requireActual<typeof import('@/app/(app)/vendedores/NotaDetalleModal')>(
+    '@/app/(app)/vendedores/NotaDetalleModal'
+  );
+  return { ...actual, NotaDetalleModal: jest.fn(actual.NotaDetalleModal) };
+});
 
 const g = globalThis as unknown as Record<string, unknown>;
 g.TextEncoder = g.TextEncoder ?? TextEncoder;
@@ -422,7 +430,8 @@ describe('fila clickeable (R7)', () => {
         return Promise.resolve({ ok: true, status: 200, json: async () => ({ filtros: null }) });
       }
       if (String(url).startsWith('/api/vendedores/notas/')) {
-        return Promise.resolve({ ok: true, status: 200, json: async () => DETALLE });
+        const [, empresa, nota] = String(url).match(/notas\/([^/]+)\/([^/]+)$/)!;
+        return Promise.resolve({ ok: true, status: 200, json: async () => ({ ...DETALLE, empresa, nota }) });
       }
       return Promise.resolve({ ok: true, status: 200, json: async () => notas });
     });
@@ -456,6 +465,209 @@ describe('fila clickeable (R7)', () => {
     await waitFor(() =>
       expect(fn.mock.calls.some((c) => String(c[0]) === '/api/vendedores/notas/sanjh/003817')).toBe(true)
     );
+  });
+
+  it('B11 smoke R4-R7: pagina 2, abre/cierra detalle, cambia tamano y filtra', async () => {
+    const fn = fetchConDetalle(respuesta(lote(76)));
+    render(<VendedoresClient />);
+    await screen.findByText('000001');
+    siguiente();
+    fireEvent.click(screen.getByText('000026').closest('tr')!);
+    expect(await screen.findByText('Detalle de nota 000026')).toBeInTheDocument();
+    expect(fn.mock.calls.some(([url]) => url === '/api/vendedores/notas/vida/000026')).toBe(true);
+    fireEvent.click(screen.getByText('Close'));
+    expect(screen.getByText('Página 2 de 4')).toBeInTheDocument();
+    tamano(50);
+    expect(screen.getByText('Mostrando 51-76 de 76')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Empresa'), { target: { value: 'sanjh' } });
+    expect(await screen.findByText('Página 1 de 2')).toBeInTheDocument();
+  });
+});
+
+// S7b riesgos: limites, filtros/seleccion compartidos, carga/error, carrera e hidratacion (B14 abajo).
+function lote(n: number, prefijo = '') {
+  return Array.from({ length: n }, (_, i) => fila(`${prefijo}${String(i + 1).padStart(6, '0')}`));
+}
+const siguiente = () => fireEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+const tamano = (n: number) => fireEvent.change(screen.getByLabelText('Notas por página'), { target: { value: String(n) } });
+const visibles = () => within(screen.getByRole('table')).getAllByRole('row').slice(1)
+  .map((tr) => within(tr).getAllByRole('cell')[2].textContent);
+
+describe('S7b paginacion y colores', () => {
+  it('B1: vacio no ofrece paginas fantasma', async () => {
+    fetchMock();
+    render(<VendedoresClient />);
+    await screen.findByText('No hay notas para los filtros elegidos.');
+    expect(screen.getByText('Página 1 de 1')).toBeInTheDocument();
+    expect(screen.getByText('Mostrando 0-0 de 0')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Anterior' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeDisabled();
+  });
+
+  it.each([25, 26, 50])('B2: %i notas sin duplicados ni pagina vacia', async (n) => {
+    fetchMock({ notas: respuesta(lote(n)) });
+    render(<VendedoresClient />);
+    await screen.findByText('000001');
+    expect(visibles()).toEqual(lote(25).map((f) => f.nota));
+    expect(screen.getByRole('button', { name: 'Anterior' })).toBeDisabled();
+    const ids = visibles();
+    if (n > 25) {
+      siguiente();
+      expect(visibles()).toEqual(lote(n).slice(25).map((f) => f.nota));
+      ids.push(...visibles());
+      expect(screen.getByText(`Mostrando 26-${n} de ${n}`)).toBeInTheDocument();
+    }
+    expect(new Set(ids).size).toBe(n);
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeDisabled();
+    siguiente();
+    expect(screen.getByText(`Página ${Math.ceil(n / 25)} de ${Math.ceil(n / 25)}`)).toBeInTheDocument();
+  });
+
+  it('B3: corrige pagina alta y conserva la valida al cambiar 25/50/100', async () => {
+    fetchMock({ notas: respuesta(lote(120)) });
+    render(<VendedoresClient />);
+    await screen.findByText('000001');
+    for (let i = 0; i < 4; i++) siguiente();
+    tamano(50);
+    expect(screen.getByText('Página 3 de 3')).toBeInTheDocument();
+    expect(screen.getByText('Mostrando 101-120 de 120')).toBeInTheDocument();
+    tamano(100);
+    expect(screen.getByText('Página 2 de 2')).toBeInTheDocument();
+    tamano(25);
+    expect(screen.getByText('Página 2 de 5')).toBeInTheDocument();
+    expect(visibles()).toEqual(lote(50).slice(25).map((f) => f.nota));
+  });
+
+  it.each([
+    ['Vendedor', 'PRAVIN'], ['Empresa', 'sanjh'], ['Estado', 'pendientes'],
+    ['Fecha de venta desde', '2026-10-01'], ['Fecha de venta hasta', '2026-12-01'],
+    ['Fecha de visación desde', '2026-11-01'], ['Fecha de visación hasta', '2026-11-30'],
+  ])('B4: %s reinicia desde pagina 3', async (label, value) => {
+    fetchMock({ notas: respuesta(lote(76)) });
+    render(<VendedoresClient />);
+    await screen.findByText('000001');
+    siguiente(); siguiente();
+    expect(screen.getByText('Página 3 de 4')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    expect(await screen.findByText('Página 1 de 4')).toBeInTheDocument();
+    expect(visibles()[0]).toBe('000001');
+  });
+
+  it('B4: fecha invalida oculta controles y volver al mismo filtro reinicia pagina', async () => {
+    const fn = fetchMock({ notas: respuesta(lote(76)) });
+    render(<VendedoresClient />);
+    await screen.findByText('000001');
+    siguiente(); siguiente();
+    const input = screen.getByLabelText('Fecha de venta hasta') as HTMLInputElement;
+    const anterior = input.value;
+    fireEvent.change(input, { target: { value: '0002-11-11' } });
+    expect(screen.getByText('Hay una fecha incompleta o inválida.')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Paginación de notas' })).toBeNull();
+    expect(notasCalls(fn)).toHaveLength(1);
+    fireEvent.change(input, { target: { value: anterior } });
+    expect(await screen.findByText('Página 1 de 4')).toBeInTheDocument();
+  });
+
+  it('B5/B6: respuesta aceptada reemplaza notas; obsoleta no cambia pagina ni datos', async () => {
+    const pendientes: Array<(value: unknown) => void> = [];
+    global.fetch = jest.fn((url: string) => esFiltros(url)
+      ? Promise.resolve({ ok: true, json: async () => ({ filtros: null }) })
+      : new Promise((resolve) => pendientes.push(resolve))) as unknown as typeof fetch;
+    render(<VendedoresClient />);
+    await waitFor(() => expect(pendientes).toHaveLength(1));
+    await act(async () => pendientes[0]({ ok: true, json: async () => respuesta(lote(76)) }));
+    siguiente(); siguiente();
+    fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'pendientes' } });
+    fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'facturadas' } });
+    await act(async () => pendientes[2]({ ok: true, json: async () => respuesta(lote(76, 'N')) }));
+    expect(screen.getByText('Página 1 de 4')).toBeInTheDocument();
+    expect(visibles()[0]).toBe('N000001');
+    siguiente();
+    await act(async () => pendientes[1]({ ok: true, json: async () => respuesta(lote(76, 'V')) }));
+    expect(screen.getByText('Página 2 de 4')).toBeInTheDocument();
+    expect(visibles()).toEqual(lote(50, 'N').slice(25).map((f) => f.nota));
+  });
+
+  it('B7/B8: fallback y colores exclusivamente en el texto de Estado', async () => {
+    fetchMock({ notas: respuesta([fila('1'), fila('2', { estado: 'pendiente' }), fila('3', { estado: 'raro' })]) });
+    render(<VendedoresClient />);
+    await screen.findByText('1');
+    for (const tr of screen.getAllByRole('row').slice(1)) {
+      const cells = within(tr).getAllByRole('cell');
+      const facturada = cells[2].textContent === '1';
+      const texto = within(cells[6]).getByText(facturada ? 'Facturada' : 'Pendiente');
+      expect(texto.tagName).toBe('SPAN');
+      expect(texto).toHaveClass('font-medium', facturada ? 'text-green-600' : 'text-red-600', facturada ? 'dark:text-green-400' : 'dark:text-red-400');
+      for (const element of [tr, ...cells]) expect(element.className).not.toMatch(/text-(green|red)-/);
+    }
+  });
+
+  it('B9: visacion conserva aviso y restriccion al paginar', async () => {
+    fetchMock({ notas: respuesta(lote(76)) });
+    render(<VendedoresClient />);
+    await screen.findByText('000001');
+    siguiente(); siguiente();
+    fireEvent.change(screen.getByLabelText('Fecha de visación desde'), { target: { value: '2026-11-01' } });
+    await screen.findByText('Página 1 de 4');
+    siguiente();
+    expect(screen.getByText('Con rango de visación solo se muestran notas facturadas.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Estado')).toHaveValue('facturadas');
+    expect(screen.getByRole('option', { name: 'Pendientes' })).toBeDisabled();
+  });
+
+  it('B10: total remoto no crea paginas sin datos', async () => {
+    fetchMock({ notas: respuesta(lote(300), 800) });
+    render(<VendedoresClient />);
+    await screen.findByText('000001');
+    tamano(100); siguiente(); siguiente();
+    expect(screen.getByText('Mostrando los primeros 300 de 800')).toBeInTheDocument();
+    expect(screen.getByText('Mostrando 201-300 de 300')).toBeInTheDocument();
+    expect(screen.getByText('Página 3 de 3')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeDisabled();
+  });
+
+  it('B11: paginar no limpia la seleccion del modal (doble)', async () => {
+    const doble = jest.mocked(Modal.NotaDetalleModal).mockImplementation(({ empresa, nota, onClose }) =>
+      <div role="dialog" aria-label={`${empresa}/${nota}`}><button onClick={onClose}>Cerrar doble</button></div>);
+    try {
+      fetchMock({ notas: respuesta(lote(76)) });
+      render(<VendedoresClient />);
+      await screen.findByText('000001');
+      siguiente();
+      fireEvent.click(screen.getByText('000026').closest('tr')!);
+      siguiente(); tamano(50);
+      expect(screen.getByRole('dialog', { name: 'vida/000026' })).toBeInTheDocument();
+      fireEvent.click(screen.getByText('Cerrar doble'));
+      expect(screen.getByText('Página 2 de 2')).toBeInTheDocument();
+    } finally {
+      doble.mockImplementation(jest.requireActual<typeof Modal>('@/app/(app)/vendedores/NotaDetalleModal').NotaDetalleModal);
+    }
+  });
+
+  it('B12: paginar/cambiar tamano no consulta ni persiste preferencias', async () => {
+    const fn = fetchMock({ notas: respuesta(lote(120)) });
+    render(<VendedoresClient />);
+    await screen.findByText('000001');
+    siguiente(); tamano(50); tamano(100);
+    await act(async () => { await esperar(600); });
+    expect(notasCalls(fn)).toHaveLength(1);
+    expect(putCalls(fn)).toHaveLength(0);
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it('B13: carga y error no dejan controles operativos', async () => {
+    const fn = fetchMock({ notas: respuesta(lote(76)) });
+    render(<VendedoresClient />);
+    await screen.findByText('000001');
+    siguiente();
+    let resolver!: (value: { ok: boolean; status: number; json: () => Promise<Respuesta> }) => void;
+    fn.mockImplementationOnce(() => new Promise<{ ok: boolean; status: number; json: () => Promise<Respuesta> }>((resolve) => { resolver = resolve; }));
+    fireEvent.change(screen.getByLabelText('Empresa'), { target: { value: 'sanjh' } });
+    expect(screen.getByText('Cargando...')).toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Paginación de notas' })).toBeNull();
+    await act(async () => resolver({ ok: false, status: 500, json: async () => respuesta() }));
+    expect(screen.getByText('Error al cargar las notas.')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Notas por página')).toBeNull();
   });
 });
 
