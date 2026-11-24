@@ -29,7 +29,7 @@ export async function GET() {
   return NextResponse.json({ data: rows });
 }
 
-export async function POST(request: Request = new Request('http://localhost/api/prenotas')) {
+export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   const rol = (session?.user as any)?.rol;
 

@@ -1,14 +1,10 @@
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { filterProducts, type CatalogoProducto } from "./filter-products";
+import { parseKeywords } from "./parse-keywords";
 import { getLatestIngresoRealCodigos } from "@/utils/catalogo-ingreso";
 
 export const dynamic = 'force-dynamic';
-
-export function parseKeywords(raw: string): string[] {
-  if (!raw || !raw.trim()) return [];
-  return raw.split(',').map(s => s.trim().replace(/\s+/g, ' ')).filter(Boolean);
-}
 
 export async function GET(request: Request, { params }: { params: { slug: string } }) {
   const { slug } = params;

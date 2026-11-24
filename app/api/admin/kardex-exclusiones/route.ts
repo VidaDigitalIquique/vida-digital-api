@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import { NextResponse } from "next/server";
 
-export async function GET(_request?: Request) {
+export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || (session.user as any).rol !== "admin") {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
