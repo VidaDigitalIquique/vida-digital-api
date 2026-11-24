@@ -67,3 +67,54 @@ Busca en logs/latest.log líneas con:
   [UPDATE] → imagen re-subida porque fue modificada
   [SKIP]   → imagen sin cambios, no se re-sube
   [ERROR]  → error al subir (revisar el mensaje)
+
+## 8. Borrado de filas obsoletas (itemdcto y movidcto)
+
+### Instalación en el PC de Pravin
+1. Copia a la carpeta del sincronizador, junto a `sync_winfac_neon.py`:
+   `sync_winfac_neon.py`, `reconciliacion.py` y `env.example`.
+   Sin `reconciliacion.py` el script falla al iniciar.
+2. Dependencias: las mismas de las secciones 2 y 7
+   (`dbfread`, `psycopg2-binary`, `python-dotenv`, `cloudinary`).
+3. En el `.env` existente agrega (no reemplaces `DATABASE_URL`):
+```
+SYNC_DELETE_ENABLED=false
+SYNC_DELETE_MAX_ROWS=100
+```
+4. No cambies el lanzador ni la tarea programada: la interfaz de
+   `sync_winfac_neon.py` es la misma.
+
+### Guardas
+- Solo `itemdcto` y `movidcto`, en los esquemas `vida` y `sanjh`.
+  `inb`, `inventar`, `clientes` e imágenes conservan su flujo (sin borrado).
+- `SYNC_DELETE_ENABLED=false` (por defecto): nunca borra; el UPSERT sí se aplica.
+- `SYNC_DELETE_MAX_ROWS=100`: máximo absoluto por tabla y esquema, por ejecución.
+  `0` solo permite ejecuciones sin candidatos; un valor inválido bloquea el borrado.
+- Un snapshot vacío, una lectura fallida, una PK inválida o un DBF que cambia
+  durante la lectura **no producen ninguna escritura** (ni UPSERT ni DELETE).
+- El UPSERT y el DELETE del destino se confirman juntos; si algo falla, se revierte todo.
+- Para comparar PK se usan los valores tal como están en Neon (sin recortar):
+  una fila antigua `"  1"` no coincide con la PK canónica `"1"` y puede borrarse.
+
+### Estados en el log
+- `upsert=N, borrados=M, candidatos=K` → reconciliación completada.
+- `BORRADO_OMITIDO <esquema>.<tabla>: flag_apagado; candidatos=K, limite=L` →
+  UPSERT aplicado, nada borrado porque el flag está apagado.
+- `BORRADO_OMITIDO ...: limite_excedido (K > L)` → UPSERT aplicado, nada borrado
+  porque se superó el límite. Revisar antes de subir `SYNC_DELETE_MAX_ROWS`.
+- `snapshot invalido` / `lectura invalida` / `archivo cambio durante la lectura` →
+  sin escrituras en ese destino.
+- `ERROR <esquema>.<tabla>` → se revirtió la transacción de ese destino.
+
+### Operación manual recomendada
+1. Pausa la tarea programada y el polling (`sync_tray.pyw`) antes de activar el borrado.
+2. Acuerda con WinFac una **ventana sin escrituras** en los DBF mientras corre el sync.
+3. Primera corrida con `SYNC_DELETE_ENABLED=false`: revisa en el log
+   `BORRADO_OMITIDO` y cuántos candidatos hay por tabla/esquema.
+4. Si los candidatos son razonables (≤ límite), activa `SYNC_DELETE_ENABLED=true`
+   y ejecuta otra vez con WinFac detenido. Revisa `borrados=` en el log.
+5. Ejecuta una segunda corrida: debe dar `candidatos=0` (idempotente).
+6. Reanuda la tarea y el polling; conserva los logs fechados como evidencia.
+
+`sync_tray.pyw` marca la solicitud como completada aunque el sync falle:
+no uses ese estado como prueba; revisa siempre el log fechado del sincronizador.
