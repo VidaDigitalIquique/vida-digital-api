@@ -188,7 +188,7 @@ describe('imagenes', () => {
     expect(screen.getAllByText('SINIMG').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('miniatura 56x56 con width/height (sin fill) y sin warning de sizes', async () => {
+  it('miniatura 56x56 SIEMPRE cuadrada: contenedor h-14 w-14 e imagen con fill recortada', async () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const error = jest.spyOn(console, 'error').mockImplementation(() => {});
     try {
@@ -202,9 +202,16 @@ describe('imagenes', () => {
       await screen.findByText('Vida Digital');
 
       const img = document.querySelector('img') as HTMLImageElement;
-      expect(img.getAttribute('width')).toBe('56');
-      expect(img.getAttribute('height')).toBe('56');
-      expect(img.closest('[style*="width"]')).toBeTruthy();
+      // Sin width/height fijos: una imagen apaisada quedaria de 56x~30 por el preflight de Tailwind.
+      expect(img.getAttribute('width')).toBeNull();
+      expect(img.getAttribute('height')).toBeNull();
+      // fill: next/image posiciona la imagen en absoluto y object-cover la recorta al cuadrado.
+      expect(img.style.position).toBe('absolute');
+      expect(img.className).toContain('object-cover');
+
+      const contenedor = img.closest('span') as HTMLElement;
+      expect(contenedor).toBeTruthy();
+      expect(contenedor).toHaveClass('relative', 'block', 'h-14', 'w-14', 'overflow-hidden', 'rounded-md');
 
       const mensajes = [...warn.mock.calls, ...error.mock.calls].flat().join(' ');
       expect(mensajes).not.toMatch(/sizes/);

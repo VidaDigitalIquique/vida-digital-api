@@ -34,7 +34,9 @@ function Imagen({ linea, empresa }: { linea: LineaDetalle; empresa: 'vida' | 'sa
     );
   }
   return (
-    <ImageWithFallback src={linea.imagen_url} codigo={linea.codigo} empresaSlug={empresa} width={56} height={56} className="rounded-md" />
+    <span className="relative block h-14 w-14 overflow-hidden rounded-md">
+      <ImageWithFallback src={linea.imagen_url} codigo={linea.codigo} empresaSlug={empresa} fill className="h-14 w-14" />
+    </span>
   );
 }
 
