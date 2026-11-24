@@ -65,11 +65,14 @@ export function ImageWithFallback({
       <div
         className={`flex flex-col items-center justify-center gap-0.5 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-md overflow-hidden ${className}`}
         style={{ width: fill ? '100%' : width, height: fill ? '100%' : height }}
+        {...(FIX_D11 ? { role: 'img', 'aria-label': `Sin imagen: ${codigo}`, title: codigo } : {})}
       >
         <ImageOff className="w-5 h-5 text-zinc-400 dark:text-zinc-600" />
-        <span className="text-sm font-mono text-zinc-400 dark:text-zinc-600 tracking-wider break-all px-2 text-center">
-          {codigo}
-        </span>
+        {!FIX_D11 && (
+          <span className="text-sm font-mono text-zinc-400 dark:text-zinc-600 tracking-wider break-all px-2 text-center">
+            {codigo}
+          </span>
+        )}
         <span className="text-[10px] text-zinc-400 dark:text-zinc-500">Sin imagen</span>
       </div>
     );

@@ -35,7 +35,7 @@ describe('ImageWithFallback — flag ON', () => {
 
   test('sin src: placeholder con codigo y "Sin imagen", sin ningun <img> (0 requests)', () => {
     const { container } = render(<ImageWithFallback src={null} codigo="25004" />);
-    expect(screen.getByText('25004')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /25004/ })).toBeInTheDocument();
     expect(screen.getByText('Sin imagen')).toBeInTheDocument();
     expect(container.querySelector('img')).toBeNull();
   });
