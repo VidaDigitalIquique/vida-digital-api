@@ -7,6 +7,10 @@ Metodo pBravoT. Programador: escribe codigo solo en ciclos pBravoT (ver ~/.claud
 - Auth: next-auth v4, CredentialsProvider con **RUT + contrasena** contra la tabla `usuarios` (bcryptjs).
   Sesion: `(session.user as any).rol` (sin "e"), `.nombre`, `.rut`, `.empresas` (tabla `usuario_empresa`).
 - Roles y rutas: `middleware.ts` -> `RUTAS_POR_ROL` (admin, vendedor, bodeguero). Una pantalla nueva se agrega ahi.
+- Paginas privadas con segmento dinamico: el matcher de `middleware.ts` excluye toda ruta que termina en
+  extension (`.json`, `.png`, ...), asi que `/prenotas/[id].json` o `/seguimientos/[empresa]/[folio]` NO pasan
+  por `RUTAS_POR_ROL`. Toda pagina privada con segmento dinamico valida sesion y rol en su `page.tsx`
+  (hoy: `prenotas/[id]` rechaza bodeguero; `seguimientos/[empresa]/[folio]` exige admin/vendedor).
 - Base: PostgreSQL en Neon, `lib/db.ts` (`sql` de @neondatabase/serverless). Esquemas `vida` y `sanjh` = replica de
   WinFac (los usan otras apps, ej. App Arjun, en solo lectura): no modificar su estructura.
 - Produccion: https://vidadigital-inventario-v2.vercel.app (Vercel despliega desde `main`).

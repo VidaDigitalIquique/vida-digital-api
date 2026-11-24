@@ -2,10 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-
-// Mismas listas que validan las APIs (app/api/.../alertas/route.ts).
-const ROLES_ALERTAS = ['admin', 'supervisor', 'vendedor'];
-const ROLES_SEGUIMIENTOS = ['admin', 'vendedor'];
+import { ROLES_ALERTAS, ROLES_SEGUIMIENTOS } from '@/lib/roles';
 
 interface AlertasContextType {
   alertasCount: number;
@@ -36,7 +33,7 @@ export function AlertasProvider({ children }: { children: React.ReactNode }) {
   const puedeSeguimientos = autenticado && typeof rol === 'string' && ROLES_SEGUIMIENTOS.includes(rol);
 
   const refreshAlertas = useCallback(async () => {
-    if (!puedeAlertas) return;
+    if (!puedeAlertas) { setAlertasCount(0); return; }
     try {
       const res = await fetch('/api/deseados/alertas');
       if (res.ok) {
@@ -47,7 +44,7 @@ export function AlertasProvider({ children }: { children: React.ReactNode }) {
   }, [puedeAlertas]);
 
   const refreshStockBajo = useCallback(async () => {
-    if (!puedeAlertas) return;
+    if (!puedeAlertas) { setStockBajoCount(0); return; }
     try {
       const res = await fetch('/api/alertas-stock');
       if (res.ok) {
@@ -58,7 +55,7 @@ export function AlertasProvider({ children }: { children: React.ReactNode }) {
   }, [puedeAlertas]);
 
   const refreshSeguimientos = useCallback(async () => {
-    if (!puedeSeguimientos) return;
+    if (!puedeSeguimientos) { setSeguimientosCount(0); return; }
     try {
       const res = await fetch('/api/seguimientos/alertas');
       if (res.ok) {

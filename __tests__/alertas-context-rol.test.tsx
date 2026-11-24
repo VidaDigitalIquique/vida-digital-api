@@ -110,4 +110,22 @@ describe('AlertasProvider segun rol', () => {
     await act(async () => {});
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  test('logout: admin con 3/4/5 pasa a unauthenticated -> 0/0/0 sin llamadas nuevas', async () => {
+    mockSesion = { data: { user: { rol: 'admin' } }, status: 'authenticated' };
+    const { getByTestId, rerender } = montar();
+
+    await waitFor(() => expect(getByTestId('counts').textContent).toBe('3/4/5'));
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+
+    mockSesion = { data: null, status: 'unauthenticated' };
+    rerender(
+      <AlertasProvider>
+        <Consumidor />
+      </AlertasProvider>
+    );
+
+    await waitFor(() => expect(getByTestId('counts').textContent).toBe('0/0/0'));
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
 });

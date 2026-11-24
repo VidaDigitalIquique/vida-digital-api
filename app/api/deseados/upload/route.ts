@@ -3,13 +3,14 @@ export const runtime = 'nodejs';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sql } from '@/lib/db';
+import { ROLES_OPERATIVOS } from '@/lib/roles';
 import { NextResponse } from 'next/server';
 import { uploadImage } from '@/lib/cloudinary';
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   const rol = (session?.user as any)?.rol;
-  if (!session || !['admin', 'supervisor', 'vendedor'].includes(rol)) {
+  if (!session || !ROLES_OPERATIVOS.includes(rol)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
 

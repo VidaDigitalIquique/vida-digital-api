@@ -5,27 +5,20 @@ import path from 'path';
 // (next build lo exige) y no conviene importar middleware.ts en jest (next-auth/edge).
 const src = fs.readFileSync(path.join(__dirname, '..', 'middleware.ts'), 'utf8');
 
-function extraerConst(nombre: string): string {
-  const m = src.match(new RegExp(`export const ${nombre} =\\s*'([^']+)'`));
-  if (!m) throw new Error(`No se encontro la constante ${nombre} en middleware.ts`);
-  // Texto del fuente -> valor real del string (deshace el doble escape de los backslashes).
-  return m[1].replace(/\\\\/g, '\\');
-}
-
 function extraerMatcherLiteral(): string {
   const m = src.match(/matcher:\s*\[\s*'([^']+)'/);
   if (!m) throw new Error('No se encontro el literal de config.matcher en middleware.ts');
   return m[1].replace(/\\\\/g, '\\');
 }
 
-const PATRON = extraerConst('MATCHER_PATTERN');
+const PATRON = extraerMatcherLiteral();
 
 // Next 14 compila el matcher como new RegExp('^' + patron + '$') sobre el pathname.
 const aplicaMiddleware = (pathname: string) => new RegExp(`^${PATRON}$`).test(pathname);
 
 describe('middleware matcher', () => {
-  it('el literal de config.matcher es identico a MATCHER_PATTERN', () => {
-    expect(extraerMatcherLiteral()).toBe(PATRON);
+  it('el patron se define una sola vez: no existe el export MATCHER_PATTERN', () => {
+    expect(src).not.toContain('MATCHER_PATTERN');
   });
 
   it.each([

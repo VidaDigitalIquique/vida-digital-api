@@ -2,7 +2,17 @@
  * D1 — control de acceso a catalogos.
  * Estado inicial: ROJO (lib/roles.ts aun no existe).
  */
-import { ROLES_CATALOGO, puedeGestionarCatalogos, puedeVerVendedores } from './roles';
+import { ROLES_ALERTAS, ROLES_CATALOGO, ROLES_SEGUIMIENTOS, puedeGestionarCatalogos, puedeVerVendedores } from './roles';
+
+describe('listas de roles compartidas (fuente unica)', () => {
+  it('ROLES_ALERTAS es la lista de las APIs de alertas', () => {
+    expect(ROLES_ALERTAS).toEqual(['admin', 'supervisor', 'vendedor']);
+  });
+
+  it('ROLES_SEGUIMIENTOS es la lista de la API de seguimientos', () => {
+    expect(ROLES_SEGUIMIENTOS).toEqual(['admin', 'vendedor']);
+  });
+});
 
 describe('puedeGestionarCatalogos', () => {
   it('ROLES_CATALOGO contiene admin y vendedor', () => {
