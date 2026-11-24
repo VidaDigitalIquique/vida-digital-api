@@ -390,3 +390,17 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 ## 2026-11-11 22:24 - prod-b750775-2212-vendedor-ia - commit b750775 - PRODUCCION PASA
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\prod-b750775-2212-vendedor-ia
 - [x] P-20261111-2224-1 (media) HALLAZGO: EXP-1 — `/deseados?modo=china` registra 14 errores de consola -> BACKLOG D11 (imagenes de productos en Cloudinary; preexistente, /deseados no lo toco este release; incluye codigos con & en el nombre del archivo)
+
+## 2026-11-24 12:15 - s7 - commit 8f0bf28 - FALLA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s7
+- [x] P-20261124-1215-1 (media) FALLA: QA-12 — Tocar fuera del menú móvil abierto no lo oculta -> ARREGLADO (S7d fix: el toque exterior excluye solo el logo y el panel); verificado en s7b QA-03 PASA
+- [x] P-20261124-1215-2 (media) HALLAZGO: EXP-1 — En /precios, la barra de búsqueda se dibuja encima del menú móvil -> ARREGLADO (S7d fix: panel con z-index sobre el buscador sticky de /precios); verificado en s7b QA-04 PASA
+- [x] P-20261124-1215-3 (baja) HALLAZGO: EXP-2 — Rango invertido: el mensaje de error no explica la causa -> ARREGLADO (S7c fix: validacion en el cliente con mensaje claro y sin llamar a la API); verificado en s7b QA-02 PASA
+- [x] P-20261124-1215-4 (baja) HALLAZGO: EXP-3 — Diferencia de 1 centavo entre las vistas Año y Mes -> DESCARTADO (redondeo por periodo: cada fila se redondea a centavos y el TOTAL del rango es la suma de las filas; Ano = redondeo de la suma bruta; diferencia maxima 0,01 USD por diseno)
+- [x] P-20261124-1215-5 (baja) HALLAZGO: EXP-4 — Vendedor ve "Sincronizar WinFac" en el menú móvil -> DESCARTADO (paridad: el vendedor ya tenia Sincronizar WinFac y Crear Catalogo en la barra inferior y en el menu de escritorio; no es regresion)
+- [x] P-20261124-1215-6 (media) HALLAZGO: Consola -> DESCARTADO (favicon 500 y 404 de imagenes de Cloudinary son preexistentes, ver BACKLOG D11; no los introduce este cambio)
+- [x] P-20261124-1215-7 (media) CONSOLA: Failed to load resource: the server responded with a status of 400 (Bad Request) (/api/vendedores/ganancia) -> ARREGLADO (el 400 era el rango invertido; ahora el panel lo valida en el cliente y no llama a la API: S7c fix)
+
+## 2026-11-24 12:22 - s7b - commit d5b4638 - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s7b
+- Sin pendientes nuevos.
