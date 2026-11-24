@@ -156,3 +156,8 @@
 - Desvios del Programador: S7a justifico width/height por un "warning de sizes" que no aplica (ImageWithFallback usa unoptimized): las miniaturas apaisadas no eran cuadradas; corregido volviendo a `fill` (S7a fix). Ningun otro
 - QA metricas: FP 0, ESC 0, ACIERTOS 2 (EXP-1, EXP-2) + 1 falla real (QA-12), costo QA 3.58 USD
 - Hallazgo ajeno al slice: `.env` esta VERSIONADO en git (tracked, no ignorado) y modificado: contiene secretos; fuera de alcance, se informa a Pablo
+## 2026-11-24 - S8/S9 + release vendedores-ui-v2
+- S8: ganancia por periodo exacta (redondeo por nota en SQL, centavos enteros) y estado por defecto Facturadas. Verificacion independiente SQL/JS coincide con API.
+- S9: enlace Dashboard (solo admin) en menu movil, 45/45 tests, tsc 55 errores preexistentes sin cambio.
+- Senal 3: ponytail-audit VERDE, QA regresion 12/13 PASA + R10 verificado por Director, flags vendedores-ganancia-periodo y menu-movil-v2 = true, sin variables de entorno ni migraciones nuevas.
+- BACKLOG: EXP-1/2/3 de QA s8, rango personalizado se pierde al cambiar agrupacion, .env versionado (diferido por Pablo).

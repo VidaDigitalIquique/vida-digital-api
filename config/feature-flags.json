@@ -27,6 +27,6 @@
   "bodega_despachos_editar_folio": true,
   "drawer-ventas-detalle": true,
   "vendedores-modulo": true,
-  "vendedores-ganancia-periodo": false,
-  "menu-movil-v2": false
+  "vendedores-ganancia-periodo": true,
+  "menu-movil-v2": true
 }

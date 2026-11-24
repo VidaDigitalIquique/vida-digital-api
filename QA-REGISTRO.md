@@ -404,3 +404,8 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 ## 2026-11-24 12:22 - s7b - commit d5b4638 - PASA
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s7b
 - Sin pendientes nuevos.
+
+## 2026-11-24 13:01 - s8 - commit d36722c - INVALIDO
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s8
+- Sin pendientes nuevos.
+- Nota del Director: el intento 2 salio INVALIDO por limite de uso del agente de QA. El intento 1 (qa\s8-intento1) fue valido: 12/13 PASA, R10 BLOQUEADO solo por no poder abrir .xlsx; el Director abrio el archivo y coincide con la pantalla (ANGELA 109.80, JOSEPH LEVANO 378.06, PRAVIN 1083.17, TOTAL 1571.03). Exploraciones EXP-1 (Limpiar fechas de venta se deshace al escribir visacion), EXP-2 (cambiar agrupacion reinicia estado), EXP-3 (filtros en blanco mientras carga): BACKLOG, severidad media/baja, no bloquean.
