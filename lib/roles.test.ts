@@ -2,7 +2,15 @@
  * D1 — control de acceso a catalogos.
  * Estado inicial: ROJO (lib/roles.ts aun no existe).
  */
-import { ROLES_ALERTAS, ROLES_CATALOGO, ROLES_SEGUIMIENTOS, puedeGestionarCatalogos, puedeVerVendedores } from './roles';
+import {
+  ROLES_ALERTAS,
+  ROLES_CATALOGO,
+  ROLES_SEGUIMIENTOS,
+  puedeEditarComisionPct,
+  puedeGestionarCatalogos,
+  puedeVerGananciaVendedores,
+  puedeVerVendedores,
+} from './roles';
 
 describe('listas de roles compartidas (fuente unica)', () => {
   it('ROLES_ALERTAS es la lista de las APIs de alertas', () => {
@@ -37,18 +45,35 @@ describe('puedeGestionarCatalogos', () => {
 });
 
 describe('puedeVerVendedores', () => {
+  it.each(['admin', 'vendedor'])('%p -> true', (rol) => {
+    expect(puedeVerVendedores(rol)).toBe(true);
+  });
+
+  it.each(['bodeguero', 'supervisor', '', 'Admin', 'ADMIN', 'root'])('%p -> false', (rol) => {
+    expect(puedeVerVendedores(rol)).toBe(false);
+  });
+
+  it.each([undefined, null, 123, true, {}, []])('%p (no string) -> false', (rol) => {
+    expect(puedeVerVendedores(rol)).toBe(false);
+  });
+});
+
+describe.each([
+  ['puedeVerGananciaVendedores', puedeVerGananciaVendedores],
+  ['puedeEditarComisionPct', puedeEditarComisionPct],
+] as const)('%s (solo admin)', (_nombre, fn) => {
   it('admin -> true', () => {
-    expect(puedeVerVendedores('admin')).toBe(true);
+    expect(fn('admin')).toBe(true);
   });
 
   it.each(['vendedor', 'bodeguero', 'supervisor', '', 'Admin', 'ADMIN', 'root'])(
     '%p -> false',
     (rol) => {
-      expect(puedeVerVendedores(rol)).toBe(false);
+      expect(fn(rol)).toBe(false);
     }
   );
 
   it.each([undefined, null, 123, true, {}, []])('%p (no string) -> false', (rol) => {
-    expect(puedeVerVendedores(rol)).toBe(false);
+    expect(fn(rol)).toBe(false);
   });
 });

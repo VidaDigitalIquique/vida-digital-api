@@ -219,12 +219,13 @@ describe('regresion y guardas', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it('T11: vendedor y bodeguero -> 403 sin tocar la base', async () => {
-    for (const rol of ['vendedor', 'bodeguero']) {
-      sesion('1', rol);
-      expect((await pedir('mes=2026-11&formato=xlsx')).status).toBe(403);
-    }
+  it('T11: bodeguero -> 403 sin tocar la base; vendedor -> 200 xlsx (s14a)', async () => {
+    sesion('1', 'bodeguero');
+    expect((await pedir('mes=2026-11&formato=xlsx')).status).toBe(403);
     expect(fetchMock).not.toHaveBeenCalled();
+
+    sesion('1', 'vendedor');
+    expect((await pedir('mes=2026-11&formato=xlsx')).status).toBe(200);
   });
 
   it('T12: sin sesion -> 401', async () => {

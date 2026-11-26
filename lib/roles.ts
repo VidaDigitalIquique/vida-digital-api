@@ -13,7 +13,17 @@ export function puedeGestionarCatalogos(rol: unknown): boolean {
   return typeof rol === 'string' && ROLES_CATALOGO.includes(rol);
 }
 
-/** Modulo VENDEDORES: solo admin (PRD R3). */
+/** Modulo VENDEDORES (notas, filtros, comisiones): admin y vendedor. */
 export function puedeVerVendedores(rol: unknown): boolean {
+  return typeof rol === 'string' && (rol === 'admin' || rol === 'vendedor');
+}
+
+/** Ganancia por periodo y detalle de nota (costo, % sobre costo): solo admin. */
+export function puedeVerGananciaVendedores(rol: unknown): boolean {
+  return rol === 'admin';
+}
+
+/** Editar el %global de comision: solo admin (C1). */
+export function puedeEditarComisionPct(rol: unknown): boolean {
   return rol === 'admin';
 }

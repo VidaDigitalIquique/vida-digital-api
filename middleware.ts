@@ -3,15 +3,15 @@ import { NextResponse } from 'next/server';
 
 const RUTAS_POR_ROL: Record<string, string[]> = {
   admin: ['/dashboard', '/precios', '/ventas', '/bodega', '/catalogo', '/admin', '/inventario', '/despachos', '/deseados', '/alertas-stock', '/clientes-nuevos', '/prenotas', '/pettycash', '/sueldos', '/deudas', '/seguimientos', '/garantias', '/caja-mayor', '/vendedores'],
-  vendedor: ['/precios', '/ventas', '/catalogo', '/bodega', '/deseados', '/alertas-stock', '/clientes-nuevos', '/prenotas', '/deudas', '/seguimientos', '/garantias', '/admin/importar', '/caja-mayor'],
+  vendedor: ['/precios', '/ventas', '/catalogo', '/bodega', '/deseados', '/alertas-stock', '/clientes-nuevos', '/prenotas', '/deudas', '/seguimientos', '/garantias', '/admin/importar', '/caja-mayor', '/vendedores'],
   bodeguero: ['/bodega', '/deudas'],
 };
 
 export default withAuth(
   function middleware(req) {
     const { pathname } = req.nextUrl;
-    const token = req.nextauth.token as any;
-    const rol = token?.rol as string;
+    const token = req.nextauth.token as { rol?: string } | null;
+    const rol = token?.rol;
 
     if (!rol || !RUTAS_POR_ROL[rol]) {
       return NextResponse.redirect(new URL('/login', req.url));

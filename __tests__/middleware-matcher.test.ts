@@ -16,6 +16,28 @@ const PATRON = extraerMatcherLiteral();
 // Next 14 compila el matcher como new RegExp('^' + patron + '$') sobre el pathname.
 const aplicaMiddleware = (pathname: string) => new RegExp(`^${PATRON}$`).test(pathname);
 
+// Lista de rutas de un rol dentro de RUTAS_POR_ROL, leida del fuente (mismo criterio
+// que el matcher: no se importa middleware.ts por next-auth/edge).
+function rutasDe(rol: string): string[] {
+  const m = src.match(new RegExp(`${rol}:\\s*\\[([^\\]]*)\\]`));
+  if (!m) throw new Error(`No se encontro la lista de ${rol} en RUTAS_POR_ROL`);
+  return (m[1].match(/'[^']+'/g) ?? []).map((x) => x.slice(1, -1));
+}
+
+describe('RUTAS_POR_ROL — modulo vendedores', () => {
+  it('vendedor puede entrar a /vendedores', () => {
+    expect(rutasDe('vendedor')).toContain('/vendedores');
+  });
+
+  it('bodeguero NO entra a /vendedores (queda fuera y se le redirige)', () => {
+    expect(rutasDe('bodeguero')).not.toContain('/vendedores');
+  });
+
+  it('admin conserva /vendedores', () => {
+    expect(rutasDe('admin')).toContain('/vendedores');
+  });
+});
+
 describe('middleware matcher', () => {
   it('el patron se define una sola vez: no existe el export MATCHER_PATTERN', () => {
     expect(src).not.toContain('MATCHER_PATTERN');

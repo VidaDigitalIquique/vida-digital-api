@@ -72,23 +72,25 @@ describe('guardas', () => {
     expect(queryMock).not.toHaveBeenCalled();
   });
 
-  it('vendedor y bodeguero -> 403 y no tocan la base', async () => {
-    for (const rol of ['vendedor', 'bodeguero']) {
-      (getServerSession as jest.Mock).mockResolvedValue({ user: { rol } });
-      const res = await GET(req());
-      expect(res.status).toBe(403);
-    }
+  it('bodeguero -> 403 y no toca la base', async () => {
+    (getServerSession as jest.Mock).mockResolvedValue({ user: { rol: 'bodeguero' } });
+    const res = await GET(req());
+    expect(res.status).toBe(403);
     expect(queryMock).not.toHaveBeenCalled();
   });
 
-  it('flag apagado: admin -> 404, vendedor -> 403 (orden 401/403/404)', async () => {
+  it('vendedor -> 200 (s14a: ve las notas)', async () => {
+    (getServerSession as jest.Mock).mockResolvedValue({ user: { rol: 'vendedor' } });
+    const res = await GET(req('desde=2026-11-01&hasta=2026-11-11'));
+    expect(res.status).toBe(200);
+  });
+
+  it('flag apagado: admin y vendedor -> 404 (el rol se evalua antes)', async () => {
     flags['vendedores-modulo'] = false;
-    const admin = await GET(req());
-    expect(admin.status).toBe(404);
+    expect((await GET(req())).status).toBe(404);
 
     (getServerSession as jest.Mock).mockResolvedValue({ user: { rol: 'vendedor' } });
-    const vendedor = await GET(req());
-    expect(vendedor.status).toBe(403);
+    expect((await GET(req())).status).toBe(404);
 
     expect(queryMock).not.toHaveBeenCalled();
   });
@@ -223,5 +225,21 @@ describe('respuesta con datos', () => {
     await expect(res.json()).resolves.toEqual({ error: 'Error al consultar notas' });
     expect(spy).toHaveBeenCalledWith('GET /api/vendedores/notas error:', expect.any(Error));
     spy.mockRestore();
+  });
+
+  it('a un vendedor la lista NO le expone costo/ganancia/precio', async () => {
+    (getServerSession as jest.Mock).mockResolvedValue({ user: { rol: 'vendedor' } });
+    queryMock.mockImplementation((text: string) => {
+      if (text.includes('DISTINCT')) return Promise.resolve([{ vendedor: 'PRAVIN' }]);
+      return Promise.resolve([FILA]);
+    });
+
+    const res = await GET(req('desde=2026-11-01&hasta=2026-11-11'));
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.notas).toHaveLength(1);
+    for (const clave of ['costo', 'ganancia', 'precio']) {
+      expect(body.notas[0]).not.toHaveProperty(clave);
+    }
   });
 });

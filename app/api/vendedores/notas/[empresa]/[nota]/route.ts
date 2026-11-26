@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 import flags from '@/config/feature-flags.json';
 import { hoyCL } from '@/lib/fechas';
-import { puedeVerVendedores } from '@/lib/roles';
+import { puedeVerGananciaVendedores } from '@/lib/roles';
 import { schemaDeEmpresa } from '@/lib/ventas-producto';
 import { fetchDetalleNota } from '@/lib/vendedores-notas';
 
@@ -18,7 +18,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
   const rol = (session.user as unknown as { rol?: string })?.rol;
-  if (!puedeVerVendedores(rol)) return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
+  if (!puedeVerGananciaVendedores(rol)) return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
 
   if (!flags['vendedores-modulo']) return NextResponse.json({ error: 'No encontrado' }, { status: 404 });
 

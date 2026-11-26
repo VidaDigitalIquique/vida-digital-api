@@ -3,19 +3,25 @@ import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 import flags from '@/config/feature-flags.json';
 import { hoyCL } from '@/lib/fechas';
-import { puedeVerVendedores } from '@/lib/roles';
+import { puedeEditarComisionPct, puedeVerVendedores } from '@/lib/roles';
 import { fetchComisiones, guardarComisionPct, leerComisionPct } from '@/lib/comisiones';
 import { generarComisionesXlsx } from '@/lib/comisiones-xlsx';
 import { mesDeHoy, mesValido, validarPct } from '@/lib/comisiones-utils';
 
 export const dynamic = 'force-dynamic';
 
-async function autorizar(): Promise<{ error: NextResponse } | { usuarioId: number }> {
+async function autorizar(
+  requiereEditarPct = false
+): Promise<{ error: NextResponse } | { usuarioId: number }> {
   const session = await getServerSession(authOptions);
   if (!session) return { error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) };
 
   const user = session.user as unknown as { rol?: string; id?: string };
   if (!puedeVerVendedores(user?.rol)) {
+    return { error: NextResponse.json({ error: 'Acceso denegado' }, { status: 403 }) };
+  }
+  // C1: el % global solo lo edita admin (403 antes de leer el body o tocar la base).
+  if (requiereEditarPct && !puedeEditarComisionPct(user?.rol)) {
     return { error: NextResponse.json({ error: 'Acceso denegado' }, { status: 403 }) };
   }
   if (!flags['vendedores-modulo']) {
@@ -64,7 +70,7 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const auth = await autorizar();
+  const auth = await autorizar(true);
   if ('error' in auth) return auth.error;
 
   let raw: unknown;

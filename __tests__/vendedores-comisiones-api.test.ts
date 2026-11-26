@@ -13,14 +13,25 @@ jest.mock('next-auth', () => ({ getServerSession: jest.fn() }));
 
 jest.mock('@/lib/auth', () => ({ authOptions: {} }));
 
-jest.mock('next/server', () => ({
-  NextResponse: {
-    json: (body: unknown, init?: { status?: number }) => ({
-      status: init?.status ?? 200,
-      json: async () => body,
-    }),
-  },
-}));
+jest.mock('next/server', () => {
+  class NextResponse {
+    status: number;
+    headers: Record<string, string>;
+    private _body: unknown;
+    constructor(body?: unknown, init?: { status?: number; headers?: Record<string, string> }) {
+      this._body = body;
+      this.status = init?.status ?? 200;
+      this.headers = init?.headers ?? {};
+    }
+    async json() {
+      return this._body;
+    }
+    static json(body: unknown, init?: { status?: number }) {
+      return new NextResponse(body, init);
+    }
+  }
+  return { NextResponse };
+});
 
 jest.mock('@/config/feature-flags.json', () => ({ 'vendedores-modulo': true }));
 
@@ -88,18 +99,29 @@ describe('guardas (401 -> 403 -> 404)', () => {
     expect(queryMock).not.toHaveBeenCalled();
   });
 
-  it('vendedor y bodeguero -> 403 y no tocan la base', async () => {
-    for (const rol of ['vendedor', 'bodeguero']) {
-      sesion('1', rol);
-      expect((await GET(req())).status).toBe(403);
-    }
+  it('bodeguero -> 403 y no toca la base', async () => {
+    sesion('1', 'bodeguero');
+    expect((await GET(req())).status).toBe(403);
     expect(queryMock).not.toHaveBeenCalled();
   });
 
-  it('flag apagado: admin -> 404; vendedor -> 403 (el rol se evalua antes)', async () => {
+  it('vendedor -> GET 200 y xlsx 200 (s14a: ve las comisiones)', async () => {
+    sesion('1', 'vendedor');
+    const res = await GET(req());
+    expect(res.status).toBe(200);
+    expect((await res.json()).comision_pct).toBe(0.5);
+
+    const xlsx = await GET(req('formato=xlsx'));
+    expect(xlsx.status).toBe(200);
+    expect((xlsx.headers as unknown as Record<string, string>)['Content-Type']).toContain('spreadsheetml');
+  });
+
+  it('flag apagado: admin y vendedor -> 404; bodeguero -> 403 (el rol se evalua antes)', async () => {
     flags['vendedores-modulo'] = false;
     expect((await GET(req())).status).toBe(404);
     sesion('1', 'vendedor');
+    expect((await GET(req())).status).toBe(404);
+    sesion('1', 'bodeguero');
     expect((await GET(req())).status).toBe(403);
     expect(queryMock).not.toHaveBeenCalled();
   });
@@ -124,6 +146,15 @@ describe('guardas (401 -> 403 -> 404)', () => {
     flags['vendedores-modulo'] = true;
     sesion(null); // admin sin id: updated_by no se puede resolver
     expect((await PUT(pedir(body))).status).toBe(401);
+    expect(queryMock).not.toHaveBeenCalled();
+  });
+
+  it('PUT vendedor -> 403 sin leer el body ni tocar la base (C1: % global solo admin)', async () => {
+    sesion('1', 'vendedor');
+    const jsonSpy = jest.fn();
+    const res = await PUT({ json: jsonSpy } as unknown as Request);
+    expect(res.status).toBe(403);
+    expect(jsonSpy).not.toHaveBeenCalled();
     expect(queryMock).not.toHaveBeenCalled();
   });
 });

@@ -95,20 +95,31 @@ describe('guardas (401 -> 403 -> 404)', () => {
     expect(queryMock).not.toHaveBeenCalled();
   });
 
-  it('vendedor y bodeguero -> 403 y no tocan la base', async () => {
-    for (const rol of ['vendedor', 'bodeguero']) {
-      sesion('1', rol);
-      expect((await GET()).status).toBe(403);
-      expect((await PUT(pedir(VALIDO))).status).toBe(403);
-    }
+  it('bodeguero -> 403 y no toca la base', async () => {
+    sesion('1', 'bodeguero');
+    expect((await GET()).status).toBe(403);
+    expect((await PUT(pedir(VALIDO))).status).toBe(403);
     expect(queryMock).not.toHaveBeenCalled();
   });
 
-  it('flag apagado: admin -> 404, vendedor -> 403 (el rol se evalua antes)', async () => {
+  it('vendedor -> 200 en GET y PUT con su propio usuario_id (s14a)', async () => {
+    sesion('7', 'vendedor');
+    queryMock.mockResolvedValue([FILA]);
+    expect((await GET()).status).toBe(200);
+    expect((queryMock.mock.calls[0] as [string, unknown[]])[1]).toEqual([7]);
+
+    queryMock.mockClear();
+    expect((await PUT(pedir(VALIDO))).status).toBe(200);
+    expect((queryMock.mock.calls[0] as [string, unknown[]])[1][0]).toBe(7);
+  });
+
+  it('flag apagado: admin y vendedor -> 404; bodeguero -> 403 (el rol se evalua antes)', async () => {
     flags['vendedores-modulo'] = false;
     expect((await GET()).status).toBe(404);
     expect((await PUT(pedir(VALIDO))).status).toBe(404);
     sesion('1', 'vendedor');
+    expect((await GET()).status).toBe(404);
+    sesion('1', 'bodeguero');
     expect((await GET()).status).toBe(403);
     expect(queryMock).not.toHaveBeenCalled();
   });

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 import flags from '@/config/feature-flags.json';
 import { hoyCL } from '@/lib/fechas';
-import { puedeVerVendedores } from '@/lib/roles';
+import { puedeVerGananciaVendedores } from '@/lib/roles';
 import { fechaValida, parsearEstado } from '@/lib/filtros-validacion';
 import {
   MAX_PERIODOS,
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   if (!session) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
   const user = session.user as unknown as { rol?: string };
-  if (!puedeVerVendedores(user?.rol)) {
+  if (!puedeVerGananciaVendedores(user?.rol)) {
     return NextResponse.json({ error: 'Acceso denegado' }, { status: 403 });
   }
   if (!flags['vendedores-ganancia-periodo']) {
