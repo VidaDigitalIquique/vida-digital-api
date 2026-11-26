@@ -30,5 +30,5 @@
   "vendedores-ganancia-periodo": true,
   "menu-movil-v2": true,
   "fix-d11-imagen-producto": true,
-  "vendedores-buscador": false
+  "vendedores-buscador": true
 }

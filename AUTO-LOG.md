@@ -209,3 +209,14 @@
 - QA s14 (1.47 USD): 5 de 6 casos PASAN (vendedor sin Ganancia ni detalle, 403 en APIs bloqueadas, % solo texto, regresion admin, bodeguero redirigido). QA-S14-06 FALLA solo por expectativa demasiado amplia del caso: el vendedor ya veia Sincronizar WinFac / Categorias antes de s14 (preexistente, BACKLOG D15, decision de Pablo). Filtros y F5 del vendedor OK.
 - C2: el humo de produccion no distingue roles en la misma ruta; se espera una falsa FALLA del vendedor en /vendedores hasta resolverlo.
 - Release: Pablo autorizo explicitamente mandar todo a produccion cuando estuviera OK (2026-11-26 16:12). /ponytail-audit (Senal 3) NO se corrio.
+
+
+## 2026-11-26 - s15: buscador en /vendedores (F1)
+- Pedido de Pablo: un solo buscador por N de nota de venta o nombre de cliente, resultados en vivo mientras se tipea, clic abre el registro.
+- Slices: s15a API GET /api/vendedores/buscar (9f9b3ee), s15b UI BuscadorNotas (b5d76d5). Flag vendedores-buscador, encendido en este release.
+- Admin: el clic abre el detalle de la empresa correcta (con costos). Vendedor: cuadro solo cabecera, sin costos ni ganancia. Busqueda efimera: no toca filtros ni tabla.
+- Limitacion conocida: la API une siempre Vida Digital + SANJH, no respeta el selector de Empresa (decision para un slice posterior).
+- Verificacion propia: jest completo 132 suites / 1135 tests verdes, tsc 0, build OK (lint=1 preexistente en archivos ajenos).
+- QA s15 (1.51 USD): 7 de 7 PASA, sin defectos ni errores de consola.
+- D15 aceptado por Pablo (vendedor puede entrar a /admin/importar).
+- Release: autorizado por Pablo (2026-11-26 16:41). /ponytail-audit (Senal 3) NO se corrio.

@@ -460,3 +460,7 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 ## 2026-11-26 16:44 - prod-3988a4d-1637-vendedor - commit 3988a4d - PRODUCCION FALLA
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\prod-3988a4d-1637-vendedor
 - [x] P-20261126-1644-1 (critica) FALLA: /vendedores (oculta): termino en /vendedores (status 200); SE VEN textos de la pantalla: VENDEDORES, Comisiones -> DESCARTADO falsa alarma, ver C2 en BACKLOG-DEBUGGING.md (desde s14 el vendedor SI debe ver /vendedores con tabla y Comisiones; el humo no distingue roles en la misma ruta; el resto de las pasadas PASA)
+
+## 2026-11-26 17:24 - s15 - commit b5d76d5 - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s15
+- Sin pendientes nuevos.

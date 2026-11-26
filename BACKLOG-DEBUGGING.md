@@ -96,7 +96,7 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 - Hipotesis (no verificada): una version antigua del sync guardaba kdocitem sin trim (o con otro ancho) y la actual con trim; el UPSERT no borra las viejas (misma causa raiz que D13).
 - Correccion propuesta: junto con D13 en el PC de Pravin: normalizar kdocitem (trim) en el sync y en la limpieza historica borrar la variante con espacios cuando existe la recortada. Verificar con sanjh 000812 (1 linea de 1030A) y el conteo de filas con `kdocitem <> trim(kdocitem)` (debe quedar en 0).
 
-## F1 (MEDIA, mejora) - Buscador en /vendedores por numero de nota de venta y nombre del cliente  [PENDIENTE 2026-11-26, pedido de Pablo]
+## F1 (MEDIA, mejora) - Buscador en /vendedores por numero de nota de venta y nombre del cliente  [RESUELTO 2026-11-26: s15a API + s15b UI, flag vendedores-buscador]
 - Un solo buscador en /vendedores que encuentre registros por numero de nota de venta O por nombre del cliente.
 - Resultados en tiempo real mientras el usuario tipea (con debounce; consulta al servidor, no solo sobre lo ya cargado).
 - Click en cualquier resultado: muestra de inmediato ese registro.
@@ -109,6 +109,6 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 - Extension minima propuesta (no implementada): (1) en `humoProd.privadas[]`, aceptar textos por rol, p.ej. `"debeVersePorRol": {"admin":["Ganancia por periodo"]}` y `"noDebeVerse": ["Ganancia por periodo"]`; (2) en `qa-prod.ps1`, al armar el caso `carga` usar los textos del rol (base + por rol) y agregar `noTextos`; (3) en `qa-prod-mecanico.js`, en el caso `carga` verificar que ningun `noTextos` sea visible. Alternativa mientras tanto: dejar `/vendedores` como oculta y no ignorar el falso FALLA: es este pendiente.
 - Criterio de cierre: el humo valida en una sola corrida la misma ruta para admin (con Ganancia) y vendedor (sin Ganancia) sin falsos FALLAS.
 
-## D15 (MEDIA, permisos, preexistente) - El rol vendedor ve y puede abrir 'Sincronizar WinFac' (/admin/importar), 'Categorias' y 'Crear Catalogo'  [PENDIENTE 2026-11-26, hallazgo QA-S14-06]
+## D15 (MEDIA, permisos, preexistente) - El rol vendedor ve y puede abrir 'Sincronizar WinFac' (/admin/importar), 'Categorias' y 'Crear Catalogo'  [ACEPTADO por Pablo 2026-11-26: el vendedor puede entrar a /admin/importar, se deja asi]
 - Evidencia: QA s14 abrio /admin/importar con sesion de vendedor y cargo 'Sincronizacion Maestra' con el boton 'Sincronizar ahora' (no se pulso). Causa: middleware RUTAS_POR_ROL.vendedor ya incluia '/admin/importar' antes de s14 (commit 0edfbff) y MobileNav usa comercial = admin || vendedor para esos items. NO lo introdujo s14.
 - Decision pendiente de Pablo: si el vendedor debe poder sincronizar WinFac / editar categorias. No se cambia sin su palabra.
