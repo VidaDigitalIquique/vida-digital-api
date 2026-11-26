@@ -88,7 +88,9 @@ function fetchMock(opts: { guardados?: unknown; notas?: Respuesta; putOk?: boole
   return fn;
 }
 
-const notasCalls = (fn: jest.Mock) => fn.mock.calls.filter((c) => !esFiltros(String(c[0])));
+const esBuscarNotas = (url: string) => url.startsWith('/api/vendedores/buscar');
+const notasCalls = (fn: jest.Mock) =>
+  fn.mock.calls.filter((c) => !esFiltros(String(c[0])) && !esBuscarNotas(String(c[0])));
 const putCalls = (fn: jest.Mock) =>
   fn.mock.calls.filter(
     (c) => esFiltros(String(c[0])) && (c[1] as RequestInit | undefined)?.method === 'PUT'

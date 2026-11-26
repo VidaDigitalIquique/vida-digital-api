@@ -5,6 +5,7 @@ import { fechaDiaCL, hoyCL, lunesSemanaCL, primerDiaMesCL } from '@/lib/fechas';
 import { fechaFiltroValida, type FiltrosGuardados, type ModoFecha } from '@/lib/filtros-validacion';
 import { formatUSD } from '@/lib/utils';
 import type { NotaVenta } from '@/lib/vendedores-notas';
+import { BuscadorNotas } from './BuscadorNotas';
 import { NotaDetalleModal } from './NotaDetalleModal';
 import { PaginacionNotas } from './PaginacionNotas';
 
@@ -58,7 +59,13 @@ const COLUMNAS = [
   'Facturación',
 ];
 
-export function VendedoresClient({ puedeVerDetalle = true }: { puedeVerDetalle?: boolean } = {}) {
+export function VendedoresClient({
+  puedeVerDetalle = true,
+  buscadorActivo = false,
+}: {
+  puedeVerDetalle?: boolean;
+  buscadorActivo?: boolean;
+} = {}) {
   const [vendedor, setVendedor] = useState('');
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
@@ -250,6 +257,13 @@ export function VendedoresClient({ puedeVerDetalle = true }: { puedeVerDetalle?:
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold tracking-tight">VENDEDORES</h1>
+
+      {buscadorActivo && (
+        <BuscadorNotas
+          puedeVerDetalle={puedeVerDetalle}
+          onVerDetalle={(empresa, nota) => setSeleccion({ empresa, nota })}
+        />
+      )}
 
       <div className="flex flex-wrap items-end gap-3 rounded-md border border-zinc-200 dark:border-zinc-800 p-3">
         <label className="flex flex-col gap-1 text-xs text-zinc-500">

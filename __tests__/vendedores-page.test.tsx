@@ -7,7 +7,10 @@ import { render, screen } from '@testing-library/react';
 
 jest.mock('next-auth', () => ({ getServerSession: jest.fn() }));
 jest.mock('@/lib/auth', () => ({ authOptions: {} }));
-jest.mock('@/config/feature-flags.json', () => ({ 'vendedores-modulo': true }));
+jest.mock('@/config/feature-flags.json', () => ({
+  'vendedores-modulo': true,
+  'vendedores-buscador': false,
+}));
 jest.mock('next/navigation', () => ({
   redirect: (url: string) => {
     throw new Error(`REDIRECT:${url}`);
@@ -17,8 +20,17 @@ jest.mock('next/navigation', () => ({
   },
 }));
 jest.mock('@/app/(app)/vendedores/VendedoresClient', () => ({
-  VendedoresClient: ({ puedeVerDetalle }: { puedeVerDetalle?: boolean }) => (
-    <div>{`tabla-vendedores:detalle=${String(puedeVerDetalle)}`}</div>
+  VendedoresClient: ({
+    puedeVerDetalle,
+    buscadorActivo,
+  }: {
+    puedeVerDetalle?: boolean;
+    buscadorActivo?: boolean;
+  }) => (
+    <>
+      <div>{`tabla-vendedores:detalle=${String(puedeVerDetalle)}`}</div>
+      <div>{`tabla-vendedores:buscador=${String(buscadorActivo)}`}</div>
+    </>
   ),
 }));
 jest.mock('@/app/(app)/vendedores/ComisionesPanel', () => ({
@@ -41,6 +53,7 @@ const yoSoy = (rol: string | null) =>
 
 beforeEach(() => {
   mockFlags['vendedores-modulo'] = true;
+  mockFlags['vendedores-buscador'] = false;
   yoSoy('admin');
 });
 
@@ -71,6 +84,20 @@ describe('/vendedores', () => {
     render(await VendedoresPage());
     expect(screen.getByText('tabla-vendedores:detalle=true')).toBeInTheDocument();
     expect(screen.getByText('panel-comisiones:editar=true')).toBeInTheDocument();
+  });
+});
+
+describe('/vendedores — buscador de notas (s15b)', () => {
+  it('con el flag apagado el buscador no se activa', async () => {
+    mockFlags['vendedores-buscador'] = false;
+    render(await VendedoresPage());
+    expect(screen.getByText('tabla-vendedores:buscador=false')).toBeInTheDocument();
+  });
+
+  it('con el flag encendido el buscador se activa', async () => {
+    mockFlags['vendedores-buscador'] = true;
+    render(await VendedoresPage());
+    expect(screen.getByText('tabla-vendedores:buscador=true')).toBeInTheDocument();
   });
 });
 

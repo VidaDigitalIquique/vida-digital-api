@@ -18,7 +18,10 @@ export default async function VendedoresPage() {
   const verGanancia = puedeVerGananciaVendedores(rol);
   return (
     <div className="container max-w-7xl mx-auto px-4 py-6">
-      <VendedoresClient puedeVerDetalle={verGanancia} />
+      <VendedoresClient
+        puedeVerDetalle={verGanancia}
+        buscadorActivo={flags['vendedores-buscador']}
+      />
       {verGanancia && flags['vendedores-ganancia-periodo'] && <GananciaPeriodoPanel />}
       <ComisionesPanel puedeEditarPct={puedeEditarComisionPct(rol)} />
     </div>
