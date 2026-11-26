@@ -95,3 +95,9 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 - Impacto: "N ventas registradas" del drawer (preexistente: ya las contaba) y su detalle (S1) muestran la venta dos veces; las lineas del modal de VENDEDORES (S4) y su ganancia quedan dobles en esas notas (el aviso de D13 "lineas que no suman al total" las delata). Comisiones no afectadas (val_rea).
 - Hipotesis (no verificada): una version antigua del sync guardaba kdocitem sin trim (o con otro ancho) y la actual con trim; el UPSERT no borra las viejas (misma causa raiz que D13).
 - Correccion propuesta: junto con D13 en el PC de Pravin: normalizar kdocitem (trim) en el sync y en la limpieza historica borrar la variante con espacios cuando existe la recortada. Verificar con sanjh 000812 (1 linea de 1030A) y el conteo de filas con `kdocitem <> trim(kdocitem)` (debe quedar en 0).
+
+## F1 (MEDIA, mejora) - Buscador en /vendedores por numero de nota de venta y nombre del cliente  [PENDIENTE 2026-11-26, pedido de Pablo]
+- Un solo buscador en /vendedores que encuentre registros por numero de nota de venta O por nombre del cliente.
+- Resultados en tiempo real mientras el usuario tipea (con debounce; consulta al servidor, no solo sobre lo ya cargado).
+- Click en cualquier resultado: muestra de inmediato ese registro.
+- A decidir en Fase A: alcance por empresa/rol (el vendedor no puede abrir el detalle de nota con costos), interaccion con filtros de fecha/estado, minimo de caracteres.

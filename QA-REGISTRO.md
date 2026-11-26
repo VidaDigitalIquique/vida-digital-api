@@ -437,3 +437,11 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 ## 2026-11-26 14:24 - s12c - PASA
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s12c
 - Sin pendientes nuevos (3/3 PASA).
+
+## 2026-11-26 14:54 - s12d - commit 0edfbff - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s12d
+- Sin pendientes nuevos.
+
+## 2026-11-26 15:08 - s12e - commit 0edfbff - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s12e
+- Sin pendientes nuevos.

@@ -269,28 +269,32 @@ export function VendedoresClient() {
           </select>
         </label>
 
-        <div className="flex flex-col gap-1 text-xs text-zinc-500">
-          <span id="modo-fecha-label">Buscar por:</span>
-          <div role="group" aria-labelledby="modo-fecha-label" className="flex flex-wrap gap-1">
-            {(['venta', 'facturacion'] as const).map((modo) => (
-              <button
-                key={modo}
-                type="button"
-                aria-pressed={modoFecha === modo}
-                onClick={() => cambiarModo(modo)}
-                className={`rounded-md border px-2 py-1.5 text-xs ${
-                  modoFecha === modo
-                    ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900'
-                    : 'border-zinc-300 dark:border-zinc-700'
-                }`}
-              >
-                {modo === 'venta' ? 'Fecha de nota de venta' : 'Fecha de facturación'}
-              </button>
-            ))}
-          </div>
-          {modoFecha === 'facturacion' && (
-            <p className="text-zinc-500">Solo notas facturadas: las pendientes aún no tienen fecha de facturación.</p>
-          )}
+        <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+          <span>Buscar por:</span>
+          <span className={modoFecha === 'venta' ? 'font-medium text-zinc-900 dark:text-zinc-100' : 'text-zinc-400'}>
+            Fecha de nota de venta
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={modoFecha === 'facturacion'}
+            aria-label="Buscar por fecha de facturación"
+            onClick={() => cambiarModo(modoFecha === 'facturacion' ? 'venta' : 'facturacion')}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500 ${
+              modoFecha === 'facturacion' ? 'bg-zinc-900 dark:bg-zinc-100' : 'bg-zinc-300 dark:bg-zinc-600'
+            }`}
+          >
+            <span
+              className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                modoFecha === 'facturacion' ? 'translate-x-5 dark:bg-zinc-900' : 'translate-x-0.5'
+              }`}
+            />
+          </button>
+          <span
+            className={modoFecha === 'facturacion' ? 'font-medium text-zinc-900 dark:text-zinc-100' : 'text-zinc-400'}
+          >
+            Fecha de facturación
+          </span>
         </div>
 
         <label className="flex flex-col gap-1 text-xs text-zinc-500">
@@ -362,6 +366,12 @@ export function VendedoresClient() {
           </select>
         </label>
       </div>
+
+      {modoFecha === 'facturacion' && (
+        <p className="text-xs text-zinc-500">
+          Solo notas facturadas: las pendientes aún no tienen fecha de facturación.
+        </p>
+      )}
 
       {avisoGuardado && <p className="text-xs text-amber-600">No se pudieron guardar los filtros.</p>}
 

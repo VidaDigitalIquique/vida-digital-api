@@ -182,3 +182,12 @@
 - QA (Fase E): s12 6/6 PASA (1.10 USD; incluye caso real con la nota 002518 venta 10-11 / facturada 11-11, recarga con F5, atajos, móvil 390x844); s12c 3/3 PASA (0.44 USD). EXP-1..3 sin hallazgo (DESCARTADO); EXP-4 tablas anchas cortadas en móvil -> BACKLOG (preexistente).
 - Datos: 112 notas facturadas de oct-nov tienen `fechadoc > fechanvt`; las pendientes casi no tienen `fechadoc` (25 de 27): por eso en modo facturación solo hay facturadas.
 - Commit en rama feat/vendedores-filtro-fecha-modo. NO está en main ni desplegado. Gate humano pendiente: UAT de Pablo y Señal 3 (ponytail-audit, humoProd) antes del merge/deploy. `.env` sigue versionado en git y modificado (D9, diferido por Pablo): NO incluido en el commit.
+- Release s12 a main (0edfbff) el 2026-11-26 14:29 por decision de Pablo (UAT en produccion), SIN ponytail-audit previo: Senal 3 parcial (build, tests, QA de regresion ok; auditoria pendiente). Humo qa-prod (solo lectura, sin IA): PASA 28 casos, 0 errores de consola, pero solo con la sesion del rol vendedor; /vendedores (admin) no quedo cubierto por el humo.
+
+
+## 2026-11-26 - s12d + s12e: interruptor (switch) compacto para Buscar por fecha de venta / facturacion
+- Pedido de Pablo: el modo de fecha debia ser un switch toggle, no dos botones grandes (s12b los habia dejado como control segmentado). Cambio: s12d reemplaza los botones por un switch real (role=switch, aria-checked); s12e lo retoca: texto de ayuda en su propia linea fuera del bloque (la fila de filtros no se mueve al encender), switch h-6 w-11 con area tactil de 44px y contraste en modo oscuro.
+- Programador deep: s12d 2.78 USD, s12e 2.20 USD. Verificacion propia: diff contra contrato; jest vendedores 16 suites / 390 tests verdes, tsc 0, build OK; lint=1 preexistente.
+- QA: s12d 3/3 PASA (0.49 USD); s12e 2 obligatorios PASA + 1 BLOQUEADO (modo oscuro no emulable por el agente: limitacion, sin revisar) (0.42 USD). Observacion: al apagar el switch Estado queda en Facturadas (comportamiento de diseno).
+- Backlog: F1 buscador por nota y cliente en /vendedores (BACKLOG-DEBUGGING.md).
+- Commit en rama feat/vendedores-toggle-switch. NO esta en main. Pendiente: decision de Pablo sobre produccion.

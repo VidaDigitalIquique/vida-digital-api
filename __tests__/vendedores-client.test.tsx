@@ -95,8 +95,8 @@ const putCalls = (fn: jest.Mock) =>
   );
 const ultimaNotas = (fn: jest.Mock) => String(notasCalls(fn)[notasCalls(fn).length - 1]?.[0] ?? '');
 
-const modoVenta = () => screen.getByRole('button', { name: 'Fecha de nota de venta' });
-const modoFacturacion = () => screen.getByRole('button', { name: 'Fecha de facturación' });
+const switchModo = () => screen.getByRole('switch', { name: 'Buscar por fecha de facturación' });
+const alternarModo = () => fireEvent.click(switchModo());
 const opcionPendientes = () => screen.getByRole('option', { name: 'Pendientes' }) as HTMLOptionElement;
 const inputDesde = () => screen.getByLabelText('Fecha desde') as HTMLInputElement;
 const inputHasta = () => screen.getByLabelText('Fecha hasta') as HTMLInputElement;
@@ -218,14 +218,14 @@ describe('fechas', () => {
 
     expect(screen.getByText('Cargando filtros...')).toBeInTheDocument();
     expect(screen.queryByLabelText('Fecha desde')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Fecha de nota de venta' })).toBeNull();
+    expect(screen.queryByRole('switch')).toBeNull();
     expect(screen.queryByRole('table')).toBeNull();
 
     await act(async () => {
       resolver({ ok: true, status: 200, json: async () => ({ filtros: null }) });
     });
     expect(screen.getByLabelText('Fecha desde')).toBeInTheDocument();
-    expect(modoVenta()).toHaveAttribute('aria-pressed', 'true');
+    expect(switchModo()).toHaveAttribute('aria-checked', 'false');
   });
 
   it('los atajos Hoy / Esta semana / Este mes escriben las fechas de Chile', async () => {
@@ -264,8 +264,7 @@ describe('interruptor venta / facturacion (R1-R4, R6, R8, R9)', () => {
     expect(url).toContain('desde=2026-11-01');
     expect(url).toContain('hasta=2026-11-30');
     expect(url).toContain('estado=facturadas');
-    expect(modoFacturacion()).toHaveAttribute('aria-pressed', 'true');
-    expect(modoVenta()).toHaveAttribute('aria-pressed', 'false');
+    expect(switchModo()).toHaveAttribute('aria-checked', 'true');
     expect(inputDesde().value).toBe('2026-11-01');
     expect(inputHasta().value).toBe('2026-11-30');
     expect(opcionPendientes()).toBeDisabled();
@@ -279,8 +278,7 @@ describe('interruptor venta / facturacion (R1-R4, R6, R8, R9)', () => {
     await montar(fn);
 
     expect(ultimaNotas(fn)).not.toContain('modoFecha');
-    expect(modoVenta()).toHaveAttribute('aria-pressed', 'true');
-    expect(modoFacturacion()).toHaveAttribute('aria-pressed', 'false');
+    expect(switchModo()).toHaveAttribute('aria-checked', 'false');
     expect(opcionPendientes()).not.toBeDisabled();
   });
 
@@ -291,7 +289,7 @@ describe('interruptor venta / facturacion (R1-R4, R6, R8, R9)', () => {
     fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'pendientes' } });
     await waitFor(() => expect(ultimaNotas(fn)).toContain('estado=pendientes'));
 
-    fireEvent.click(modoFacturacion());
+    alternarModo();
 
     await waitFor(() => {
       expect((screen.getByLabelText('Estado') as HTMLSelectElement).value).toBe('facturadas');
@@ -301,7 +299,7 @@ describe('interruptor venta / facturacion (R1-R4, R6, R8, R9)', () => {
       expect(url).not.toContain('estado=pendientes');
     });
     expect(opcionPendientes()).toBeDisabled();
-    expect(modoFacturacion()).toHaveAttribute('aria-pressed', 'true');
+    expect(switchModo()).toHaveAttribute('aria-checked', 'true');
   });
 
   it('R4: volver a venta conserva fechas y estado y rehabilita Pendientes', async () => {
@@ -312,17 +310,17 @@ describe('interruptor venta / facturacion (R1-R4, R6, R8, R9)', () => {
     fireEvent.change(inputHasta(), { target: { value: '2026-11-20' } });
     await waitFor(() => expect(ultimaNotas(fn)).toContain('desde=2026-11-01'));
 
-    fireEvent.click(modoFacturacion());
+    alternarModo();
     await waitFor(() => expect(ultimaNotas(fn)).toContain('modoFecha=facturacion'));
 
-    fireEvent.click(modoVenta());
+    alternarModo();
     await waitFor(() => expect(ultimaNotas(fn)).not.toContain('modoFecha'));
 
     expect(inputDesde().value).toBe('2026-11-01');
     expect(inputHasta().value).toBe('2026-11-20');
     expect((screen.getByLabelText('Estado') as HTMLSelectElement).value).toBe('facturadas');
     expect(opcionPendientes()).not.toBeDisabled();
-    expect(modoVenta()).toHaveAttribute('aria-pressed', 'true');
+    expect(switchModo()).toHaveAttribute('aria-checked', 'false');
   });
 
   it('R6: atajo Hoy en facturacion usa la fecha de Chile y envia el modo', async () => {
@@ -339,7 +337,7 @@ describe('interruptor venta / facturacion (R1-R4, R6, R8, R9)', () => {
     const fn = fetchMock({ notas: respuesta() });
     await montar(fn);
 
-    fireEvent.click(modoFacturacion());
+    alternarModo();
     await waitFor(() => expect(ultimaNotas(fn)).toContain('modoFecha=facturacion'));
 
     fireEvent.click(screen.getByRole('button', { name: 'Hoy' }));
@@ -387,6 +385,100 @@ describe('interruptor venta / facturacion (R1-R4, R6, R8, R9)', () => {
   });
 });
 
+describe('s12d: toggle switch del modo de fecha', () => {
+  it('S1: el switch existe, parte apagado y no hay botones de modo', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+
+    expect(switchModo()).toHaveAttribute('aria-checked', 'false');
+    expect(screen.queryByRole('button', { name: 'Fecha de nota de venta' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Fecha de facturación' })).toBeNull();
+    expect(screen.queryByRole('switch', { name: 'Buscar por fecha de facturación' })).not.toBeNull();
+  });
+
+  it('S2: click lo enciende y el fetch lleva modoFecha=facturacion', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+
+    alternarModo();
+
+    expect(switchModo()).toHaveAttribute('aria-checked', 'true');
+    await waitFor(() => expect(ultimaNotas(fn)).toContain('modoFecha=facturacion'));
+  });
+
+  it('S3: click otra vez lo apaga y el fetch ya no lleva modoFecha', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+
+    alternarModo();
+    await waitFor(() => expect(ultimaNotas(fn)).toContain('modoFecha=facturacion'));
+
+    alternarModo();
+
+    expect(switchModo()).toHaveAttribute('aria-checked', 'false');
+    await waitFor(() => expect(ultimaNotas(fn)).not.toContain('modoFecha'));
+  });
+
+  it('S4: un guardado en facturacion restaura el switch encendido antes del primer fetch', async () => {
+    const fn = fetchMock({
+      guardados: guardado({ desde: '2026-11-01', hasta: '2026-11-30', estado: 'facturadas', modoFecha: 'facturacion' }),
+      notas: respuesta(),
+    });
+    render(<VendedoresClient />);
+    await waitFor(() => expect(notasCalls(fn)).toHaveLength(1));
+
+    expect(switchModo()).toHaveAttribute('aria-checked', 'true');
+    expect(ultimaNotas(fn)).toContain('modoFecha=facturacion');
+    await esperar(300);
+    expect(notasCalls(fn)).toHaveLength(1);
+  });
+
+  it('S5: el texto de ayuda aparece solo con el switch encendido', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+    const ayuda = 'Solo notas facturadas: las pendientes aún no tienen fecha de facturación.';
+
+    expect(screen.queryByText(ayuda)).toBeNull();
+    alternarModo();
+    expect(await screen.findByText(ayuda)).toBeInTheDocument();
+    alternarModo();
+    await waitFor(() => expect(screen.queryByText(ayuda)).toBeNull());
+  });
+});
+
+describe('s12e: texto de ayuda fuera del bloque del switch y switch mas grande', () => {
+  const AYUDA = 'Solo notas facturadas: las pendientes aún no tienen fecha de facturación.';
+
+  it('T1: la ayuda vive fuera del grupo del switch pero dentro del documento', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+
+    alternarModo();
+    const ayuda = await screen.findByText(AYUDA);
+
+    const grupo = screen.getByText('Buscar por:').parentElement as HTMLElement;
+    expect(grupo.contains(switchModo())).toBe(true);
+    expect(grupo.contains(ayuda)).toBe(false);
+    expect(document.body.contains(ayuda)).toBe(true);
+
+    alternarModo();
+    await waitFor(() => expect(screen.queryByText(AYUDA)).toBeNull());
+  });
+
+  it('T2: el switch es h-6/w-11 y conserva role=switch y aria-checked', async () => {
+    const fn = fetchMock({ notas: respuesta() });
+    await montar(fn);
+
+    const sw = switchModo();
+    expect(sw).toHaveClass('h-6', 'w-11');
+    expect(sw).toHaveAttribute('role', 'switch');
+    expect(sw).toHaveAttribute('aria-checked', 'false');
+
+    alternarModo();
+    expect(sw).toHaveAttribute('aria-checked', 'true');
+  });
+});
+
 describe('s12c: Estado en modo facturacion', () => {
   const estadoSelect = () => screen.getByLabelText('Estado') as HTMLSelectElement;
   const opcionTodas = () => within(estadoSelect()).getByRole('option', { name: 'Todas' }) as HTMLOptionElement;
@@ -395,7 +487,7 @@ describe('s12c: Estado en modo facturacion', () => {
     const fn = fetchMock({ notas: respuesta() });
     await montar(fn);
 
-    fireEvent.click(modoFacturacion());
+    alternarModo();
     await waitFor(() => expect(ultimaNotas(fn)).toContain('modoFecha=facturacion'));
 
     expect(estadoSelect().value).toBe('facturadas');
@@ -442,7 +534,7 @@ describe('s12c: Estado en modo facturacion', () => {
     });
     await montar(fn);
 
-    fireEvent.click(modoVenta());
+    alternarModo();
     await waitFor(() => expect(ultimaNotas(fn)).not.toContain('modoFecha'));
 
     expect(estadoSelect().value).toBe('facturadas');
@@ -603,9 +695,9 @@ describe('carrera de respuestas', () => {
       pendientes[0].resolver({ ok: true, json: async () => respuesta([fila('INICIAL')]) });
     });
 
-    fireEvent.click(modoFacturacion());
+    alternarModo();
     await waitFor(() => expect(pendientes).toHaveLength(2));
-    fireEvent.click(modoVenta());
+    alternarModo();
     await waitFor(() => expect(pendientes).toHaveLength(3));
 
     await act(async () => {
@@ -865,7 +957,7 @@ describe('S7b paginacion y colores', () => {
     render(<VendedoresClient />);
     await screen.findByText('000001');
     siguiente(); siguiente();
-    fireEvent.click(modoFacturacion());
+    alternarModo();
     await screen.findByText('Página 1 de 4');
     siguiente();
     expect(
@@ -873,7 +965,7 @@ describe('S7b paginacion y colores', () => {
     ).toBeInTheDocument();
     expect(screen.getByLabelText('Estado')).toHaveValue('facturadas');
     expect(screen.getByRole('option', { name: 'Pendientes' })).toBeDisabled();
-    expect(modoFacturacion()).toHaveAttribute('aria-pressed', 'true');
+    expect(switchModo()).toHaveAttribute('aria-checked', 'true');
   });
 
   it('B10: total remoto no crea paginas sin datos', async () => {
