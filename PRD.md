@@ -12,16 +12,17 @@ Todas las definiciones de datos de este documento están **verificadas** contra 
 1. **Actualización (drawer de /precios):** en el drawer de un producto, el texto "N ventas registradas" pasa a ser clickeable y
    muestra el detalle de cada una de esas ventas: cliente de la nota de venta y precio al que compró (más fecha, nota, empresa,
    vendedor y cantidad si caben).
-2. **Módulo VENDEDORES (nuevo, solo administradores):** tabla de todas las notas de venta (pendientes de facturar y facturadas)
-   de Vida Digital y SANJH, con filtros persistentes por usuario; modal con el detalle de cada venta (imagen, código, costo,
-   % sobre costo, cajas, precio, ganancia USD); e informe mensual de comisiones por vendedor, exportable a .xlsx.
+2. **Módulo VENDEDORES (nuevo, admin y vendedor):** tabla de todas las notas de venta (pendientes de facturar y facturadas)
+   de Vida Digital y SANJH, con filtros persistentes por usuario; **solo el admin** abre el modal con el detalle de cada venta
+   (imagen, código, costo, % sobre costo, cajas, precio, ganancia USD); e informe mensual de comisiones por vendedor, exportable
+   a .xlsx. El vendedor ve la tabla, los filtros y el informe de comisiones, pero no abre el detalle de nota ni edita el %.
 
 ## 2. Usuarios
 
 | Rol | Actualización drawer | Módulo VENDEDORES |
 |-----|----------------------|-------------------|
-| admin | Sí (ya ve /precios) | Sí: único rol que lo ve (menú, página y APIs) |
-| vendedor | Sí (ya ve /precios) | No: no ve el menú; la ruta y las APIs le niegan acceso |
+| admin | Sí (ya ve /precios) | Sí: acceso completo (menú, página, APIs, detalle de nota y edición del % de comisión) |
+| vendedor | Sí (ya ve /precios) | Sí, parcial: menú, tabla, filtros e informe de comisiones; no ve "Ganancia por periodo", no abre el detalle de nota (costos) y no edita el % (solo lectura) |
 | bodeguero | No (no ve /precios) | No |
 
 ## 3. Definiciones de datos (verificadas)
@@ -67,7 +68,7 @@ A4. Empresa: la del drawer (el `empresaSlug` que ya usa `/api/kardex`).
 
 ### B. Módulo VENDEDORES
 B1. Menú: opción **VENDEDORES** a la derecha del desplegable **ADMINISTRACIÓN** en `components/TopNav.tsx` (y en el menú móvil
-    si existe), solo para admin. Ruta `/vendedores`.
+    si existe), para admin y vendedor. Ruta `/vendedores`.
 B2. Tabla de notas de venta de **ambas empresas** con columna **Empresa** (Vida Digital / SANJH). Columnas mínimas: Empresa,
     Fecha de venta, N° nota (`knumfoli`), Cliente, Vendedor, Total (USD, `val_rea`), Estado (Pendiente / Facturada), N° de
     visación (si tiene), Fecha de facturación (si tiene).
@@ -82,13 +83,14 @@ B3. Filtros:
     - Empresa: Todas / Vida Digital / SANJH (la columna Empresa es pedido de Pablo; el filtro es comodidad).
 B4. **Filtros persistentes por usuario:** se guardan por usuario (en la base, no solo en el navegador) y se restauran al volver a
     la pantalla, desde cualquier equipo.
-B5. Clic en una venta (pendiente o facturada) → **modal** con cabecera (Empresa, nota, cliente comprador, cliente factura, vendedor,
+B5. **Solo admin.** Clic en una venta (pendiente o facturada) → **modal** con cabecera (Empresa, nota, cliente comprador, cliente factura, vendedor,
     fecha de venta, estado, visación y fecha de visación, total real) y tabla de líneas: **IMAGEN | CÓDIGO | COSTO | % SOBRE EL COSTO | CANTIDAD (cajas) | PRECIO DE VENTA | GANANCIA USD**,
-    con total de ganancia al pie.
-B6. **Informe de comisiones mensual:** por mes de **facturación** (`fechadoc`), una fila por vendedor válido: N° de notas
+    con total de ganancia al pie. Con rol vendedor la fila no es clickeable y el servidor responde 403 en el detalle de la nota.
+B6. **Informe de comisiones mensual** (visible para admin y vendedor): por mes de **facturación** (`fechadoc`), una fila por vendedor válido: N° de notas
     facturadas, total vendido (suma de `val_rea`), % de comisión, comisión (USD) = total vendido × %. Solo notas facturadas.
     Total general al pie. Se puede elegir el mes (por defecto el mes en curso).
 B7. **% de comisión único para todos**, configurable por un admin desde el módulo, **predeterminado 0,5%**. Se guarda en la base.
+    El vendedor lo ve como texto (solo lectura); el guardado (`PUT`) es solo admin.
 B8. **Exportar el informe a .xlsx** (columnas iguales a la pantalla; hoja con el mes en el nombre del archivo).
 B9. Todo el módulo ignora notas con fecha de venta futura, notas pendientes sin líneas y los vendedores excluidos.
 
@@ -96,7 +98,7 @@ B9. Todo el módulo ignora notas con fecha de venta futura, notas pendientes sin
 - Pagar comisiones, marcarlas como pagadas o llevar historial de pagos.
 - Porcentajes de comisión distintos por vendedor o por producto.
 - Editar ventas o notas (todo es lectura de WinFac).
-- Ver ganancias o comisiones con rol vendedor.
+- Ver ganancias con rol vendedor (el vendedor sí ve el informe de comisiones; el % se muestra como texto y no puede editarlo).
 - Limpiar en WinFac las notas con fecha futura.
 - Corregir las líneas duplicadas de WinFac (ver Riesgos).
 
@@ -109,8 +111,9 @@ ya use el repo (`lib/excel.ts`, verificar en Fase A).
   la Fase A lo justifique.
 - Esquemas `vida` y `sanjh`: solo lectura, sin cambios de estructura. Tablas nuevas solo en `public`.
 - Fechas y horas en hora de Chile con `lib/fechas.ts`; nada de `new Date()`/`toLocale*` durante el render (BUGS.md D3).
-- Página privada: validar sesión **y rol admin** en la page y en cada API (BUGS.md D1/D2: rutas con extensión no pasan por el
-  middleware). Agregar `/vendedores` a `RUTAS_POR_ROL.admin` y a `humoProd` en `.pbravot/qa-entorno.json`.
+- Página privada: validar sesión **y rol** en la page y en cada API (BUGS.md D1/D2: rutas con extensión no pasan por el
+  middleware). `/vendedores` admite admin y vendedor; las APIs de ganancia, detalle de nota y edición del % exigen admin (el
+  vendedor recibe 403). Agregar `/vendedores` a `RUTAS_POR_ROL.admin` y `.vendedor`, y a `humoProd` en `.pbravot/qa-entorno.json`.
 - Cada slice nace bajo feature flag en `config/feature-flags.json` (false) y ≤200 líneas.
 
 ## 8. Escala
@@ -134,11 +137,13 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
 - Cuando: abre el drawer
 - Entonces: no hay enlace clickeable de ventas y no aparece ningún error
 
-### R3 — Solo el administrador ve el módulo VENDEDORES (riesgo: alto)
-- Rol: vendedor y bodeguero
+### R3 — Acceso al módulo VENDEDORES por rol (riesgo: alto)
+- Rol: admin, vendedor y bodeguero
 - Dado: sesión iniciada
 - Cuando: mira el menú y escribe /vendedores en la barra de direcciones
-- Entonces: no ve la opción VENDEDORES en el menú y no ve la pantalla (termina en una pantalla de su rol)
+- Entonces: el admin ve el menú y la pantalla completos; el vendedor ve la opción VENDEDORES en el menú y la pantalla (tabla,
+  filtros e informe de comisiones) pero no "Ganancia por periodo", no abre el detalle de nota ni edita el % de comisión; el
+  bodeguero no ve la opción en el menú y termina en una pantalla de su rol
 
 ### R4 — Admin ve la tabla de ventas del mes en curso (riesgo: alto)
 - Rol: admin
@@ -198,6 +203,31 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
 - Cuando: usa /precios y el menú
 - Entonces: el drawer se comporta como hoy (texto no clickeable) y no existe la opción VENDEDORES
 
+### R12 — Acceso del vendedor a VENDEDORES (riesgo: alto)
+- Rol: vendedor
+- Dado: un vendedor con sesión iniciada
+- Cuando: abre /vendedores
+- Entonces: ve la tabla de notas, los filtros y la sección Comisiones; NO ve "Ganancia por periodo"; al hacer clic en una fila
+  no se abre ningún detalle
+
+### R13 — APIs restringidas para el vendedor (riesgo: alto)
+- Rol: vendedor
+- Dado: un vendedor con sesión iniciada
+- Cuando: pide /api/vendedores/ganancia o /api/vendedores/notas/<empresa>/<nota>
+- Entonces: recibe 403
+
+### R14 — % de comisión en solo lectura para el vendedor (riesgo: medio)
+- Rol: vendedor
+- Dado: un vendedor en la sección Comisiones
+- Cuando: mira el porcentaje de comisión
+- Entonces: lo ve como texto (sin campo ni botón Guardar) y un PUT a /api/vendedores/comisiones responde 403
+
+### R15 — Acceso del bodeguero a VENDEDORES (riesgo: alto)
+- Rol: bodeguero
+- Dado: un bodeguero con sesión iniciada
+- Cuando: abre /vendedores
+- Entonces: es redirigido a una pantalla de su rol
+
 ---
 
 ## Riesgos técnicos (insumo para Fase B)
@@ -214,11 +244,12 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
   informe va por `fechadoc` (Pablo, pregunta 6), la tabla por `fechanvt` por defecto (desde s12 el interruptor "Buscar por" permite elegir `fechadoc`).
 - **Dos esquemas idénticos:** consultas a `vida` y `sanjh` unidas con columna empresa; evitar duplicar SQL (Fase A propone).
 - **Zona horaria:** "mes en curso", "hoy" y "fecha futura" en hora de Chile (`lib/fechas.ts`), en servidor y cliente.
-- **Permisos:** página y APIs nuevas validan rol admin (patrón `lib/roles.ts`).
+- **Permisos:** página y APIs nuevas validan rol (patrón `lib/roles.ts`): `/vendedores` para admin y vendedor; ganancia,
+  detalle de nota y edición del % solo admin.
 
 ## Slices sugeridos (≤200 líneas cada uno, cada uno con su Fase E)
 1. **S1 — Drawer:** API de detalle de ventas registradas del producto (mismo filtro que `/api/kardex`) + lista clickeable (R1, R2, R11-drawer).
-2. **S2 — Módulo base:** ruta `/vendedores` admin, menú, `RUTAS_POR_ROL`, `humoProd`, API de notas con filtros y tabla (R3, R4, R5, R11).
+2. **S2 — Módulo base:** ruta `/vendedores` (admin y vendedor, s14a/s14b), menú, `RUTAS_POR_ROL`, `humoProd`, API de notas con filtros y tabla (R3, R4, R5, R11).
 3. **S3 — Filtros persistentes:** tabla `public` de preferencias por usuario + API + restaurar filtros (R6).
 4. **S4 — Modal de detalle de venta** (R7).
 5. **S5 — Comisiones:** configuración del % (tabla `public`) + informe mensual (R8, R9).

@@ -35,7 +35,7 @@
         ]
       },
       "vendedor": {
-        "noDebeVer": [
+        "debeVer": [
           "VENDEDORES"
         ]
       },
@@ -212,7 +212,8 @@
           "VENDEDORES",
           "Ganancia por periodo",
           "Comisiones"
-        ]
+        ],
+        "nota": "Admin-only: el humo no admite expectativas por rol en la misma ruta. El vendedor entra a /vendedores pero no ve 'Ganancia por periodo'; hasta BACKLOG C2 el paso del vendedor marca esta ruta como falsa FALLA."
       },
       {
         "ruta": "/ventas/kardex",

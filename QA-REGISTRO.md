@@ -449,3 +449,10 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 ## 2026-11-26 15:35 - s13g - commit 255aaf1 - PASA
 - Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s13g
 - Sin pendientes nuevos.
+
+## 2026-11-26 16:23 - s14 - commit 7f9a573 - FALLA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s14
+- [x] P-20261126-1623-1 (media) FALLA: QA-S14-06 — El menú móvil del vendedor incluye items con rutas /admin/ -> BACKLOG D15 (preexistente: middleware y MobileNav ya daban esos items al vendedor antes de s14; mi caso exigia "ningun item de administracion", expectativa demasiado amplia; lo demas del caso PASA)
+- [x] P-20261126-1623-2 (baja) CONSOLA: Failed to load resource: the server responded with a status of 403 (Forbidden) (/api/vendedores/ganancia) -> DESCARTADO 403 esperado: el QA pidio a proposito las APIs bloqueadas al vendedor (QA-S14-02) y la de notas dio 403 al probar el rol bodeguero (QA-S14-05)
+- [x] P-20261126-1623-3 (baja) CONSOLA: Failed to load resource: the server responded with a status of 403 (Forbidden) (/api/vendedores/notas/vida/002525) -> DESCARTADO 403 esperado: el QA pidio a proposito las APIs bloqueadas al vendedor (QA-S14-02) y la de notas dio 403 al probar el rol bodeguero (QA-S14-05)
+- [x] P-20261126-1623-4 (baja) CONSOLA: Failed to load resource: the server responded with a status of 403 (Forbidden) (/api/vendedores/notas) -> DESCARTADO 403 esperado: el QA pidio a proposito las APIs bloqueadas al vendedor (QA-S14-02) y la de notas dio 403 al probar el rol bodeguero (QA-S14-05)

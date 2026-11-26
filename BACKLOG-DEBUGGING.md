@@ -101,3 +101,14 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 - Resultados en tiempo real mientras el usuario tipea (con debounce; consulta al servidor, no solo sobre lo ya cargado).
 - Click en cualquier resultado: muestra de inmediato ese registro.
 - A decidir en Fase A: alcance por empresa/rol (el vendedor no puede abrir el detalle de nota con costos), interaccion con filtros de fecha/estado, minimo de caracteres.
+
+## C2 (BAJA, tooling) - el humo en produccion no puede expresar expectativas distintas por rol en la misma ruta  [PENDIENTE 2026-11-26]
+- Detectado al documentar el acceso del vendedor a /vendedores (s14d).
+- Causa VERIFICADA en `~/.claude/pbravot/qa-prod.ps1` + `qa-prod-mecanico.js`: `humoProd.privadas[]` tiene una sola expectativa por ruta; por cada rol, una entrada con ese rol en `roles` es un caso `carga` (todos los `debeVerse` deben verse) y sin el rol es un caso `oculta` (la ruta debe redirigir/401/403/404 y ninguno de los `debeVerse` debe verse). `humoProd.roles.<rol>.debeVer/noDebeVer` solo aplica al menu en `/`.
+- Efecto: con `/vendedores` en `roles:["admin"]` la pasada del vendedor la juzga 'oculta' y da FALLA (el vendedor ya entra); agregar "vendedor" exigiria que vea "Ganancia por periodo" (que no debe ver) y tambien FALLA. Una segunda entrada con la misma ruta tampoco sirve: crea un caso 'oculta' para el otro rol con esos textos como prohibidos.
+- Extension minima propuesta (no implementada): (1) en `humoProd.privadas[]`, aceptar textos por rol, p.ej. `"debeVersePorRol": {"admin":["Ganancia por periodo"]}` y `"noDebeVerse": ["Ganancia por periodo"]`; (2) en `qa-prod.ps1`, al armar el caso `carga` usar los textos del rol (base + por rol) y agregar `noTextos`; (3) en `qa-prod-mecanico.js`, en el caso `carga` verificar que ningun `noTextos` sea visible. Alternativa mientras tanto: dejar `/vendedores` como oculta y no ignorar el falso FALLA: es este pendiente.
+- Criterio de cierre: el humo valida en una sola corrida la misma ruta para admin (con Ganancia) y vendedor (sin Ganancia) sin falsos FALLAS.
+
+## D15 (MEDIA, permisos, preexistente) - El rol vendedor ve y puede abrir 'Sincronizar WinFac' (/admin/importar), 'Categorias' y 'Crear Catalogo'  [PENDIENTE 2026-11-26, hallazgo QA-S14-06]
+- Evidencia: QA s14 abrio /admin/importar con sesion de vendedor y cargo 'Sincronizacion Maestra' con el boton 'Sincronizar ahora' (no se pulso). Causa: middleware RUTAS_POR_ROL.vendedor ya incluia '/admin/importar' antes de s14 (commit 0edfbff) y MobileNav usa comercial = admin || vendedor para esos items. NO lo introdujo s14.
+- Decision pendiente de Pablo: si el vendedor debe poder sincronizar WinFac / editar categorias. No se cambia sin su palabra.

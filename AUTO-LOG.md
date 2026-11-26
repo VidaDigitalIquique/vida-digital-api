@@ -199,3 +199,13 @@
 - Programador deep: 3.62 USD. Verificacion propia: diff contra contrato; jest vendedores 16 suites / 398 tests verdes, tsc 0, build OK; lint=1 preexistente.
 - QA s13g: 3/3 PASA (0.43 USD; Total Este mes igual en Dia/Semana/Mes/Año; movil sin cortes). Limitacion: Hoy y Esta semana dieron 0 por falta de ventas en esos dias en la base de pruebas.
 - Commit en rama feat/vendedores-toggle-switch. NO esta en main.
+
+
+## 2026-11-26 - s14: el rol vendedor accede a /vendedores (sin Ganancia, sin detalle de nota, % de comision solo lectura)
+- Pedido de Pablo: el vendedor debe entrar a /vendedores y ver solo la tabla de notas y Comisiones; no Ganancia por periodo. Decisiones con Pablo: ve tabla y comisiones como el admin (todos los vendedores); no abre el detalle de nota (costos); bloqueo tambien en el servidor.
+- Decision del Director C1 (a avisar): el PUT /api/vendedores/comisiones cambia el % GLOBAL; queda solo admin y el vendedor ve el % como texto.
+- Slices: s14a servidor (8b1dba2: roles.ts con puedeVerVendedores / puedeVerGananciaVendedores / puedeEditarComisionPct, middleware, 3 rutas API), s14b pantalla y menu (7f9a573), s14d docs/config QA (PRD R3 y R12-R15, qa-entorno.json, qa-barrido.md). Sin feature flag nuevo.
+- Costos programador deep: s14-A 3.09, s14a 4.19, s14b 4.89, s14d 3.00 USD. Verificacion propia: diffs contra contrato, jest suite completa 1094 verdes, tsc 0, build OK (lint=1 preexistente).
+- QA s14 (1.47 USD): 5 de 6 casos PASAN (vendedor sin Ganancia ni detalle, 403 en APIs bloqueadas, % solo texto, regresion admin, bodeguero redirigido). QA-S14-06 FALLA solo por expectativa demasiado amplia del caso: el vendedor ya veia Sincronizar WinFac / Categorias antes de s14 (preexistente, BACKLOG D15, decision de Pablo). Filtros y F5 del vendedor OK.
+- C2: el humo de produccion no distingue roles en la misma ruta; se espera una falsa FALLA del vendedor en /vendedores hasta resolverlo.
+- Release: Pablo autorizo explicitamente mandar todo a produccion cuando estuviera OK (2026-11-26 16:12). /ponytail-audit (Senal 3) NO se corrio.
