@@ -185,10 +185,9 @@ export function reglasModulo(esquema: EmpresaSlug): string {
 // Columna del rango: SOLO desde este mapa fijo, nunca desde el texto del usuario.
 const COLUMNA_FECHA: Record<ModoFecha, string> = { venta: 'm.fechanvt', facturacion: 'm.fechadoc' };
 
-function bloqueNotas(esquema: EmpresaSlug, modoFecha: ModoFecha): string {
-  const columna = COLUMNA_FECHA[modoFecha];
-  return `
-  SELECT '${esquema}' AS empresa,
+// Columnas de NotaVenta: solo cabecera, nunca costo/ganancia/precio.
+function camposNota(esquema: EmpresaSlug): string {
+  return `SELECT '${esquema}' AS empresa,
          m.knumfoli::text AS nota,
          to_char(m.fechanvt, 'YYYY-MM-DD') AS fecha_venta,
          COALESCE(m.cliente,'') AS cliente,
@@ -197,7 +196,13 @@ function bloqueNotas(esquema: EmpresaSlug, modoFecha: ModoFecha): string {
          CASE WHEN m.pestadot='3' AND btrim(COALESCE(m.visaadua,'')) <> ''
               THEN 'facturada' ELSE 'pendiente' END AS estado,
          NULLIF(btrim(COALESCE(m.visaadua,'')),'') AS visacion,
-         to_char(m.fechadoc, 'YYYY-MM-DD') AS fecha_facturacion
+         to_char(m.fechadoc, 'YYYY-MM-DD') AS fecha_facturacion`;
+}
+
+function bloqueNotas(esquema: EmpresaSlug, modoFecha: ModoFecha): string {
+  const columna = COLUMNA_FECHA[modoFecha];
+  return `
+  ${camposNota(esquema)}
   FROM ${esquema}.movidcto m
   WHERE ${reglasModulo(esquema)}
     AND ($2::date IS NULL OR ${columna} >= $2::date)
@@ -244,8 +249,26 @@ type FilaNota = {
   estado: string;
   visacion: string | null;
   fecha_facturacion: string | null;
-  total: unknown;
+  total?: unknown;
 };
+
+function mapearNotas(filas: FilaNota[]): NotaVenta[] {
+  return filas.map((r) => {
+    const empresa: EmpresaSlug = r.empresa === 'sanjh' ? 'sanjh' : 'vida';
+    return {
+      empresa,
+      empresa_nombre: NOMBRE_EMPRESA[empresa],
+      fecha_venta: String(r.fecha_venta),
+      nota: String(r.nota),
+      cliente: r.cliente ?? '',
+      vendedor: r.vendedor ?? '',
+      total_usd: Number(r.total_usd) || 0,
+      estado: r.estado === 'facturada' ? 'facturada' : 'pendiente',
+      visacion: r.visacion ?? null,
+      fecha_facturacion: r.fecha_facturacion ?? null,
+    };
+  });
+}
 
 type FilaVendedor = { vendedor: string };
 
@@ -261,25 +284,57 @@ export async function fetchNotas(
   const filas = (filasRaw ?? []) as unknown as FilaNota[];
   const listas = (listasRaw ?? []) as unknown as FilaVendedor[][];
 
-  const notas: NotaVenta[] = filas.map((r) => {
-    const empresa: EmpresaSlug = r.empresa === 'sanjh' ? 'sanjh' : 'vida';
-    return {
-      empresa,
-      empresa_nombre: NOMBRE_EMPRESA[empresa],
-      fecha_venta: String(r.fecha_venta),
-      nota: String(r.nota),
-      cliente: r.cliente ?? '',
-      vendedor: r.vendedor ?? '',
-      total_usd: Number(r.total_usd) || 0,
-      estado: r.estado === 'facturada' ? 'facturada' : 'pendiente',
-      visacion: r.visacion ?? null,
-      fecha_facturacion: r.fecha_facturacion ?? null,
-    };
-  });
+  const notas = mapearNotas(filas);
 
   const vendedores = Array.from(new Set(listas.flat().map((v) => v.vendedor).filter(Boolean))).sort();
 
   return { notas, vendedores, total: Number(filas[0]?.total ?? 0) };
+}
+
+// Mismo plegado que el normalize('NFD') + toLowerCase() de normalizarBusqueda.
+const TEXTO_CLIENTE =
+  "translate(lower(COALESCE(m.cliente,'')), 'áàäâéèëêíìïîóòöôúùüûñç', 'aaaaeeeeiiiioooouuuunc')";
+
+/** Trim + colapsar espacios + recorte a 60. El texto del usuario solo viaja como parametro. */
+export function normalizarBusqueda(q: string): { patronNota: string | null; patronCliente: string } {
+  const limpio = q.trim().replace(/\s+/g, ' ').slice(0, 60);
+  return {
+    patronNota: /^\d+$/.test(limpio) ? limpio.replace(/^0+/, '') || null : null,
+    patronCliente: limpio
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[\\%_]/g, '\\$&'),
+  };
+}
+
+function bloqueBusqueda(esquema: EmpresaSlug): string {
+  return `
+  ${camposNota(esquema)}
+  FROM ${esquema}.movidcto m
+  WHERE ${reglasModulo(esquema)}
+    AND (($2::text IS NOT NULL AND ltrim(m.knumfoli::text,'0') LIKE ($2::text || '%'))
+      OR ${TEXTO_CLIENTE} LIKE ('%' || $3::text || '%') ESCAPE '\\')`;
+}
+
+/** Buscador: mira siempre vida+sanjh, ignora rango de fechas/estado de la tabla. */
+export function construirConsultaBusqueda(
+  q: string,
+  hoy: string,
+  limit = 8
+): { text: string; params: unknown[] } {
+  const { patronNota, patronCliente } = normalizarBusqueda(q);
+  const text = `SELECT n.*
+FROM (${(['vida', 'sanjh'] as EmpresaSlug[]).map(bloqueBusqueda).join('\n  UNION ALL\n')}) n
+ORDER BY n.fecha_venta DESC, n.empresa, n.nota DESC
+LIMIT $4`;
+  return { text, params: [hoy, patronNota, patronCliente, limit] };
+}
+
+export async function buscarNotas(q: string, hoy: string): Promise<{ notas: NotaVenta[] }> {
+  const { text, params } = construirConsultaBusqueda(q, hoy);
+  const filas = (await sql.query(text, params)) as unknown as FilaNota[];
+  return { notas: mapearNotas(filas ?? []) };
 }
 
 type FilaDetalle = {

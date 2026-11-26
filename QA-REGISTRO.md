@@ -456,3 +456,7 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - [x] P-20261126-1623-2 (baja) CONSOLA: Failed to load resource: the server responded with a status of 403 (Forbidden) (/api/vendedores/ganancia) -> DESCARTADO 403 esperado: el QA pidio a proposito las APIs bloqueadas al vendedor (QA-S14-02) y la de notas dio 403 al probar el rol bodeguero (QA-S14-05)
 - [x] P-20261126-1623-3 (baja) CONSOLA: Failed to load resource: the server responded with a status of 403 (Forbidden) (/api/vendedores/notas/vida/002525) -> DESCARTADO 403 esperado: el QA pidio a proposito las APIs bloqueadas al vendedor (QA-S14-02) y la de notas dio 403 al probar el rol bodeguero (QA-S14-05)
 - [x] P-20261126-1623-4 (baja) CONSOLA: Failed to load resource: the server responded with a status of 403 (Forbidden) (/api/vendedores/notas) -> DESCARTADO 403 esperado: el QA pidio a proposito las APIs bloqueadas al vendedor (QA-S14-02) y la de notas dio 403 al probar el rol bodeguero (QA-S14-05)
+
+## 2026-11-26 16:44 - prod-3988a4d-1637-vendedor - commit 3988a4d - PRODUCCION FALLA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\prod-3988a4d-1637-vendedor
+- [x] P-20261126-1644-1 (critica) FALLA: /vendedores (oculta): termino en /vendedores (status 200); SE VEN textos de la pantalla: VENDEDORES, Comisiones -> DESCARTADO falsa alarma, ver C2 en BACKLOG-DEBUGGING.md (desde s14 el vendedor SI debe ver /vendedores con tabla y Comisiones; el humo no distingue roles en la misma ruta; el resto de las pasadas PASA)

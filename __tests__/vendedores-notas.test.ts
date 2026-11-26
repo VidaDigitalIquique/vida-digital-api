@@ -11,6 +11,9 @@ import {
   construirConsulta,
   consultaVendedores,
   fetchNotas,
+  normalizarBusqueda,
+  construirConsultaBusqueda,
+  buscarNotas,
   type FiltrosNotas,
 } from '@/lib/vendedores-notas';
 import { parsearModoFecha } from '@/lib/filtros-validacion';
@@ -505,5 +508,146 @@ describe('fetchNotas', () => {
     await fetchNotas(['vida', 'sanjh'], filtros());
     const llamadas = queryMock.mock.calls.map((c) => String(c[0]));
     expect(llamadas.filter((t) => t.includes('DISTINCT')).length).toBe(2);
+  });
+});
+
+describe('normalizarBusqueda', () => {
+  it('pliega tildes y mayusculas igual que el translate del SQL', () => {
+    const esperado = { patronNota: null, patronCliente: 'angela' };
+    expect(normalizarBusqueda('angela')).toEqual(esperado);
+    expect(normalizarBusqueda('ANGELA')).toEqual(esperado);
+    expect(normalizarBusqueda('Ángela')).toEqual(esperado);
+    expect(normalizarBusqueda('ANGÉLA')).toEqual(esperado);
+  });
+
+  it('recorta, colapsa espacios y limita a 60 caracteres', () => {
+    expect(normalizarBusqueda('  john   doe  ').patronCliente).toBe('john doe');
+    expect(normalizarBusqueda('a'.repeat(100)).patronCliente).toBe('a'.repeat(60));
+  });
+
+  it('nota: solo digitos, sin ceros a la izquierda; "000" -> null', () => {
+    expect(normalizarBusqueda('2578').patronNota).toBe('2578');
+    expect(normalizarBusqueda('002578').patronNota).toBe('2578');
+    expect(normalizarBusqueda(' 002578 ').patronNota).toBe('2578');
+    expect(normalizarBusqueda('000').patronNota).toBeNull();
+    expect(normalizarBusqueda('2578a').patronNota).toBeNull();
+    expect(normalizarBusqueda('angela').patronNota).toBeNull();
+  });
+
+  it('escapa \\, % y _ para que LIKE los trate como literales', () => {
+    expect(normalizarBusqueda('a%b').patronCliente).toBe('a\\%b');
+    expect(normalizarBusqueda('a_b').patronCliente).toBe('a\\_b');
+    expect(normalizarBusqueda('a\\b').patronCliente).toBe('a\\\\b');
+  });
+});
+
+describe('construirConsultaBusqueda', () => {
+  const hoy = HOY;
+
+  it('siempre consulta vida y sanjh (sin parametro empresa)', () => {
+    const { text } = construirConsultaBusqueda('25', hoy);
+    expect(text).toContain('vida.movidcto');
+    expect(text).toContain('sanjh.movidcto');
+    expect(text).toContain('UNION ALL');
+  });
+
+  it('conserva las reglas del modulo y no aplica fechas/estado/vendedor de la tabla', () => {
+    const { text, params } = construirConsultaBusqueda('25', hoy);
+    expect(text).toContain('m.tipomovi=\'V\'');
+    expect(text).toContain("m.id_tdocu IN ('203','551','554')");
+    expect(text).toContain('m.fechanvt <= $1::date');
+    expect(text).toContain("NOT IN ('PABLO BRAVO','EMPRESA')");
+    expect(text).toContain('EXISTS');
+    expect(text).toContain('itemdcto');
+    expect(params[0]).toBe(hoy);
+    // ni rango de fechas ni estado ni vendedor de la tabla
+    expect(text).not.toContain('$2::date');
+    expect(text).not.toContain('$3::date');
+    expect(text).not.toContain('$5');
+    expect(text).not.toContain('btrim(upper(m.vendedor)) = btrim(upper(');
+  });
+
+  it('nota por prefijo sin ceros y cliente con translate/ESCAPE', () => {
+    const { text, params } = construirConsultaBusqueda('002578', hoy);
+    expect(text).toContain("ltrim(m.knumfoli::text,'0') LIKE ($2::text || '%')");
+    expect(text).toContain(
+      "translate(lower(COALESCE(m.cliente,'')), 'áàäâéèëêíìïîóòöôúùüûñç', 'aaaaeeeeiiiioooouuuunc')"
+    );
+    expect(text).toContain("LIKE ('%' || $3::text || '%') ESCAPE '\\'");
+    expect(params).toEqual([hoy, '2578', '002578', 8]);
+  });
+
+  it('q sin digitos: patronNota null (OR solo por cliente)', () => {
+    const { params } = construirConsultaBusqueda('Ángela', hoy);
+    expect(params[1]).toBeNull();
+    expect(params[2]).toBe('angela');
+  });
+
+  it('q "000" -> patronNota null', () => {
+    expect(construirConsultaBusqueda('000', hoy).params[1]).toBeNull();
+  });
+
+  it('orden, LIMIT parametrizado y limit por defecto 8', () => {
+    const { text, params } = construirConsultaBusqueda('25', hoy);
+    expect(text).toContain('ORDER BY n.fecha_venta DESC, n.empresa, n.nota DESC');
+    expect(text).toContain('LIMIT $4');
+    expect(text).not.toContain('LIMIT 8');
+    expect(params[3]).toBe(8);
+    expect(construirConsultaBusqueda('25', hoy, 3).params[3]).toBe(3);
+  });
+
+  it('no selecciona costo, ganancia ni precio', () => {
+    const { text } = construirConsultaBusqueda('25', hoy);
+    expect(text).not.toMatch(/costo|ganancia|precio/i);
+    expect(text).not.toContain('cosunita');
+    expect(text).not.toContain('precread');
+  });
+
+  it('% y _ quedan escapados en el parametro, nunca como comodines', () => {
+    expect(construirConsultaBusqueda('a%b', hoy).params[2]).toBe('a\\%b');
+    expect(construirConsultaBusqueda('a_b', hoy).params[2]).toBe('a\\_b');
+  });
+
+  it('comilla y ;-- viajan como parametro, jamas en el texto SQL', () => {
+    const ataque = "'; DROP TABLE x;--";
+    const { text, params } = construirConsultaBusqueda(ataque, hoy);
+    expect(text).not.toContain('DROP TABLE');
+    expect(text.toLowerCase()).not.toContain('drop table');
+    expect(params[2]).toBe("'; drop table x;--");
+  });
+});
+
+describe('buscarNotas', () => {
+  beforeEach(() => queryMock.mockReset());
+
+  it('la misma nota en vida y sanjh devuelve 2 filas con empresa distinta', async () => {
+    queryMock.mockResolvedValue([
+      {
+        empresa: 'vida', nota: '002578', fecha_venta: '2026-11-20', cliente: 'ANGELA',
+        vendedor: 'PRAVIN', total_usd: 825, estado: 'facturada', visacion: '431033',
+        fecha_facturacion: '2026-11-21',
+      },
+      {
+        empresa: 'sanjh', nota: '002578', fecha_venta: '2026-11-19', cliente: 'ANGELA',
+        vendedor: 'PRAVIN', total_usd: '10', estado: 'pendiente', visacion: null,
+        fecha_facturacion: null,
+      },
+    ]);
+
+    const r = await buscarNotas('2578', HOY);
+
+    expect(queryMock).toHaveBeenCalledTimes(1);
+    const [text, params] = queryMock.mock.calls[0] as [string, unknown[]];
+    expect(String(text)).toContain('ORDER BY n.fecha_venta DESC');
+    expect(params).toEqual([HOY, '2578', '2578', 8]);
+    expect(r.notas).toHaveLength(2);
+    expect(r.notas.map((n) => n.empresa)).toEqual(['vida', 'sanjh']);
+    expect(r.notas.map((n) => n.empresa_nombre)).toEqual(['Vida Digital', 'SANJH']);
+    expect(r.notas[1]).toMatchObject({ total_usd: 10, estado: 'pendiente' });
+  });
+
+  it('sin filas -> { notas: [] }', async () => {
+    queryMock.mockResolvedValue([]);
+    await expect(buscarNotas('nadie', HOY)).resolves.toEqual({ notas: [] });
   });
 });
