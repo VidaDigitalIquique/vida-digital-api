@@ -3,10 +3,8 @@ import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 import flags from '@/config/feature-flags.json';
 import { sql } from '@/lib/db';
-import { hoyCL } from '@/lib/fechas';
 import { puedeVerVendedores } from '@/lib/roles';
 import { validarFiltrosGuardados } from '@/lib/vendedores-notas';
-import type { FiltrosGuardados } from '@/lib/filtros-validacion';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,14 +26,12 @@ async function autorizar(): Promise<{ error: NextResponse } | { usuarioId: numbe
   return { usuarioId };
 }
 
-function normalizarFiltros(valor: unknown): FiltrosGuardados | null {
-  if (valor && typeof valor === 'object' && !Array.isArray(valor)) return valor as FiltrosGuardados;
+function normalizarFiltros(valor: unknown): unknown {
+  if (valor && typeof valor === 'object' && !Array.isArray(valor)) return valor;
   if (typeof valor === 'string') {
     try {
       const parsed = JSON.parse(valor);
-      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-        ? (parsed as FiltrosGuardados)
-        : null;
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
     } catch {
       return null;
     }
@@ -52,7 +48,11 @@ export async function GET() {
       'SELECT filtros FROM public.vendedores_filtros WHERE usuario_id = $1',
       [auth.usuarioId]
     )) as Array<{ filtros?: unknown }>;
-    return NextResponse.json({ filtros: normalizarFiltros(filas[0]?.filtros) });
+    const obj = normalizarFiltros(filas[0]?.filtros);
+    if (!obj) return NextResponse.json({ filtros: null });
+    // Valida y migra el formato viejo (visacion); lo ilegible se descarta sin romper.
+    const parsed = validarFiltrosGuardados(obj);
+    return NextResponse.json({ filtros: 'error' in parsed ? null : parsed.filtros });
   } catch (error) {
     console.error('GET /api/vendedores/filtros error:', error);
     return NextResponse.json({ error: 'Error al leer los filtros' }, { status: 500 });
@@ -69,7 +69,7 @@ export async function PUT(request: Request) {
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
-  const parsed = validarFiltrosGuardados(raw, hoyCL());
+  const parsed = validarFiltrosGuardados(raw);
   if ('error' in parsed) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
   try {

@@ -73,9 +73,11 @@ B2. Tabla de notas de venta de **ambas empresas** con columna **Empresa** (Vida 
     visación (si tiene), Fecha de facturación (si tiene).
 B3. Filtros:
     - Vendedor (lista de vendedores válidos de las notas, sin los excluidos; incluye a los que también son admin).
-    - Fecha o rango de fechas de la venta (`fechanvt`), con atajos Hoy / Esta semana / Este mes; **por defecto: mes en curso**
-      (hora de Chile).
-    - Fecha o rango de fechas de visación (`fechadoc`), opcional (vacío por defecto); al usarlo solo quedan notas facturadas.
+    - Rango de fechas único (Desde / Hasta), con atajos Hoy / Esta semana / Este mes y "Limpiar fechas"; **por defecto: mes en curso**
+      (hora de Chile). Un interruptor "Buscar por" define a qué fecha se aplica el rango: **Fecha de nota de venta** (`fechanvt`, por
+      defecto) o **Fecha de facturación** (`fechadoc`). En modo facturación solo quedan notas facturadas (las pendientes no tienen fecha
+      de facturación), el estado queda fijo en Facturadas y la tabla se ordena por la fecha de facturación. El modo se guarda por usuario
+      junto con los demás filtros (s12; reemplaza el filtro separado de visación).
     - Estado: Todas / Pendientes de facturar / Facturadas (traspaso hecho).
     - Empresa: Todas / Vida Digital / SANJH (la columna Empresa es pedido de Pablo; el filtro es comodidad).
 B4. **Filtros persistentes por usuario:** se guardan por usuario (en la base, no solo en el navegador) y se restauran al volver a
@@ -146,14 +148,15 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
   Facturada) y el número de visación en las facturadas; no aparecen ventas de PABLO BRAVO, EMPRESA ni sin vendedor, ni notas con
   fecha posterior a hoy
 
-### R5 — Filtros por vendedor, fecha, fecha de visación y estado (riesgo: medio)
+### R5 — Filtros por vendedor, fecha (venta o facturación) y estado (riesgo: medio)
 - Rol: admin
 - Dado: la tabla de VENDEDORES
-- Cuando: elige un vendedor, un rango de fechas y "Pendientes de facturar" (y luego "Facturadas"); después limpia la fecha de venta y
-  elige un rango de fecha de visación
+- Cuando: elige un vendedor, un rango de fechas y "Pendientes de facturar" (y luego "Facturadas"); después pulsa "Fecha de facturación"
+  en el interruptor "Buscar por" con el mismo rango
 - Entonces: la tabla muestra solo notas de ese vendedor, dentro del rango, con el estado elegido; con "Facturadas" todas tienen
-  número de visación y con "Pendientes" ninguna lo tiene; con el rango de visación solo aparecen facturadas cuya fecha de visación
-  está en ese rango
+  número de visación y con "Pendientes" ninguna lo tiene; en modo "Fecha de facturación" el estado queda en Facturadas (Todas y
+  Pendientes deshabilitadas) y solo aparecen facturadas cuya fecha de facturación está en ese rango; una nota vendida el 20 y facturada
+  el 26 aparece con el rango del 26 en modo facturación y no aparece con el rango del 26 en modo venta
 
 ### R6 — Filtros persistentes por usuario (riesgo: medio)
 - Rol: admin
@@ -208,7 +211,7 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
   cuadra con el total, un aviso visible: "Esta nota tiene líneas en el sistema que no suman al total de WinFac (diferencia USD X):
   la ganancia por línea puede incluir productos que no son parte de la venta". Causa raíz por investigar: BACKLOG D13.
 - **Fechas futuras y de facturación anteriores a la venta:** 27 (vida) y 18 (sanjh) facturadas tienen `fechadoc < fechanvt`; el
-  informe va por `fechadoc` (Pablo, pregunta 6), la tabla por `fechanvt`.
+  informe va por `fechadoc` (Pablo, pregunta 6), la tabla por `fechanvt` por defecto (desde s12 el interruptor "Buscar por" permite elegir `fechadoc`).
 - **Dos esquemas idénticos:** consultas a `vida` y `sanjh` unidas con columna empresa; evitar duplicar SQL (Fase A propone).
 - **Zona horaria:** "mes en curso", "hoy" y "fecha futura" en hora de Chile (`lib/fechas.ts`), en servidor y cliente.
 - **Permisos:** página y APIs nuevas validan rol admin (patrón `lib/roles.ts`).

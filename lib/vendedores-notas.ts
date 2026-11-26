@@ -8,25 +8,27 @@ import {
 } from '@/lib/vendedores-detalle';
 import {
   CLAVES_FILTROS,
+  CLAVES_LEGADO,
   fechaFiltroValida,
   fechaValida,
   parsearEstado,
+  parsearModoFecha,
   type FiltrosGuardados,
+  type ModoFecha,
 } from '@/lib/filtros-validacion';
 
-export { fechaFiltroValida, fechaValida, parsearEstado } from '@/lib/filtros-validacion';
-export type { FiltrosGuardados } from '@/lib/filtros-validacion';
+export { fechaFiltroValida, fechaValida, parsearEstado, parsearModoFecha } from '@/lib/filtros-validacion';
+export type { FiltrosGuardados, ModoFecha } from '@/lib/filtros-validacion';
 
 export type EmpresaSlug = 'vida' | 'sanjh';
 export type EstadoNota = 'facturada' | 'pendiente';
 
 export interface FiltrosNotas {
   hoy: string; // YYYY-MM-DD en hora de Chile: corta las notas futuras
-  desde: string | null; // null = sin limite inferior (solo hay filtro de visacion)
-  hasta: string | null; // null = sin limite superior (solo hay filtro de visacion)
+  desde: string | null; // null = sin limite
+  hasta: string | null; // null = sin limite
   vendedor: string | null;
-  visaDesde: string | null;
-  visaHasta: string | null;
+  modoFecha: ModoFecha; // columna del rango: fecha de venta o de facturacion
   estado: EstadoNota | null; // null = todas
   limit: number;
 }
@@ -65,14 +67,10 @@ export function parsearFiltros(
 ): { filtros: FiltrosNotas } | { error: string } {
   const desdeRaw = searchParams.get('desde');
   const hastaRaw = searchParams.get('hasta');
-  const visaDesdeRaw = searchParams.get('visaDesde');
-  const visaHastaRaw = searchParams.get('visaHasta');
 
   for (const [nombre, valor] of [
     ['desde', desdeRaw],
     ['hasta', hastaRaw],
-    ['visaDesde', visaDesdeRaw],
-    ['visaHasta', visaHastaRaw],
   ] as const) {
     if (valor && !fechaValida(valor)) return { error: `fecha ${nombre} inválida` };
   }
@@ -81,21 +79,19 @@ export function parsearFiltros(
   // (filtrosIniciales) y se envia explicito, para que "limpiar fechas" sea posible.
   const desde = desdeRaw || null;
   const hasta = hastaRaw || null;
-  const visaDesde = visaDesdeRaw || null;
-  const visaHasta = visaHastaRaw || null;
-  if (desde && hasta && desde > hasta) return { error: 'rango de fecha de venta inválido' };
-  if (visaDesde && visaHasta && visaDesde > visaHasta) {
-    return { error: 'rango de fecha de visación inválido' };
-  }
+  if (desde && hasta && desde > hasta) return { error: 'rango de fechas inválido' };
+
+  const modoFecha = parsearModoFecha(searchParams.get('modoFecha') ?? '');
+  if (!modoFecha) return { error: 'modoFecha inválido' };
 
   const estadoParam = parsearEstado(searchParams.get('estado') ?? 'todas');
   if (!estadoParam) return { error: 'estado inválido' };
   let estado: EstadoNota | null = estadoParam === 'todas' ? null : estadoParam === 'pendientes' ? 'pendiente' : 'facturada';
 
-  if ((visaDesde || visaHasta) && estado === 'pendiente') {
-    return { error: 'el rango de visación solo aplica a notas facturadas' };
+  if (modoFecha === 'facturacion') {
+    if (estado === 'pendiente') return { error: 'el modo facturación solo aplica a notas facturadas' };
+    estado = 'facturada';
   }
-  if (visaDesde || visaHasta) estado = 'facturada';
 
   const limitRaw = searchParams.get('limit');
   let limit = 300;
@@ -106,62 +102,71 @@ export function parsearFiltros(
   }
 
   return {
-    filtros: { hoy, desde, hasta, vendedor: searchParams.get('vendedor')?.trim() || null, visaDesde, visaHasta, estado, limit },
+    filtros: { hoy, desde, hasta, vendedor: searchParams.get('vendedor')?.trim() || null, modoFecha, estado, limit },
   };
 }
 
+const CLAVES_ACEPTADAS = [...CLAVES_FILTROS, ...CLAVES_LEGADO] as const;
+
 /**
- * Valida y normaliza el JSON guardado por usuario. Reutiliza la validacion de
- * parsearFiltros (fechas, rangos, estado, visacion) sin aplicarle los defaults
- * de mes: lo guardado son las fechas tal como estan en los campos ('' = vacio).
+ * Valida y normaliza el JSON guardado por usuario. Acepta las claves del par de
+ * visacion (formato anterior) y las migra sin abortar: el guardado viejo de un
+ * usuario no debe romper la pantalla.
  */
-export function validarFiltrosGuardados(
-  raw: unknown,
-  hoy: string
-): { filtros: FiltrosGuardados } | { error: string } {
+export function validarFiltrosGuardados(raw: unknown): { filtros: FiltrosGuardados } | { error: string } {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { error: 'filtros inválidos' };
   const obj = raw as Record<string, unknown>;
   for (const clave of Object.keys(obj)) {
-    if (!(CLAVES_FILTROS as readonly string[]).includes(clave)) {
+    if (!(CLAVES_ACEPTADAS as readonly string[]).includes(clave)) {
       return { error: `clave desconocida: ${clave}` };
     }
   }
 
-  const campos = {} as Record<(typeof CLAVES_FILTROS)[number], string>;
-  for (const clave of CLAVES_FILTROS) {
+  const campos = {} as Record<(typeof CLAVES_ACEPTADAS)[number], string>;
+  for (const clave of CLAVES_ACEPTADAS) {
     const valor = obj[clave] ?? '';
     if (typeof valor !== 'string') return { error: `${clave} inválido` };
     campos[clave] = valor.trim();
   }
   if (campos.vendedor.length > 100) return { error: 'vendedor inválido' };
-  for (const clave of ['desde', 'hasta', 'visaDesde', 'visaHasta'] as const) {
-    if (!fechaFiltroValida(campos[clave])) return { error: `fecha ${clave} inválida` };
+
+  const modoFecha = parsearModoFecha(campos.modoFecha);
+  if (!modoFecha) return { error: 'modoFecha inválido' };
+
+  let { desde, hasta } = campos;
+  let estado = campos.estado;
+  let modo: ModoFecha = modoFecha;
+
+  // Migracion A3: visa sin fechas de venta -> facturacion; con fechas -> se descarta.
+  const tieneVisa = Boolean(campos.visaDesde || campos.visaHasta);
+  if (tieneVisa && !desde && !hasta && fechaFiltroValida(campos.visaDesde) && fechaFiltroValida(campos.visaHasta)) {
+    if (!(campos.visaDesde && campos.visaHasta && campos.visaDesde > campos.visaHasta)) {
+      desde = campos.visaDesde;
+      hasta = campos.visaHasta;
+      estado = 'facturadas';
+      modo = 'facturacion';
+    }
   }
+
+  for (const nombre of ['desde', 'hasta'] as const) {
+    if (!fechaFiltroValida(campos[nombre])) return { error: `fecha ${nombre} inválida` };
+  }
+  if (desde && hasta && desde > hasta) return { error: 'rango de fechas inválido' };
+
   const empresa = empresasDe(campos.empresa)
     ? ((campos.empresa || 'todas') as FiltrosGuardados['empresa'])
     : null;
   if (!empresa) return { error: 'empresa inválida' };
-  const estado = parsearEstado(campos.estado || 'todas');
-  if (!estado) return { error: 'estado inválido' };
 
-  const sp = new URLSearchParams();
-  for (const clave of ['vendedor', 'desde', 'hasta', 'visaDesde', 'visaHasta'] as const) {
-    if (campos[clave]) sp.set(clave, campos[clave]);
+  let estadoFiltro = parsearEstado(estado || 'todas');
+  if (!estadoFiltro) return { error: 'estado inválido' };
+  if (modo === 'facturacion') {
+    if (estadoFiltro === 'pendientes') return { error: 'el modo facturación solo aplica a notas facturadas' };
+    estadoFiltro = 'facturadas';
   }
-  if (campos.estado) sp.set('estado', campos.estado);
-  const parsed = parsearFiltros(sp, hoy);
-  if ('error' in parsed) return parsed;
 
   return {
-    filtros: {
-      vendedor: campos.vendedor,
-      desde: campos.desde,
-      hasta: campos.hasta,
-      visaDesde: campos.visaDesde,
-      visaHasta: campos.visaHasta,
-      estado,
-      empresa,
-    },
+    filtros: { vendedor: campos.vendedor, desde, hasta, estado: estadoFiltro, empresa, modoFecha: modo },
   };
 }
 
@@ -177,7 +182,11 @@ export function reglasModulo(esquema: EmpresaSlug): string {
     AND EXISTS (SELECT 1 FROM ${esquema}.itemdcto i WHERE i.knumfoli = m.knumfoli)`;
 }
 
-function bloqueNotas(esquema: EmpresaSlug): string {
+// Columna del rango: SOLO desde este mapa fijo, nunca desde el texto del usuario.
+const COLUMNA_FECHA: Record<ModoFecha, string> = { venta: 'm.fechanvt', facturacion: 'm.fechadoc' };
+
+function bloqueNotas(esquema: EmpresaSlug, modoFecha: ModoFecha): string {
+  const columna = COLUMNA_FECHA[modoFecha];
   return `
   SELECT '${esquema}' AS empresa,
          m.knumfoli::text AS nota,
@@ -191,36 +200,26 @@ function bloqueNotas(esquema: EmpresaSlug): string {
          to_char(m.fechadoc, 'YYYY-MM-DD') AS fecha_facturacion
   FROM ${esquema}.movidcto m
   WHERE ${reglasModulo(esquema)}
-    AND ($2::date IS NULL OR m.fechanvt >= $2::date)
-    AND ($3::date IS NULL OR m.fechanvt <= $3::date)
+    AND ($2::date IS NULL OR ${columna} >= $2::date)
+    AND ($3::date IS NULL OR ${columna} <= $3::date)
     AND ($4::text IS NULL OR btrim(upper(m.vendedor)) = btrim(upper($4)))
-    AND ($5::date IS NULL OR m.fechadoc >= $5::date)
-    AND ($6::date IS NULL OR m.fechadoc <= $6::date)
-    AND ($7::text IS NULL
-      OR ($7='facturada' AND m.pestadot='3' AND btrim(COALESCE(m.visaadua,'')) <> '')
-      OR ($7='pendiente' AND m.pestadot='1' AND btrim(COALESCE(m.visaadua,'')) = ''))`;
+    AND ($5::text IS NULL
+      OR ($5='facturada' AND m.pestadot='3' AND btrim(COALESCE(m.visaadua,'')) <> '')
+      OR ($5='pendiente' AND m.pestadot='1' AND btrim(COALESCE(m.visaadua,'')) = ''))`;
 }
 
 export function construirConsulta(
   empresas: EmpresaSlug[],
   filtros: FiltrosNotas
 ): { text: string; params: unknown[] } {
+  const orden = filtros.modoFecha === 'facturacion' ? 'n.fecha_facturacion DESC NULLS LAST' : 'n.fecha_venta DESC';
   const text = `SELECT n.*, COUNT(*) OVER() AS total
-FROM (${empresas.map(bloqueNotas).join('\n  UNION ALL\n')}) n
-ORDER BY n.fecha_venta DESC, n.empresa, n.nota DESC
-LIMIT $8`;
+FROM (${empresas.map((e) => bloqueNotas(e, filtros.modoFecha)).join('\n  UNION ALL\n')}) n
+ORDER BY ${orden}, n.empresa, n.nota DESC
+LIMIT $6`;
   return {
     text,
-    params: [
-      filtros.hoy,
-      filtros.desde,
-      filtros.hasta,
-      filtros.vendedor,
-      filtros.visaDesde,
-      filtros.visaHasta,
-      filtros.estado,
-      filtros.limit,
-    ],
+    params: [filtros.hoy, filtros.desde, filtros.hasta, filtros.vendedor, filtros.estado, filtros.limit],
   };
 }
 

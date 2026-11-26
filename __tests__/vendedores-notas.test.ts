@@ -1,6 +1,6 @@
 /**
  * S2a — Fase B: tests que intentan romper la API de notas de VENDEDORES.
- * Estado inicial: ROJO (lib/vendedores-notas.ts aun no existe).
+ * S12a — modoFecha venta/facturacion reemplaza el par de visacion.
  */
 import {
   empresasDe,
@@ -13,6 +13,7 @@ import {
   fetchNotas,
   type FiltrosNotas,
 } from '@/lib/vendedores-notas';
+import { parsearModoFecha } from '@/lib/filtros-validacion';
 
 const queryMock = jest.fn();
 jest.mock('@/lib/db', () => ({
@@ -27,8 +28,7 @@ function filtros(over: Partial<FiltrosNotas> = {}): FiltrosNotas {
     desde: '2026-11-01',
     hasta: HOY,
     vendedor: null,
-    visaDesde: null,
-    visaHasta: null,
+    modoFecha: 'venta',
     estado: null,
     limit: 300,
     ...over,
@@ -82,54 +82,130 @@ describe('fechaFiltroValida (campos del cliente)', () => {
   );
 });
 
+describe('parsearModoFecha', () => {
+  it('vacio o venta -> venta; facturacion -> facturacion; otra cosa -> null', () => {
+    expect(parsearModoFecha('')).toBe('venta');
+    expect(parsearModoFecha('venta')).toBe('venta');
+    expect(parsearModoFecha('facturacion')).toBe('facturacion');
+    expect(parsearModoFecha('facturación')).toBeNull();
+    expect(parsearModoFecha('foo')).toBeNull();
+  });
+});
+
 describe('validarFiltrosGuardados', () => {
   const GUARDADOS = {
     vendedor: ' PRAVIN ',
     desde: '2026-11-01',
     hasta: '2026-11-11',
-    visaDesde: '',
-    visaHasta: '',
     estado: 'todas',
     empresa: 'todas',
+    modoFecha: 'venta',
   };
 
   it('normaliza: recorta y conserva las fechas vacias', () => {
-    const r = validarFiltrosGuardados(GUARDADOS, HOY);
+    const r = validarFiltrosGuardados(GUARDADOS);
     expect('error' in r).toBe(false);
     if ('error' in r) return;
     expect(r.filtros).toEqual({
       vendedor: 'PRAVIN',
       desde: '2026-11-01',
       hasta: '2026-11-11',
-      visaDesde: '',
-      visaHasta: '',
       estado: 'todas',
       empresa: 'todas',
+      modoFecha: 'venta',
     });
   });
 
-  it('claves ausentes quedan como "sin filtro"', () => {
-    const r = validarFiltrosGuardados({}, HOY);
+  it('claves ausentes quedan como "sin filtro" y modo fecha venta', () => {
+    const r = validarFiltrosGuardados({});
     expect('error' in r).toBe(false);
     if ('error' in r) return;
     expect(r.filtros).toEqual({
       vendedor: '',
       desde: '',
       hasta: '',
-      visaDesde: '',
-      visaHasta: '',
       estado: 'todas',
       empresa: 'todas',
+      modoFecha: 'venta',
     });
   });
 
-  it('estado y empresa vacios caen a "todas"; visacion fuerza facturadas al consultar', () => {
-    const r = validarFiltrosGuardados({ ...GUARDADOS, estado: '', empresa: '', visaDesde: '2026-11-01' }, HOY);
+  it('estado, empresa y modo fecha vacios caen a "todas"/venta', () => {
+    const r = validarFiltrosGuardados({ ...GUARDADOS, estado: '', empresa: '', modoFecha: '' });
     expect('error' in r).toBe(false);
     if ('error' in r) return;
     expect(r.filtros.estado).toBe('todas');
     expect(r.filtros.empresa).toBe('todas');
-    expect(r.filtros.visaDesde).toBe('2026-11-01');
+    expect(r.filtros.modoFecha).toBe('venta');
+  });
+
+  describe('migracion de filas viejas con visacion (nunca 400)', () => {
+    it('visacion sin fechas de venta -> modo facturacion con esas fechas', () => {
+      const r = validarFiltrosGuardados(
+        {
+          vendedor: 'ANGELA', desde: '', hasta: '',
+          visaDesde: '2026-11-01', visaHasta: '2026-11-30',
+          estado: 'facturadas', empresa: 'todas',
+        }
+      );
+      expect('error' in r).toBe(false);
+      if ('error' in r) return;
+      expect(r.filtros).toEqual({
+        vendedor: 'ANGELA',
+        desde: '2026-11-01',
+        hasta: '2026-11-30',
+        estado: 'facturadas',
+        empresa: 'todas',
+        modoFecha: 'facturacion',
+      });
+    });
+
+    it('visacion con estado "todas" tambien queda facturadas', () => {
+      const r = validarFiltrosGuardados(
+        { vendedor: '', desde: '', hasta: '', visaDesde: '2026-11-01', estado: 'todas', empresa: 'todas' }
+      );
+      expect('error' in r).toBe(false);
+      if ('error' in r) return;
+      expect(r.filtros).toMatchObject({ modoFecha: 'facturacion', estado: 'facturadas', desde: '2026-11-01' });
+    });
+
+    it('visacion con fechas de venta: se descarta y queda en venta', () => {
+      const r = validarFiltrosGuardados(
+        {
+          vendedor: 'PRAVIN', desde: '2026-11-01', hasta: '2026-11-11',
+          visaDesde: '2026-11-02', visaHasta: '2026-11-20',
+          estado: 'facturadas', empresa: 'todas',
+        }
+      );
+      expect('error' in r).toBe(false);
+      if ('error' in r) return;
+      expect(r.filtros).toEqual({
+        vendedor: 'PRAVIN',
+        desde: '2026-11-01',
+        hasta: '2026-11-11',
+        estado: 'facturadas',
+        empresa: 'todas',
+        modoFecha: 'venta',
+      });
+    });
+
+    it('visacion + pendientes no da error: migra a facturadas', () => {
+      const r = validarFiltrosGuardados(
+        { vendedor: '', desde: '', hasta: '', visaDesde: '2026-11-01', estado: 'pendientes', empresa: 'todas' }
+      );
+      expect('error' in r).toBe(false);
+      if ('error' in r) return;
+      expect(r.filtros.estado).toBe('facturadas');
+    });
+
+    it('visacion con basura no da error: se ignora', () => {
+      const r = validarFiltrosGuardados(
+        { vendedor: '', desde: '', hasta: '', visaDesde: 'no-es-fecha', estado: 'todas', empresa: 'todas' }
+      );
+      expect('error' in r).toBe(false);
+      if ('error' in r) return;
+      expect(r.filtros).toMatchObject({ desde: '', hasta: '', modoFecha: 'venta' });
+    });
   });
 
   it.each([
@@ -139,22 +215,22 @@ describe('validarFiltrosGuardados', () => {
     ['clave desconocida', { ...GUARDADOS, usuario_id: 999 }],
     ['clave limit', { ...GUARDADOS, limit: 10 }],
     ['valor no string', { ...GUARDADOS, desde: 20261101 }],
+    ['visa no string', { ...GUARDADOS, visaDesde: 20261101 }],
     ['vendedor no string', { ...GUARDADOS, vendedor: { x: 1 } }],
     ['vendedor demasiado largo', { ...GUARDADOS, vendedor: 'X'.repeat(101) }],
     ['fecha invalida', { ...GUARDADOS, desde: '2026-02-30' }],
     ['fecha parcial', { ...GUARDADOS, hasta: '0002-11-11' }],
     ['rango invertido', { ...GUARDADOS, desde: '2026-11-10', hasta: '2026-11-01' }],
-    ['visacion invertida', { ...GUARDADOS, visaDesde: '2026-11-10', visaHasta: '2026-11-01' }],
-    ['visacion + pendientes', { ...GUARDADOS, visaDesde: '2026-11-01', estado: 'pendientes' }],
+    ['modo fecha invalido', { ...GUARDADOS, modoFecha: 'foo' }],
     ['estado invalido', { ...GUARDADOS, estado: 'facturado' }],
     ['empresa invalida', { ...GUARDADOS, empresa: 'vida; DROP TABLE usuarios' }],
   ])('rechaza %s', (_nombre, raw) => {
-    expect('error' in validarFiltrosGuardados(raw, HOY)).toBe(true);
+    expect('error' in validarFiltrosGuardados(raw)).toBe(true);
   });
 });
 
 describe('parsearFiltros', () => {
-  it('sin parametros: sin fechas de venta (null), todas, limit 300', () => {
+  it('sin parametros: modo venta, sin fechas (null), todas, limit 300', () => {
     const r = parsearFiltros(new URLSearchParams(), HOY);
     expect('error' in r).toBe(false);
     if ('error' in r) return;
@@ -163,8 +239,7 @@ describe('parsearFiltros', () => {
       desde: null,
       hasta: null,
       vendedor: null,
-      visaDesde: null,
-      visaHasta: null,
+      modoFecha: 'venta',
       estado: null,
       limit: 300,
     });
@@ -178,46 +253,46 @@ describe('parsearFiltros', () => {
     expect(r.filtros.hasta).toBeNull();
   });
 
-  it('rango de visacion sin estado -> fuerza facturadas', () => {
-    const r = parsearFiltros(new URLSearchParams('visaDesde=2026-11-01&visaHasta=2026-11-30'), HOY);
+  it('modoFecha vacio -> venta', () => {
+    const r = parsearFiltros(new URLSearchParams('modoFecha='), HOY);
+    expect('error' in r).toBe(false);
+    if ('error' in r) return;
+    expect(r.filtros.modoFecha).toBe('venta');
+  });
+
+  it('modo facturacion sin estado -> fuerza facturadas', () => {
+    const r = parsearFiltros(new URLSearchParams('modoFecha=facturacion&desde=2026-11-26&hasta=2026-11-26'), HOY);
+    expect('error' in r).toBe(false);
+    if ('error' in r) return;
+    expect(r.filtros.modoFecha).toBe('facturacion');
+    expect(r.filtros.estado).toBe('facturada');
+    expect(r.filtros.desde).toBe('2026-11-26');
+    expect(r.filtros.hasta).toBe('2026-11-26');
+  });
+
+  it('modo facturacion con estado "todas" -> facturadas', () => {
+    const r = parsearFiltros(new URLSearchParams('modoFecha=facturacion&estado=todas'), HOY);
     expect('error' in r).toBe(false);
     if ('error' in r) return;
     expect(r.filtros.estado).toBe('facturada');
-    expect(r.filtros.visaDesde).toBe('2026-11-01');
-    expect(r.filtros.visaHasta).toBe('2026-11-30');
   });
 
-  it('solo visacion, sin fechas de venta -> sin restriccion por fecha de venta', () => {
-    const r = parsearFiltros(new URLSearchParams('visaDesde=2026-11-01'), HOY);
-    expect('error' in r).toBe(false);
-    if ('error' in r) return;
-    expect(r.filtros.desde).toBeNull();
-    expect(r.filtros.hasta).toBeNull();
-    expect(r.filtros.estado).toBe('facturada');
-  });
-
-  it('visacion con una fecha de venta no inventa la otra', () => {
-    const r = parsearFiltros(new URLSearchParams('visaHasta=2026-11-30&desde=2026-10-01'), HOY);
-    expect('error' in r).toBe(false);
-    if ('error' in r) return;
-    expect(r.filtros.desde).toBe('2026-10-01');
-    expect(r.filtros.hasta).toBeNull();
-  });
-
-  it('rango de visacion + pendientes -> error', () => {
-    const r = parsearFiltros(new URLSearchParams('visaDesde=2026-11-01&estado=pendientes'), HOY);
+  it('modo facturacion + pendientes -> error', () => {
+    const r = parsearFiltros(new URLSearchParams('modoFecha=facturacion&estado=pendientes'), HOY);
     expect('error' in r).toBe(true);
+  });
+
+  it('modo fecha invalido -> error', () => {
+    expect('error' in parsearFiltros(new URLSearchParams('modoFecha=foo'), HOY)).toBe(true);
   });
 
   it('fecha invalida -> error', () => {
     expect('error' in parsearFiltros(new URLSearchParams('desde=2026-02-30'), HOY)).toBe(true);
     expect('error' in parsearFiltros(new URLSearchParams('hasta=11-11-2026'), HOY)).toBe(true);
-    expect('error' in parsearFiltros(new URLSearchParams('visaHasta=foo'), HOY)).toBe(true);
   });
 
   it('rango invertido -> error', () => {
     expect('error' in parsearFiltros(new URLSearchParams('desde=2026-11-10&hasta=2026-11-01'), HOY)).toBe(true);
-    expect('error' in parsearFiltros(new URLSearchParams('visaDesde=2026-11-10&visaHasta=2026-11-01'), HOY)).toBe(true);
   });
 
   it('estado invalido -> error', () => {
@@ -259,21 +334,41 @@ describe('construirConsulta', () => {
   });
 
   it('futuras: siempre filtra <= hoy, con hoy como $1', () => {
-    const { text, params } = consulta(['vida']);
+    const { text, params } = consulta(['vida'], filtros({ modoFecha: 'facturacion', estado: 'facturada' }));
     expect(text).toContain('m.fechanvt <= $1::date');
     expect(params[0]).toBe(HOY);
   });
 
-  it('desde/hasta null no restringen la venta pero las futuras siguen fuera', () => {
-    const { text, params } = consulta(
-      ['vida'],
-      filtros({ desde: null, hasta: null, visaDesde: '2026-11-01', estado: 'facturada' })
-    );
+  it('modo venta filtra por fechanvt y ordena por fecha de venta', () => {
+    const { text } = consulta(['vida']);
     expect(text).toContain('($2::date IS NULL OR m.fechanvt >= $2::date)');
     expect(text).toContain('($3::date IS NULL OR m.fechanvt <= $3::date)');
+    expect(text).not.toContain('m.fechadoc >= $2::date');
+    expect(text).toContain('ORDER BY n.fecha_venta DESC, n.empresa, n.nota DESC');
+  });
+
+  it('modo facturacion filtra por fechadoc y ordena por fecha de facturacion (nulls al final)', () => {
+    const { text } = consulta(['vida'], filtros({ modoFecha: 'facturacion', estado: 'facturada' }));
+    expect(text).toContain('($2::date IS NULL OR m.fechadoc >= $2::date)');
+    expect(text).toContain('($3::date IS NULL OR m.fechadoc <= $3::date)');
+    expect(text).not.toContain('m.fechanvt >= $2::date');
+    expect(text).toContain('ORDER BY n.fecha_facturacion DESC NULLS LAST, n.empresa, n.nota DESC');
+    // el corte de futuras sigue siendo por venta
     expect(text).toContain('m.fechanvt <= $1::date');
-    expect(params[1]).toBeNull();
-    expect(params[2]).toBeNull();
+  });
+
+  it('desde/hasta null no restringen la fecha elegida pero las futuras siguen fuera', () => {
+    const venta = consulta(['vida'], filtros({ desde: null, hasta: null }));
+    expect(venta.text).toContain('($2::date IS NULL OR m.fechanvt >= $2::date)');
+    expect(venta.params[1]).toBeNull();
+    expect(venta.params[2]).toBeNull();
+
+    const fact = consulta(['vida'], filtros({ desde: null, hasta: null, modoFecha: 'facturacion', estado: 'facturada' }));
+    expect(fact.text).toContain('($2::date IS NULL OR m.fechadoc >= $2::date)');
+    expect(fact.text).toContain('($3::date IS NULL OR m.fechadoc <= $3::date)');
+    expect(fact.text).toContain('m.fechanvt <= $1::date');
+    expect(fact.params[1]).toBeNull();
+    expect(fact.params[2]).toBeNull();
   });
 
   it('excluye PABLO BRAVO, EMPRESA, NULL y vacio', () => {
@@ -296,16 +391,15 @@ describe('construirConsulta', () => {
     expect(text).toContain('visaadua');
   });
 
-  it('parametros en orden: hoy, desde, hasta, vendedor, visa, estado, limit', () => {
+  it('parametros en orden: hoy, desde, hasta, vendedor, estado, limit', () => {
     const f = filtros({
       vendedor: 'PRAVIN',
-      visaDesde: '2026-11-01',
-      visaHasta: '2026-11-30',
+      modoFecha: 'facturacion',
       estado: 'facturada',
       limit: 50,
     });
     const { params } = consulta(['vida'], f);
-    expect(params).toEqual([HOY, '2026-11-01', HOY, 'PRAVIN', '2026-11-01', '2026-11-30', 'facturada', 50]);
+    expect(params).toEqual([HOY, '2026-11-01', HOY, 'PRAVIN', 'facturada', 50]);
   });
 
   it('no interpola texto del usuario en el SQL', () => {
@@ -316,10 +410,11 @@ describe('construirConsulta', () => {
     expect(params[3]).toBe(ataque);
   });
 
-  it('el limit va como parametro, no interpolado', () => {
+  it('el limit va como parametro $6, no interpolado', () => {
     const { text, params } = consulta(['vida'], filtros({ limit: 42 }));
-    expect(text).toContain('LIMIT $8');
-    expect(params[7]).toBe(42);
+    expect(text).toContain('LIMIT $6');
+    expect(text).not.toContain('LIMIT 42');
+    expect(params[5]).toBe(42);
   });
 });
 

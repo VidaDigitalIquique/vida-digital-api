@@ -422,3 +422,18 @@ Con pendientes (alta) o (critica) abiertos, el hook pre-commit bloquea el commit
 - Evidencia valida: qa\s10-intento1 (21 casos: 20 PASA, R10 BLOQUEADO solo por no poder abrir .xlsx). El reintento fue cancelado por el Director (un build compartio .next con el servidor de QA).
 - R10 verificado por el Director abriendo comisiones-2026-11.xlsx: ANGELA 15 notas 109.80, ANIL 0, JOSEPH LEVANO 30 notas 378.06, PRAVIN 27 notas 1083.17, TOTAL 72 notas 157103.40 / comision 1571.03 al 1 % = coincide con la pantalla. R10 = PASA.
 - Exploraciones: EXP-1 (ventas duplicadas en producto 1025: 4 pares identicos, probable dato D14), EXP-2 (500 en /api/deseados/alertas, sin efecto visible), EXP-3 (aviso de hidratacion style en SeguimientosClient), EXP-4 (notas Pendientes con fecha de facturacion, dato de prueba): BACKLOG, severidad media/baja, no bloquean.
+
+## 2026-11-26 14:13 - s12 - commit e8f82e3 - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s12
+- [x] P-20261126-1413-1 (media) HALLAZGO: EXP-1 — Rango invertido en modo facturación: sin hallazgo -> DESCARTADO el agente probó y no hubo hallazgo (aviso correcto, nada se rompe)
+- [x] P-20261126-1413-2 (media) HALLAZGO: EXP-2 — Rango invertido en modo venta: sin hallazgo -> DESCARTADO el agente probó y no hubo hallazgo (aviso correcto, nada se rompe)
+- [x] P-20261126-1413-3 (media) HALLAZGO: EXP-3 — Fechas vacías en modo facturación: sin hallazgo -> DESCARTADO el agente probó y no hubo hallazgo (todas las facturadas, sin pendientes)
+- [x] P-20261126-1413-4 (media) HALLAZGO: EXP-4 — Móvil: tablas cortadas en el borde derecho (observación, severidad baja) -> BACKLOG tablas anchas en móvil (preexistente, no es de s12; ver AUTO-LOG 2026-11-26)
+
+## 2026-11-26 14:25 - s12c - commit e8f82e3 - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s12c
+- Sin pendientes nuevos.
+
+## 2026-11-26 14:24 - s12c - PASA
+- Evidencia: C:\Users\pablo\Documents\_dt-vida-digital\qa\s12c
+- Sin pendientes nuevos (3/3 PASA).

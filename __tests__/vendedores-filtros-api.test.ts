@@ -34,9 +34,19 @@ const VALIDO = {
   vendedor: 'PRAVIN',
   desde: '2026-11-01',
   hasta: '2026-11-11',
-  visaDesde: '',
-  visaHasta: '',
   estado: 'todas',
+  empresa: 'todas',
+  modoFecha: 'venta',
+};
+
+// Fila que dejo guardada la version anterior (par de visacion, sin modoFecha).
+const VIEJO = {
+  vendedor: 'ANGELA',
+  desde: '',
+  hasta: '',
+  visaDesde: '2026-11-01',
+  visaHasta: '2026-11-30',
+  estado: 'facturadas',
   empresa: 'todas',
 };
 
@@ -140,10 +150,46 @@ describe('GET', () => {
     await expect(res.json()).resolves.toMatchObject({ filtros: { vendedor: 'ANGELA' } });
   });
 
-  it('jsonb devuelto como texto se normaliza; basura -> null', async () => {
+  it('fila vieja con visacion: GET migra a modo facturacion y NUNCA devuelve 400', async () => {
+    queryMock.mockResolvedValue([{ filtros: VIEJO }]);
+    const res = await GET();
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({
+      filtros: {
+        vendedor: 'ANGELA',
+        desde: '2026-11-01',
+        hasta: '2026-11-30',
+        estado: 'facturadas',
+        empresa: 'todas',
+        modoFecha: 'facturacion',
+      },
+    });
+  });
+
+  it('fila vieja con visacion + fechas de venta: queda en venta y descarta visa', async () => {
+    queryMock.mockResolvedValue([
+      { filtros: { ...VIEJO, desde: '2026-11-02', hasta: '2026-11-10' } },
+    ]);
+    const res = await GET();
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({
+      filtros: {
+        desde: '2026-11-02',
+        hasta: '2026-11-10',
+        estado: 'facturadas',
+        modoFecha: 'venta',
+      },
+    });
+  });
+
+  it('jsonb devuelto como texto se normaliza; basura o contenido invalido -> null', async () => {
     queryMock.mockResolvedValueOnce([{ filtros: JSON.stringify(VALIDO) }]);
     await expect((await GET()).json()).resolves.toEqual({ filtros: VALIDO });
     queryMock.mockResolvedValueOnce([{ filtros: '{no-json' }]);
+    await expect((await GET()).json()).resolves.toEqual({ filtros: null });
+    queryMock.mockResolvedValueOnce([{ filtros: { ...VALIDO, desde: 20261101 } }]);
+    await expect((await GET()).json()).resolves.toEqual({ filtros: null });
+    queryMock.mockResolvedValueOnce([{ filtros: { ...VALIDO, usuario_id: 9 } }]);
     await expect((await GET()).json()).resolves.toEqual({ filtros: null });
   });
 
@@ -176,6 +222,21 @@ describe('PUT', () => {
     expect((queryMock.mock.calls[0] as [string, unknown[]])[1][0]).toBe(2);
   });
 
+  it('body viejo con visacion se guarda ya migrado (6 claves, modo facturacion)', async () => {
+    const res = await PUT(pedir(VIEJO));
+    expect(res.status).toBe(200);
+    const [, params] = queryMock.mock.calls[0] as [string, unknown[]];
+    expect(JSON.parse(String(params[1]))).toEqual({
+      vendedor: 'ANGELA',
+      desde: '2026-11-01',
+      hasta: '2026-11-30',
+      estado: 'facturadas',
+      empresa: 'todas',
+      modoFecha: 'facturacion',
+    });
+    await expect(res.json()).resolves.toMatchObject({ filtros: { modoFecha: 'facturacion' } });
+  });
+
   it('usuario_id en el body -> 400 por clave desconocida, sin tocar la base', async () => {
     const res = await PUT(pedir({ ...VALIDO, usuario_id: 999 }));
     expect(res.status).toBe(400);
@@ -200,8 +261,9 @@ describe('PUT', () => {
       { ...VALIDO, desde: '2026-02-30' },
       { ...VALIDO, desde: '0002-11-11' },
       { ...VALIDO, desde: '2026-11-10', hasta: '2026-11-01' },
-      { ...VALIDO, visaDesde: '2026-11-10', visaHasta: '2026-11-01' },
-      { ...VALIDO, visaDesde: '2026-11-01', estado: 'pendientes' },
+      { ...VALIDO, modoFecha: 'foo' },
+      { ...VALIDO, modoFecha: 'facturacion', estado: 'pendientes' },
+      { ...VALIDO, visaDesde: 20261101 },
       { ...VALIDO, estado: 'facturado' },
       { ...VALIDO, empresa: 'foo' },
       { ...VALIDO, vendedor: 'X'.repeat(101) },

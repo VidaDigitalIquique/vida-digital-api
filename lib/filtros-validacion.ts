@@ -3,26 +3,21 @@
 
 export type EmpresaFiltro = 'todas' | 'vida' | 'sanjh';
 export type EstadoFiltro = 'todas' | 'pendientes' | 'facturadas';
+export type ModoFecha = 'venta' | 'facturacion';
 
 export interface FiltrosGuardados {
   vendedor: string;
   desde: string;
   hasta: string;
-  visaDesde: string;
-  visaHasta: string;
   estado: EstadoFiltro;
   empresa: EmpresaFiltro;
+  modoFecha: ModoFecha;
 }
 
-export const CLAVES_FILTROS = [
-  'vendedor',
-  'desde',
-  'hasta',
-  'visaDesde',
-  'visaHasta',
-  'estado',
-  'empresa',
-] as const;
+export const CLAVES_FILTROS = ['vendedor', 'desde', 'hasta', 'estado', 'empresa', 'modoFecha'] as const;
+
+/** Claves del formato anterior (par de visacion): solo se leen para migrar. */
+export const CLAVES_LEGADO = ['visaDesde', 'visaHasta'] as const;
 
 export function fechaValida(valor: string | null): boolean {
   if (valor === null) return true;
@@ -40,5 +35,12 @@ export function fechaFiltroValida(valor: string): boolean {
 
 export function parsearEstado(valor: string): EstadoFiltro | null {
   if (valor === 'todas' || valor === 'pendientes' || valor === 'facturadas') return valor;
+  return null;
+}
+
+/** Vacio = fila del formato viejo sin modo: se trata como venta. */
+export function parsearModoFecha(valor: string): ModoFecha | null {
+  if (valor === '' || valor === 'venta') return 'venta';
+  if (valor === 'facturacion') return 'facturacion';
   return null;
 }

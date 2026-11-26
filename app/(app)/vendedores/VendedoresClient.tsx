@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { fechaDiaCL, hoyCL, lunesSemanaCL, primerDiaMesCL } from '@/lib/fechas';
-import { fechaFiltroValida, type FiltrosGuardados } from '@/lib/filtros-validacion';
+import { fechaFiltroValida, type FiltrosGuardados, type ModoFecha } from '@/lib/filtros-validacion';
 import { formatUSD } from '@/lib/utils';
 import type { NotaVenta } from '@/lib/vendedores-notas';
 import { NotaDetalleModal } from './NotaDetalleModal';
@@ -17,10 +17,9 @@ function canonizar(f: FiltrosGuardados): string {
     vendedor: f.vendedor,
     desde: f.desde,
     hasta: f.hasta,
-    visaDesde: f.visaDesde,
-    visaHasta: f.visaHasta,
     estado: f.estado,
     empresa: f.empresa,
+    modoFecha: f.modoFecha,
   });
 }
 
@@ -32,10 +31,9 @@ function filtrosIniciales(f: FiltrosGuardados | null): FiltrosGuardados {
     vendedor: f?.vendedor ?? '',
     desde: f?.desde ?? '',
     hasta: f?.hasta ?? '',
-    visaDesde: f?.visaDesde ?? '',
-    visaHasta: f?.visaHasta ?? '',
     estado: f?.estado || 'todas',
     empresa: f?.empresa || 'todas',
+    modoFecha: f?.modoFecha || 'venta',
   };
   if (f) return filtros;
   return { ...filtros, desde: primerDiaMesCL(), hasta: hoyCL() };
@@ -64,9 +62,8 @@ export function VendedoresClient() {
   const [vendedor, setVendedor] = useState('');
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
-  const [visaDesde, setVisaDesde] = useState('');
-  const [visaHasta, setVisaHasta] = useState('');
   const [estado, setEstado] = useState<EstadoFiltro>('todas');
+  const [modoFecha, setModoFecha] = useState<ModoFecha>('venta');
   const [empresa, setEmpresa] = useState<EmpresaFiltro>('todas');
   const [pagina, setPagina] = useState(1);
   const [tamanoPagina, setTamanoPagina] = useState<25 | 50 | 100>(25);
@@ -82,7 +79,6 @@ export function VendedoresClient() {
   const pendiente = useRef<string | null>(null);
   const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [seleccion, setSeleccion] = useState<{ empresa: 'vida' | 'sanjh'; nota: string } | null>(null);
-  const hayVisacion = Boolean(visaDesde || visaHasta);
   const paginas = Math.max(1, Math.ceil((data?.notas.length ?? 0) / tamanoPagina));
   const paginaEfectiva = Math.max(1, Math.min(pagina, paginas));
   const notasVisibles = data?.notas.slice((paginaEfectiva - 1) * tamanoPagina, paginaEfectiva * tamanoPagina);
@@ -90,7 +86,7 @@ export function VendedoresClient() {
   // Incluso un filtro temporalmente invalido reinicia la navegacion local.
   useEffect(() => {
     setPagina(1);
-  }, [vendedor, desde, hasta, visaDesde, visaHasta, estado, empresa]);
+  }, [vendedor, desde, hasta, estado, empresa, modoFecha]);
 
   const cambiarTamano = (tamano: 25 | 50 | 100) => {
     setTamanoPagina(tamano);
@@ -124,14 +120,12 @@ export function VendedoresClient() {
   }, []);
 
   // EXP-1/EXP-3: solo se consulta (y se guarda) con fechas completas y rangos validos.
-  const fechasCompletas = [desde, hasta, visaDesde, visaHasta].every(fechaFiltroValida);
+  const fechasCompletas = [desde, hasta].every(fechaFiltroValida);
   const errorFechas = !fechasCompletas
     ? 'Hay una fecha incompleta o inválida.'
     : desde && hasta && desde > hasta
       ? 'La fecha desde es posterior a la fecha hasta'
-      : visaDesde && visaHasta && visaDesde > visaHasta
-        ? 'La fecha de visación desde es posterior a la fecha de visación hasta'
-        : '';
+      : '';
 
   // R6: restaurar ANTES de pedir notas (una sola consulta inicial).
   useEffect(() => {
@@ -139,14 +133,17 @@ export function VendedoresClient() {
     const aplicar = (f: FiltrosGuardados | null) => {
       if (!vivo) return;
       const filtros = filtrosIniciales(f);
+      guardado.current = canonizar(filtros);
+      // s12c: en facturacion no existe "Todas"/"Pendientes"; un guardado viejo se
+      // normaliza antes del primer fetch. guardado.current conserva el valor crudo
+      // para que el efecto de guardado persista el normalizado.
+      if (filtros.modoFecha === 'facturacion') filtros.estado = 'facturadas';
       setVendedor(filtros.vendedor);
       setDesde(filtros.desde);
       setHasta(filtros.hasta);
-      setVisaDesde(filtros.visaDesde);
-      setVisaHasta(filtros.visaHasta);
       setEstado(filtros.estado);
       setEmpresa(filtros.empresa);
-      guardado.current = canonizar(filtros);
+      setModoFecha(filtros.modoFecha);
       setInicializando(false);
     };
     fetch('/api/vendedores/filtros')
@@ -168,10 +165,9 @@ export function VendedoresClient() {
     if (vendedor) params.set('vendedor', vendedor);
     if (desde) params.set('desde', desde);
     if (hasta) params.set('hasta', hasta);
-    if (visaDesde) params.set('visaDesde', visaDesde);
-    if (visaHasta) params.set('visaHasta', visaHasta);
     if (estado !== 'todas') params.set('estado', estado);
     if (empresa !== 'todas') params.set('empresa', empresa);
+    if (modoFecha === 'facturacion') params.set('modoFecha', 'facturacion');
 
     const qs = params.toString();
     setCargando(true);
@@ -192,12 +188,12 @@ export function VendedoresClient() {
         setError(true);
         setCargando(false);
       });
-  }, [inicializando, errorFechas, vendedor, desde, hasta, visaDesde, visaHasta, estado, empresa]);
+  }, [inicializando, errorFechas, vendedor, desde, hasta, estado, empresa, modoFecha]);
 
   // R6: guardar con debounce. Un fallo no rompe la pantalla: solo avisa.
   useEffect(() => {
     if (inicializando || errorFechas) return;
-    const json = canonizar({ vendedor, desde, hasta, visaDesde, visaHasta, estado, empresa });
+    const json = canonizar({ vendedor, desde, hasta, estado, empresa, modoFecha });
     if (json === guardado.current) {
       pendiente.current = null;
       return;
@@ -220,7 +216,7 @@ export function VendedoresClient() {
     }, 500);
     temporizador.current = t;
     return () => clearTimeout(t);
-  }, [inicializando, errorFechas, vendedor, desde, hasta, visaDesde, visaHasta, estado, empresa]);
+  }, [inicializando, errorFechas, vendedor, desde, hasta, estado, empresa, modoFecha]);
 
   // D3: la fecha de hoy se calcula en el click, nunca durante el render.
   const atajo = (d: string, h: string) => {
@@ -229,21 +225,15 @@ export function VendedoresClient() {
   };
 
   // EXP-1: limpiar deja las fechas vacias (= sin limite); no vuelve a imponer el mes.
-  const limpiarFechasVenta = () => {
+  const limpiarFechas = () => {
     setDesde('');
     setHasta('');
   };
 
-  // EXP-1: cada campo acepta quedar vacio sin que el otro se rellene por detras.
-  const cambiarFechaVenta = (valor: string, cual: 'desde' | 'hasta') => {
-    if (cual === 'desde') setDesde(valor);
-    else setHasta(valor);
-  };
-
-  const cambiarVisa = (valor: string, cual: 'desde' | 'hasta') => {
-    if (cual === 'desde') setVisaDesde(valor);
-    else setVisaHasta(valor);
-    if (valor) setEstado('facturadas');
+  // En facturacion la nota aun pendiente no tiene fecha: el estado se fuerza a facturadas.
+  const cambiarModo = (modo: ModoFecha) => {
+    setModoFecha(modo);
+    if (modo === 'facturacion') setEstado('facturadas');
   };
 
   // EXP-3: no pintar filtros con valores provisorios antes de restaurar; el
@@ -279,24 +269,48 @@ export function VendedoresClient() {
           </select>
         </label>
 
+        <div className="flex flex-col gap-1 text-xs text-zinc-500">
+          <span id="modo-fecha-label">Buscar por:</span>
+          <div role="group" aria-labelledby="modo-fecha-label" className="flex flex-wrap gap-1">
+            {(['venta', 'facturacion'] as const).map((modo) => (
+              <button
+                key={modo}
+                type="button"
+                aria-pressed={modoFecha === modo}
+                onClick={() => cambiarModo(modo)}
+                className={`rounded-md border px-2 py-1.5 text-xs ${
+                  modoFecha === modo
+                    ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900'
+                    : 'border-zinc-300 dark:border-zinc-700'
+                }`}
+              >
+                {modo === 'venta' ? 'Fecha de nota de venta' : 'Fecha de facturación'}
+              </button>
+            ))}
+          </div>
+          {modoFecha === 'facturacion' && (
+            <p className="text-zinc-500">Solo notas facturadas: las pendientes aún no tienen fecha de facturación.</p>
+          )}
+        </div>
+
         <label className="flex flex-col gap-1 text-xs text-zinc-500">
-          Fecha de venta desde
+          Desde
           <input
-            aria-label="Fecha de venta desde"
+            aria-label="Fecha desde"
             type="date"
             value={desde}
-            onChange={(e) => cambiarFechaVenta(e.target.value, 'desde')}
+            onChange={(e) => setDesde(e.target.value)}
             className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 py-1.5 text-sm"
           />
         </label>
 
         <label className="flex flex-col gap-1 text-xs text-zinc-500">
-          Fecha de venta hasta
+          Hasta
           <input
-            aria-label="Fecha de venta hasta"
+            aria-label="Fecha hasta"
             type="date"
             value={hasta}
-            onChange={(e) => cambiarFechaVenta(e.target.value, 'hasta')}
+            onChange={(e) => setHasta(e.target.value)}
             className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 py-1.5 text-sm"
           />
         </label>
@@ -311,43 +325,23 @@ export function VendedoresClient() {
           <button type="button" onClick={() => atajo(primerDiaMesCL(), hoyCL())} className="rounded-md border px-2 py-1.5 text-xs">
             Este mes
           </button>
-          <button type="button" onClick={limpiarFechasVenta} className="rounded-md border px-2 py-1.5 text-xs">
-            Limpiar fechas de venta
+          <button type="button" onClick={limpiarFechas} className="rounded-md border px-2 py-1.5 text-xs">
+            Limpiar fechas
           </button>
         </div>
-
-        <label className="flex flex-col gap-1 text-xs text-zinc-500">
-          Visación desde
-          <input
-            aria-label="Fecha de visación desde"
-            type="date"
-            value={visaDesde}
-            onChange={(e) => cambiarVisa(e.target.value, 'desde')}
-            className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 py-1.5 text-sm"
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-xs text-zinc-500">
-          Visación hasta
-          <input
-            aria-label="Fecha de visación hasta"
-            type="date"
-            value={visaHasta}
-            onChange={(e) => cambiarVisa(e.target.value, 'hasta')}
-            className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 py-1.5 text-sm"
-          />
-        </label>
 
         <label className="flex flex-col gap-1 text-xs text-zinc-500">
           Estado
           <select
             aria-label="Estado"
-            value={estado}
-            onChange={(e) => setEstado(hayVisacion ? 'facturadas' : (e.target.value as EstadoFiltro))}
+            value={modoFecha === 'facturacion' ? 'facturadas' : estado}
+            onChange={(e) => setEstado(e.target.value as EstadoFiltro)}
             className="rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 py-1.5 text-sm"
           >
-            <option value="todas">Todas</option>
-            <option value="pendientes" disabled={hayVisacion}>
+            <option value="todas" disabled={modoFecha === 'facturacion'}>
+              Todas
+            </option>
+            <option value="pendientes" disabled={modoFecha === 'facturacion'}>
               Pendientes
             </option>
             <option value="facturadas">Facturadas</option>
@@ -369,9 +363,6 @@ export function VendedoresClient() {
         </label>
       </div>
 
-      {hayVisacion && (
-        <p className="text-xs text-zinc-500">Con rango de visación solo se muestran notas facturadas.</p>
-      )}
       {avisoGuardado && <p className="text-xs text-amber-600">No se pudieron guardar los filtros.</p>}
 
       {errorFechas && <p className="py-8 text-center text-amber-600">{errorFechas}</p>}

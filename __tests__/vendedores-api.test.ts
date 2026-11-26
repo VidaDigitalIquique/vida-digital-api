@@ -104,12 +104,16 @@ describe('validacion', () => {
   it('fechas invalidas o invertidas -> 400', async () => {
     expect((await GET(req('desde=2026-02-30'))).status).toBe(400);
     expect((await GET(req('desde=2026-11-10&hasta=2026-11-01'))).status).toBe(400);
-    expect((await GET(req('visaDesde=2026-11-10&visaHasta=2026-11-01'))).status).toBe(400);
     expect(queryMock).not.toHaveBeenCalled();
   });
 
-  it('visacion + pendientes -> 400', async () => {
-    const res = await GET(req('visaDesde=2026-11-01&estado=pendientes'));
+  it('modo fecha invalido -> 400', async () => {
+    expect((await GET(req('modoFecha=foo'))).status).toBe(400);
+    expect(queryMock).not.toHaveBeenCalled();
+  });
+
+  it('modo facturacion + pendientes -> 400', async () => {
+    const res = await GET(req('modoFecha=facturacion&estado=pendientes'));
     expect(res.status).toBe(400);
     expect(queryMock).not.toHaveBeenCalled();
   });
@@ -131,6 +135,8 @@ describe('defaults en hora de Chile', () => {
     expect(params[0]).toBe('2026-11-11');
     expect(params[1]).toBeNull();
     expect(params[2]).toBeNull();
+    expect(params[4]).toBeNull();
+    expect(params[5]).toBe(300);
   });
 });
 
@@ -148,29 +154,33 @@ describe('consulta', () => {
     expect(vida).not.toContain('sanjh.');
   });
 
-  it('reenvia vendedor, visacion y estado como parametros', async () => {
-    await GET(req('vendedor=PRAVIN&visaDesde=2026-11-01&visaHasta=2026-11-30&estado=todas'));
-    const [, params] = queryMock.mock.calls[0] as [string, unknown[]];
+  it('reenvia vendedor y estado; facturacion filtra por fechadoc', async () => {
+    await GET(req('vendedor=PRAVIN&modoFecha=facturacion&desde=2026-11-01&hasta=2026-11-30&estado=todas'));
+    const [text, params] = queryMock.mock.calls[0] as [string, unknown[]];
     expect(params[3]).toBe('PRAVIN');
-    expect(params[4]).toBe('2026-11-01');
-    expect(params[5]).toBe('2026-11-30');
-    expect(params[6]).toBe('facturada');
+    expect(params[4]).toBe('facturada');
+    expect(params[5]).toBe(300);
+    expect(String(text)).toContain('m.fechadoc >= $2::date');
+    expect(String(text)).toContain('m.fechadoc <= $3::date');
+    expect(String(text)).toContain('ORDER BY n.fecha_facturacion DESC NULLS LAST');
   });
 
-  it('solo visacion: no manda desde/hasta (null) y sigue cortando futuras', async () => {
-    await GET(req('visaDesde=2026-11-01'));
+  it('facturacion sin fechas: desde/hasta null, corte de futuras por venta y orden por facturacion', async () => {
+    await GET(req('modoFecha=facturacion&desde=&hasta='));
     const [text, params] = queryMock.mock.calls[0] as [string, unknown[]];
     expect(typeof params[0]).toBe('string');
     expect(params[1]).toBeNull();
     expect(params[2]).toBeNull();
+    expect(params[4]).toBe('facturada');
     expect(String(text)).toContain('m.fechanvt <= $1::date');
-    expect(String(text)).toContain('$2::date IS NULL');
+    expect(String(text)).toContain('($2::date IS NULL OR m.fechadoc >= $2::date)');
+    expect(String(text)).toContain('ORDER BY n.fecha_facturacion DESC NULLS LAST');
   });
 
   it('limit 999 se acota a 500 y se informa en la respuesta', async () => {
     const res = await GET(req('limit=999'));
     const [, params] = queryMock.mock.calls[0] as [string, unknown[]];
-    expect(params[7]).toBe(500);
+    expect(params[5]).toBe(500);
     expect((await res.json()).limit).toBe(500);
   });
 });
