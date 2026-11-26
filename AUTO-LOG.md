@@ -191,3 +191,11 @@
 - QA: s12d 3/3 PASA (0.49 USD); s12e 2 obligatorios PASA + 1 BLOQUEADO (modo oscuro no emulable por el agente: limitacion, sin revisar) (0.42 USD). Observacion: al apagar el switch Estado queda en Facturadas (comportamiento de diseno).
 - Backlog: F1 buscador por nota y cliente en /vendedores (BACKLOG-DEBUGGING.md).
 - Commit en rama feat/vendedores-toggle-switch. NO esta en main. Pendiente: decision de Pablo sobre produccion.
+
+
+## 2026-11-26 - s13g: Ganancia por periodo con atajos de rango
+- Pedido de Pablo: el filtro de fechas de Ganancia por periodo 'no funciona'. Causa (evidencia): los botones Dia/Semana/Mes/Año agrupan las filas del mismo rango (requisito S8: el Total no cambia al agrupar), no fijan el rango; el panel no tenia atajos de rango, por eso el Total era siempre el mismo.
+- Cambio: atajos Hoy / Esta semana / Este mes (fijan Desde/Hasta con una sola consulta, fechas calculadas en el click), etiqueta visible 'Agrupar por:' y nota 'El rango usa la fecha de la nota de venta.'. Sin cambios de API ni de consulta.
+- Programador deep: 3.62 USD. Verificacion propia: diff contra contrato; jest vendedores 16 suites / 398 tests verdes, tsc 0, build OK; lint=1 preexistente.
+- QA s13g: 3/3 PASA (0.43 USD; Total Este mes igual en Dia/Semana/Mes/Año; movil sin cortes). Limitacion: Hoy y Esta semana dieron 0 por falta de ventas en esos dias en la base de pruebas.
+- Commit en rama feat/vendedores-toggle-switch. NO esta en main.

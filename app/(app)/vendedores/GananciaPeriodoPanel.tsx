@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { formatUSD } from '@/lib/utils';
+import { hoyCL, lunesSemanaCL, primerDiaMesCL } from '@/lib/fechas';
 import type { Agrupacion, EstadoGanancia, InformeGanancia } from '@/lib/vendedores-ganancia-tipos';
 
 const GRUPOS: { valor: Agrupacion; texto: string }[] = [
@@ -105,6 +106,13 @@ export function GananciaPeriodoPanel() {
     cargar(new URLSearchParams({ agrupar: agrupacion, desde, hasta, estado: valor }));
   };
 
+  // D3: las fechas del atajo se calculan en el click, nunca durante el render.
+  const atajo = (d: string, h: string) => {
+    setDesde(d);
+    setHasta(h);
+    cargar(new URLSearchParams({ agrupar: agrupacion, desde: d, hasta: h, estado }));
+  };
+
   const cambiarFecha = (campo: 'desde' | 'hasta', valor: string) => {
     if (campo === 'desde') setDesde(valor);
     else setHasta(valor);
@@ -123,6 +131,7 @@ export function GananciaPeriodoPanel() {
       <h2 className="text-xl font-bold tracking-tight">Ganancia por periodo</h2>
 
       <div className="flex flex-wrap items-end gap-3 rounded-md border border-zinc-200 dark:border-zinc-800 p-3">
+        <span className="text-xs text-zinc-500">Agrupar por:</span>
         <div className="flex flex-wrap gap-1" role="group" aria-label="Agrupar por">
           {GRUPOS.map((g) => (
             <button
@@ -148,6 +157,17 @@ export function GananciaPeriodoPanel() {
           Hasta
           <input aria-label="Hasta" type="date" value={hasta} onChange={(e) => cambiarFecha('hasta', e.target.value)} className={CAMPO} />
         </label>
+        <div className="flex gap-1">
+          <button type="button" onClick={() => atajo(hoyCL(), hoyCL())} className="rounded-md border px-2 py-1.5 text-xs">
+            Hoy
+          </button>
+          <button type="button" onClick={() => atajo(lunesSemanaCL(), hoyCL())} className="rounded-md border px-2 py-1.5 text-xs">
+            Esta semana
+          </button>
+          <button type="button" onClick={() => atajo(primerDiaMesCL(), hoyCL())} className="rounded-md border px-2 py-1.5 text-xs">
+            Este mes
+          </button>
+        </div>
         <label className="flex flex-col gap-1 text-xs text-zinc-500">
           Estado
           <select aria-label="Estado" value={estado} onChange={(e) => cambiarEstado(e.target.value as EstadoGanancia)} className={CAMPO}>
@@ -157,6 +177,7 @@ export function GananciaPeriodoPanel() {
           </select>
         </label>
       </div>
+      <p className="text-xs text-zinc-500">El rango usa la fecha de la nota de venta.</p>
 
       {cargando && <p className="py-8 text-center text-zinc-400">Cargando...</p>}
       {!cargando && aviso && <p role="alert" className="py-8 text-center text-red-600">{aviso}</p>}

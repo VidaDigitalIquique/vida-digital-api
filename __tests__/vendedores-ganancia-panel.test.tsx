@@ -5,7 +5,7 @@
  * La UI no recalcula: pinta las filas y totales que devuelve la API.
  */
 import React from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { InformeGanancia } from '@/lib/vendedores-ganancia-tipos';
 import { GananciaPeriodoPanel } from '@/app/(app)/vendedores/GananciaPeriodoPanel';
 
@@ -208,6 +208,164 @@ describe('estados de la carga', () => {
 
     expect(screen.queryByText('24-11-2026')).not.toBeInTheDocument();
     expect(screen.getByText('Sem. 23-11-2026 (lun)')).toBeInTheDocument();
+  });
+});
+
+describe('s13g atajos rapidos de rango', () => {
+  // 2026-11-27T02:30:00Z = 2026-11-26 23:30 en America/Santiago (UTC-3):
+  // hoy CL = 2026-11-26 (jueves), lunes = 2026-11-23, dia 1 del mes = 2026-11-01.
+  const NO_FALSOS = [
+    'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval',
+    'setImmediate', 'clearImmediate', 'nextTick', 'queueMicrotask',
+    'requestAnimationFrame', 'cancelAnimationFrame',
+    'requestIdleCallback', 'cancelIdleCallback', 'hrtime', 'performance',
+  ] as const;
+
+  beforeEach(() => {
+    jest.useFakeTimers({ now: new Date('2026-11-27T02:30:00Z'), doNotFake: [...NO_FALSOS] });
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
+  // Eco: devuelve la agrupacion/estado/fechas pedidas y, si se indica, un total distinto por rango.
+  function eco(base: InformeGanancia = DIA, totalesPorDesde: Record<string, number> = {}) {
+    const fn = jest.fn((url: string) => {
+      const p = params(url);
+      if (!p.has('desde')) {
+        return Promise.resolve({ ok: true, status: 200, json: async () => base });
+      }
+      const desde = p.get('desde') as string;
+      const total = totalesPorDesde[desde];
+      const cuerpo: InformeGanancia = {
+        ...base,
+        agrupacion: (p.get('agrupar') ?? base.agrupacion) as InformeGanancia['agrupacion'],
+        estado: (p.get('estado') ?? base.estado) as InformeGanancia['estado'],
+        desde,
+        hasta: p.get('hasta') as string,
+        ...(total !== undefined ? { totales: { vida_usd: total, sanjh_usd: 0, total_usd: total } } : {}),
+      };
+      return Promise.resolve({ ok: true, status: 200, json: async () => cuerpo });
+    });
+    global.fetch = fn as unknown as typeof fetch;
+    return fn;
+  }
+
+  async function montarCon(fn: jest.Mock) {
+    render(<GananciaPeriodoPanel />);
+    await screen.findByText('24-11-2026');
+    return fn;
+  }
+
+  it('G1: Hoy fija desde=hasta=2026-11-26 con la agrupacion y estado vigentes', async () => {
+    const fn = await montarCon(eco());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Semana' }));
+    await waitFor(() => expect(fn).toHaveBeenCalledTimes(2));
+    fireEvent.change(screen.getByLabelText('Estado'), { target: { value: 'pendientes' } });
+    await waitFor(() => expect(fn).toHaveBeenCalledTimes(3));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hoy' }));
+    await waitFor(() => expect(fn).toHaveBeenCalledTimes(4));
+
+    const p = params(fn.mock.calls[3][0]);
+    expect(p.get('desde')).toBe('2026-11-26');
+    expect(p.get('hasta')).toBe('2026-11-26');
+    expect(p.get('agrupar')).toBe('semana');
+    expect(p.get('estado')).toBe('pendientes');
+  });
+
+  it('G2: Esta semana fija desde=2026-11-23 y hasta=2026-11-26', async () => {
+    const fn = await montarCon(eco());
+    fireEvent.click(screen.getByRole('button', { name: 'Esta semana' }));
+    await waitFor(() => expect(fn).toHaveBeenCalledTimes(2));
+
+    const p = params(fn.mock.calls[1][0]);
+    expect(p.get('desde')).toBe('2026-11-23');
+    expect(p.get('hasta')).toBe('2026-11-26');
+    expect(p.get('agrupar')).toBe('dia');
+    expect(p.get('estado')).toBe('facturadas');
+  });
+
+  it('G3: Este mes fija desde=2026-11-01 y hasta=2026-11-26', async () => {
+    const fn = await montarCon(eco());
+    fireEvent.click(screen.getByRole('button', { name: 'Este mes' }));
+    await waitFor(() => expect(fn).toHaveBeenCalledTimes(2));
+
+    const p = params(fn.mock.calls[1][0]);
+    expect(p.get('desde')).toBe('2026-11-01');
+    expect(p.get('hasta')).toBe('2026-11-26');
+  });
+
+  it('G4: un solo fetch por clic y el Total cambia con el total del nuevo rango', async () => {
+    const fn = await montarCon(eco(DIA, { '2026-11-26': 999 }));
+    expect(screen.getAllByText('$160.75').length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hoy' }));
+    await waitFor(() => expect(fn).toHaveBeenCalledTimes(2));
+
+    expect((await screen.findAllByText('$999.00')).length).toBeGreaterThan(0);
+    expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  it('G5: tras un atajo, cambiar la agrupacion conserva las fechas y el mismo Total (S8)', async () => {
+    const fn = await montarCon(eco(DIA, { '2026-11-26': 999 }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hoy' }));
+    await screen.findAllByText('$999.00');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mes' }));
+    await waitFor(() => expect(fn).toHaveBeenCalledTimes(3));
+
+    const p = params(fn.mock.calls[2][0]);
+    expect(p.get('agrupar')).toBe('mes');
+    expect(p.get('desde')).toBe('2026-11-26');
+    expect(p.get('hasta')).toBe('2026-11-26');
+    expect((await screen.findAllByText('$999.00')).length).toBeGreaterThan(0);
+  });
+
+  it('G6: "Agrupar por:" es visible y los atajos no son botones del grupo', async () => {
+    await montarCon(eco());
+
+    expect(screen.getByText('Agrupar por:')).toBeInTheDocument();
+    const grupo = screen.getByRole('group', { name: 'Agrupar por' });
+    expect(within(grupo).getByRole('button', { name: 'Día' })).toBeInTheDocument();
+    expect(within(grupo).queryByRole('button', { name: 'Hoy' })).toBeNull();
+    expect(within(grupo).queryByRole('button', { name: 'Esta semana' })).toBeNull();
+    expect(within(grupo).queryByRole('button', { name: 'Este mes' })).toBeNull();
+  });
+
+  it('G7: dos atajos seguidos, gana la ultima respuesta (la vieja no pisa)', async () => {
+    const resp = (total: number) => ({
+      ok: true,
+      status: 200,
+      json: async () => ({ ...DIA, totales: { vida_usd: total, sanjh_usd: 0, total_usd: total } }),
+    });
+    const pendientes: Record<string, (v: unknown) => void> = {};
+    const fn = jest.fn((url: string) => {
+      const p = params(url);
+      if (!p.has('desde')) return Promise.resolve(resp(160.75));
+      return new Promise((resolve) => { pendientes[p.get('desde') as string] = resolve; });
+    });
+    global.fetch = fn as unknown as typeof fetch;
+    render(<GananciaPeriodoPanel />);
+    await screen.findByText('24-11-2026');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hoy' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Este mes' }));
+    expect(fn).toHaveBeenCalledTimes(3);
+
+    pendientes['2026-11-01'](resp(700)); // la ultima llega primero
+    pendientes['2026-11-26'](resp(100)); // la vieja llega despues
+
+    expect((await screen.findAllByText('$700.00')).length).toBeGreaterThan(0);
+    expect(screen.queryByText('$100.00')).not.toBeInTheDocument();
+  });
+
+  it('G8: aclara que el rango usa la fecha de la nota de venta', async () => {
+    await montarCon(eco());
+    expect(screen.getByText('El rango usa la fecha de la nota de venta.')).toBeInTheDocument();
   });
 });
 
