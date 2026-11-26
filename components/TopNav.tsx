@@ -227,8 +227,8 @@ export function TopNav() {
               </DropdownMenu>
             )}
 
-            {/* VENDEDORES — solo admin y con el flag encendido */}
-            {isAdmin && flags['vendedores-modulo'] && (
+            {/* VENDEDORES — admin y vendedor, con el flag encendido */}
+            {(isAdmin || rol === 'vendedor') && flags['vendedores-modulo'] && (
               <Link href="/vendedores" className={navLink(pathname.startsWith('/vendedores'))}>
                 <Users className="w-4 h-4" />
                 VENDEDORES

@@ -17,10 +17,14 @@ jest.mock('next/navigation', () => ({
   },
 }));
 jest.mock('@/app/(app)/vendedores/VendedoresClient', () => ({
-  VendedoresClient: () => <div>tabla-vendedores</div>,
+  VendedoresClient: ({ puedeVerDetalle }: { puedeVerDetalle?: boolean }) => (
+    <div>{`tabla-vendedores:detalle=${String(puedeVerDetalle)}`}</div>
+  ),
 }));
 jest.mock('@/app/(app)/vendedores/ComisionesPanel', () => ({
-  ComisionesPanel: () => <div>panel-comisiones</div>,
+  ComisionesPanel: ({ puedeEditarPct }: { puedeEditarPct?: boolean }) => (
+    <div>{`panel-comisiones:editar=${String(puedeEditarPct)}`}</div>
+  ),
 }));
 jest.mock('@/app/(app)/vendedores/GananciaPeriodoPanel', () => ({
   GananciaPeriodoPanel: () => <div>panel-ganancia</div>,
@@ -46,11 +50,16 @@ describe('/vendedores', () => {
     await expect(VendedoresPage()).rejects.toThrow('REDIRECT:/login');
   });
 
-  it('vendedor y bodeguero -> /dashboard', async () => {
-    for (const rol of ['vendedor', 'bodeguero']) {
-      yoSoy(rol);
-      await expect(VendedoresPage()).rejects.toThrow('REDIRECT:/dashboard');
-    }
+  it('bodeguero -> /dashboard', async () => {
+    yoSoy('bodeguero');
+    await expect(VendedoresPage()).rejects.toThrow('REDIRECT:/dashboard');
+  });
+
+  it('vendedor NO redirige: ve la tabla y las comisiones', async () => {
+    yoSoy('vendedor');
+    render(await VendedoresPage());
+    expect(screen.getByText('tabla-vendedores:detalle=false')).toBeInTheDocument();
+    expect(screen.getByText('panel-comisiones:editar=false')).toBeInTheDocument();
   });
 
   it('admin con el flag apagado -> notFound', async () => {
@@ -58,10 +67,10 @@ describe('/vendedores', () => {
     await expect(VendedoresPage()).rejects.toThrow('NOT_FOUND');
   });
 
-  it('admin con el flag encendido -> renderiza la tabla y el panel de comisiones', async () => {
+  it('admin con el flag encendido -> tabla y comisiones con edicion habilitada', async () => {
     render(await VendedoresPage());
-    expect(screen.getByText('tabla-vendedores')).toBeInTheDocument();
-    expect(screen.getByText('panel-comisiones')).toBeInTheDocument();
+    expect(screen.getByText('tabla-vendedores:detalle=true')).toBeInTheDocument();
+    expect(screen.getByText('panel-comisiones:editar=true')).toBeInTheDocument();
   });
 });
 
@@ -72,13 +81,20 @@ describe('/vendedores — seccion Ganancia por periodo (S7c-2)', () => {
     expect(screen.queryByText('panel-ganancia')).not.toBeInTheDocument();
   });
 
-  it('con el flag encendido la seccion se monta entre la tabla y comisiones', async () => {
+  it('admin con el flag encendido la seccion se monta entre la tabla y comisiones', async () => {
     mockFlags['vendedores-ganancia-periodo'] = true;
     render(await VendedoresPage());
-    const tabla = screen.getByText('tabla-vendedores');
+    const tabla = screen.getByText('tabla-vendedores:detalle=true');
     const ganancia = screen.getByText('panel-ganancia');
-    const comisiones = screen.getByText('panel-comisiones');
+    const comisiones = screen.getByText('panel-comisiones:editar=true');
     expect(tabla.compareDocumentPosition(ganancia) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(ganancia.compareDocumentPosition(comisiones) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('vendedor NO monta la seccion aunque el flag este encendido', async () => {
+    mockFlags['vendedores-ganancia-periodo'] = true;
+    yoSoy('vendedor');
+    render(await VendedoresPage());
+    expect(screen.queryByText('panel-ganancia')).not.toBeInTheDocument();
   });
 });

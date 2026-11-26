@@ -55,7 +55,8 @@ describe('MobileNav', () => {
       render(<MobileNav rol={rol} />);
       const button = screen.getByRole('button', { name: /menú/i });
       if (button.getAttribute('aria-expanded') === 'false') fireEvent.click(button);
-      if (rol === 'admin' && enabled) expect(linkVendedores()).toHaveAttribute('href', '/vendedores');
+      if ((rol === 'admin' || rol === 'vendedor') && enabled)
+        expect(linkVendedores()).toHaveAttribute('href', '/vendedores');
       else expect(screen.queryByText('VENDEDORES')).toBeNull();
       cleanup();
     }
@@ -68,13 +69,15 @@ describe('TopNav', () => {
     expect(linkVendedores()).toHaveAttribute('href', '/vendedores');
   });
 
-  it('vendedor y bodeguero no lo ven', () => {
-    for (const rol of ['vendedor', 'bodeguero']) {
-      mockEstado.rol = rol;
-      render(<TopNav />);
-      expect(screen.queryByText('VENDEDORES')).toBeNull();
-      cleanup();
-    }
+  it('vendedor con el flag encendido lo ve; bodeguero no', () => {
+    mockEstado.rol = 'vendedor';
+    render(<TopNav />);
+    expect(linkVendedores()).toHaveAttribute('href', '/vendedores');
+    cleanup();
+
+    mockEstado.rol = 'bodeguero';
+    render(<TopNav />);
+    expect(screen.queryByText('VENDEDORES')).toBeNull();
   });
 
   it('admin con el flag apagado no lo ve', () => {
@@ -90,13 +93,27 @@ describe('BottomNav', () => {
     expect(linkVendedores()).toHaveAttribute('href', '/vendedores');
   });
 
-  it('vendedor y bodeguero no lo ven', () => {
-    for (const rol of ['vendedor', 'bodeguero']) {
-      mockEstado.rol = rol;
-      render(<BottomNav />);
-      expect(screen.queryByText('VENDEDORES')).toBeNull();
-      cleanup();
-    }
+  it('vendedor con el flag encendido ve VENDEDORES sin abrir el bloque admin', () => {
+    mockEstado.rol = 'vendedor';
+    render(<BottomNav />);
+    expect(linkVendedores()).toHaveAttribute('href', '/vendedores');
+    // El bloque admin no se ensancha: el vendedor no ve sus entradas.
+    expect(screen.queryByText('Sueldos')).toBeNull();
+    expect(screen.queryByText('Pettycash')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Admin' })).toBeNull();
+  });
+
+  it('vendedor sin el flag no lo ve; bodeguero nunca', () => {
+    mockEstado.rol = 'vendedor';
+    mockFlags['vendedores-modulo'] = false;
+    render(<BottomNav />);
+    expect(screen.queryByText('VENDEDORES')).toBeNull();
+    cleanup();
+
+    mockFlags['vendedores-modulo'] = true;
+    mockEstado.rol = 'bodeguero';
+    render(<BottomNav />);
+    expect(screen.queryByText('VENDEDORES')).toBeNull();
   });
 
   it('admin con el flag apagado no lo ve', () => {

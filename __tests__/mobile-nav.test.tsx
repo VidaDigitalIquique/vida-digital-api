@@ -33,7 +33,7 @@ describe.each(['admin', 'vendedor', 'bodeguero', 'supervisor'])('inventario exac
       ...(comercial ? [['/deseados', 'Deseados']] : []),
       ...(comercial && seguimientos ? [['/seguimientos', 'Seguimientos']] : []),
       ...(rol !== 'supervisor' ? [['/deudas', rol === 'admin' ? 'Deudas' : 'Mis Deudas']] : []),
-      ...(rol === 'admin' ? admin : []), ...(rol === 'admin' && vendedores ? [['/vendedores', 'VENDEDORES']] : []),
+      ...(rol === 'admin' ? admin : []), ...(comercial && vendedores ? [['/vendedores', 'VENDEDORES']] : []),
     ];
     expect(screen.getAllByRole('link').map(a => [a.getAttribute('href'), a.textContent])).toEqual(esperado);
     const salir = screen.getByRole('button', { name: 'Cerrar sesión' });

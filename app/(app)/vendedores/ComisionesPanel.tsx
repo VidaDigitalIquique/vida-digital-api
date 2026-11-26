@@ -11,7 +11,7 @@ const TD = 'whitespace-nowrap px-3 py-2';
 const leer = (r: Response) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)));
 
 // La UI no recalcula: pinta filas y totales tal como los devuelve la API (S6 igual).
-export function ComisionesPanel() {
+export function ComisionesPanel({ puedeEditarPct = true }: { puedeEditarPct?: boolean } = {}) {
   const [data, setData] = useState<InformeComisiones | null>(null);
   const [mes, setMes] = useState('');
   const [pct, setPct] = useState('');
@@ -102,13 +102,19 @@ export function ComisionesPanel() {
           Mes
           <input aria-label="Mes" type="month" value={mes} onChange={(e) => cambiarMes(e.target.value)} className={CAMPO} />
         </label>
-        <label className="flex flex-col gap-1 text-xs text-zinc-500">
-          % de comisión
-          <input aria-label="% de comisión" type="text" inputMode="decimal" value={pct} onChange={(e) => { pctSucio.current = e.target.value !== pctServidor.current; setPct(e.target.value); }} className={`w-28 ${CAMPO}`} />
-        </label>
-        <button type="button" onClick={guardar} disabled={pctNum === null || guardando || cargando} className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50">
-          Guardar
-        </button>
+        {puedeEditarPct ? (
+          <>
+            <label className="flex flex-col gap-1 text-xs text-zinc-500">
+              % de comisión
+              <input aria-label="% de comisión" type="text" inputMode="decimal" value={pct} onChange={(e) => { pctSucio.current = e.target.value !== pctServidor.current; setPct(e.target.value); }} className={`w-28 ${CAMPO}`} />
+            </label>
+            <button type="button" onClick={guardar} disabled={pctNum === null || guardando || cargando} className="rounded-md border px-3 py-1.5 text-sm disabled:opacity-50">
+              Guardar
+            </button>
+          </>
+        ) : (
+          data && <span className="text-sm text-zinc-500">Comisión: {data.comision_pct.toFixed(2)} %</span>
+        )}
         {mes && (
           <a href={`/api/vendedores/comisiones?mes=${encodeURIComponent(mes)}&formato=xlsx`} className="rounded-md border px-3 py-1.5 text-sm">
             Exportar
@@ -117,7 +123,7 @@ export function ComisionesPanel() {
         {data && <span className="text-sm text-zinc-500">Informe de {data.mes_etiqueta}</span>}
       </div>
 
-      {!cargando && !error && errorPct && <p className="text-xs text-amber-600">{errorPct}</p>}
+      {puedeEditarPct && !cargando && !error && errorPct && <p className="text-xs text-amber-600">{errorPct}</p>}
       {avisoPct && <p className="text-xs text-amber-600">No se pudo guardar el porcentaje.</p>}
       {cargando && <p className="py-8 text-center text-zinc-400">Cargando...</p>}
       {!cargando && error && <p className="py-8 text-center text-red-600">No se pudieron cargar las comisiones.</p>}

@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { notFound, redirect } from 'next/navigation';
 import flags from '@/config/feature-flags.json';
-import { puedeVerVendedores } from '@/lib/roles';
+import { puedeEditarComisionPct, puedeVerGananciaVendedores, puedeVerVendedores } from '@/lib/roles';
 import { VendedoresClient } from './VendedoresClient';
 import { ComisionesPanel } from './ComisionesPanel';
 import { GananciaPeriodoPanel } from './GananciaPeriodoPanel';
@@ -15,11 +15,12 @@ export default async function VendedoresPage() {
   const rol = (session.user as unknown as { rol?: string })?.rol;
   if (!puedeVerVendedores(rol)) redirect('/dashboard');
   if (!flags['vendedores-modulo']) notFound();
+  const verGanancia = puedeVerGananciaVendedores(rol);
   return (
     <div className="container max-w-7xl mx-auto px-4 py-6">
-      <VendedoresClient />
-      {flags['vendedores-ganancia-periodo'] && <GananciaPeriodoPanel />}
-      <ComisionesPanel />
+      <VendedoresClient puedeVerDetalle={verGanancia} />
+      {verGanancia && flags['vendedores-ganancia-periodo'] && <GananciaPeriodoPanel />}
+      <ComisionesPanel puedeEditarPct={puedeEditarComisionPct(rol)} />
     </div>
   );
 }

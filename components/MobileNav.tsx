@@ -87,7 +87,7 @@ export function MobileNav({ rol }: { rol: string | undefined }) {
       option('/pettycash', 'Pettycash', Wallet),
       option('/sueldos', 'Sueldos', Users),
     ] : [] },
-    { title: '', items: admin && flags['vendedores-modulo'] ? [option('/vendedores', 'VENDEDORES', Users)] : [] },
+    { title: '', items: comercial && flags['vendedores-modulo'] ? [option('/vendedores', 'VENDEDORES', Users)] : [] },
   ];
 
   const renderLink = ({ href, label, icon: Icon, count = 0 }: Option) => {

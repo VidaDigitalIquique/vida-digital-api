@@ -219,6 +219,14 @@ export function BottomNav() {
           </Link>
         )}
 
+        {/* VENDEDORES — vendedor con el flag encendido (el bloque Admin no se ensancha) */}
+        {isVendedor && flags['vendedores-modulo'] && (
+          <Link href="/vendedores" className={btnClass(pathname.startsWith('/vendedores'))}>
+            <Users className="w-6 h-6" />
+            <span className="text-[10px] font-medium">VENDEDORES</span>
+          </Link>
+        )}
+
         {/* Admin — solo admin */}
         {isAdmin && (
           <>

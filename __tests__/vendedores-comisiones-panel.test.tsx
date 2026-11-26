@@ -156,6 +156,41 @@ describe('exportar el informe a Excel (R10)', () => {
   });
 });
 
+describe('s14b: sin permiso para editar el % (puedeEditarPct=false)', () => {
+  it('muestra el % como texto de solo lectura y no ofrece input ni Guardar', async () => {
+    const fn = fetchMock();
+    render(<ComisionesPanel puedeEditarPct={false} />);
+    await screen.findByText('ANGELA');
+
+    expect(screen.queryByLabelText('% de comisión')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Guardar' })).toBeNull();
+    expect(screen.getByText(/Comisión:\s*0\.50\s*%/)).toBeInTheDocument();
+    expect(puts(fn)).toHaveLength(0);
+  });
+
+  it('cambiar de mes sigue funcionando y nunca hace PUT', async () => {
+    const fn = fetchMock();
+    render(<ComisionesPanel puedeEditarPct={false} />);
+    await screen.findByText('ANGELA');
+
+    fireEvent.change(inputMes(), { target: { value: '2026-10' } });
+    expect(await screen.findByText(/octubre 2026/)).toBeInTheDocument();
+    expect(fn.mock.calls.some((c) => String(c[0]).includes('mes=2026-10'))).toBe(true);
+    expect(puts(fn)).toHaveLength(0);
+  });
+
+  it('la tabla, los totales y la exportacion se mantienen', async () => {
+    render(<ComisionesPanel puedeEditarPct={false} />);
+    await screen.findByText('ANGELA');
+    expect(screen.getByText('ANIL CHANDNANI')).toBeInTheDocument();
+    expect(screen.getAllByText('$10,980.10').length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: 'Exportar' })).toHaveAttribute(
+      'href',
+      '/api/vendedores/comisiones?mes=2026-11&formato=xlsx'
+    );
+  });
+});
+
 describe('guardar el % (R9)', () => {
   it('manda {mes, comision_pct} y pinta el informe recalculado que devuelve la API', async () => {
     const fn = await montar();

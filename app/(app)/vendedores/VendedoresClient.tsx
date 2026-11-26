@@ -58,7 +58,7 @@ const COLUMNAS = [
   'Facturación',
 ];
 
-export function VendedoresClient() {
+export function VendedoresClient({ puedeVerDetalle = true }: { puedeVerDetalle?: boolean } = {}) {
   const [vendedor, setVendedor] = useState('');
   const [desde, setDesde] = useState('');
   const [hasta, setHasta] = useState('');
@@ -406,15 +406,15 @@ export function VendedoresClient() {
                   {notasVisibles?.map((n) => (
                     <tr
                       key={`${n.empresa}-${n.nota}`}
-                      tabIndex={0}
-                      onClick={() => setSeleccion({ empresa: n.empresa, nota: n.nota })}
-                      onKeyDown={(e) => {
+                      tabIndex={puedeVerDetalle ? 0 : -1}
+                      onClick={puedeVerDetalle ? () => setSeleccion({ empresa: n.empresa, nota: n.nota }) : undefined}
+                      onKeyDown={puedeVerDetalle ? (e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
                           setSeleccion({ empresa: n.empresa, nota: n.nota });
                         }
-                      }}
-                      className="cursor-pointer border-t border-zinc-100 hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900"
+                      } : undefined}
+                      className={`${puedeVerDetalle ? 'cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 ' : ''}border-t border-zinc-100 dark:border-zinc-800`}
                     >
                       <td className="whitespace-nowrap px-3 py-2">{n.empresa_nombre}</td>
                       <td className="whitespace-nowrap px-3 py-2">{fechaDiaCL(n.fecha_venta)}</td>
@@ -449,7 +449,7 @@ export function VendedoresClient() {
         </>
       )}
 
-      {seleccion && (
+      {puedeVerDetalle && seleccion && (
         <NotaDetalleModal
           empresa={seleccion.empresa}
           nota={seleccion.nota}

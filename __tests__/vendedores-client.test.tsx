@@ -835,6 +835,28 @@ describe('fila clickeable (R7)', () => {
   });
 });
 
+describe('s14b: sin permiso de detalle (puedeVerDetalle=false)', () => {
+  it('la fila no es clickeable ni accesible y no monta el modal', async () => {
+    const modal = jest.mocked(Modal.NotaDetalleModal);
+    modal.mockClear();
+    const fn = fetchMock({ notas: respuesta([fila('002514')]) });
+    render(<VendedoresClient puedeVerDetalle={false} />);
+
+    const tr = (await screen.findByText('002514')).closest('tr') as HTMLElement;
+    expect(tr.tabIndex).toBe(-1);
+    expect(tr.className).not.toMatch(/cursor-pointer/);
+    expect(tr).not.toHaveAttribute('role', 'button');
+
+    fireEvent.click(tr);
+    fireEvent.keyDown(tr, { key: 'Enter' });
+    fireEvent.keyDown(tr, { key: ' ' });
+
+    expect(modal).not.toHaveBeenCalled();
+    expect(fn.mock.calls.some((c) => String(c[0]).startsWith('/api/vendedores/notas/'))).toBe(false);
+    expect(screen.queryByText(/Detalle de nota/)).toBeNull();
+  });
+});
+
 // S7b riesgos: limites, filtros/seleccion compartidos, carga/error, carrera e hidratacion (B14 abajo).
 function lote(n: number, prefijo = '') {
   return Array.from({ length: n }, (_, i) => fila(`${prefijo}${String(i + 1).padStart(6, '0')}`));
