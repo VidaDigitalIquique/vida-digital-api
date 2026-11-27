@@ -23,11 +23,6 @@ export function formatRut(rut: string): string {
   return start.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv;
 }
 
-export function calcDiff(fisico: number | null, saldo: number): number | null {
-  if (fisico === null || isNaN(fisico)) return null;
-  return fisico - saldo;
-}
-
 export function generateSlug(text: string): string {
   return text
     .toString()
