@@ -28,3 +28,29 @@ export async function uploadImage(base64Data: string, folder: string, publicId?:
 export async function deleteImage(publicId: string) {
   return getCloudinary().uploader.destroy(publicId);
 }
+
+/** Listado de solo lectura de las imágenes de productos (Admin API), una página por llamada. */
+export async function listarImagenesProductos(
+  cursor: string | null = null,
+  max = 500
+): Promise<{
+  recursos: { public_id: string; secure_url: string; created_at: string | null }[];
+  siguiente: string | null;
+}> {
+  const cld = getCloudinary();
+  type RecursoAdmin = { public_id: string; secure_url: string; created_at?: string };
+  const res = (await cld.api.resources({
+    type: 'upload',
+    prefix: 'productos/',
+    max_results: max,
+    next_cursor: cursor ?? undefined,
+  })) as { resources?: RecursoAdmin[]; next_cursor?: string };
+  return {
+    recursos: (res?.resources ?? []).map((r) => ({
+      public_id: r.public_id,
+      secure_url: r.secure_url,
+      created_at: r.created_at ?? null,
+    })),
+    siguiente: res?.next_cursor ?? null,
+  };
+}

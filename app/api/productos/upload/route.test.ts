@@ -59,8 +59,50 @@ describe("POST /api/productos/upload", () => {
      const body = await response.json();
      expect(body).toHaveProperty("imagen_url");
      expect(body).toHaveProperty("public_id");
-     // UPDATE por codigo: sql`... WHERE codigo = ${codigo}`
+     // UPDATE por codigo normalizado: valor interpolado intacto en el indice 3
      expect(sql).toHaveBeenCalledTimes(1);
      expect((sql as unknown as jest.Mock).mock.calls[0][3]).toBe("VD-DC-30HE");
+  });
+
+  it("33. el WHERE compara el codigo normalizado con upper(btrim())", async () => {
+    (sql as unknown as jest.Mock).mockClear();
+    (getServerSession as jest.Mock).mockResolvedValue({
+      user: { id: 1, rol: 'admin', empresas: [1] }
+    });
+    (uploadImage as jest.Mock).mockResolvedValue({
+      secure_url: "https://res.cloudinary.com/demo/image/upload/productos/VD-DC-30HE.png",
+      public_id: "productos/VD-DC-30HE",
+    });
+
+    const request = new Request("http://localhost/api/productos/upload", {
+      method: "POST",
+      body: JSON.stringify({ productoId: 1, imageBase64: "data:image/png;base64,fake-data", codigo: "VD-DC-30HE" })
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+    const [strings] = (sql as unknown as jest.Mock).mock.calls[0];
+    expect(strings.join("?")).toContain("upper(btrim(codigo))");
+    expect((sql as unknown as jest.Mock).mock.calls[0][3]).toBe("VD-DC-30HE");
+  });
+
+  it("34. codigo con espacios llega intacto al valor interpolado", async () => {
+    (sql as unknown as jest.Mock).mockClear();
+    (getServerSession as jest.Mock).mockResolvedValue({
+      user: { id: 1, rol: 'admin', empresas: [1] }
+    });
+    (uploadImage as jest.Mock).mockResolvedValue({
+      secure_url: "https://res.cloudinary.com/demo/image/upload/productos/CH-002%20CH-003.png",
+      public_id: "productos/CH-002 CH-003",
+    });
+
+    const request = new Request("http://localhost/api/productos/upload", {
+      method: "POST",
+      body: JSON.stringify({ productoId: 1, imageBase64: "data:image/png;base64,fake-data", codigo: " CH-002 CH-003 " })
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+    expect((sql as unknown as jest.Mock).mock.calls[0][3]).toBe(" CH-002 CH-003 ");
   });
 });
