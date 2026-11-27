@@ -71,6 +71,8 @@ Al cerrar cada item: commit con causa raiz, entrada en BUGS.md, cerrar el pendie
 - Detectado 2026-11-11 en el humo de produccion con IA (prod-2ac571c-1552-admin-ia): 156 URLs distintas `res.cloudinary.com/dxkidwxjl/image/upload/productos/<codigo>.jpg` responden 404 (pendientes P-20261111-1600-*, cerrados como BACKLOG D11).
 - Preexistente: la UI pide la imagen por codigo de producto aunque no se haya subido. No lo introdujo el release D1-D5.
 - Por revisar: que pantalla las pide (listados de productos), si conviene mostrar un placeholder sin pedir la URL (o usar un fallback de Cloudinary) y/o subir las imagenes faltantes (/admin/subir-imagenes). Decision de producto: como mostrar productos sin imagen.
+- 2026-11-27 (s18): causa raiz de las fotos faltantes corregida: trigger de herencia (migrations/012) + reconciliacion con Cloudinary (reparadas 1109 filas en produccion). Detalle en AUTO-LOG.md.
+
 ## D12 (MEDIA) - Seguimientos muestra el cliente de la nota y el de la factura al reves  [RESUELTO 2026-11-24 s10b; QA-S10-05 PASA]
 - Detectado 2026-11-11 al armar el PRD de VENDEDORES. Pablo confirmo que el cliente de la nota de venta es `movidcto.cliente` (ej. nota SANJH 003816: "DILIP MAYANI").
 - `app/api/seguimientos/route.ts` toma como cliente `clientes(kcodclie).nombress` ("IMPORT EXPORT VED SPA" en esa nota) y como `factura_nombre` `clientes(kcodcli2)` ("DILIP MAYANI"). Datos: `movidcto.cliente` coincide con el nombre de `kcodcli2` en el 98% de las notas.

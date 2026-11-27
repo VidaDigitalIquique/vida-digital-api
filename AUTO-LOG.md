@@ -220,3 +220,13 @@
 - QA s15 (1.51 USD): 7 de 7 PASA, sin defectos ni errores de consola.
 - D15 aceptado por Pablo (vendedor puede entrar a /admin/importar).
 - Release: autorizado por Pablo (2026-11-26 16:41). /ponytail-audit (Senal 3) NO se corrio.
+
+## 2026-11-27 - s18: fotos de productos desincronizadas (rama fix/fotos-sincronizadas)
+- Pedido de Pablo: averiguar por que faltaban fotos y asegurar que no vuelva a pasar; no pueden quedar desincronizadas.
+- Causa raiz: (1) sync-inventar, sync-from-winfac e importar insertan filas nuevas de public.productos con imagen_url/public_id NULL (copian categoria de una hermana pero no la foto); (2) el sync Python solo vincula al SUBIR la imagen y salta las ya presentes en Cloudinary; (3) upload y catalog-image actualizaban por codigo exacto; (4) nada reconciliaba. Ademas, algo ajeno al repo escribio hoy 2026-11-27 13:30 UTC 347 URLs sin version ni extension (325 apuntaban a recursos inexistentes).
+- Slices: s18a (1197547) trigger BEFORE INSERT + lib/fotos-sync.ts; s18b (eed04af) endpoint POST /api/cron/sync-fotos (flag sync-fotos-reconciliacion, FALSE), scripts/reconciliar-fotos.ts, upload/catalog-image por codigo normalizado; s18c (65d94fa) leer productos antes de listar Cloudinary (carrera con subidas).
+- Produccion (Director, 2026-11-27 ~15:5x UTC): migrations/012 aplicada (trigger verificado con insercion de prueba revertida); reconciliar-fotos --apply con respaldo `_dt-vida-digital\backups\fotos-backup-20261127-155622.json`: 1109 filas (762 vinculadas, 32 reapuntadas, 315 limpiadas), 0 errores; dry-run posterior: 0 acciones. Restaurar: `reconciliar-fotos.ts --restaurar <respaldo>`.
+- Quedan 356 filas (298 codigos, 54 con saldo) sin foto porque NO existen en Cloudinary: lista en `_dt-vida-digital\fotos-faltantes.csv`.
+- Pendiente (gate): UAT, merge a main y deploy (el endpoint solo existe tras el deploy), encender flag sync-fotos-reconciliacion y agregar POST /api/cron/sync-fotos a cron-job.org (cada 10-15 min, Bearer CRON_SECRET). Si se corre scripts/seed.ts en una base, re-aplicar migrations/012.
+- Propuesta aparte (no hecha): sync_winfac_neon.py -> _actualizar_neon por codigo normalizado y revincular las imagenes que ya estan en Cloudinary (requiere ir al PC de Pravin).
+- Bug aparte detectado: components/ProductDrawer.tsx llama a `/api/productos/\${producto.id}` (texto literal) en guardar precios y marcar como visto; fallan siempre.
