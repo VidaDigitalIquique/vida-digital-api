@@ -251,3 +251,10 @@
 - Ramas integradas: fix/drawer-url-literal (s20), fix/fotos-sincronizadas (s18a-c), feat/vendedores-comisiones-margen (s16, s17, s19). Flags encendidos: vendedores-comisiones-margen, sync-fotos-reconciliacion.
 - Verificacion propia de lo integrado: tsc 0, jest/vitest completos verdes, build OK (lint=1 preexistente en archivos ajenos).
 - /ponytail-audit (Senal 3) NO se corrio. Pendiente tras el deploy: humo de produccion (qa-prod) y primera llamada al endpoint /api/cron/sync-fotos.
+
+## 2026-11-27 - s22: limpieza ponytail (rama chore/ponytail-s22)
+- Se corrio /ponytail-audit (Senal 3, pendiente del release s16-s20) sobre todo el repo y se aplico solo lo clasificado SEGURO.
+- Borrado: 29 .ps1 de raiz (era Render), src/index.cjs y su .bak, sync-neon/debug.txt, components/button.tsx (duplicado de ui/button), lib/excel.ts, scripts/fix_syntax.js, calcDiff (lib/utils.ts), 22 flags muertas de config/feature-flags.json (quedan 12 vivas), 6 dependencias (react-hook-form, @hookform/resolvers, next-cloudinary, tw-animate-css, shadcn, @types/sharp).
+- Conservado: horaCL y ultimoDiaMesCL (la auditoria erro: las usa pettycash/client_page.tsx).
+- Fuera de alcance, pendiente: unificar despachos/procesar y despachos/process, mover undici a devDependencies, README, scripts/migrate-caja-mayor.ts y hojas .xlsx/.xls de raiz (dudosos).
+- Verificacion propia (verificar.ps1): tsc 0, jest/vitest verdes, build 0 (lint=1 preexistente).
