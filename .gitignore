@@ -40,3 +40,8 @@ next-env.d.ts
 
 # backups and old versions
 ol/
+
+# env con secretos: nunca versionar (dejar solo .env.example)
+.env
+.env.*
+!.env.example
