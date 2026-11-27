@@ -94,3 +94,7 @@
 - Verificacion: __tests__/alertas-context-rol.test.tsx (bodeguero 0 llamadas, admin/vendedor 3, loading->admin); Fase E bug-d5 PASA 3/3; Director: red del navegador con bodeguero sin llamadas a alertas.
 - Zona fragil: si cambian los roles de una API de alertas, actualizar ROLES_ALERTAS / ROLES_SEGUIMIENTOS en AlertasContext.tsx. `AlertasProvider` debe seguir dentro de `SessionProvider` (useSession).
 - Commit: el de "fix: D5 alertas por rol" (ver git log)
+
+## B-20261127 - Plantillas con barra invertida antes de ${...} (drawer de productos, usuarios, despachos)  [RESUELTO 2026-11-27 s20]
+- Causa raiz: barra invertida antes de `${` en plantillas de texto: JS no interpola. 10 sitios: ProductDrawer (URL del PUT en guardar precios y marcar como visto; botones hoy deshabilitados por DISABLED_V2, sin efecto visible), admin/usuarios (3 className sin colores) y despachos (2 toasts, ancho de la barra de progreso, clase de fila).
+- Fix: quitar la barra invertida en esos 10 sitios. Guardia permanente `__tests__/sin-escapes-literales.test.ts` (falla si reaparece en app/, components/ o lib/).

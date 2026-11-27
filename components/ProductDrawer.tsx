@@ -256,7 +256,7 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
     setIsSaving(true);
     
     try {
-      const res = await fetch(`/api/productos/\${producto.id}`, {
+      const res = await fetch(`/api/productos/${producto.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -299,7 +299,7 @@ export function ProductDrawer({ producto, empresaNombre, session, open, onOpenCh
   const handleMarkAsViewed = async () => {
     if (!producto) return;
     try {
-      const res = await fetch(`/api/productos/\${producto.id}`, {
+      const res = await fetch(`/api/productos/${producto.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ es_nuevo: false }),

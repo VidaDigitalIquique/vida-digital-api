@@ -86,7 +86,7 @@ export function DespachosClient({ activeEmpresaId }: { activeEmpresaId: number }
       }));
 
       setQueue(prev => [...prev, ...newItems]);
-      toast.success(`\${files.length} imágenes extraídas del ZIP`);
+      toast.success(`${files.length} imágenes extraídas del ZIP`);
     } catch (err) {
       toast.error('Error al subir ZIP');
     } finally {
@@ -150,7 +150,7 @@ export function DespachosClient({ activeEmpresaId }: { activeEmpresaId: number }
 
     setIsProcessingQueue(false);
     toast(`Proceso Finalizado`, {
-      description: `\${success} exitosos / \${fallback} sin folio / \${errors} errores`,
+      description: `${success} exitosos / ${fallback} sin folio / ${errors} errores`,
       duration: 5000,
     });
   };
@@ -233,7 +233,7 @@ export function DespachosClient({ activeEmpresaId }: { activeEmpresaId: number }
 
            {/* Progress Bar */}
            <div className="w-full h-1 bg-zinc-100 dark:bg-zinc-800">
-              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `\${progress}%` }}></div>
+              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${progress}%` }}></div>
            </div>
 
            <div className="flex-1 overflow-y-auto p-4 space-y-2">
@@ -262,7 +262,7 @@ export function DespachosClient({ activeEmpresaId }: { activeEmpresaId: number }
                   }
 
                   return (
-                    <div key={item.id} className={`flex items-center gap-3 p-2 rounded-lg \${statusColor} transition-colors`}>
+                    <div key={item.id} className={`flex items-center gap-3 p-2 rounded-lg ${statusColor} transition-colors`}>
                        <span className="text-xs font-mono opacity-50 w-6 text-center">{idx + 1}</span>
                        <div className="w-10 h-10 rounded bg-white dark:bg-black/20 overflow-hidden flex-shrink-0">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
