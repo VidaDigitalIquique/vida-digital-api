@@ -75,7 +75,7 @@ function mockDb() {
       return Promise.resolve(
         t.includes('sanjh.movidcto')
           ? []
-          : [{ vendedor: 'ANGELA', ganancia_usd: 320, costo_usd: 1700 }]
+          : [{ vendedor: 'ANGELA', suma_pct: 90, n_lineas: 3 }] // 10 + 20 + 60 -> 30 %
       );
     }
     if (t.includes('DISTINCT')) {
@@ -228,17 +228,17 @@ describe('contrato del informe', () => {
   });
 });
 
-describe('columna % promedio sobre el costo (s16)', () => {
+describe('columna % promedio sobre el costo (s17: promedio simple por linea)', () => {
   const llamadasMargen = () =>
     queryMock.mock.calls.filter((c) => String(c[0]).includes('precread'));
 
-  it('admin con el flag encendido: margen ponderado en filas y totales', async () => {
+  it('admin con el flag encendido: promedio simple de las lineas en filas y totales', async () => {
     flags['vendedores-comisiones-margen'] = true;
     const body = await (await GET(req())).json();
     const angela = body.filas.find((f: { vendedor: string }) => f.vendedor === 'ANGELA');
-    expect(angela.margen_pct).toBeCloseTo(320 / 1700 * 100, 10);
+    expect(angela.margen_pct).toBeCloseTo(90 / 3, 10); // 30 %, no 18,8235 % ponderado
     expect(body.filas.find((f: { vendedor: string }) => f.vendedor === 'PRAVIN').margen_pct).toBeNull();
-    expect(body.totales.margen_pct).toBeCloseTo(320 / 1700 * 100, 10);
+    expect(body.totales.margen_pct).toBeCloseTo(30, 10);
     expect(llamadasMargen()).toHaveLength(2); // vida + sanjh
   });
 
@@ -261,7 +261,7 @@ describe('columna % promedio sobre el costo (s16)', () => {
   it('PUT admin con el flag encendido devuelve el informe con margen', async () => {
     flags['vendedores-comisiones-margen'] = true;
     const body = await (await PUT(pedir({ mes: '2026-11', comision_pct: 1 }))).json();
-    expect(body.filas[0].margen_pct).toBeCloseTo(320 / 1700 * 100, 10);
+    expect(body.filas[0].margen_pct).toBeCloseTo(30, 10);
   });
 
   it('xlsx de vendedor: 5 columnas, sin la de margen', async () => {
@@ -283,7 +283,7 @@ describe('columna % promedio sobre el costo (s16)', () => {
     expect(filas[0][5]).toBe('% promedio sobre el costo');
     expect(ws['F2'].t).toBe('n');
     expect(ws['F2'].z).toBe('0.0"%"');
-    expect(ws['F2'].v).toBeCloseTo(18.823529411764707, 8);
+    expect(ws['F2'].v).toBeCloseTo(30, 8);
     expect(ws['F3'].v).toBe('-'); // PRAVIN sin lineas de costo
   });
 });

@@ -232,10 +232,13 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
 - Rol: admin (con el flag `vendedores-comisiones-margen` encendido)
 - Dado: el informe de comisiones de un mes con el flag encendido y sesión de admin
 - Cuando: mira la tabla (o exporta el Excel)
-- Entonces: ve al final una columna "% promedio sobre el costo" con el margen del mes de cada vendedor calculado como
-  (precio − costo) × cantidad sobre el costo × cantidad, sumado de todas sus líneas de ambas empresas y dividido una sola vez
-  (no es el promedio de los porcentajes); las líneas sin costo válido no entran en ninguna de las dos sumas; un vendedor sin
-  costo válido muestra "-"; con el flag apagado, o con rol vendedor, la columna no aparece ni viaja en la API.
+- Entonces: ve al final una columna "% promedio sobre el costo" con el margen del mes de cada vendedor calculado como el
+  **promedio simple por línea**: el % de cada línea es (precio − costo) / costo × 100 (la cantidad no pondera), se suman los
+  % de todas sus líneas de ambas empresas y se divide por la cantidad de líneas (una sola división al final; el total del mes
+  es suma de todas las líneas / cantidad de todas las líneas, no el promedio de los promedios por vendedor). Las líneas con
+  costo NULL o ≤ 0 y las líneas con precio NULL no entran ni en la suma ni en el conteo; una línea con precio 0 sí cuenta
+  (aporta −100 %). Un vendedor sin líneas válidas muestra "-"; con el flag apagado, o con rol vendedor, la columna no aparece
+  ni viaja en la API.
 - Nota: el margen es "sobre las líneas registradas en el sistema" mientras D13 siga abierto (la réplica puede tener líneas que
   no son parte de la venta real).
 

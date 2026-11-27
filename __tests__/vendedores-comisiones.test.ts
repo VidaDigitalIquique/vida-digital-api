@@ -8,7 +8,7 @@ import {
   fetchComisiones,
   leerComisionPct,
 } from '@/lib/comisiones';
-import { margenSobreCosto } from '@/lib/comisiones-utils';
+import { margenPromedioLineas } from '@/lib/comisiones-utils';
 
 const queryMock = jest.fn();
 jest.mock('@/lib/db', () => ({
@@ -18,7 +18,7 @@ jest.mock('@/lib/db', () => ({
 const HOY = '2026-11-11';
 
 type Agg = { vendedor: string; notas: number; total_usd: number };
-type Margen = { vendedor: string; ganancia_usd: number; costo_usd: number };
+type Margen = { vendedor: string; suma_pct: number; n_lineas: number };
 type Db = {
   pct?: unknown;
   vidaVendedores?: string[];
@@ -98,20 +98,29 @@ describe('consultaComisiones', () => {
   });
 });
 
-describe('consultaMargenComisiones (s16)', () => {
+describe('consultaMargenComisiones (s17: promedio simple por linea)', () => {
   it('no selecciona val_rea ni une productos: el JOIN no puede inflar el total vendido', () => {
     const sql = consultaMargenComisiones('vida');
     expect(sql).not.toContain('val_rea');
     expect(sql).not.toContain('productos');
   });
 
-  it('suma ganancia y costo crudos por vendedor desde las lineas de la nota', () => {
+  it('devuelve SUMA de porcentajes por linea y COUNT de lineas, no ganancia/costo', () => {
     const sql = consultaMargenComisiones('sanjh');
     expect(sql).toContain('sanjh.itemdcto');
     expect(sql).toContain('i.knumfoli = m.knumfoli');
-    expect(sql).toMatch(/SUM\(\(COALESCE\(i\.precread,0\) - COALESCE\(i\.cosunita,0\)\) \* COALESCE\(i\.cantsali,0\)\)/);
-    expect(sql).toMatch(/SUM\(COALESCE\(i\.cosunita,0\) \* COALESCE\(i\.cantsali,0\)\)/);
+    // Porcentaje de CADA linea: (precio - costo) / costo * 100.
+    expect(sql).toContain('i.precread - i.cosunita');
+    expect(sql).toMatch(/\/\s*i\.cosunita::float8/);
+    expect(sql).toContain('* 100');
+    expect(sql).toContain('COUNT(*)::int AS n_lineas');
+    expect(sql).toContain('SUM(');
     expect(sql).toContain('GROUP BY 1');
+  });
+
+  it('NO usa cantsali: la cantidad vendida no pondera el promedio (s17)', () => {
+    const sql = consultaMargenComisiones('vida');
+    expect(sql).not.toContain('cantsali');
   });
 
   it('aplica las mismas condiciones de la nota (estado 3, visaadua, rango de fechadoc)', () => {
@@ -123,9 +132,12 @@ describe('consultaMargenComisiones (s16)', () => {
     expect(sql).toContain('vida.movidcto');
   });
 
-  it('excluye de AMBAS sumas las lineas sin costo valido (correccion D13)', () => {
+  it('excluye de AMBAS (suma y conteo) las lineas con costo invalido o precio NULL (s17)', () => {
     const sql = consultaMargenComisiones('vida');
     expect(sql).toContain('COALESCE(i.cosunita,0) > 0');
+    expect(sql).toContain('i.precread IS NOT NULL');
+    // precread 0 SI cuenta (-100 %): COALESCE(precread,0) convertiria NULL en -100 y lo contaria.
+    expect(sql).not.toMatch(/COALESCE\(i\.precread/);
   });
 
   it('el esquema sale solo del mapa fijo', () => {
@@ -134,17 +146,18 @@ describe('consultaMargenComisiones (s16)', () => {
   });
 });
 
-describe('margenSobreCosto (s16)', () => {
-  it('ganancia sobre costo en porcentaje, sin redondear', () => {
-    expect(margenSobreCosto(320, 1700)).toBeCloseTo(18.823529411764707, 10);
-    expect(margenSobreCosto(60, 100)).toBe(60);
+describe('margenPromedioLineas (s17)', () => {
+  it('division por la cantidad de lineas, sin redondear', () => {
+    expect(margenPromedioLineas(90, 3)).toBe(30); // 10 + 20 + 60
+    expect(margenPromedioLineas(60, 1)).toBe(60);
+    expect(margenPromedioLineas(-100, 1)).toBe(-100); // precread 0 cuenta
   });
 
-  it('costo 0, negativo o no finito -> null (nunca Infinity/NaN)', () => {
-    expect(margenSobreCosto(100, 0)).toBeNull();
-    expect(margenSobreCosto(100, -5)).toBeNull();
-    expect(margenSobreCosto(Infinity, 100)).toBeNull();
-    expect(margenSobreCosto(NaN, 100)).toBeNull();
+  it('sin lineas o valores no finitos -> null (nunca Infinity/NaN)', () => {
+    expect(margenPromedioLineas(100, 0)).toBeNull();
+    expect(margenPromedioLineas(100, -1)).toBeNull();
+    expect(margenPromedioLineas(Infinity, 1)).toBeNull();
+    expect(margenPromedioLineas(NaN, 1)).toBeNull();
   });
 });
 
@@ -265,21 +278,21 @@ describe('fetchComisiones', () => {
   });
 });
 
-describe('fetchComisiones con margen (s16)', () => {
-  const MARGEN_A8: Db = {
+describe('fetchComisiones con margen (s17: promedio simple por linea)', () => {
+  const MARGEN_LINEAS: Db = {
     vidaVendedores: ['ANGELA', 'PRAVIN'],
     vidaAgg: [
       { vendedor: 'ANGELA', notas: 2, total_usd: 2000 },
       { vendedor: 'PRAVIN', notas: 1, total_usd: 100 },
     ],
     vidaMargen: [
-      { vendedor: 'ANGELA', ganancia_usd: 320, costo_usd: 1700 }, // A.8: 18,8235 %
-      { vendedor: 'PRAVIN', ganancia_usd: 60, costo_usd: 100 }, // 60 %
+      { vendedor: 'ANGELA', suma_pct: 90, n_lineas: 3 }, // 10 + 20 + 60 -> 30 %
+      { vendedor: 'PRAVIN', suma_pct: 60, n_lineas: 1 }, // 60 %
     ],
   };
 
   it('por defecto (sin flag) no incluye la clave y NO ejecuta la consulta de margen', async () => {
-    mockDb(MARGEN_A8);
+    mockDb(MARGEN_LINEAS);
     const informe = await fetchComisiones('2026-11', HOY, 0.5);
     expect(informe.filas.every((f) => !('margen_pct' in f))).toBe(true);
     expect('margen_pct' in informe.totales).toBe(false);
@@ -287,49 +300,80 @@ describe('fetchComisiones con margen (s16)', () => {
     expect(queryMock.mock.calls.some((c) => String(c[0]).includes('precread'))).toBe(false);
   });
 
-  it('con flag: ponderado por costo, NO promedio de porcentajes (A.8)', async () => {
-    mockDb(MARGEN_A8);
-    const informe = await fetchComisiones('2026-11', HOY, 0.5, true);
-    const angela = informe.filas.find((f) => f.vendedor === 'ANGELA')!;
-    const pravin = informe.filas.find((f) => f.vendedor === 'PRAVIN')!;
+  it('(a) promedio simple por linea: 10 %, 20 % y 60 % -> 30 % (no ponderado)', async () => {
+    // Lineas reales con cantidades y costos distintos para que el ponderado difiera.
+    const lineas = [
+      { precio: 110, costo: 100, cant: 1 }, // +10 %
+      { precio: 12, costo: 10, cant: 1 }, // +20 %
+      { precio: 1600, costo: 1000, cant: 3 }, // +60 %
+    ];
+    const pct = (l: { precio: number; costo: number }) => ((l.precio - l.costo) / l.costo) * 100;
+    const ponderadoPorCosto =
+      (lineas.reduce((s, l) => s + (l.precio - l.costo) * l.cant, 0) /
+        lineas.reduce((s, l) => s + l.costo * l.cant, 0)) *
+      100;
+    mockDb({
+      vidaVendedores: ['ANGELA'],
+      vidaMargen: [
+        {
+          vendedor: 'ANGELA',
+          suma_pct: lineas.reduce((s, l) => s + pct(l), 0),
+          n_lineas: lineas.length,
+        },
+      ],
+    });
 
-    expect(angela.margen_pct).toBeCloseTo(320 / 1700 * 100, 10); // 18,8235…
-    expect(angela.margen_pct).not.toBeCloseTo(16.67, 2); // promedio simple de lineas
-    expect(pravin.margen_pct).toBeCloseTo(60, 10);
-    // Total ponderado del mes: 380/1800, no el promedio de las filas (39,4).
-    expect(informe.totales.margen_pct).toBeCloseTo(380 / 1800 * 100, 10); // 21,1111…
-    expect(informe.totales.margen_pct).not.toBeCloseTo(39.4, 1);
+    const informe = await fetchComisiones('2026-11', HOY, 0.5, true);
+    expect(informe.filas[0].margen_pct).toBeCloseTo(30, 10);
+    expect(informe.filas[0].margen_pct).not.toBeCloseTo(ponderadoPorCosto, 2); // ≈ 58,3 %
   });
 
-  it('divide UNA sola vez tras fusionar vida y sanjh: 100/1000 + 0/1000 = 5 %', async () => {
+  it('(b) vida (2 lineas, suma 50) + sanjh (1 linea, suma 10) = 60/3 = 20 %, no 17,5 %', async () => {
     mockDb({
       vidaVendedores: ['ANGELA'],
       sanjhVendedores: ['ANGELA'],
-      vidaMargen: [{ vendedor: 'ANGELA', ganancia_usd: 100, costo_usd: 1000 }],
-      sanjhMargen: [{ vendedor: 'ANGELA', ganancia_usd: 0, costo_usd: 1000 }],
+      vidaMargen: [{ vendedor: 'ANGELA', suma_pct: 50, n_lineas: 2 }],
+      sanjhMargen: [{ vendedor: 'ANGELA', suma_pct: 10, n_lineas: 1 }],
     });
     const informe = await fetchComisiones('2026-11', HOY, 0.5, true);
     expect(informe.filas).toHaveLength(1);
-    expect(informe.filas[0].margen_pct).toBeCloseTo(5, 10);
-    expect(informe.totales.margen_pct).toBeCloseTo(5, 10);
+    expect(informe.filas[0].margen_pct).toBeCloseTo(20, 10);
+    expect(informe.filas[0].margen_pct).not.toBeCloseTo(17.5, 10); // promedio de promedios (25 y 10)
+    expect(informe.totales.margen_pct).toBeCloseTo(20, 10);
   });
 
-  it('"ANGELA" y " angela " de empresas distintas son una fila y suman crudo', async () => {
-    mockDb({
-      vidaVendedores: ['ANGELA'],
-      sanjhVendedores: [' angela '],
-      vidaMargen: [{ vendedor: 'ANGELA', ganancia_usd: 300, costo_usd: 1000 }],
-      sanjhMargen: [{ vendedor: ' angela ', ganancia_usd: 100, costo_usd: 1000 }],
-    });
+  it('(c) total global = sumaTodos / lineasTodas, no el promedio de las filas', async () => {
+    mockDb(MARGEN_LINEAS);
     const informe = await fetchComisiones('2026-11', HOY, 0.5, true);
-    expect(informe.filas).toHaveLength(1);
-    expect(informe.filas[0].margen_pct).toBeCloseTo(20, 10); // 400/2000
+    const angela = informe.filas.find((f) => f.vendedor === 'ANGELA')!;
+    const pravin = informe.filas.find((f) => f.vendedor === 'PRAVIN')!;
+    expect(angela.margen_pct).toBeCloseTo(30, 10);
+    expect(pravin.margen_pct).toBeCloseTo(60, 10);
+    expect(informe.totales.margen_pct).toBeCloseTo(150 / 4, 10); // 37,5 %
+    expect(informe.totales.margen_pct).not.toBeCloseTo(45, 10); // promedio de filas (30 y 60)
   });
 
-  it('costo 0 o vendedor sin lineas -> null serializable, nunca Infinity/NaN', async () => {
+  it('(d) precread 0 cuenta como -100 %; sin costo o precread NULL no entran (los filtra la consulta)', async () => {
     mockDb({
       vidaVendedores: ['ANGELA', 'PRAVIN'],
-      vidaMargen: [{ vendedor: 'ANGELA', ganancia_usd: 100, costo_usd: 0 }],
+      vidaMargen: [
+        // 3 lineas fisicas, una con precread NULL: la consulta la excluye y solo quedan 2.
+        { vendedor: 'ANGELA', suma_pct: 50, n_lineas: 2 },
+        { vendedor: 'PRAVIN', suma_pct: -100, n_lineas: 1 }, // una linea con precread = 0
+      ],
+    });
+    const informe = await fetchComisiones('2026-11', HOY, 0.5, true);
+    expect(informe.filas.find((f) => f.vendedor === 'ANGELA')!.margen_pct).toBeCloseTo(25, 10);
+    expect(informe.filas.find((f) => f.vendedor === 'PRAVIN')!.margen_pct).toBeCloseTo(-100, 10);
+    const sqlMargen = consultaMargenComisiones('vida');
+    expect(sqlMargen).toContain('COALESCE(i.cosunita,0) > 0');
+    expect(sqlMargen).toContain('i.precread IS NOT NULL');
+  });
+
+  it('(e) sin lineas validas -> null serializable, nunca Infinity/NaN', async () => {
+    mockDb({
+      vidaVendedores: ['ANGELA', 'PRAVIN'],
+      vidaMargen: [{ vendedor: 'ANGELA', suma_pct: 100, n_lineas: 0 }],
     });
     const informe = await fetchComisiones('2026-11', HOY, 0.5, true);
     expect(informe.filas.every((f) => f.margen_pct === null)).toBe(true);
@@ -338,29 +382,47 @@ describe('fetchComisiones con margen (s16)', () => {
     expect(JSON.stringify(informe)).not.toMatch(/Infinity|NaN/);
   });
 
+  it('"ANGELA" y " angela " de empresas distintas son una fila y suman porcentajes y lineas', async () => {
+    mockDb({
+      vidaVendedores: ['ANGELA'],
+      sanjhVendedores: [' angela '],
+      vidaMargen: [{ vendedor: 'ANGELA', suma_pct: 40, n_lineas: 1 }],
+      sanjhMargen: [{ vendedor: ' angela ', suma_pct: 30, n_lineas: 1 }],
+    });
+    const informe = await fetchComisiones('2026-11', HOY, 0.5, true);
+    expect(informe.filas).toHaveLength(1);
+    expect(informe.filas[0].margen_pct).toBeCloseTo(35, 10); // (40+30)/2
+  });
+
   it('duplicar exactamente una linea no cambia el porcentaje (D14)', async () => {
     mockDb({
       vidaVendedores: ['ANGELA'],
-      vidaMargen: [{ vendedor: 'ANGELA', ganancia_usd: 320, costo_usd: 1700 }],
+      vidaMargen: [{ vendedor: 'ANGELA', suma_pct: 120, n_lineas: 4 }],
     });
     const base = await fetchComisiones('2026-11', HOY, 0.5, true);
 
     mockDb({
       vidaVendedores: ['ANGELA'],
-      vidaMargen: [{ vendedor: 'ANGELA', ganancia_usd: 640, costo_usd: 3400 }],
+      vidaMargen: [{ vendedor: 'ANGELA', suma_pct: 150, n_lineas: 5 }], // +1 linea de 30 %
     });
     const duplicado = await fetchComisiones('2026-11', HOY, 0.5, true);
 
     expect(duplicado.filas[0].margen_pct).toBeCloseTo(base.filas[0].margen_pct!, 10);
+    expect(duplicado.filas[0].margen_pct).toBeCloseTo(30, 10);
   });
 
-  it('con flag: la consulta de margen NO toca val_rea y notas/total/comision no cambian', async () => {
-    mockDb(MARGEN_A8);
+  it('con flag: notas/total/comision no cambian y la consulta de margen NO toca val_rea', async () => {
+    mockDb(MARGEN_LINEAS);
     const sin = await fetchComisiones('2026-11', HOY, 0.5);
-    mockDb(MARGEN_A8);
+    mockDb(MARGEN_LINEAS);
     const con = await fetchComisiones('2026-11', HOY, 0.5, true);
 
-    expect(con.filas.map(({ margen_pct: _m, ...f }) => f)).toEqual(sin.filas);
+    const sinMargen = (f: { margen_pct?: number | null }) => {
+      const copia = { ...f };
+      delete copia.margen_pct;
+      return copia;
+    };
+    expect(con.filas.map(sinMargen)).toEqual(sin.filas);
     expect(con.totales.notas).toBe(sin.totales.notas);
     expect(con.totales.total_usd).toBe(sin.totales.total_usd);
     expect(con.totales.comision_usd).toBe(sin.totales.comision_usd);
@@ -370,7 +432,7 @@ describe('fetchComisiones con margen (s16)', () => {
   });
 
   it('parametriza hoy y el rango del mes en la consulta de margen', async () => {
-    mockDb(MARGEN_A8);
+    mockDb(MARGEN_LINEAS);
     await fetchComisiones('2026-10', HOY, 0.5, true);
     const llamada = queryMock.mock.calls.find(
       (c) => String(c[0]).includes('precread') && String(c[0]).includes('vida.movidcto')
@@ -378,15 +440,8 @@ describe('fetchComisiones con margen (s16)', () => {
     expect(llamada[1]).toEqual([HOY, '2026-10-01', '2026-11-01']);
   });
 
-  it('una linea con costo 0 no infla el numerador (la excluye la consulta)', async () => {
-    // El mock simula el WHERE COALESCE(cosunita,0) > 0: la linea sin costo no llega.
-    mockDb({
-      vidaVendedores: ['ANGELA'],
-      vidaMargen: [{ vendedor: 'ANGELA', ganancia_usd: 320, costo_usd: 1700 }],
-    });
-    const informe = await fetchComisiones('2026-11', HOY, 0.5, true);
-    expect(informe.filas[0].margen_pct).toBeCloseTo(18.823529411764707, 10);
-    expect(consultaMargenComisiones('vida')).toContain('COALESCE(i.cosunita,0) > 0');
+  it('(g) la consulta NO usa cantsali como ponderador (cantidad no pesa)', () => {
+    expect(consultaMargenComisiones('vida')).not.toContain('cantsali');
   });
 });
 

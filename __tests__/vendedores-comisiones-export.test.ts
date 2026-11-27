@@ -194,14 +194,14 @@ describe('archivo .xlsx (R10)', () => {
   });
 });
 
-describe('columna % promedio sobre el costo en el .xlsx (s16)', () => {
+describe('columna % promedio sobre el costo en el .xlsx (s17: promedio simple por linea)', () => {
   const INFORME_MARGEN: InformeComisiones = {
     ...INFORME,
     filas: [
-      { ...INFORME.filas[0], margen_pct: 320 / 1700 * 100 },
+      { ...INFORME.filas[0], margen_pct: 30 }, // 3 lineas que suman 90 %
       { ...INFORME.filas[1], margen_pct: null },
     ],
-    totales: { ...INFORME.totales, margen_pct: 320 / 1700 * 100 },
+    totales: { ...INFORME.totales, margen_pct: 30 },
   };
 
   const CON_MARGEN = [...ENCABEZADOS, '% promedio sobre el costo'];
@@ -216,9 +216,9 @@ describe('columna % promedio sobre el costo en el .xlsx (s16)', () => {
     const { ws } = hoja(res);
     expect(XLSX.utils.sheet_to_json(ws, { header: 1 })).toEqual([
       CON_MARGEN,
-      ['ANGELA', 2, 10980.1, 0.5, 54.9, 320 / 1700 * 100],
+      ['ANGELA', 2, 10980.1, 0.5, 54.9, 30],
       ['PRAVIN', 1, 100, 0.5, 0.5, '-'],
-      ['TOTAL', 3, 11080.1, 0.5, 55.4, 320 / 1700 * 100],
+      ['TOTAL', 3, 11080.1, 0.5, 55.4, 30],
     ]);
     expect(ws['F2']?.t).toBe('n');
     expect(ws['F2']?.z).toBe('0.0"%"');

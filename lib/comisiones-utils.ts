@@ -60,8 +60,9 @@ export function redondearCentavos(n: number): number {
   return Math.round(Number((n * 100).toFixed(6))) / 100;
 }
 
-/** % de ganancia sobre el costo, sin redondear; null si el costo no sirve. */
-export function margenSobreCosto(gananciaUsd: number, costoUsd: number): number | null {
-  if (!Number.isFinite(gananciaUsd) || !Number.isFinite(costoUsd) || costoUsd <= 0) return null;
-  return (gananciaUsd / costoUsd) * 100;
+/** Promedio simple del % de cada linea (suma / cantidad), sin redondear; null sin lineas. */
+export function margenPromedioLineas(sumaPct: number, nLineas: number): number | null {
+  if (!Number.isFinite(sumaPct) || !Number.isFinite(nLineas) || nLineas <= 0) return null;
+  const pct = sumaPct / nLineas;
+  return Number.isFinite(pct) ? pct : null;
 }

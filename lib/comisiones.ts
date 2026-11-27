@@ -1,10 +1,10 @@
 import { sql } from '@/lib/db';
 import { consultaVendedores, reglasModulo, type EmpresaSlug } from '@/lib/vendedores-notas';
-import { etiquetaMes, margenSobreCosto, rangoMes, redondearCentavos, type FilaComision, type InformeComisiones } from '@/lib/comisiones-utils';
+import { etiquetaMes, margenPromedioLineas, rangoMes, redondearCentavos, type FilaComision, type InformeComisiones } from '@/lib/comisiones-utils';
 
 const EMPRESAS: EmpresaSlug[] = ['vida', 'sanjh'];
 type FilaAgregado = { vendedor: string | null; notas: unknown; total_usd: unknown };
-type FilaMargen = { vendedor: string | null; ganancia_usd: unknown; costo_usd: unknown };
+type FilaMargen = { vendedor: string | null; suma_pct: unknown; n_lineas: unknown };
 type FilaVendedor = { vendedor: string | null };
 
 /** Condiciones de la nota del mes compartidas por comisiones y margen ($2..$3 = rango). */
@@ -27,17 +27,19 @@ GROUP BY 1`;
 }
 
 /**
- * Ganancia y costo crudos por vendedor, desde las lineas de la nota (solo admin, s16).
- * Sin la linea sin costo valido en NINGUNA de las dos sumas (D13: inflaria el margen).
+ * Suma del % de cada linea y cuantas lineas, por vendedor (solo admin, s17).
+ * La division es por linea (no importa la cantidad) y se promedia UNA vez al final.
+ * Sin costo valido ni precio NULL (D13: inflarian el promedio); precio 0 cuenta como -100 %.
  */
 export function consultaMargenComisiones(esquema: EmpresaSlug): string {
   return `SELECT btrim(m.vendedor) AS vendedor,
-       COALESCE(SUM((COALESCE(i.precread,0) - COALESCE(i.cosunita,0)) * COALESCE(i.cantsali,0)), 0)::float8 AS ganancia_usd,
-       COALESCE(SUM(COALESCE(i.cosunita,0) * COALESCE(i.cantsali,0)), 0)::float8 AS costo_usd
+       COALESCE(SUM(((i.precread - i.cosunita)::float8 / i.cosunita::float8) * 100), 0)::float8 AS suma_pct,
+       COUNT(*)::int AS n_lineas
 FROM ${esquema}.movidcto m
 JOIN ${esquema}.itemdcto i ON i.knumfoli = m.knumfoli
 WHERE ${condicionesComisionesMes(esquema)}
   AND COALESCE(i.cosunita,0) > 0
+  AND i.precread IS NOT NULL
 GROUP BY 1`;
 }
 
@@ -64,12 +66,12 @@ export async function fetchComisiones(
   const listas = (listasRaw ?? []).flat() as unknown as FilaVendedor[];
   const margenes = (margenesRaw ?? []).flat() as unknown as FilaMargen[];
 
-  const acumulado = new Map<string, { vendedor: string; notas: number; total: number; ganancia: number; costo: number }>();
+  const acumulado = new Map<string, { vendedor: string; notas: number; total: number; sumaPct: number; nLineas: number }>();
   for (const r of listas) {
     const nombre = (r.vendedor ?? '').trim();
     if (nombre && !acumulado.has(nombre.toUpperCase())) {
       // El filtro de la tabla compara con upper(): deduplicar igual.
-      acumulado.set(nombre.toUpperCase(), { vendedor: nombre, notas: 0, total: 0, ganancia: 0, costo: 0 });
+      acumulado.set(nombre.toUpperCase(), { vendedor: nombre, notas: 0, total: 0, sumaPct: 0, nLineas: 0 });
     }
   }
   for (const r of agregados) {
@@ -78,12 +80,12 @@ export async function fetchComisiones(
     fila.notas += Number(r.notas) || 0;
     fila.total += Number(r.total_usd) || 0;
   }
-  // Se acumula crudo por empresa y se divide UNA vez por vendedor (no promedio de %).
+  // Se suman % y lineas crudos por empresa y se divide UNA vez por vendedor (promedio simple).
   for (const r of margenes) {
     const fila = acumulado.get((r.vendedor ?? '').trim().toUpperCase());
     if (!fila) continue;
-    fila.ganancia += Number(r.ganancia_usd) || 0;
-    fila.costo += Number(r.costo_usd) || 0;
+    fila.sumaPct += Number(r.suma_pct) || 0;
+    fila.nLineas += Number(r.n_lineas) || 0;
   }
 
   // Comparacion simple: localeCompare depende del ICU del proceso.
@@ -93,12 +95,12 @@ export async function fetchComisiones(
   const filas: FilaComision[] = acumulados.map((f) => {
     const total = redondearCentavos(f.total);
     const fila: FilaComision = { vendedor: f.vendedor, notas: f.notas, total_usd: total, comision_pct: comisionPct, comision_usd: redondearCentavos((total * comisionPct) / 100) };
-    if (verMargen) fila.margen_pct = margenSobreCosto(f.ganancia, f.costo);
+    if (verMargen) fila.margen_pct = margenPromedioLineas(f.sumaPct, f.nLineas);
     return fila;
   });
   const suma = (campo: 'notas' | 'total_usd' | 'comision_usd') => filas.reduce((s, f) => s + f[campo], 0);
-  const ganancia = acumulados.reduce((s, f) => s + f.ganancia, 0);
-  const costo = acumulados.reduce((s, f) => s + f.costo, 0);
+  const sumaPct = acumulados.reduce((s, f) => s + f.sumaPct, 0);
+  const nLineas = acumulados.reduce((s, f) => s + f.nLineas, 0);
 
   return {
     mes,
@@ -109,7 +111,7 @@ export async function fetchComisiones(
       notas: suma('notas'),
       total_usd: redondearCentavos(suma('total_usd')),
       comision_usd: redondearCentavos(suma('comision_usd')),
-      ...(verMargen ? { margen_pct: margenSobreCosto(ganancia, costo) } : {}),
+      ...(verMargen ? { margen_pct: margenPromedioLineas(sumaPct, nLineas) } : {}),
     },
   };
 }

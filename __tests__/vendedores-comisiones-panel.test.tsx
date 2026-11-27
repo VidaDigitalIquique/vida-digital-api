@@ -156,14 +156,14 @@ describe('exportar el informe a Excel (R10)', () => {
   });
 });
 
-describe('columna % promedio sobre el costo (s16)', () => {
+describe('columna % promedio sobre el costo (s17: promedio simple por linea)', () => {
   const CON_MARGEN: InformeComisiones = {
     ...INFORME_11,
     filas: [
-      { ...INFORME_11.filas[0], margen_pct: 320 / 1700 * 100 },
+      { ...INFORME_11.filas[0], margen_pct: 30 },
       { ...INFORME_11.filas[1], margen_pct: null },
     ],
-    totales: { ...INFORME_11.totales, margen_pct: 320 / 1700 * 100 },
+    totales: { ...INFORME_11.totales, margen_pct: 30 },
   };
 
   function fetchMargen() {
@@ -177,10 +177,10 @@ describe('columna % promedio sobre el costo (s16)', () => {
     render(<ComisionesPanel />);
     await screen.findByText('ANGELA');
     expect(screen.queryByText('% promedio sobre el costo')).not.toBeInTheDocument();
-    expect(screen.queryByText('18.8 %')).not.toBeInTheDocument();
+    expect(screen.queryByText('30.0 %')).not.toBeInTheDocument();
   });
 
-  it('mostrarMargen: cabecera al final, "18.8 %" por fila, "-" para null y total en tfoot', async () => {
+  it('mostrarMargen: cabecera al final, "30.0 %" por fila, "-" para null y total en tfoot', async () => {
     fetchMargen();
     render(<ComisionesPanel mostrarMargen />);
     await screen.findByText('ANGELA');
@@ -189,8 +189,8 @@ describe('columna % promedio sobre el costo (s16)', () => {
     const ths = within(thead).getAllByRole('columnheader');
     expect(ths[ths.length - 1]).toHaveTextContent('% promedio sobre el costo');
     expect(screen.getByText('-')).toBeInTheDocument();
-    // El total usa el margen ya ponderado por la API (18,8235 %), no el promedio (39,4 %).
-    expect(screen.getAllByText('18.8 %')).toHaveLength(2);
+    // La UI no recalcula: pinta el margen ya promediado por la API (30 %), no otro valor.
+    expect(screen.getAllByText('30.0 %')).toHaveLength(2);
     expect(screen.queryByText('39.4 %')).not.toBeInTheDocument();
   });
 
