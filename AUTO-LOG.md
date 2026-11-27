@@ -266,3 +266,11 @@
 - Incidente: al sacar .env del indice y cambiar de rama, git sobrescribio el .env local y el merge lo borro del disco. Se restauro la version versionada (14 claves); Pablo repuso TEST_DATABASE_URL. Pendiente de Pablo: rotar las credenciales que estuvieron en el .env versionado (siguen en el historial de GitHub).
 - Humo de produccion tras ba47654: anon, admin y bodeguero PASA; vendedor FALLA solo en QA-VEN26 (falso positivo conocido, BACKLOG C2: el vendedor puede ver /vendedores y no ve el margen).
 - Decision sobre despachos: no se fusionan procesar y process (despachos_bodega 3.503 filas y en uso; despachos 0 filas y sin lectores). Se retira el lado muerto en s25.
+
+## 2026-11-27 - s25: retiro del lado muerto de despachos (integrado en main local)
+- Decision del Director con evidencia (Pablo: "si es mejor unificar, unifiquemos"): no se fusionan procesar y process. public.despachos_bodega (3.503 filas, ultima 2026-11-27) es la que se usa; public.despachos tiene 0 filas y nada la lee.
+- Retirado: /api/despachos/process, pantalla admin /despachos (no enlazada en menus), lib/openrouter.ts, __tests__/despachos-toast-zip.test.tsx, '/despachos' en RUTAS_POR_ROL.admin y en humoProd de .pbravot/qa-entorno.json. Test nuevo __tests__/s25-despachos-muerto.test.ts. route.test.ts de procesar adaptado (se quito la mitad que comparaba contra process).
+- Conservado: bodega/despachos, api/despachos/procesar y buscar, lib/gemini.ts. La tabla public.despachos NO se toco (vacia; borrarla es decision aparte de Pablo).
+- OPENROUTER_API_KEY SIGUE EN USO: lib/gemini.ts la usa. No quitarla de Vercel.
+- Pendiente: app/api/despachos/extract-zip/route.ts quedo sin llamadores; comentario residual en procesar/route.ts:47 que menciona /api/despachos/process.
+- Verificacion propia: tsc 0, jest/vitest verdes, build 0 (lint=1 preexistente).
