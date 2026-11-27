@@ -9,6 +9,8 @@ export interface FilaComision {
   total_usd: number;
   comision_pct: number;
   comision_usd: number;
+  /** Solo admin y con el flag encendido; ausente en el resto de los casos. */
+  margen_pct?: number | null;
 }
 
 export interface InformeComisiones {
@@ -16,7 +18,7 @@ export interface InformeComisiones {
   mes_etiqueta: string; // "noviembre 2026"
   comision_pct: number;
   filas: FilaComision[];
-  totales: { notas: number; total_usd: number; comision_usd: number };
+  totales: { notas: number; total_usd: number; comision_usd: number; margen_pct?: number | null };
 }
 
 // Nombres fijos: el ICU de Node dice "sept" en septiembre (misma razon que lib/fechas.ts).
@@ -56,4 +58,11 @@ export function validarPct(valor: unknown): number | null {
 /** Half-up a centavos, quitando antes el ruido binario de los float8. */
 export function redondearCentavos(n: number): number {
   return Math.round(Number((n * 100).toFixed(6))) / 100;
+}
+
+/** Promedio simple del % de cada linea (suma / cantidad), sin redondear; null sin lineas. */
+export function margenPromedioLineas(sumaPct: number, nLineas: number): number | null {
+  if (!Number.isFinite(sumaPct) || !Number.isFinite(nLineas) || nLineas <= 0) return null;
+  const pct = sumaPct / nLineas;
+  return Number.isFinite(pct) ? pct : null;
 }

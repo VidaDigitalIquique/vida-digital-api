@@ -230,3 +230,24 @@
 - Pendiente (gate): UAT, merge a main y deploy (el endpoint solo existe tras el deploy), encender flag sync-fotos-reconciliacion y agregar POST /api/cron/sync-fotos a cron-job.org (cada 10-15 min, Bearer CRON_SECRET). Si se corre scripts/seed.ts en una base, re-aplicar migrations/012.
 - Propuesta aparte (no hecha): sync_winfac_neon.py -> _actualizar_neon por codigo normalizado y revincular las imagenes que ya estan en Cloudinary (requiere ir al PC de Pravin).
 - Bug aparte detectado: components/ProductDrawer.tsx llama a `/api/productos/\${producto.id}` (texto literal) en guardar precios y marcar como visto; fallan siempre.
+
+## 2026-11-27 - s16: columna "% promedio sobre el costo" en Comisiones (/vendedores), solo admin, flag apagado
+- Pedido de Pablo: que la tabla Comisiones muestre el promedio del % sobre el costo que cada vendedor aplico en el mes (para ver en que rango de ganancia vende cada uno).
+- Decisiones del Director: promedio PONDERADO por costo (sum ganancia / sum costo, dividido una sola vez tras sumar vida+sanjh; no promedio de porcentajes); lineas con costo <= 0/NULL fuera de ambas sumas; columna y campo margen_pct solo para admin (el vendedor no ve costos) y detras del flag endedores-comisiones-margen (false). Total = margen ponderado global.
+- Programador deep (deepseek-flash): s16-A 2.83 USD, s16-BCD 7.69 USD. Rama feat/vendedores-comisiones-margen. Contrato aprobado sin cambios salvo la exclusion de lineas sin costo.
+- Verificacion propia: diff leido contra el contrato; jest vendedores 18 suites / 484 tests, suite completa 132 suites / 1168 tests y vitest 81 OK; verificar.ps1 s16: tsc 0, test 0, build 0 (lint=1 preexistente en archivos ajenos).
+- Verificacion con datos reales (SELECT en produccion, noviembre 2026): margen de la app = calculo independiente linea a linea para los 4 vendedores y el total (ANGELA 40.05, ANIL CHANDNANI 25.89, JOSEPH LEVANO 30.83, PRAVIN 28.83, total 30.01); 0 lineas sin costo; notas, total_usd y comision identicos con y sin margen.
+- PENDIENTE: UAT de Pablo, merge a main, encender flag y QA de UI / humo (agregar "% promedio sobre el costo" a humoProd.debeVerse al encender). Sin commit en main ni deploy.
+## 2026-11-27 - s16/s17: columna "% promedio sobre el costo" en Comisiones (rama feat/vendedores-comisiones-margen)
+- Pedido de Pablo: columna con el promedio del % sobre el costo que cada vendedor aplico en el mes. Aclaracion 2026-11-27: promedio SIMPLE por linea de producto (suma de los % de cada linea / cantidad de lineas), sin ponderar por cantidad ni costo.
+- Slices: s16 (7002f55, version ponderada por costo) y s17 (6864fc6, promedio simple por linea). Flag vendedores-comisiones-margen en FALSE; solo admin; tambien en el Excel.
+- Verificacion propia: tsc 0, jest/vitest completos verdes, build OK (lint=1 preexistente en archivos ajenos). Contraste en produccion (solo lectura) igual al calculo independiente linea a linea.
+- Hallazgo de datos: 2 lineas de ANGELA (nov 2026, notas 002489 y 002498) tienen costo 0,01 (costo no cargado) -> 179.900 % y 44.900 %; su promedio queda en 2.541 % (44,5 % sin ellas). 11 lineas de Vida en 2026 superan 1.000 %. Pendiente decision de Pablo: excluir lineas con costo <= 0,01 (recomendado).
+- Pendiente (gate): UAT de Pablo, decidir la exclusion, merge a main, encender el flag, Fase E y humo de produccion (agregar "% promedio sobre el costo" a humoProd.debeVerse).
+
+
+## 2026-11-27 - Release: s16-s20 a produccion (main)
+- Pablo autorizo (2026-11-27 13:19): excluir costos <= 0,01 (s19), desplegar comisiones y fotos, encender sus flags, agregar el endpoint a cron-job.org y corregir el bug de `${` (s20).
+- Ramas integradas: fix/drawer-url-literal (s20), fix/fotos-sincronizadas (s18a-c), feat/vendedores-comisiones-margen (s16, s17, s19). Flags encendidos: vendedores-comisiones-margen, sync-fotos-reconciliacion.
+- Verificacion propia de lo integrado: tsc 0, jest/vitest completos verdes, build OK (lint=1 preexistente en archivos ajenos).
+- /ponytail-audit (Senal 3) NO se corrio. Pendiente tras el deploy: humo de produccion (qa-prod) y primera llamada al endpoint /api/cron/sync-fotos.

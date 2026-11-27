@@ -31,5 +31,6 @@
   "menu-movil-v2": true,
   "fix-d11-imagen-producto": true,
   "vendedores-buscador": true,
-  "sync-fotos-reconciliacion": false
+  "sync-fotos-reconciliacion": true,
+  "vendedores-comisiones-margen": true
 }

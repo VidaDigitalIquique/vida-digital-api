@@ -4,7 +4,7 @@
  * S5b — Fase B: panel de COMISIONES (R8, R9). La UI no recalcula: muestra la API.
  */
 import React from 'react';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { redondearCentavos, type InformeComisiones } from '@/lib/comisiones-utils';
 import { ComisionesPanel } from '@/app/(app)/vendedores/ComisionesPanel';
 
@@ -153,6 +153,56 @@ describe('exportar el informe a Excel (R10)', () => {
       'href',
       '/api/vendedores/comisiones?mes=2026-10&formato=xlsx'
     );
+  });
+});
+
+describe('columna % promedio sobre el costo (s17: promedio simple por linea)', () => {
+  const CON_MARGEN: InformeComisiones = {
+    ...INFORME_11,
+    filas: [
+      { ...INFORME_11.filas[0], margen_pct: 30 },
+      { ...INFORME_11.filas[1], margen_pct: null },
+    ],
+    totales: { ...INFORME_11.totales, margen_pct: 30 },
+  };
+
+  function fetchMargen() {
+    const fn = jest.fn(() => Promise.resolve({ ok: true, status: 200, json: async () => CON_MARGEN }));
+    global.fetch = fn as unknown as typeof fetch;
+    return fn;
+  }
+
+  it('por defecto la columna NO se muestra aunque la API la mande', async () => {
+    fetchMargen();
+    render(<ComisionesPanel />);
+    await screen.findByText('ANGELA');
+    expect(screen.queryByText('% promedio sobre el costo')).not.toBeInTheDocument();
+    expect(screen.queryByText('30.0 %')).not.toBeInTheDocument();
+  });
+
+  it('mostrarMargen: cabecera al final, "30.0 %" por fila, "-" para null y total en tfoot', async () => {
+    fetchMargen();
+    render(<ComisionesPanel mostrarMargen />);
+    await screen.findByText('ANGELA');
+
+    const thead = document.querySelector('thead') as HTMLElement;
+    const ths = within(thead).getAllByRole('columnheader');
+    expect(ths[ths.length - 1]).toHaveTextContent('% promedio sobre el costo');
+    expect(screen.getByText('-')).toBeInTheDocument();
+    // La UI no recalcula: pinta el margen ya promediado por la API (30 %), no otro valor.
+    expect(screen.getAllByText('30.0 %')).toHaveLength(2);
+    expect(screen.queryByText('39.4 %')).not.toBeInTheDocument();
+  });
+
+  it('formatea sin toLocale* ni new Date (render determinista, D3)', () => {
+    const fs = jest.requireActual<typeof import('fs')>('fs');
+    const path = jest.requireActual<typeof import('path')>('path');
+    const src = fs.readFileSync(
+      path.join(process.cwd(), 'app', '(app)', 'vendedores', 'ComisionesPanel.tsx'),
+      'utf8'
+    );
+    expect(src).not.toMatch(/toLocale/);
+    expect(src).not.toMatch(/new Date/);
   });
 });
 

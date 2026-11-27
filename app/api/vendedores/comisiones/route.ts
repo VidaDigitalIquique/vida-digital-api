@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 import flags from '@/config/feature-flags.json';
 import { hoyCL } from '@/lib/fechas';
-import { puedeEditarComisionPct, puedeVerVendedores } from '@/lib/roles';
+import { puedeEditarComisionPct, puedeVerGananciaVendedores, puedeVerVendedores } from '@/lib/roles';
 import { fetchComisiones, guardarComisionPct, leerComisionPct } from '@/lib/comisiones';
 import { generarComisionesXlsx } from '@/lib/comisiones-xlsx';
 import { mesDeHoy, mesValido, validarPct } from '@/lib/comisiones-utils';
@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 
 async function autorizar(
   requiereEditarPct = false
-): Promise<{ error: NextResponse } | { usuarioId: number }> {
+): Promise<{ error: NextResponse } | { usuarioId: number; verMargen: boolean }> {
   const session = await getServerSession(authOptions);
   if (!session) return { error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) };
 
@@ -31,7 +31,9 @@ async function autorizar(
   if (!Number.isInteger(usuarioId) || usuarioId < 1) {
     return { error: NextResponse.json({ error: 'No autorizado' }, { status: 401 }) };
   }
-  return { usuarioId };
+  const verMargen =
+    Boolean(flags['vendedores-comisiones-margen']) && puedeVerGananciaVendedores(user?.rol);
+  return { usuarioId, verMargen };
 }
 
 export async function GET(request: Request) {
@@ -51,9 +53,9 @@ export async function GET(request: Request) {
 
   try {
     const comisionPct = await leerComisionPct();
-    const informe = await fetchComisiones(mes, hoy, comisionPct);
+    const informe = await fetchComisiones(mes, hoy, comisionPct, auth.verMargen);
     if (formato === 'xlsx') {
-      return new NextResponse(new Uint8Array(generarComisionesXlsx(informe)), {
+      return new NextResponse(new Uint8Array(generarComisionesXlsx(informe, auth.verMargen)), {
         status: 200,
         headers: {
           'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -96,7 +98,7 @@ export async function PUT(request: Request) {
 
   try {
     const guardado = await guardarComisionPct(comisionPct, auth.usuarioId);
-    return NextResponse.json(await fetchComisiones(mes, hoy, guardado));
+    return NextResponse.json(await fetchComisiones(mes, hoy, guardado, auth.verMargen));
   } catch (error) {
     console.error('PUT /api/vendedores/comisiones error:', error);
     return NextResponse.json({ error: 'Error al guardar las comisiones' }, { status: 500 });

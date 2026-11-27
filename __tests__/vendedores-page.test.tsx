@@ -10,6 +10,7 @@ jest.mock('@/lib/auth', () => ({ authOptions: {} }));
 jest.mock('@/config/feature-flags.json', () => ({
   'vendedores-modulo': true,
   'vendedores-buscador': false,
+  'vendedores-comisiones-margen': false,
 }));
 jest.mock('next/navigation', () => ({
   redirect: (url: string) => {
@@ -34,8 +35,17 @@ jest.mock('@/app/(app)/vendedores/VendedoresClient', () => ({
   ),
 }));
 jest.mock('@/app/(app)/vendedores/ComisionesPanel', () => ({
-  ComisionesPanel: ({ puedeEditarPct }: { puedeEditarPct?: boolean }) => (
-    <div>{`panel-comisiones:editar=${String(puedeEditarPct)}`}</div>
+  ComisionesPanel: ({
+    puedeEditarPct,
+    mostrarMargen,
+  }: {
+    puedeEditarPct?: boolean;
+    mostrarMargen?: boolean;
+  }) => (
+    <>
+      <div>{`panel-comisiones:editar=${String(puedeEditarPct)}`}</div>
+      <div>{`panel-comisiones:margen=${String(mostrarMargen)}`}</div>
+    </>
   ),
 }));
 jest.mock('@/app/(app)/vendedores/GananciaPeriodoPanel', () => ({
@@ -54,6 +64,7 @@ const yoSoy = (rol: string | null) =>
 beforeEach(() => {
   mockFlags['vendedores-modulo'] = true;
   mockFlags['vendedores-buscador'] = false;
+  mockFlags['vendedores-comisiones-margen'] = false;
   yoSoy('admin');
 });
 
@@ -98,6 +109,26 @@ describe('/vendedores — buscador de notas (s15b)', () => {
     mockFlags['vendedores-buscador'] = true;
     render(await VendedoresPage());
     expect(screen.getByText('tabla-vendedores:buscador=true')).toBeInTheDocument();
+  });
+});
+
+describe('/vendedores — columna % sobre el costo (s16)', () => {
+  it('admin con el flag encendido -> mostrarMargen=true', async () => {
+    mockFlags['vendedores-comisiones-margen'] = true;
+    render(await VendedoresPage());
+    expect(screen.getByText('panel-comisiones:margen=true')).toBeInTheDocument();
+  });
+
+  it('admin con el flag apagado -> mostrarMargen=false', async () => {
+    render(await VendedoresPage());
+    expect(screen.getByText('panel-comisiones:margen=false')).toBeInTheDocument();
+  });
+
+  it.each([true, false])('vendedor con el flag %p -> mostrarMargen=false (solo admin)', async (on) => {
+    mockFlags['vendedores-comisiones-margen'] = on;
+    yoSoy('vendedor');
+    render(await VendedoresPage());
+    expect(screen.getByText('panel-comisiones:margen=false')).toBeInTheDocument();
   });
 });
 

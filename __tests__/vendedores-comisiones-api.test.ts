@@ -2,6 +2,7 @@
  * S5a/S5b — Fase B: guardas y contrato HTTP de /api/vendedores/comisiones (R8, R9).
  */
 import { getServerSession } from 'next-auth';
+import * as XLSX from 'xlsx';
 
 const queryMock = jest.fn();
 
@@ -33,7 +34,10 @@ jest.mock('next/server', () => {
   return { NextResponse };
 });
 
-jest.mock('@/config/feature-flags.json', () => ({ 'vendedores-modulo': true }));
+jest.mock('@/config/feature-flags.json', () => ({
+  'vendedores-modulo': true,
+  'vendedores-comisiones-margen': false,
+}));
 
 jest.mock('@/lib/fechas', () => ({ hoyCL: jest.fn(() => '2026-11-11') }));
 
@@ -67,6 +71,13 @@ function mockDb() {
       // UPSERT: devuelve lo guardado; SELECT: el valor actual.
       return Promise.resolve([{ pct: t.includes('ON CONFLICT') ? (params ?? [])[0] : 0.5 }]);
     }
+    if (t.includes('precread')) {
+      return Promise.resolve(
+        t.includes('sanjh.movidcto')
+          ? []
+          : [{ vendedor: 'ANGELA', suma_pct: 90, n_lineas: 3 }] // 10 + 20 + 60 -> 30 %
+      );
+    }
     if (t.includes('DISTINCT')) {
       return Promise.resolve(
         t.includes('sanjh.movidcto')
@@ -89,6 +100,7 @@ beforeEach(() => {
   queryMock.mockReset();
   mockDb();
   flags['vendedores-modulo'] = true;
+  flags['vendedores-comisiones-margen'] = false;
   sesion('1');
 });
 
@@ -213,6 +225,66 @@ describe('contrato del informe', () => {
     await expect(res.json()).resolves.toEqual({ error: 'Error al consultar las comisiones' });
     expect(spy).toHaveBeenCalledWith('GET /api/vendedores/comisiones error:', expect.any(Error));
     spy.mockRestore();
+  });
+});
+
+describe('columna % promedio sobre el costo (s17: promedio simple por linea)', () => {
+  const llamadasMargen = () =>
+    queryMock.mock.calls.filter((c) => String(c[0]).includes('precread'));
+
+  it('admin con el flag encendido: promedio simple de las lineas en filas y totales', async () => {
+    flags['vendedores-comisiones-margen'] = true;
+    const body = await (await GET(req())).json();
+    const angela = body.filas.find((f: { vendedor: string }) => f.vendedor === 'ANGELA');
+    expect(angela.margen_pct).toBeCloseTo(90 / 3, 10); // 30 %, no 18,8235 % ponderado
+    expect(body.filas.find((f: { vendedor: string }) => f.vendedor === 'PRAVIN').margen_pct).toBeNull();
+    expect(body.totales.margen_pct).toBeCloseTo(30, 10);
+    expect(llamadasMargen()).toHaveLength(2); // vida + sanjh
+  });
+
+  it('flag apagado: sin la clave y sin consultar el margen', async () => {
+    const body = await (await GET(req())).json();
+    expect(body.filas.every((f: object) => !('margen_pct' in f))).toBe(true);
+    expect('margen_pct' in body.totales).toBe(false);
+    expect(llamadasMargen()).toHaveLength(0);
+  });
+
+  it('vendedor con el flag encendido: sin margen y sin consultar el margen (solo admin)', async () => {
+    flags['vendedores-comisiones-margen'] = true;
+    sesion('1', 'vendedor');
+    const body = await (await GET(req())).json();
+    expect(body.filas.every((f: object) => !('margen_pct' in f))).toBe(true);
+    expect('margen_pct' in body.totales).toBe(false);
+    expect(llamadasMargen()).toHaveLength(0);
+  });
+
+  it('PUT admin con el flag encendido devuelve el informe con margen', async () => {
+    flags['vendedores-comisiones-margen'] = true;
+    const body = await (await PUT(pedir({ mes: '2026-11', comision_pct: 1 }))).json();
+    expect(body.filas[0].margen_pct).toBeCloseTo(30, 10);
+  });
+
+  it('xlsx de vendedor: 5 columnas, sin la de margen', async () => {
+    sesion('1', 'vendedor');
+    const res = await GET(req('formato=xlsx'));
+    const wb = XLSX.read((res as unknown as { _body: Buffer })._body, { type: 'buffer' });
+    const filas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }) as unknown[][];
+    expect(filas[0]).toHaveLength(5);
+    expect(filas[0]).not.toContain('% promedio sobre el costo');
+  });
+
+  it('xlsx de admin con el flag encendido: 6 columnas y el margen al final', async () => {
+    flags['vendedores-comisiones-margen'] = true;
+    const res = await GET(req('formato=xlsx'));
+    const wb = XLSX.read((res as unknown as { _body: Buffer })._body, { type: 'buffer', cellNF: true });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const filas = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
+    expect(filas[0]).toHaveLength(6);
+    expect(filas[0][5]).toBe('% promedio sobre el costo');
+    expect(ws['F2'].t).toBe('n');
+    expect(ws['F2'].z).toBe('0.0"%"');
+    expect(ws['F2'].v).toBeCloseTo(30, 8);
+    expect(ws['F3'].v).toBe('-'); // PRAVIN sin lineas de costo
   });
 });
 

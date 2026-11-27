@@ -6,12 +6,17 @@ import { validarPct, type InformeComisiones } from '@/lib/comisiones-utils';
 
 const COLUMNAS = ['Vendedor', 'Notas facturadas', 'Total vendido USD', '% comisión', 'Comisión USD'];
 const CAMPO = 'rounded-md border border-zinc-300 dark:border-zinc-700 bg-transparent px-2 py-1.5 text-sm';
+const MARGEN = '% promedio sobre el costo';
 const TH = 'whitespace-nowrap px-3 py-2 text-left font-medium text-zinc-500';
 const TD = 'whitespace-nowrap px-3 py-2';
+// Formato fijo: el ICU del proceso no debe decidir el texto (test determinista).
+const formatMargen = (v: number | null | undefined) => (v == null ? '-' : `${v.toFixed(1)} %`);
 const leer = (r: Response) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)));
 
 // La UI no recalcula: pinta filas y totales tal como los devuelve la API (S6 igual).
-export function ComisionesPanel({ puedeEditarPct = true }: { puedeEditarPct?: boolean } = {}) {
+export function ComisionesPanel(
+  { puedeEditarPct = true, mostrarMargen = false }: { puedeEditarPct?: boolean; mostrarMargen?: boolean } = {}
+) {
   const [data, setData] = useState<InformeComisiones | null>(null);
   const [mes, setMes] = useState('');
   const [pct, setPct] = useState('');
@@ -131,7 +136,7 @@ export function ComisionesPanel({ puedeEditarPct = true }: { puedeEditarPct?: bo
         <div className="overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800">
           <table className="w-full text-sm">
             <thead className="bg-zinc-50 dark:bg-zinc-900">
-              <tr>{COLUMNAS.map((c) => <th key={c} className={TH}>{c}</th>)}</tr>
+              <tr>{COLUMNAS.map((c) => <th key={c} className={TH}>{c}</th>)}{mostrarMargen && <th className={TH}>{MARGEN}</th>}</tr>
             </thead>
             <tbody>
               {data.filas.map((f) => (
@@ -141,6 +146,7 @@ export function ComisionesPanel({ puedeEditarPct = true }: { puedeEditarPct?: bo
                   <td className={TD}>{formatUSD(f.total_usd)}</td>
                   <td className={TD}>{f.comision_pct.toFixed(2)} %</td>
                   <td className={TD}>{formatUSD(f.comision_usd)}</td>
+                  {mostrarMargen && <td className={TD}>{formatMargen(f.margen_pct)}</td>}
                 </tr>
               ))}
             </tbody>
@@ -151,6 +157,7 @@ export function ComisionesPanel({ puedeEditarPct = true }: { puedeEditarPct?: bo
                 <th className={TH}>{formatUSD(data.totales.total_usd)}</th>
                 <th className={TH}>{data.comision_pct.toFixed(2)} %</th>
                 <th className={TH}>{formatUSD(data.totales.comision_usd)}</th>
+                {mostrarMargen && <th className={TH}>{formatMargen(data.totales.margen_pct)}</th>}
               </tr>
             </tfoot>
           </table>
