@@ -16,7 +16,7 @@ import type { EjecutorSql } from '../lib/fotos-sync';
 const CLOUD = 'demo';
 const U = (p: string) => `https://res.cloudinary.com/${CLOUD}/image/upload/${p}`;
 
-type Evento = { tipo: 'select' | 'update' | 'respaldo'; texto?: string; valores?: unknown[] };
+type Evento = { tipo: 'select' | 'update' | 'respaldo' | 'listar'; texto?: string; valores?: unknown[] };
 
 function sqlFalso(filas: FilaFoto[], eventos: Evento[] = []): EjecutorSql {
   const sql = jest.fn(async (strings: TemplateStringsArray, ...valores: unknown[]) => {
@@ -107,6 +107,40 @@ describe('scripts/reconciliar-fotos', () => {
     expect(res.escribio).toBe(false);
     expect(actualizaciones(eventos)).toHaveLength(0);
     expect(volcar).not.toHaveBeenCalled();
+  });
+
+  it('lee los productos antes de listar Cloudinary', async () => {
+    const eventos: Evento[] = [];
+    const d = deps(sqlFalso([fila], eventos), eventos);
+    d.listar = async () => {
+      eventos.push({ tipo: 'listar' });
+      return {
+        recursos: [{ public_id: 'productos/A', secure_url: U('productos/A.jpg'), created_at: null }],
+        incompleto: false,
+      };
+    };
+    await ejecutarReconciliacion(d, { aplicar: false });
+    const select = eventos.findIndex((e) => e.tipo === 'select');
+    const listar = eventos.findIndex((e) => e.tipo === 'listar');
+    expect(select).toBeGreaterThanOrEqual(0);
+    expect(select).toBeLessThan(listar);
+  });
+
+  it('la foto creada antes del listado no se limpia; el recurso ausente si', async () => {
+    process.env.CLOUDINARY_CLOUD_NAME = CLOUD;
+    const conRecurso: FilaFoto = {
+      id: 1, codigo: 'A', imagen_url: U('productos/A.jpg'), public_id: 'productos/A',
+    };
+    const eventos: Evento[] = [];
+    const con = await ejecutarReconciliacion(deps(sqlFalso([conRecurso], eventos), eventos), { aplicar: false });
+    expect(con.acciones).toBe(0);
+
+    const sinRecurso: FilaFoto = {
+      id: 2, codigo: 'B', imagen_url: U('productos/B.jpg'), public_id: 'productos/B',
+    };
+    const eventos2: Evento[] = [];
+    const sin = await ejecutarReconciliacion(deps(sqlFalso([sinRecurso], eventos2), eventos2), { aplicar: false });
+    expect(sin.acciones).toBe(1);
   });
 
   it('restaurar devuelve imagen_url, public_id e id de cada fila', async () => {

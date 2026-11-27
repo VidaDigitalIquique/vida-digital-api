@@ -22,6 +22,12 @@ export async function POST(request: Request) {
   const flagOn = (flags as Record<string, boolean>)['sync-fotos-reconciliacion'] === true;
   const dry = !flagOn || new URL(request.url).searchParams.get('dry') === '1';
 
+  // Leer productos antes de listar: una foto subida entre ambas lecturas ya está
+  // en la fila y también en el listado, así el plan no la confunde con una huérfana.
+  const productos = (await sql`
+    SELECT id, codigo, imagen_url, public_id FROM public.productos ORDER BY id
+  `) as ProductoFoto[];
+
   const recursos: RecursoFoto[] = [];
   let cursor: string | null = null;
   let paginas = 0;
@@ -36,10 +42,6 @@ export async function POST(request: Request) {
     console.error('POST /api/cron/sync-fotos listado:', error);
     return NextResponse.json({ ok: false, error: 'cloudinary_no_disponible' }, { status: 502 });
   }
-
-  const productos = (await sql`
-    SELECT id, codigo, imagen_url, public_id FROM public.productos ORDER BY id
-  `) as ProductoFoto[];
 
   const plan = planificarReconciliacion(productos, recursos, process.env.CLOUDINARY_CLOUD_NAME ?? '', {
     listadoIncompleto: Boolean(cursor),

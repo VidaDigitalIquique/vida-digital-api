@@ -111,13 +111,48 @@ describe('POST /api/cron/sync-fotos', () => {
     expect(updates()).toHaveLength(0);
   });
 
-  it('27. si el listado lanza devuelve 502', async () => {
+  it('27. si el listado lanza devuelve 502 sin escribir', async () => {
+    sqlMock.mockResolvedValue(productos(1));
     listarMock.mockRejectedValue(new Error('cloud caido'));
     const res = await POST(req());
     expect(res.status).toBe(502);
     const body = await res.json();
     expect(body.error).toBe('cloudinary_no_disponible');
-    expect(sqlMock).not.toHaveBeenCalled();
+    expect(updates()).toHaveLength(0);
+  });
+
+  it('29. lee los productos antes de listar Cloudinary', async () => {
+    FLAG['sync-fotos-reconciliacion'] = true;
+    const orden: string[] = [];
+    sqlMock.mockImplementation(async (s: TemplateStringsArray) => {
+      orden.push(s.join('').includes('UPDATE') ? 'update' : 'select');
+      return productos(1);
+    });
+    listarMock.mockImplementation(async () => {
+      orden.push('listar');
+      return pagina([{ public_id: 'productos/COD-1', secure_url: U('productos/COD-1.jpg'), created_at: null }]);
+    });
+    await POST(req('http://localhost/api/cron/sync-fotos?dry=1'));
+    expect(orden[0]).toBe('select');
+    expect(orden.indexOf('select')).toBeLessThan(orden.indexOf('listar'));
+  });
+
+  it('30. la foto creada antes del listado no se limpia; el recurso ausente si', async () => {
+    FLAG['sync-fotos-reconciliacion'] = true;
+    const conRecurso = [{
+      id: 1, codigo: 'COD-1', imagen_url: U('productos/COD-1.jpg'), public_id: 'productos/COD-1',
+    }];
+    setup(conRecurso, [{ public_id: 'productos/COD-1', secure_url: U('productos/COD-1.jpg'), created_at: null }]);
+    const ok = await (await POST(req('http://localhost/api/cron/sync-fotos?dry=1'))).json();
+    expect(ok.acciones).toBe(0);
+
+    const sinRecurso = [{
+      id: 2, codigo: 'COD-2', imagen_url: U('productos/COD-2.jpg'), public_id: 'productos/COD-2',
+    }];
+    setup(sinRecurso, [{ public_id: 'productos/COD-1', secure_url: U('productos/COD-1.jpg'), created_at: null }]);
+    const malo = await (await POST(req('http://localhost/api/cron/sync-fotos?dry=1'))).json();
+    expect(malo.acciones).toBe(1);
+    expect(malo.muestra[0].tipo).toBe('limpiar');
   });
 
   it('28. 250 acciones: 200 aplicadas y 50 pendientes', async () => {

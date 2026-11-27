@@ -56,8 +56,10 @@ export async function ejecutarReconciliacion(
     deps.log('ERROR: --apply requiere --backup <carpeta>. No se escribe nada.');
     return { codigo: 1, escribio: false, bloqueado: null, acciones: 0 };
   }
-  const { recursos, incompleto } = await deps.listar();
+  // Leer productos antes de listar: una foto subida entre ambas lecturas ya está
+  // en la fila y también en el listado, así el plan no la confunde con una huérfana.
   const productos = (await deps.sql`SELECT id, codigo, imagen_url, public_id FROM public.productos ORDER BY id`) as ProductoFoto[];
+  const { recursos, incompleto } = await deps.listar();
   const plan = planificarReconciliacion(productos, recursos, process.env.CLOUDINARY_CLOUD_NAME ?? '', { listadoIncompleto: incompleto });
   deps.log(JSON.stringify({ bloqueado: plan.bloqueado, conteos: plan.conteos, acciones: plan.acciones.length,
     muestra: plan.acciones.slice(0, 20) }, null, 2));
