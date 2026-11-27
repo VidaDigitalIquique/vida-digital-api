@@ -169,7 +169,7 @@ export function UsuariosClient({ empresasList, currentUserId }: { empresasList: 
                  <TableCell className="font-mono text-sm">{u.rut}</TableCell>
                  <TableCell className="font-semibold">{u.nombre}{currentUserId === u.id && ' (Tú)'}</TableCell>
                  <TableCell className="text-center">
-                    <Badge variant="outline" className={`\${u.rol === 'admin' ? 'border-purple-200 text-purple-700 bg-purple-50' : u.rol === 'bodeguero' ? 'border-amber-200 text-amber-700 bg-amber-50' : u.rol === 'vendedor' ? 'border-blue-200 text-blue-700 bg-blue-50' : 'bg-transparent'}`}>
+                    <Badge variant="outline" className={`${u.rol === 'admin' ? 'border-purple-200 text-purple-700 bg-purple-50' : u.rol === 'bodeguero' ? 'border-amber-200 text-amber-700 bg-amber-50' : u.rol === 'vendedor' ? 'border-blue-200 text-blue-700 bg-blue-50' : 'bg-transparent'}`}>
                        {u.rol.toUpperCase()}
                     </Badge>
                  </TableCell>
@@ -241,7 +241,7 @@ export function UsuariosClient({ empresasList, currentUserId }: { empresasList: 
                     <label className="text-sm font-medium block">Estado de Cuenta</label>
                     <button 
                       onClick={() => setIsActive(!isActive)}
-                      className={`w-full py-2 rounded-md border text-sm font-semibold transition-colors \${isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}
+                      className={`w-full py-2 rounded-md border text-sm font-semibold transition-colors ${isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}
                     >
                       {isActive ? 'Activo (Desactivar)' : 'Bloqueado (Reactivar)'}
                     </button>
@@ -258,7 +258,7 @@ export function UsuariosClient({ empresasList, currentUserId }: { empresasList: 
                          <button 
                            key={emp.id} 
                            onClick={() => toggleEmpresa(emp.id)}
-                           className={`flex items-center justify-between p-2 rounded-md border text-left text-sm font-medium transition-colors \${sel ? 'border-blue-500 bg-blue-50/50 text-blue-700 dark:bg-blue-900/20' : 'bg-transparent text-zinc-600 hover:bg-zinc-50'}`}
+                           className={`flex items-center justify-between p-2 rounded-md border text-left text-sm font-medium transition-colors ${sel ? 'border-blue-500 bg-blue-50/50 text-blue-700 dark:bg-blue-900/20' : 'bg-transparent text-zinc-600 hover:bg-zinc-50'}`}
                          >
                            {emp.nombre}
                            {sel && <Check className="w-4 h-4 text-blue-600" />}
