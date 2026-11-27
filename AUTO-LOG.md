@@ -258,3 +258,11 @@
 - Conservado: horaCL y ultimoDiaMesCL (la auditoria erro: las usa pettycash/client_page.tsx).
 - Fuera de alcance, pendiente: unificar despachos/procesar y despachos/process, mover undici a devDependencies, README, scripts/migrate-caja-mayor.ts y hojas .xlsx/.xls de raiz (dudosos).
 - Verificacion propia (verificar.ps1): tsc 0, jest/vitest verdes, build 0 (lint=1 preexistente).
+
+## 2026-11-27 - s23 y s24 (seguridad y limpieza dudosa), integrados en main local
+- Pablo autorizo (15:09): tratar como slices aparte las observaciones de seguridad y los items dudosos del audit.
+- s23 (759eedc): /api/despachos/procesar ahora valida que el usuario pertenezca a la empresa (mismo control que process: 401 sin sesion, 403 empresa ajena; falla cerrado si la sesion no trae empresas). lib/gemini.ts ya no escribe en el log los 8 primeros caracteres de las claves. Tests: empresa ajena, sin sesion, regresion de autorizado, y que ningun log contiene la clave. Barrido: no hay otros console.* que impriman secretos.
+- s24 (dbc7f9e): undici a devDependencies (solo lo usa jest.setup.js; rango resuelto ^7.30.2), README del proyecto (sin secretos), git rm de 4 hojas Excel/XLS de la raiz (siguen en el historial).
+- Incidente: al sacar .env del indice y cambiar de rama, git sobrescribio el .env local y el merge lo borro del disco. Se restauro la version versionada (14 claves); Pablo repuso TEST_DATABASE_URL. Pendiente de Pablo: rotar las credenciales que estuvieron en el .env versionado (siguen en el historial de GitHub).
+- Humo de produccion tras ba47654: anon, admin y bodeguero PASA; vendedor FALLA solo en QA-VEN26 (falso positivo conocido, BACKLOG C2: el vendedor puede ver /vendedores y no ve el margen).
+- Decision sobre despachos: no se fusionan procesar y process (despachos_bodega 3.503 filas y en uso; despachos 0 filas y sin lectores). Se retira el lado muerto en s25.
