@@ -236,9 +236,9 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
   **promedio simple por línea**: el % de cada línea es (precio − costo) / costo × 100 (la cantidad no pondera), se suman los
   % de todas sus líneas de ambas empresas y se divide por la cantidad de líneas (una sola división al final; el total del mes
   es suma de todas las líneas / cantidad de todas las líneas, no el promedio de los promedios por vendedor). Las líneas con
-  costo NULL o ≤ 0 y las líneas con precio NULL no entran ni en la suma ni en el conteo; una línea con precio 0 sí cuenta
-  (aporta −100 %). Un vendedor sin líneas válidas muestra "-"; con el flag apagado, o con rol vendedor, la columna no aparece
-  ni viaja en la API.
+  costo NULL o ≤ 0,01 (0,01 es el placeholder de costo no cargado; incluye negativos) y las líneas con precio NULL no
+  entran ni en la suma ni en el conteo; una línea con precio 0 sí cuenta (aporta −100 %). Un vendedor sin líneas válidas
+  muestra "-"; con el flag apagado, o con rol vendedor, la columna no aparece ni viaja en la API.
 - Nota: el margen es "sobre las líneas registradas en el sistema" mientras D13 siga abierto (la réplica puede tener líneas que
   no son parte de la venta real).
 

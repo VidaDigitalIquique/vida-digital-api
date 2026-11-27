@@ -26,10 +26,13 @@ WHERE ${condicionesComisionesMes(esquema)}
 GROUP BY 1`;
 }
 
+/** Costo minimo valido: costos <= este valor son placeholder de costo no cargado (s19). */
+export const COSTO_MINIMO_VALIDO = 0.01;
+
 /**
  * Suma del % de cada linea y cuantas lineas, por vendedor (solo admin, s17).
  * La division es por linea (no importa la cantidad) y se promedia UNA vez al final.
- * Sin costo valido ni precio NULL (D13: inflarian el promedio); precio 0 cuenta como -100 %.
+ * Sin costo valido (> 0,01) ni precio NULL (D13: inflarian el promedio); precio 0 cuenta como -100 %.
  */
 export function consultaMargenComisiones(esquema: EmpresaSlug): string {
   return `SELECT btrim(m.vendedor) AS vendedor,
@@ -38,7 +41,7 @@ export function consultaMargenComisiones(esquema: EmpresaSlug): string {
 FROM ${esquema}.movidcto m
 JOIN ${esquema}.itemdcto i ON i.knumfoli = m.knumfoli
 WHERE ${condicionesComisionesMes(esquema)}
-  AND COALESCE(i.cosunita,0) > 0
+  AND i.cosunita > ${COSTO_MINIMO_VALIDO}
   AND i.precread IS NOT NULL
 GROUP BY 1`;
 }

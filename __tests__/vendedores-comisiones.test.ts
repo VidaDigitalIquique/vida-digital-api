@@ -3,6 +3,7 @@
  * Estado inicial: ROJO (lib/comisiones.ts aun no existe).
  */
 import {
+  COSTO_MINIMO_VALIDO,
   consultaComisiones,
   consultaMargenComisiones,
   fetchComisiones,
@@ -134,10 +135,17 @@ describe('consultaMargenComisiones (s17: promedio simple por linea)', () => {
 
   it('excluye de AMBAS (suma y conteo) las lineas con costo invalido o precio NULL (s17)', () => {
     const sql = consultaMargenComisiones('vida');
-    expect(sql).toContain('COALESCE(i.cosunita,0) > 0');
+    expect(sql).toContain('i.cosunita > 0.01');
     expect(sql).toContain('i.precread IS NOT NULL');
     // precread 0 SI cuenta (-100 %): COALESCE(precread,0) convertiria NULL en -100 y lo contaria.
     expect(sql).not.toMatch(/COALESCE\(i\.precread/);
+  });
+
+  it('s19: excluye el costo placeholder <= 0,01 (ya no basta > 0) sin volver a COALESCE', () => {
+    const sql = consultaMargenComisiones('vida');
+    expect(sql).toContain('i.cosunita > 0.01');
+    expect(sql).not.toContain('COALESCE(i.cosunita,0) > 0');
+    expect(COSTO_MINIMO_VALIDO).toBe(0.01);
   });
 
   it('el esquema sale solo del mapa fijo', () => {
@@ -328,6 +336,18 @@ describe('fetchComisiones con margen (s17: promedio simple por linea)', () => {
     expect(informe.filas[0].margen_pct).not.toBeCloseTo(ponderadoPorCosto, 2); // ≈ 58,3 %
   });
 
+  it('(a2) s19: la linea de costo 0,01 (placeholder) no entra en la suma ni en el conteo', async () => {
+    // La consulta SQL ya la excluye (> 0.01); aqui llegan solo las lineas validas 10 % y 20 %.
+    const pctPlaceholder = ((18 - 0.01) / 0.01) * 100; // 179.900 %: lo que rompia el promedio
+    mockDb({
+      vidaVendedores: ['ANGELA'],
+      vidaMargen: [{ vendedor: 'ANGELA', suma_pct: 10 + 20, n_lineas: 2 }],
+    });
+    const informe = await fetchComisiones('2026-11', HOY, 0.5, true);
+    expect(informe.filas[0].margen_pct).toBeCloseTo(15, 10); // 30 / 2, no (30 + 179900) / 3
+    expect(informe.filas[0].margen_pct).not.toBeCloseTo((30 + pctPlaceholder) / 3, 2);
+  });
+
   it('(b) vida (2 lineas, suma 50) + sanjh (1 linea, suma 10) = 60/3 = 20 %, no 17,5 %', async () => {
     mockDb({
       vidaVendedores: ['ANGELA'],
@@ -366,7 +386,7 @@ describe('fetchComisiones con margen (s17: promedio simple por linea)', () => {
     expect(informe.filas.find((f) => f.vendedor === 'ANGELA')!.margen_pct).toBeCloseTo(25, 10);
     expect(informe.filas.find((f) => f.vendedor === 'PRAVIN')!.margen_pct).toBeCloseTo(-100, 10);
     const sqlMargen = consultaMargenComisiones('vida');
-    expect(sqlMargen).toContain('COALESCE(i.cosunita,0) > 0');
+    expect(sqlMargen).toContain('i.cosunita > 0.01');
     expect(sqlMargen).toContain('i.precread IS NOT NULL');
   });
 
