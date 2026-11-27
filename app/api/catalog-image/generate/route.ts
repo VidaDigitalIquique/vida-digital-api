@@ -138,7 +138,7 @@ export async function POST(request: Request) {
       await sql`
         UPDATE productos
         SET imagen_url = ${result.secure_url}, public_id = ${result.public_id}, updated_at = NOW()
-        WHERE codigo = ${productCode.trim()}
+        WHERE upper(btrim(codigo)) = upper(btrim(${productCode.trim()}))
       `;
 
       return NextResponse.json({ result_url: result.secure_url, public_id: result.public_id });
