@@ -44,6 +44,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Faltan datos requeridos' }, { status: 400 });
     }
 
+    // Mismo control de empresa que /api/despachos/process
+    if (!(session.user as any).empresas.includes(Number(empresaId))) {
+      return NextResponse.json({ error: 'Acceso denegado a esta empresa' }, { status: 403 });
+    }
+
     // 1. Llamar a Gemini para identificar el folio
     const folio = await callGemini(imageBase64, mimeType);
 
