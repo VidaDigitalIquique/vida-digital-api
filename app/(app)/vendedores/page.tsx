@@ -23,7 +23,10 @@ export default async function VendedoresPage() {
         buscadorActivo={flags['vendedores-buscador']}
       />
       {verGanancia && flags['vendedores-ganancia-periodo'] && <GananciaPeriodoPanel />}
-      <ComisionesPanel puedeEditarPct={puedeEditarComisionPct(rol)} />
+      <ComisionesPanel
+        puedeEditarPct={puedeEditarComisionPct(rol)}
+        mostrarMargen={verGanancia && Boolean(flags['vendedores-comisiones-margen'])}
+      />
     </div>
   );
 }

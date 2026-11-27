@@ -44,7 +44,10 @@ jest.mock('@/lib/comisiones', () => ({
 
 jest.mock('@/lib/fechas', () => ({ hoyCL: jest.fn(() => '2026-11-11') }));
 
-jest.mock('@/config/feature-flags.json', () => ({ 'vendedores-modulo': true }));
+jest.mock('@/config/feature-flags.json', () => ({
+  'vendedores-modulo': true,
+  'vendedores-comisiones-margen': false,
+}));
 
 const flags = jest.requireMock('@/config/feature-flags.json') as Record<string, boolean>;
 const fetchMock = fetchComisiones as jest.MockedFunction<typeof fetchComisiones>;
@@ -99,6 +102,7 @@ beforeAll(async () => {
 beforeEach(() => {
   jest.clearAllMocks();
   flags['vendedores-modulo'] = true;
+  flags['vendedores-comisiones-margen'] = false;
   sesion('1');
   fetchMock.mockResolvedValue(INFORME);
   pctMock.mockResolvedValue(0.5);
@@ -149,7 +153,7 @@ describe('archivo .xlsx (R10)', () => {
     await pedir('mes=2026-11&formato=xlsx');
     expect(pctMock).toHaveBeenCalledTimes(1);
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith('2026-11', '2026-11-11', 0.5);
+    expect(fetchMock).toHaveBeenCalledWith('2026-11', '2026-11-11', 0.5, false);
   });
 
   it('T6: mes sin datos -> encabezado y fila TOTAL en 0', async () => {
@@ -187,6 +191,70 @@ describe('archivo .xlsx (R10)', () => {
     expect(ws['A2']?.t).toBe('s');
     expect(ws['A2']?.v).toBe('=1+1');
     expect((ws['A2'] as { f?: string } | undefined)?.f).toBeUndefined();
+  });
+});
+
+describe('columna % promedio sobre el costo en el .xlsx (s16)', () => {
+  const INFORME_MARGEN: InformeComisiones = {
+    ...INFORME,
+    filas: [
+      { ...INFORME.filas[0], margen_pct: 320 / 1700 * 100 },
+      { ...INFORME.filas[1], margen_pct: null },
+    ],
+    totales: { ...INFORME.totales, margen_pct: 320 / 1700 * 100 },
+  };
+
+  const CON_MARGEN = [...ENCABEZADOS, '% promedio sobre el costo'];
+
+  it('admin con el flag encendido: pide el margen, 6 columnas y formato 0.0"%"', async () => {
+    flags['vendedores-comisiones-margen'] = true;
+    fetchMock.mockResolvedValue(INFORME_MARGEN);
+
+    const res = await pedir('mes=2026-11&formato=xlsx');
+    expect(fetchMock).toHaveBeenCalledWith('2026-11', '2026-11-11', 0.5, true);
+
+    const { ws } = hoja(res);
+    expect(XLSX.utils.sheet_to_json(ws, { header: 1 })).toEqual([
+      CON_MARGEN,
+      ['ANGELA', 2, 10980.1, 0.5, 54.9, 320 / 1700 * 100],
+      ['PRAVIN', 1, 100, 0.5, 0.5, '-'],
+      ['TOTAL', 3, 11080.1, 0.5, 55.4, 320 / 1700 * 100],
+    ]);
+    expect(ws['F2']?.t).toBe('n');
+    expect(ws['F2']?.z).toBe('0.0"%"');
+    expect(ws['F4']?.z).toBe('0.0"%"');
+  });
+
+  it('flag apagado: pide sin margen y el archivo mantiene 5 columnas', async () => {
+    const res = await pedir('mes=2026-11&formato=xlsx');
+    expect(fetchMock).toHaveBeenCalledWith('2026-11', '2026-11-11', 0.5, false);
+    const { ws } = hoja(res);
+    const filas = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
+    expect(filas[0]).toEqual(ENCABEZADOS);
+    expect(filas.every((f) => f.length === 5)).toBe(true);
+  });
+
+  it('vendedor con el flag encendido: pide sin margen y 5 columnas (solo admin)', async () => {
+    flags['vendedores-comisiones-margen'] = true;
+    sesion('1', 'vendedor');
+    const res = await pedir('mes=2026-11&formato=xlsx');
+    expect(fetchMock).toHaveBeenCalledWith('2026-11', '2026-11-11', 0.5, false);
+    const { ws } = hoja(res);
+    expect((XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][])[0]).toEqual(ENCABEZADOS);
+  });
+
+  it('con margen, la formula se sigue neutralizando y la columna F no rompe el guardia', async () => {
+    flags['vendedores-comisiones-margen'] = true;
+    fetchMock.mockResolvedValue({
+      ...INFORME_MARGEN,
+      filas: [
+        { vendedor: '=1+1', notas: 1, total_usd: 10, comision_pct: 0.5, comision_usd: 0.05, margen_pct: 10 },
+      ],
+    });
+    const { ws } = hoja(await pedir('mes=2026-11&formato=xlsx'));
+    expect(ws['A2']?.t).toBe('s');
+    expect((ws['A2'] as { f?: string } | undefined)?.f).toBeUndefined();
+    expect(ws['F2']?.z).toBe('0.0"%"');
   });
 });
 

@@ -30,5 +30,6 @@
   "vendedores-ganancia-periodo": true,
   "menu-movil-v2": true,
   "fix-d11-imagen-producto": true,
-  "vendedores-buscador": true
+  "vendedores-buscador": true,
+  "vendedores-comisiones-margen": false
 }

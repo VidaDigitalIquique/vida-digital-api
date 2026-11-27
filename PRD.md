@@ -228,6 +228,17 @@ virtualización no es necesaria para un mes; sí para rangos largos (Fase A deci
 - Cuando: abre /vendedores
 - Entonces: es redirigido a una pantalla de su rol
 
+### R16 — % promedio sobre el costo por vendedor (riesgo: medio)
+- Rol: admin (con el flag `vendedores-comisiones-margen` encendido)
+- Dado: el informe de comisiones de un mes con el flag encendido y sesión de admin
+- Cuando: mira la tabla (o exporta el Excel)
+- Entonces: ve al final una columna "% promedio sobre el costo" con el margen del mes de cada vendedor calculado como
+  (precio − costo) × cantidad sobre el costo × cantidad, sumado de todas sus líneas de ambas empresas y dividido una sola vez
+  (no es el promedio de los porcentajes); las líneas sin costo válido no entran en ninguna de las dos sumas; un vendedor sin
+  costo válido muestra "-"; con el flag apagado, o con rol vendedor, la columna no aparece ni viaja en la API.
+- Nota: el margen es "sobre las líneas registradas en el sistema" mientras D13 siga abierto (la réplica puede tener líneas que
+  no son parte de la venta real).
+
 ---
 
 ## Riesgos técnicos (insumo para Fase B)

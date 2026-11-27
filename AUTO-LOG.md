@@ -220,3 +220,11 @@
 - QA s15 (1.51 USD): 7 de 7 PASA, sin defectos ni errores de consola.
 - D15 aceptado por Pablo (vendedor puede entrar a /admin/importar).
 - Release: autorizado por Pablo (2026-11-26 16:41). /ponytail-audit (Senal 3) NO se corrio.
+
+## 2026-11-27 - s16: columna "% promedio sobre el costo" en Comisiones (/vendedores), solo admin, flag apagado
+- Pedido de Pablo: que la tabla Comisiones muestre el promedio del % sobre el costo que cada vendedor aplico en el mes (para ver en que rango de ganancia vende cada uno).
+- Decisiones del Director: promedio PONDERADO por costo (sum ganancia / sum costo, dividido una sola vez tras sumar vida+sanjh; no promedio de porcentajes); lineas con costo <= 0/NULL fuera de ambas sumas; columna y campo margen_pct solo para admin (el vendedor no ve costos) y detras del flag endedores-comisiones-margen (false). Total = margen ponderado global.
+- Programador deep (deepseek-flash): s16-A 2.83 USD, s16-BCD 7.69 USD. Rama feat/vendedores-comisiones-margen. Contrato aprobado sin cambios salvo la exclusion de lineas sin costo.
+- Verificacion propia: diff leido contra el contrato; jest vendedores 18 suites / 484 tests, suite completa 132 suites / 1168 tests y vitest 81 OK; verificar.ps1 s16: tsc 0, test 0, build 0 (lint=1 preexistente en archivos ajenos).
+- Verificacion con datos reales (SELECT en produccion, noviembre 2026): margen de la app = calculo independiente linea a linea para los 4 vendedores y el total (ANGELA 40.05, ANIL CHANDNANI 25.89, JOSEPH LEVANO 30.83, PRAVIN 28.83, total 30.01); 0 lineas sin costo; notas, total_usd y comision identicos con y sin margen.
+- PENDIENTE: UAT de Pablo, merge a main, encender flag y QA de UI / humo (agregar "% promedio sobre el costo" a humoProd.debeVerse al encender). Sin commit en main ni deploy.
