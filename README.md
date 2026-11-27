@@ -1,36 +1,49 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# App Vida Digital
 
-## Getting Started
+Aplicación web de gestión de Importadora Vida Digital: inventario, ventas, despachos,
+clientes, catálogos y comisiones de vendedores. Trabaja sobre los datos de WinFac
+(esquemas `vida` y `sanjh`, en solo lectura) y PostgreSQL en Neon.
 
-First, run the development server:
+## Stack
+
+- Next.js 14.2 (App Router) + React 18 + TypeScript
+- Tailwind CSS + shadcn/ui
+- PostgreSQL en Neon, consultado con `@neondatabase/serverless` (`lib/db.ts`)
+- Autenticación: next-auth v4 con CredentialsProvider (RUT + contraseña, bcryptjs)
+- Tests: Jest + Testing Library y Vitest
+
+## Comandos
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev        # servidor de desarrollo
+npm run build      # build de producción
+npm run start      # servir el build
+npm run lint       # ESLint (next lint)
+npm test           # Jest + Vitest
+npx tsc --noEmit   # chequeo de tipos
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Estructura
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `app/` — rutas de la App Router: páginas privadas en `app/(app)/` (dashboard, inventario,
+  ventas, precios, bodega, despachos, vendedores, caja mayor, etc.), login en `app/(auth)/`
+  y endpoints en `app/api/`.
+- `components/` — componentes de UI (incluye `components/ui/` de shadcn/ui).
+- `lib/` — lógica de negocio y acceso a datos (db, auth, comisiones, sync con WinFac, etc.).
+- `middleware.ts` — control de acceso por rol (`admin`, `vendedor`, `bodeguero`).
+- `config/feature-flags.json` — feature flags.
+- `migrations/` — migraciones SQL.
+- `scripts/` — utilidades de línea de comandos (seed, migraciones, reconciliación).
+- `tests/` y `__tests__/` — tests de Vitest y Jest.
+- `types/`, `hooks/`, `utils/`, `contexts/` — tipos, hooks, utilidades y contextos compartidos.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Entorno
 
-## Learn More
+Las variables de entorno se declaran en `.env.example` (nombres únicamente; los valores
+reales no se versionan).
 
-To learn more about Next.js, take a look at the following resources:
+## Documentación
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [CLAUDE.md](CLAUDE.md) — contexto técnico y método de trabajo del proyecto.
+- [PRD.md](PRD.md) — requerimientos y flujos críticos.
+- [BUGS.md](BUGS.md) — registro de bugs.
