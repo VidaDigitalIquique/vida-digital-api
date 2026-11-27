@@ -228,3 +228,10 @@
 - Verificacion propia: diff leido contra el contrato; jest vendedores 18 suites / 484 tests, suite completa 132 suites / 1168 tests y vitest 81 OK; verificar.ps1 s16: tsc 0, test 0, build 0 (lint=1 preexistente en archivos ajenos).
 - Verificacion con datos reales (SELECT en produccion, noviembre 2026): margen de la app = calculo independiente linea a linea para los 4 vendedores y el total (ANGELA 40.05, ANIL CHANDNANI 25.89, JOSEPH LEVANO 30.83, PRAVIN 28.83, total 30.01); 0 lineas sin costo; notas, total_usd y comision identicos con y sin margen.
 - PENDIENTE: UAT de Pablo, merge a main, encender flag y QA de UI / humo (agregar "% promedio sobre el costo" a humoProd.debeVerse al encender). Sin commit en main ni deploy.
+## 2026-11-27 - s16/s17: columna "% promedio sobre el costo" en Comisiones (rama feat/vendedores-comisiones-margen)
+- Pedido de Pablo: columna con el promedio del % sobre el costo que cada vendedor aplico en el mes. Aclaracion 2026-11-27: promedio SIMPLE por linea de producto (suma de los % de cada linea / cantidad de lineas), sin ponderar por cantidad ni costo.
+- Slices: s16 (7002f55, version ponderada por costo) y s17 (6864fc6, promedio simple por linea). Flag vendedores-comisiones-margen en FALSE; solo admin; tambien en el Excel.
+- Verificacion propia: tsc 0, jest/vitest completos verdes, build OK (lint=1 preexistente en archivos ajenos). Contraste en produccion (solo lectura) igual al calculo independiente linea a linea.
+- Hallazgo de datos: 2 lineas de ANGELA (nov 2026, notas 002489 y 002498) tienen costo 0,01 (costo no cargado) -> 179.900 % y 44.900 %; su promedio queda en 2.541 % (44,5 % sin ellas). 11 lineas de Vida en 2026 superan 1.000 %. Pendiente decision de Pablo: excluir lineas con costo <= 0,01 (recomendado).
+- Pendiente (gate): UAT de Pablo, decidir la exclusion, merge a main, encender el flag, Fase E y humo de produccion (agregar "% promedio sobre el costo" a humoProd.debeVerse).
+
