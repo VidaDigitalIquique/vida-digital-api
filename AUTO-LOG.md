@@ -274,3 +274,12 @@
 - OPENROUTER_API_KEY SIGUE EN USO: lib/gemini.ts la usa. No quitarla de Vercel.
 - Pendiente: app/api/despachos/extract-zip/route.ts quedo sin llamadores; comentario residual en procesar/route.ts:47 que menciona /api/despachos/process.
 - Verificacion propia: tsc 0, jest/vitest verdes, build 0 (lint=1 preexistente).
+
+## 2026-11-28 - s26: el buscador de /vendedores tambien busca por codigo de producto
+- Pedido de Pablo: el buscador debe buscar tambien por codigo de producto, ademas de N de nota y cliente.
+- Diseno (Director): coincidencia por itemdcto.codunico (contiene, sin distinguir mayusculas, escape de \ % _), una fila por nota (LEFT JOIN LATERAL con min(codigo)), orden nota > cliente > codigo antes del LIMIT 8, campo codigo_coincide solo cuando el motivo es el codigo (la UI muestra "Codigo: X"). Minimo 2 caracteres (decision del Director, a revisar tras el uso real). Etiqueta con el flag: "Buscar por N de nota, cliente o codigo de producto".
+- Flag vendedores-buscador-codigo: apagado = consulta y respuesta identicas a las anteriores (test de byte-identidad). Encendido en este release.
+- Commits: 7764e73 (codigo, flag apagado) + commit del flag encendido y registros. Programador deep: s26-A 3.85 USD, s26-BCD 8.56 USD.
+- Verificacion propia: jest 141 suites / 1257 tests verdes, tsc 0, build OK (lint=1 preexistente). SQL validado en la base de pruebas con datos reales (GS-002 -> 8 notas, sin duplicados, 130-300 ms).
+- QA s26 (1.59 USD): 8 de 8 PASA, sin defectos ni errores de consola.
+- Sin indice nuevo ni cambios en vida/sanjh. /ponytail-audit (Senal 3) NO se corrio.
