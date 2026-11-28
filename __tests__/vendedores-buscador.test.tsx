@@ -9,6 +9,7 @@ import { VendedoresClient } from '@/app/(app)/vendedores/VendedoresClient';
 import { BuscadorNotas } from '@/app/(app)/vendedores/BuscadorNotas';
 
 const NOMBRE = 'Buscar por N° de nota o cliente';
+const NOMBRE_LARGO = 'Buscar por N° de nota, cliente o código de producto';
 const combo = () => screen.getByRole('combobox', { name: NOMBRE }) as HTMLInputElement;
 
 type Fila = {
@@ -22,6 +23,7 @@ type Fila = {
   estado: 'facturada' | 'pendiente';
   visacion: string | null;
   fecha_facturacion: string | null;
+  codigo_coincide?: string | null;
 };
 
 function fila(over: Partial<Fila> = {}): Fila {
@@ -390,6 +392,86 @@ describe('buscador: integracion con VendedoresClient', () => {
       ([u, init]) => esFiltros(String(u)) && (init as RequestInit | undefined)?.method === 'PUT'
     );
     expect(puts).toHaveLength(0);
+  });
+});
+
+describe('buscador: codigo de producto (s26)', () => {
+  it('por defecto la etiqueta sigue siendo la corta', () => {
+    render(<BuscadorNotas puedeVerDetalle />);
+    const input = combo();
+    expect(input).toHaveAttribute('placeholder', NOMBRE);
+    expect(screen.queryByRole('combobox', { name: NOMBRE_LARGO })).not.toBeInTheDocument();
+  });
+
+  it('con el modo codigo la etiqueta y el placeholder son los largos', () => {
+    render(<BuscadorNotas puedeVerDetalle buscadorCodigoActivo />);
+    const input = screen.getByRole('combobox', { name: NOMBRE_LARGO }) as HTMLInputElement;
+    expect(input).toHaveAttribute('placeholder', NOMBRE_LARGO);
+    expect(screen.queryByRole('combobox', { name: NOMBRE })).not.toBeInTheDocument();
+  });
+
+  it('muestra "Código: ..." solo cuando la nota coincide por codigo', async () => {
+    jest.useFakeTimers();
+    mockBuscar(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          notas: [
+            fila({ nota: 'A-610', codigo_coincide: 'A-610' }),
+            fila({ nota: 'B-777' }),
+          ],
+        }),
+      })
+    );
+    render(<BuscadorNotas puedeVerDetalle buscadorCodigoActivo />);
+
+    fireEvent.change(screen.getByRole('combobox', { name: NOMBRE_LARGO }), {
+      target: { value: 'a-610' },
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(250);
+    });
+
+    const opciones = screen.getAllByRole('option');
+    expect(opciones[0]).toHaveTextContent('Código: A-610');
+    expect(opciones[1]).not.toHaveTextContent('Código:');
+
+    const linea = within(opciones[0]).getByText(/Código:/);
+    expect(linea).toHaveClass('text-xs', 'text-zinc-500');
+    expect(linea.querySelector('.font-mono')).toHaveTextContent('A-610');
+  });
+
+  it('el modal del vendedor no cambia ni muestra costos', async () => {
+    jest.useFakeTimers();
+    const fn = mockBuscar(() =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: async () => ({ notas: [fila({ codigo_coincide: 'A-610' })] }),
+      })
+    );
+    render(<BuscadorNotas puedeVerDetalle={false} buscadorCodigoActivo />);
+
+    fireEvent.change(screen.getByRole('combobox', { name: NOMBRE_LARGO }), {
+      target: { value: 'a-610' },
+    });
+    await act(async () => {
+      jest.advanceTimersByTime(250);
+    });
+    fireEvent.click(screen.getByRole('option'));
+
+    const dialogo = await screen.findByRole('dialog');
+    expect(dialogo).toHaveTextContent('002578');
+    expect(dialogo).not.toHaveTextContent('Código:');
+    expect(dialogo.textContent).not.toMatch(/costo|ganancia|precio/i);
+    expect(fn).toHaveBeenCalledTimes(1);
+  });
+
+  it('integracion: VendedoresClient con el modo codigo usa la etiqueta larga', async () => {
+    mockApp({ notas: [] });
+    render(<VendedoresClient buscadorActivo buscadorCodigoActivo />);
+    expect(await screen.findByRole('combobox', { name: NOMBRE_LARGO })).toBeInTheDocument();
   });
 });
 

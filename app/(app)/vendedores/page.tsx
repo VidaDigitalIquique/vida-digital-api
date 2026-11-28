@@ -21,6 +21,7 @@ export default async function VendedoresPage() {
       <VendedoresClient
         puedeVerDetalle={verGanancia}
         buscadorActivo={flags['vendedores-buscador']}
+        buscadorCodigoActivo={flags['vendedores-buscador-codigo']}
       />
       {verGanancia && flags['vendedores-ganancia-periodo'] && <GananciaPeriodoPanel />}
       <ComisionesPanel

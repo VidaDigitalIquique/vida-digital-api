@@ -62,9 +62,11 @@ const COLUMNAS = [
 export function VendedoresClient({
   puedeVerDetalle = true,
   buscadorActivo = false,
+  buscadorCodigoActivo = false,
 }: {
   puedeVerDetalle?: boolean;
   buscadorActivo?: boolean;
+  buscadorCodigoActivo?: boolean;
 } = {}) {
   const [vendedor, setVendedor] = useState('');
   const [desde, setDesde] = useState('');
@@ -261,6 +263,7 @@ export function VendedoresClient({
       {buscadorActivo && (
         <BuscadorNotas
           puedeVerDetalle={puedeVerDetalle}
+          buscadorCodigoActivo={buscadorCodigoActivo}
           onVerDetalle={(empresa, nota) => setSeleccion({ empresa, nota })}
         />
       )}

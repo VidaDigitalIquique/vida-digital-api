@@ -44,6 +44,7 @@ export interface NotaVenta {
   estado: EstadoNota;
   visacion: string | null;
   fecha_facturacion: string | null;
+  codigo_coincide?: string | null;
 }
 
 export interface NotasResultado {
@@ -250,6 +251,8 @@ type FilaNota = {
   visacion: string | null;
   fecha_facturacion: string | null;
   total?: unknown;
+  prioridad?: unknown;
+  codigo_coincide?: string | null;
 };
 
 function mapearNotas(filas: FilaNota[]): NotaVenta[] {
@@ -266,6 +269,9 @@ function mapearNotas(filas: FilaNota[]): NotaVenta[] {
       estado: r.estado === 'facturada' ? 'facturada' : 'pendiente',
       visacion: r.visacion ?? null,
       fecha_facturacion: r.fecha_facturacion ?? null,
+      ...(Number(r.prioridad) === 2 && r.codigo_coincide != null
+        ? { codigo_coincide: r.codigo_coincide }
+        : {}),
     };
   });
 }
@@ -296,7 +302,11 @@ const TEXTO_CLIENTE =
   "translate(lower(COALESCE(m.cliente,'')), 'áàäâéèëêíìïîóòöôúùüûñç', 'aaaaeeeeiiiioooouuuunc')";
 
 /** Trim + colapsar espacios + recorte a 60. El texto del usuario solo viaja como parametro. */
-export function normalizarBusqueda(q: string): { patronNota: string | null; patronCliente: string } {
+export function normalizarBusqueda(q: string): {
+  patronNota: string | null;
+  patronCliente: string;
+  patronCodigo: string;
+} {
   const limpio = q.trim().replace(/\s+/g, ' ').slice(0, 60);
   return {
     patronNota: /^\d+$/.test(limpio) ? limpio.replace(/^0+/, '') || null : null,
@@ -305,34 +315,70 @@ export function normalizarBusqueda(q: string): { patronNota: string | null; patr
       .replace(/[̀-ͯ]/g, '')
       .toLowerCase()
       .replace(/[\\%_]/g, '\\$&'),
+    // Sin plegado de tildes: el codigo se busca tal cual esta almacenado.
+    patronCodigo: '%' + limpio.toUpperCase().replace(/[\\%_]/g, '\\$&') + '%',
   };
 }
 
-function bloqueBusqueda(esquema: EmpresaSlug): string {
+function bloqueBusqueda(esquema: EmpresaSlug, porCodigo = false): string {
+  const extra = porCodigo
+    ? `,
+         c.codigo AS codigo_coincide,
+         CASE
+           WHEN ($2::text IS NOT NULL AND ltrim(m.knumfoli::text,'0') LIKE ($2::text || '%')) THEN 0
+           WHEN ${TEXTO_CLIENTE} LIKE ('%' || $3::text || '%') ESCAPE '\\' THEN 1
+           ELSE 2
+         END AS prioridad`
+    : '';
+  const lateral = porCodigo
+    ? `
+  LEFT JOIN LATERAL (
+    SELECT min(btrim(i.codunico)) AS codigo
+    FROM ${esquema}.itemdcto i
+    WHERE i.knumfoli = m.knumfoli
+      AND upper(btrim(i.codunico)) LIKE $4::text ESCAPE '\\'
+  ) c ON true`
+    : '';
+  const porCodigoWhere = porCodigo ? '\n      OR c.codigo IS NOT NULL' : '';
   return `
-  ${camposNota(esquema)}
-  FROM ${esquema}.movidcto m
+  ${camposNota(esquema)}${extra}
+  FROM ${esquema}.movidcto m${lateral}
   WHERE ${reglasModulo(esquema)}
     AND (($2::text IS NOT NULL AND ltrim(m.knumfoli::text,'0') LIKE ($2::text || '%'))
-      OR ${TEXTO_CLIENTE} LIKE ('%' || $3::text || '%') ESCAPE '\\')`;
+      OR ${TEXTO_CLIENTE} LIKE ('%' || $3::text || '%') ESCAPE '\\'${porCodigoWhere})`;
 }
 
 /** Buscador: mira siempre vida+sanjh, ignora rango de fechas/estado de la tabla. */
 export function construirConsultaBusqueda(
   q: string,
   hoy: string,
-  limit = 8
+  limit = 8,
+  porCodigo = false
 ): { text: string; params: unknown[] } {
-  const { patronNota, patronCliente } = normalizarBusqueda(q);
-  const text = `SELECT n.*
-FROM (${(['vida', 'sanjh'] as EmpresaSlug[]).map(bloqueBusqueda).join('\n  UNION ALL\n')}) n
+  const { patronNota, patronCliente, patronCodigo } = normalizarBusqueda(q);
+  const bloques = (['vida', 'sanjh'] as EmpresaSlug[])
+    .map((e) => bloqueBusqueda(e, porCodigo))
+    .join('\n  UNION ALL\n');
+  if (!porCodigo) {
+    const text = `SELECT n.*
+FROM (${bloques}) n
 ORDER BY n.fecha_venta DESC, n.empresa, n.nota DESC
 LIMIT $4`;
-  return { text, params: [hoy, patronNota, patronCliente, limit] };
+    return { text, params: [hoy, patronNota, patronCliente, limit] };
+  }
+  const text = `SELECT n.*
+FROM (${bloques}) n
+ORDER BY n.prioridad, n.fecha_venta DESC, n.empresa, n.nota DESC
+LIMIT $5`;
+  return { text, params: [hoy, patronNota, patronCliente, patronCodigo, limit] };
 }
 
-export async function buscarNotas(q: string, hoy: string): Promise<{ notas: NotaVenta[] }> {
-  const { text, params } = construirConsultaBusqueda(q, hoy);
+export async function buscarNotas(
+  q: string,
+  hoy: string,
+  porCodigo = false
+): Promise<{ notas: NotaVenta[] }> {
+  const { text, params } = construirConsultaBusqueda(q, hoy, 8, porCodigo);
   const filas = (await sql.query(text, params)) as unknown as FilaNota[];
   return { notas: mapearNotas(filas ?? []) };
 }

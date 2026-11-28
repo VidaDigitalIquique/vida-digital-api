@@ -23,7 +23,10 @@ jest.mock('next/server', () => ({
   },
 }));
 
-jest.mock('@/config/feature-flags.json', () => ({ 'vendedores-buscador': true }));
+jest.mock('@/config/feature-flags.json', () => ({
+  'vendedores-buscador': true,
+  'vendedores-buscador-codigo': false,
+}));
 
 const flags = jest.requireMock('@/config/feature-flags.json') as Record<string, boolean>;
 
@@ -54,11 +57,13 @@ beforeEach(() => {
   queryMock.mockReset();
   queryMock.mockImplementation(() => Promise.resolve([]));
   flags['vendedores-buscador'] = true;
+  flags['vendedores-buscador-codigo'] = false;
   (getServerSession as jest.Mock).mockResolvedValue({ user: { rol: 'admin' } });
 });
 
 afterEach(() => {
   flags['vendedores-buscador'] = true;
+  flags['vendedores-buscador-codigo'] = false;
 });
 
 describe('guardas (401 -> 403 -> 404)', () => {
@@ -132,6 +137,41 @@ describe('200', () => {
     for (const clave of ['costo', 'ganancia', 'precio']) {
       expect(body.notas[0]).not.toHaveProperty(clave);
     }
+  });
+});
+
+describe('busqueda por codigo (s26)', () => {
+  it('flag de codigo apagado: 4 params, sin columna codigo_coincide', async () => {
+    queryMock.mockResolvedValue([FILA]);
+    const res = await GET(req('q=A-610'));
+    expect(res.status).toBe(200);
+
+    const [text, params] = queryMock.mock.calls[0] as [string, unknown[]];
+    expect(params).toEqual([expect.any(String), null, 'a-610', 8]);
+    expect(String(text)).not.toContain('codunico');
+    const body = await res.json();
+    expect(body.notas[0]).not.toHaveProperty('codigo_coincide');
+  });
+
+  it('flag de codigo encendido: 5 params y SQL con LATERAL sobre itemdcto', async () => {
+    flags['vendedores-buscador-codigo'] = true;
+    queryMock.mockResolvedValue([{ ...FILA, prioridad: 2, codigo_coincide: 'A-610' }]);
+    const res = await GET(req('q=A-610'));
+    expect(res.status).toBe(200);
+
+    const [text, params] = queryMock.mock.calls[0] as [string, unknown[]];
+    expect(params).toEqual([expect.any(String), null, 'a-610', '%A-610%', 8]);
+    expect(String(text)).toContain('itemdcto');
+    expect(String(text)).toContain('ORDER BY n.prioridad');
+    const body = await res.json();
+    expect(body.notas[0].codigo_coincide).toBe('A-610');
+  });
+
+  it('flag del buscador apagado -> 404 aunque el de codigo este encendido', async () => {
+    flags['vendedores-buscador'] = false;
+    flags['vendedores-buscador-codigo'] = true;
+    expect((await GET(req('q=A-610'))).status).toBe(404);
+    expect(queryMock).not.toHaveBeenCalled();
   });
 });
 

@@ -21,8 +21,10 @@ export async function GET(request: Request) {
   // Menos de 2 caracteres: se responde vacio mientras el usuario tipea, sin tocar la base.
   if (q.trim().length < 2) return NextResponse.json({ notas: [] });
 
+  const porCodigo = Boolean(flags['vendedores-buscador-codigo']);
+
   try {
-    return NextResponse.json(await buscarNotas(q, hoyCL()));
+    return NextResponse.json(await buscarNotas(q, hoyCL(), porCodigo));
   } catch (error) {
     console.error('GET /api/vendedores/buscar error:', error);
     return NextResponse.json({ error: 'Error al consultar notas' }, { status: 500 });

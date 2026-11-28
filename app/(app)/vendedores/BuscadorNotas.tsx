@@ -8,13 +8,22 @@ import type { NotaVenta } from '@/lib/vendedores-notas';
 interface Props {
   puedeVerDetalle: boolean;
   onVerDetalle?: (empresa: 'vida' | 'sanjh', nota: string) => void;
+  buscadorCodigoActivo?: boolean;
 }
+
+const ETIQUETA_NOTAS = 'Buscar por N° de nota o cliente';
+const ETIQUETA_CODIGO = 'Buscar por N° de nota, cliente o código de producto';
 
 const opcionId = (i: number) => `buscador-nota-op-${i}`;
 const estadoTexto = (e: NotaVenta['estado']) => (e === 'facturada' ? 'Facturada' : 'Pendiente');
 
 /** Buscador efimero por N° de nota o cliente; no toca los filtros ni la tabla. */
-export function BuscadorNotas({ puedeVerDetalle, onVerDetalle }: Props) {
+export function BuscadorNotas({
+  puedeVerDetalle,
+  onVerDetalle,
+  buscadorCodigoActivo = false,
+}: Props) {
+  const etiqueta = buscadorCodigoActivo ? ETIQUETA_CODIGO : ETIQUETA_NOTAS;
   const [texto, setTexto] = useState('');
   const [notas, setNotas] = useState<NotaVenta[]>([]);
   const [estado, setEstado] = useState<'idle' | 'buscando' | 'ok' | 'error'>('idle');
@@ -97,12 +106,12 @@ export function BuscadorNotas({ puedeVerDetalle, onVerDetalle }: Props) {
         inputMode="search"
         autoComplete="off"
         role="combobox"
-        aria-label="Buscar por N° de nota o cliente"
+        aria-label={etiqueta}
         aria-expanded={mostrarLista}
         aria-controls="buscador-notas-lista"
         aria-autocomplete="list"
         aria-activedescendant={activo >= 0 ? opcionId(activo) : undefined}
-        placeholder="Buscar por N° de nota o cliente"
+        placeholder={etiqueta}
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
         onKeyDown={alTeclear}
@@ -143,6 +152,11 @@ export function BuscadorNotas({ puedeVerDetalle, onVerDetalle }: Props) {
                       {estadoTexto(n.estado)}
                     </span>
                   </div>
+                  {n.codigo_coincide && (
+                    <div className="text-xs text-zinc-500">
+                      Código: <span className="font-mono">{n.codigo_coincide}</span>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

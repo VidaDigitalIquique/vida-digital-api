@@ -513,11 +513,16 @@ describe('fetchNotas', () => {
 
 describe('normalizarBusqueda', () => {
   it('pliega tildes y mayusculas igual que el translate del SQL', () => {
-    const esperado = { patronNota: null, patronCliente: 'angela' };
-    expect(normalizarBusqueda('angela')).toEqual(esperado);
-    expect(normalizarBusqueda('ANGELA')).toEqual(esperado);
-    expect(normalizarBusqueda('Ángela')).toEqual(esperado);
-    expect(normalizarBusqueda('ANGÉLA')).toEqual(esperado);
+    const sinTilde = { patronNota: null, patronCliente: 'angela', patronCodigo: '%ANGELA%' };
+    expect(normalizarBusqueda('angela')).toEqual(sinTilde);
+    expect(normalizarBusqueda('ANGELA')).toEqual(sinTilde);
+    // El codigo no pliega tildes (contrato A.1): se busca tal cual esta almacenado.
+    expect(normalizarBusqueda('Ángela')).toEqual({
+      patronNota: null, patronCliente: 'angela', patronCodigo: '%ÁNGELA%',
+    });
+    expect(normalizarBusqueda('ANGÉLA')).toEqual({
+      patronNota: null, patronCliente: 'angela', patronCodigo: '%ANGÉLA%',
+    });
   });
 
   it('recorta, colapsa espacios y limita a 60 caracteres', () => {
@@ -538,6 +543,21 @@ describe('normalizarBusqueda', () => {
     expect(normalizarBusqueda('a%b').patronCliente).toBe('a\\%b');
     expect(normalizarBusqueda('a_b').patronCliente).toBe('a\\_b');
     expect(normalizarBusqueda('a\\b').patronCliente).toBe('a\\\\b');
+  });
+
+  it('s26 — patronCodigo: CONTAINS en mayuscula, mismo escape de comodines', () => {
+    expect(normalizarBusqueda('a-610').patronCodigo).toBe('%A-610%');
+    expect(normalizarBusqueda('A-610').patronCodigo).toBe('%A-610%');
+    expect(normalizarBusqueda('%').patronCodigo).toBe('%\\%%');
+    expect(normalizarBusqueda('_').patronCodigo).toBe('%\\_%');
+    expect(normalizarBusqueda('\\').patronCodigo).toBe('%\\\\%');
+    expect(normalizarBusqueda('0035(ANIL)').patronCodigo).toBe('%0035(ANIL)%');
+    expect(normalizarBusqueda('R.3039').patronCodigo).toBe('%R.3039%');
+    expect(normalizarBusqueda('00769-1').patronCodigo).toBe('%00769-1%');
+  });
+
+  it('s26 — patronCodigo no pliega tildes (el codigo se busca tal cual)', () => {
+    expect(normalizarBusqueda('código').patronCodigo).toBe('%CÓDIGO%');
   });
 });
 
@@ -617,6 +637,112 @@ describe('construirConsultaBusqueda', () => {
   });
 });
 
+/** Texto congelado de la busqueda ANTES de s26: con el flag apagado debe salir igual. */
+function sqlBusquedaActual(): string {
+  const campos = (esquema: 'vida' | 'sanjh') => `SELECT '${esquema}' AS empresa,
+         m.knumfoli::text AS nota,
+         to_char(m.fechanvt, 'YYYY-MM-DD') AS fecha_venta,
+         COALESCE(m.cliente,'') AS cliente,
+         btrim(COALESCE(m.vendedor,'')) AS vendedor,
+         COALESCE(m.val_rea,0)::float8 AS total_usd,
+         CASE WHEN m.pestadot='3' AND btrim(COALESCE(m.visaadua,'')) <> ''
+              THEN 'facturada' ELSE 'pendiente' END AS estado,
+         NULLIF(btrim(COALESCE(m.visaadua,'')),'') AS visacion,
+         to_char(m.fechadoc, 'YYYY-MM-DD') AS fecha_facturacion`;
+  const reglas = (esquema: 'vida' | 'sanjh') => `m.tipomovi='V'
+    AND m.id_tdocu IN ('203','551','554')
+    AND m.fechanvt <= $1::date
+    AND btrim(COALESCE(m.vendedor,'')) <> ''
+    AND btrim(upper(COALESCE(m.vendedor,''))) NOT IN ('PABLO BRAVO','EMPRESA')
+    AND ((m.pestadot='3' AND btrim(COALESCE(m.visaadua,'')) <> '')
+      OR (m.pestadot='1' AND btrim(COALESCE(m.visaadua,'')) = ''))
+    AND EXISTS (SELECT 1 FROM ${esquema}.itemdcto i WHERE i.knumfoli = m.knumfoli)`;
+  const textoCliente =
+    "translate(lower(COALESCE(m.cliente,'')), 'áàäâéèëêíìïîóòöôúùüûñç', 'aaaaeeeeiiiioooouuuunc')";
+  const bloque = (esquema: 'vida' | 'sanjh') => `
+  ${campos(esquema)}
+  FROM ${esquema}.movidcto m
+  WHERE ${reglas(esquema)}
+    AND (($2::text IS NOT NULL AND ltrim(m.knumfoli::text,'0') LIKE ($2::text || '%'))
+      OR ${textoCliente} LIKE ('%' || $3::text || '%') ESCAPE '\\')`;
+  return `SELECT n.*
+FROM (${bloque('vida')}
+  UNION ALL
+${bloque('sanjh')}) n
+ORDER BY n.fecha_venta DESC, n.empresa, n.nota DESC
+LIMIT $4`;
+}
+
+describe('construirConsultaBusqueda — modo codigo (s26)', () => {
+  const hoy = HOY;
+
+  it('flag apagado: texto y params byte-identicos a los actuales', () => {
+    const sinCuarto = construirConsultaBusqueda('002578', hoy);
+    const explicito = construirConsultaBusqueda('002578', hoy, 8, false);
+    expect(sinCuarto.text).toBe(sqlBusquedaActual());
+    expect(explicito.text).toBe(sqlBusquedaActual());
+    expect(sinCuarto.params).toEqual([hoy, '2578', '002578', 8]);
+    expect(explicito.params).toEqual([hoy, '2578', '002578', 8]);
+    expect(sinCuarto.text).not.toContain('codunico');
+    expect(sinCuarto.text).not.toContain('prioridad');
+    expect(sinCuarto.text).not.toContain('codigo_coincide');
+    expect(sinCuarto.text).not.toContain('$5');
+  });
+
+  it('flag encendido: 5 params en orden y marcadores del modo codigo', () => {
+    const { text, params } = construirConsultaBusqueda('002578', hoy, 8, true);
+    expect(params).toEqual([hoy, '2578', '002578', '%002578%', 8]);
+    expect(text).toContain('c.codigo AS codigo_coincide');
+    expect(text).toContain('AS prioridad');
+    expect(text).toContain("upper(btrim(i.codunico)) LIKE $4::text ESCAPE '\\'");
+    expect(text).toContain('LEFT JOIN LATERAL');
+    expect(text).toContain('min(btrim(i.codunico)) AS codigo');
+    expect(text).toContain('OR c.codigo IS NOT NULL');
+    expect(text).toContain('ORDER BY n.prioridad, n.fecha_venta DESC, n.empresa, n.nota DESC');
+    expect(text).toContain('LIMIT $5');
+    expect(text).not.toContain('$6');
+    expect(text.indexOf('ORDER BY n.prioridad')).toBeLessThan(text.indexOf('LIMIT $5'));
+  });
+
+  it('flag encendido: una rama LATERAL por esquema, sin JOIN multiplicador ni GROUP BY', () => {
+    const { text } = construirConsultaBusqueda('a-610', hoy, 8, true);
+    expect((text.match(/LEFT JOIN LATERAL/g) ?? []).length).toBe(2);
+    expect((text.match(/itemdcto/gi) ?? []).length).toBe(4); // EXISTS + LATERAL en cada rama
+    expect(text).not.toMatch(/JOIN\s+(vida|sanjh)\.itemdcto/i);
+    expect(text).not.toContain('GROUP BY');
+  });
+
+  it('flag encendido: limite por defecto 8 y parametrizable en $5', () => {
+    expect(construirConsultaBusqueda('25', hoy, 8, true).params[4]).toBe(8);
+    expect(construirConsultaBusqueda('25', hoy, 3, true).params[4]).toBe(3);
+    expect(construirConsultaBusqueda('25', hoy, 8, true).text).not.toContain('LIMIT 8');
+  });
+
+  it('inyeccion: jamas entra al texto SQL, tampoco en modo codigo', () => {
+    const ataque = "'; DROP TABLE x;--";
+    const apagado = construirConsultaBusqueda(ataque, hoy);
+    const encendido = construirConsultaBusqueda(ataque, hoy, 8, true);
+    for (const { text } of [apagado, encendido]) {
+      expect(text.toLowerCase()).not.toContain('drop table');
+    }
+    expect(apagado.params[2]).toBe("'; drop table x;--");
+    expect(encendido.params[3]).toBe("%'; DROP TABLE X;--%");
+  });
+
+  it('% _ \\ quedan escapados en patronCodigo', () => {
+    expect(construirConsultaBusqueda('%', hoy, 8, true).params[3]).toBe('%\\%%');
+    expect(construirConsultaBusqueda('_', hoy, 8, true).params[3]).toBe('%\\_%');
+    expect(construirConsultaBusqueda('\\', hoy, 8, true).params[3]).toBe('%\\\\%');
+  });
+
+  it('no selecciona costo, ganancia ni precio', () => {
+    const { text } = construirConsultaBusqueda('25', hoy, 8, true);
+    expect(text).not.toMatch(/costo|ganancia|precio/i);
+    expect(text).not.toContain('cosunita');
+    expect(text).not.toContain('precread');
+  });
+});
+
 describe('buscarNotas', () => {
   beforeEach(() => queryMock.mockReset());
 
@@ -649,5 +775,85 @@ describe('buscarNotas', () => {
   it('sin filas -> { notas: [] }', async () => {
     queryMock.mockResolvedValue([]);
     await expect(buscarNotas('nadie', HOY)).resolves.toEqual({ notas: [] });
+  });
+});
+
+describe('buscarNotas — modo codigo (s26)', () => {
+  beforeEach(() => queryMock.mockReset());
+
+  const fila = (over: Record<string, unknown> = {}) => ({
+    empresa: 'vida',
+    nota: 'A-610',
+    fecha_venta: '2026-11-20',
+    cliente: 'ANGELA',
+    vendedor: 'PRAVIN',
+    total_usd: 825,
+    estado: 'facturada',
+    visacion: '431033',
+    fecha_facturacion: '2026-11-21',
+    prioridad: 2,
+    codigo_coincide: 'A-610',
+    ...over,
+  });
+
+  it('flag apagado: params actuales y JSON sin codigo_coincide', async () => {
+    queryMock.mockResolvedValue([
+      fila({ prioridad: undefined, codigo_coincide: undefined }),
+    ]);
+    const r = await buscarNotas('2578', HOY);
+    const [, params] = queryMock.mock.calls[0] as [string, unknown[]];
+    expect(params).toEqual([HOY, '2578', '2578', 8]);
+    expect(r.notas[0]).not.toHaveProperty('codigo_coincide');
+  });
+
+  it('flag encendido: prioridad 2 (solo codigo) expone codigo_coincide', async () => {
+    queryMock.mockResolvedValue([fila()]);
+    const r = await buscarNotas('a-610', HOY, true);
+    const [text, params] = queryMock.mock.calls[0] as [string, unknown[]];
+    expect(String(text)).toContain('ORDER BY n.prioridad');
+    expect(params).toEqual([HOY, null, 'a-610', '%A-610%', 8]);
+    expect(r.notas[0].codigo_coincide).toBe('A-610');
+  });
+
+  it('prioridad 0 (nota y codigo a la vez): sin codigo_coincide', async () => {
+    queryMock.mockResolvedValue([fila({ nota: '2578', prioridad: 0, codigo_coincide: '2578' })]);
+    const r = await buscarNotas('2578', HOY, true);
+    expect(r.notas[0]).not.toHaveProperty('codigo_coincide');
+  });
+
+  it('prioridad 1 (coincide por cliente): sin codigo_coincide', async () => {
+    queryMock.mockResolvedValue([fila({ prioridad: 1, codigo_coincide: 'A-610' })]);
+    const r = await buscarNotas('angela', HOY, true);
+    expect(r.notas[0]).not.toHaveProperty('codigo_coincide');
+  });
+
+  it('codigo_coincide null (rama por cliente sin linea): sin la clave', async () => {
+    queryMock.mockResolvedValue([fila({ prioridad: 1, codigo_coincide: null })]);
+    const r = await buscarNotas('angela', HOY, true);
+    expect(r.notas[0]).not.toHaveProperty('codigo_coincide');
+  });
+
+  it('la misma nota en vida y sanjh en modo codigo -> 2 filas con empresa distinta', async () => {
+    queryMock.mockResolvedValue([
+      fila(),
+      fila({
+        empresa: 'sanjh', nota: 'A-610', fecha_venta: '2026-11-19', total_usd: 10,
+        estado: 'pendiente', visacion: null, fecha_facturacion: null, prioridad: 2,
+        codigo_coincide: 'A-610-2',
+      }),
+    ]);
+    const r = await buscarNotas('a-610', HOY, true);
+    expect(r.notas).toHaveLength(2);
+    expect(r.notas.map((n) => n.empresa)).toEqual(['vida', 'sanjh']);
+    expect(r.notas.map((n) => n.codigo_coincide)).toEqual(['A-610', 'A-610-2']);
+  });
+
+  it('N lineas coincidentes colapsan en una fila con el codigo minimo (SQL)', async () => {
+    queryMock.mockResolvedValue([fila()]);
+    const r = await buscarNotas('a-610', HOY, true);
+    const [text] = queryMock.mock.calls[0] as [string, unknown[]];
+    expect(String(text)).toContain('min(btrim(i.codunico)) AS codigo');
+    expect(r.notas).toHaveLength(1);
+    expect(r.notas[0].codigo_coincide).toBe('A-610');
   });
 });

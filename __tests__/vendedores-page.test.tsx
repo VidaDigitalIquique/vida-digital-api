@@ -10,6 +10,7 @@ jest.mock('@/lib/auth', () => ({ authOptions: {} }));
 jest.mock('@/config/feature-flags.json', () => ({
   'vendedores-modulo': true,
   'vendedores-buscador': false,
+  'vendedores-buscador-codigo': false,
   'vendedores-comisiones-margen': false,
 }));
 jest.mock('next/navigation', () => ({
@@ -24,13 +25,16 @@ jest.mock('@/app/(app)/vendedores/VendedoresClient', () => ({
   VendedoresClient: ({
     puedeVerDetalle,
     buscadorActivo,
+    buscadorCodigoActivo,
   }: {
     puedeVerDetalle?: boolean;
     buscadorActivo?: boolean;
+    buscadorCodigoActivo?: boolean;
   }) => (
     <>
       <div>{`tabla-vendedores:detalle=${String(puedeVerDetalle)}`}</div>
       <div>{`tabla-vendedores:buscador=${String(buscadorActivo)}`}</div>
+      <div>{`tabla-vendedores:buscador-codigo=${String(buscadorCodigoActivo)}`}</div>
     </>
   ),
 }));
@@ -64,6 +68,7 @@ const yoSoy = (rol: string | null) =>
 beforeEach(() => {
   mockFlags['vendedores-modulo'] = true;
   mockFlags['vendedores-buscador'] = false;
+  mockFlags['vendedores-buscador-codigo'] = false;
   mockFlags['vendedores-comisiones-margen'] = false;
   yoSoy('admin');
 });
@@ -109,6 +114,21 @@ describe('/vendedores — buscador de notas (s15b)', () => {
     mockFlags['vendedores-buscador'] = true;
     render(await VendedoresPage());
     expect(screen.getByText('tabla-vendedores:buscador=true')).toBeInTheDocument();
+  });
+});
+
+describe('/vendedores — buscador por codigo de producto (s26)', () => {
+  it('con el flag apagado se pasa buscadorCodigoActivo=false', async () => {
+    mockFlags['vendedores-buscador'] = true;
+    render(await VendedoresPage());
+    expect(screen.getByText('tabla-vendedores:buscador-codigo=false')).toBeInTheDocument();
+  });
+
+  it('con el flag encendido se pasa buscadorCodigoActivo=true', async () => {
+    mockFlags['vendedores-buscador'] = true;
+    mockFlags['vendedores-buscador-codigo'] = true;
+    render(await VendedoresPage());
+    expect(screen.getByText('tabla-vendedores:buscador-codigo=true')).toBeInTheDocument();
   });
 });
 
